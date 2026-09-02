@@ -1,4 +1,4 @@
-import { BACKEND, setupAttackerScenario } from '../../support/e2e';
+import { setupAttackerScenario } from '../../support/e2e';
 
 function loadTwoChampsAddToRoster(
   adminToken: string,
@@ -148,7 +148,7 @@ describe('War Synergy', () => {
   it('removing attacker from last node auto-removes their synergy (couteau suisse)', () => {
     setupAttackerScenario('syn4').then(
       ({ adminToken, ownerData, memberData, allianceId, memberAccId, warId, championUserId }) => {
-        const synergyUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
+        const synergyPath = `/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
 
         // Assign Wolverine as node attacker on node 10
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
@@ -166,11 +166,7 @@ describe('War Synergy', () => {
             cy.apiRemoveWarAttacker(memberData.access_token, allianceId, warId, 1, 11);
 
             // Synergy should be auto-removed
-            cy.request({
-              method: 'GET',
-              url: synergyUrl,
-              headers: { Authorization: `Bearer ${memberData.access_token}` },
-            }).then((res) => {
+            cy.apiRequest(memberData.access_token, 'GET', synergyPath).then((res) => {
               expect(res.status).to.eq(200);
               expect(res.body).to.have.length(0);
             });
@@ -182,7 +178,7 @@ describe('War Synergy', () => {
 
   it('duplicate synergy provider rejected', () => {
     setupAttackerScenario('syn5').then(({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
-      const synergyUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
+      const synergyPath = `/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
 
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
@@ -190,20 +186,13 @@ describe('War Synergy', () => {
         cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3').then((synCu) => {
           const payload = { champion_user_id: synCu.id, target_champion_user_id: championUserId };
 
-          cy.request({
-            method: 'POST',
-            url: synergyUrl,
-            headers: { Authorization: `Bearer ${memberData.access_token}` },
-            body: payload,
-          }).then((res) => expect(res.status).to.eq(201));
+          cy.apiRequest(memberData.access_token, 'POST', synergyPath, payload).then((res) =>
+            expect(res.status).to.eq(201),
+          );
 
-          cy.request({
-            method: 'POST',
-            url: synergyUrl,
-            headers: { Authorization: `Bearer ${memberData.access_token}` },
-            body: payload,
-            failOnStatusCode: false,
-          }).then((res) => expect(res.status).to.eq(409));
+          cy.apiRequest(memberData.access_token, 'POST', synergyPath, payload, { failOnStatusCode: false }).then(
+            (res) => expect(res.status).to.eq(409),
+          );
         });
       });
     });
@@ -211,7 +200,7 @@ describe('War Synergy', () => {
 
   it('target must be an assigned node attacker', () => {
     setupAttackerScenario('syn6').then(({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
-      const synergyUrl = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
+      const synergyPath = `/alliances/${allianceId}/wars/${warId}/bg/1/synergy`;
 
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
@@ -225,13 +214,13 @@ describe('War Synergy', () => {
         'Thor',
         'Cosmic',
         ({ cu1: nonAttackerCu, cu2: providerCu }) => {
-          cy.request({
-            method: 'POST',
-            url: synergyUrl,
-            headers: { Authorization: `Bearer ${memberData.access_token}` },
-            body: { champion_user_id: providerCu.id, target_champion_user_id: nonAttackerCu.id },
-            failOnStatusCode: false,
-          }).then((res) => {
+          cy.apiRequest(
+            memberData.access_token,
+            'POST',
+            synergyPath,
+            { champion_user_id: providerCu.id, target_champion_user_id: nonAttackerCu.id },
+            { failOnStatusCode: false },
+          ).then((res) => {
             expect(res.status).to.eq(422);
           });
         },
@@ -254,13 +243,13 @@ describe('War Synergy', () => {
           warId,
           (cu4Id) => {
             // Now try to add a 4th via synergy → backend should 409
-            cy.request({
-              method: 'POST',
-              url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/synergy`,
-              headers: { Authorization: `Bearer ${memberData.access_token}` },
-              body: { champion_user_id: cu4Id, target_champion_user_id: championUserId },
-              failOnStatusCode: false,
-            }).then((res) => {
+            cy.apiRequest(
+              memberData.access_token,
+              'POST',
+              `/alliances/${allianceId}/wars/${warId}/bg/1/synergy`,
+              { champion_user_id: cu4Id, target_champion_user_id: championUserId },
+              { failOnStatusCode: false },
+            ).then((res) => {
               expect(res.status).to.eq(409);
             });
           },
@@ -274,16 +263,12 @@ describe('War Synergy', () => {
       ({ adminToken, memberData, memberAccId, allianceId, warId, championUserId }) => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: true,
-          });
+        cy.apiGiveChampion(adminToken, memberData.access_token, memberAccId, 'Deadpool', 'Mutant', '7r3', {
+          is_preferred_attacker: true,
         });
 
-        cy.apiLoadChampion(adminToken, 'Storm', 'Mutant').then((champs) => {
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: false,
-          });
+        cy.apiGiveChampion(adminToken, memberData.access_token, memberAccId, 'Storm', 'Mutant', '7r3', {
+          is_preferred_attacker: false,
         });
 
         cy.apiLogin(memberData.user_id, 'war');

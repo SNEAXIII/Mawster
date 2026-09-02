@@ -10,6 +10,7 @@ import {
 } from '@/app/services/roster'
 import { type ImportResult } from '@/components/roster/import-report-dialog'
 import { type PreviewRow } from '@/components/roster/import-preview-row'
+import { blockingRows } from '@/components/roster/import-row-validation'
 
 // ─── Shared entry shape consumed by the preview builders ──
 // `is_preferred_attacker` is optional on purpose: `undefined` means "this
@@ -201,12 +202,24 @@ export function useRosterImportCore({
     if (previewRows.length === 0) return { success: true }
     setImporting(true)
 
+    // Last line of defence. The preview dialog already disables its button
+    // while a row is invalid, but this hook is also driven by the JSON import,
+    // and an atomic 400 here reports every row as failed — so nothing invalid
+    // may reach the API, whatever the caller did.
+    const blocked = blockingRows(previewRows)
+    if (blocked.length > 0) {
+      setImporting(false)
+      toast.error(t.roster.importExport.blockedRows.replace('{count}', String(blocked.length)))
+      return { success: false }
+    }
+
     const results: ImportResult[] = []
     let success = true
 
     try {
-      // Only send entries that are new or have changes
-      const toSend = previewRows.filter((r) => r.isNew || r.hasChanges)
+      // Only send entries that are new or have changes, minus the ones the user
+      // explicitly excluded.
+      const toSend = previewRows.filter((r) => !r.ignored && (r.isNew || r.hasChanges))
 
       if (toSend.length === 0) {
         toast.info(t.roster.importExport.noChanges)
@@ -250,28 +263,12 @@ export function useRosterImportCore({
             oldAscension: row.oldAscension ?? null,
           })
         }
-
-        // Mark unchanged entries as skipped
-        for (const row of previewRows.filter((r) => !r.isNew && !r.hasChanges)) {
-          results.push({
-            champion_name: row.champion_name,
-            success: true,
-            isNew: false,
-            isSkipped: true,
-            champion_class: row.champion_class,
-            image_url: row.image_url,
-            newRarity: row.newRarity,
-            newSignature: row.newSignature,
-            oldRarity: row.oldRarity,
-            oldSignature: row.oldSignature,
-            newAscension: row.ascension ?? 0,
-            oldAscension: row.oldAscension ?? null,
-          })
-        }
       } catch (err) {
-        // Bulk failed entirely
+        // Bulk failed entirely. Only the rows actually sent can have failed —
+        // reporting the untouched ones as errors too is what made a single bad
+        // row look like a whole-roster failure.
         success = false
-        for (const row of previewRows) {
+        for (const row of toSend) {
           results.push({
             champion_name: row.champion_name,
             success: false,
@@ -289,6 +286,26 @@ export function useRosterImportCore({
               (err instanceof Error ? err.message : undefined) || t.roster.importExport.serverError,
           })
         }
+      }
+
+      // Rows never sent — unchanged, or excluded by the user — are reported as
+      // skipped either way, so the report accounts for every detected champion.
+      for (const row of previewRows.filter((r) => r.ignored || (!r.isNew && !r.hasChanges))) {
+        results.push({
+          champion_name: row.champion_name,
+          success: true,
+          isNew: false,
+          isSkipped: true,
+          isIgnored: row.ignored === true,
+          champion_class: row.champion_class,
+          image_url: row.image_url,
+          newRarity: row.newRarity,
+          newSignature: row.newSignature,
+          oldRarity: row.oldRarity,
+          oldSignature: row.oldSignature,
+          newAscension: row.ascension ?? 0,
+          oldAscension: row.oldAscension ?? null,
+        })
       }
 
       // Refresh roster

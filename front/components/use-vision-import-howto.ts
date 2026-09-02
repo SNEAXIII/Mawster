@@ -28,17 +28,19 @@ function storeHidden(hidden: boolean): void {
 // localStorage does not exist.
 export function useVisionImportHowto() {
   const [open, setOpen] = useState(false)
-  const [dontShow, setDontShowState] = useState(false)
+  const [dontShow, setDontShow] = useState(false)
   // Held in a ref, not state: storing the pending action must not re-render,
   // and confirm() must see the value set by the click that opened the dialog.
   const proceedRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    setDontShowState(loadHidden())
+    setDontShow(loadHidden())
   }, [])
 
-  const setDontShow = useCallback((value: boolean) => {
-    setDontShowState(value)
+  // Exposed as setDontShow: callers must not be able to flip the flag without
+  // persisting it, so the raw state setter stays inside the hook.
+  const setDontShowAndStore = useCallback((value: boolean) => {
+    setDontShow(value)
     storeHidden(value)
   }, [])
 
@@ -67,5 +69,13 @@ export function useVisionImportHowto() {
     proceed?.()
   }, [])
 
-  return { open, setOpen, request, reopen, dontShow, setDontShow, confirm }
+  return {
+    open,
+    setOpen,
+    request,
+    reopen,
+    dontShow,
+    setDontShow: setDontShowAndStore,
+    confirm,
+  }
 }

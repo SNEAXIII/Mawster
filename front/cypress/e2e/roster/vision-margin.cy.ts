@@ -33,6 +33,8 @@ describe('Roster – Vision margin and correction', () => {
   }
 
   function uploadFixtureScreenshot() {
+    // The file input is visually hidden (class='hidden'), so selectFile cannot
+    // wait for it to be actionable — force is the only way to attach a fixture.
     cy.get('[data-cy="vision-input"]').selectFile('cypress/fixtures/vision/sample-roster.png', {
       force: true,
     });

@@ -25,6 +25,7 @@ type ChampionCellProps = Readonly<{
   ascension?: number | null
   isSaga?: boolean | null
   sagaMode: 'attacker' | 'defender'
+  dataCy: string
 }>
 
 /**
@@ -40,10 +41,14 @@ export function ChampionCell({
   ascension,
   isSaga,
   sagaMode,
+  dataCy,
 }: ChampionCellProps) {
   const exporting = useExportMode()
   return (
-    <td className={cn(COMPACT_COL, 'py-1')}>
+    <td
+      className={cn(COMPACT_COL, 'py-1')}
+      data-cy={dataCy}
+    >
       <div
         className='flex flex-col items-center'
         title={shortenChampionName(name)}
@@ -71,16 +76,20 @@ export function ChampionCell({
 
 type ChampionIconListProps = Readonly<{
   champions: ReadonlyArray<SynergyRecord | PrefightRecord>
+  dataCy: string
 }>
 
 /**
  * Synergy / prefight cell — a row of small unframed thumbnails, the name only in
  * the tooltip. Both columns render the same thing off the same record shape.
  */
-export function ChampionIconList({ champions }: ChampionIconListProps) {
+export function ChampionIconList({ champions, dataCy }: ChampionIconListProps) {
   const exporting = useExportMode()
   return (
-    <td className={cn(COMPACT_COL, 'py-2')}>
+    <td
+      className={cn(COMPACT_COL, 'py-2')}
+      data-cy={dataCy}
+    >
       <div className='flex items-center justify-center gap-1'>
         {champions.map((c) => {
           // Full-resolution source while exporting: the capture is upscaled, a
@@ -131,14 +140,15 @@ export function NoteCell({ record }: NoteCellProps) {
     <td className={cn(GROW_COL, 'py-2')}>
       <div className='flex flex-col gap-0.5'>
         <div className='flex items-start gap-1'>
-          {record.note_blocked ? (
+          {record.note_blocked && (
             <span
               className='italic text-muted-foreground truncate'
               data-cy='kb-note-blocked'
             >
               {t.moderation.noteBlocked}
             </span>
-          ) : hasNote ? (
+          )}
+          {!record.note_blocked && hasNote && (
             <Popover>
               <PopoverTrigger asChild>
                 <button
@@ -162,9 +172,8 @@ export function NoteCell({ record }: NoteCellProps) {
                 )}
               </PopoverContent>
             </Popover>
-          ) : (
-            <span className='text-muted-foreground'>—</span>
           )}
+          {!record.note_blocked && !hasNote && <span className='text-muted-foreground'>—</span>}
           {record.note_id && !record.note_blocked && (
             <button
               className='shrink-0 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed'

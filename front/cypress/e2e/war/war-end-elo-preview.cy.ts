@@ -1,4 +1,4 @@
-import { setupWarOwner, BACKEND } from '../../support/e2e';
+import { setupWarOwner } from '../../support/e2e';
 
 /**
  * End-war dialog ELO preview: the officer always types a POSITIVE amount and the
@@ -13,28 +13,8 @@ describe('War – End war ELO preview', () => {
   function setupSeasonWar(prefix: string, pseudo: string, name: string, tag: string, elo: number) {
     return setupWarOwner(prefix, pseudo, name, tag).then(({ adminData, ownerData, allianceId }) => {
       return cy
-        .request({
-          method: 'POST',
-          url: `${BACKEND}/admin/seasons`,
-          headers: { Authorization: `Bearer ${adminData.access_token}` },
-          body: { number: 70 },
-        })
-        .then((res) =>
-          cy.request({
-            method: 'PATCH',
-            url: `${BACKEND}/admin/seasons/${res.body.id}/open`,
-            headers: { Authorization: `Bearer ${adminData.access_token}` },
-            body: {},
-          }),
-        )
-        .then(() =>
-          cy.request({
-            method: 'PATCH',
-            url: `${BACKEND}/alliances/${allianceId}/elo`,
-            headers: { Authorization: `Bearer ${ownerData.access_token}` },
-            body: { elo },
-          }),
-        )
+        .apiCreateOpenSeason(adminData.access_token, 70)
+        .then(() => cy.apiRequest(ownerData.access_token, 'PATCH', `/alliances/${allianceId}/elo`, { elo }))
         .then(() => cy.apiCreateWar(ownerData.access_token, allianceId, `${tag}Enemy`))
         .then(() => cy.wrap({ ownerData, allianceId }));
     });

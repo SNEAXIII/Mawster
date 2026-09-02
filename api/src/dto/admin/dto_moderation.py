@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from src.dto.mixins import WarCoords
 from src.enums.NoteReportStatus import NoteReportStatus
 from src.utils.sanitize import sanitize_text
 
@@ -35,15 +36,13 @@ class NoteRevisionResponse(BaseModel):
     edited_at: datetime
 
 
-class NoteReportResponse(BaseModel):
+class NoteReportResponse(WarCoords):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     note_id: uuid.UUID
     alliance_id: uuid.UUID
     alliance_name: str | None = None
-    battlegroup: int
-    node_number: int
     note_content: str
     note_deleted: bool = False
     reporter_pseudo: str | None = None

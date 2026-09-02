@@ -26,12 +26,12 @@ export default function MatchupVerdictSelect({
   const { t } = useI18n()
   const kb = t.game.knowledgeBase
 
-  const verdictLabel = (verdict: MatchupVerdict) =>
-    verdict === 'discouraged'
-      ? kb.verdictDiscouraged
-      : verdict === 'good'
-        ? kb.verdictGood
-        : kb.verdictOk
+  const verdictLabels: Record<MatchupVerdict, string> = {
+    discouraged: kb.verdictDiscouraged,
+    good: kb.verdictGood,
+    ok: kb.verdictOk,
+  }
+  const verdictLabel = (verdict: MatchupVerdict) => verdictLabels[verdict]
 
   return (
     <Select

@@ -392,6 +392,35 @@ declare global {
       /** Navigate to alliances page and open the statistics tab. */
       goToAllianceStatsTab(): Chainable<void>;
 
+      /** Authed backend call: cy.apiRequest(token, 'POST', '/game-accounts', body). */
+      apiRequest(
+        token: string,
+        method: string,
+        path: string,
+        body?: object,
+        options?: { failOnStatusCode?: boolean },
+      ): Chainable<Cypress.Response<any>>;
+
+      /** Open a season (admin). */
+      apiOpenSeason(token: string, seasonId: string): Chainable<Cypress.Response<any>>;
+
+      /** Close a season (admin). */
+      apiCloseSeason(token: string, seasonId: string): Chainable<Cypress.Response<any>>;
+
+      /** Create then open a season — yields the season id. */
+      apiCreateOpenSeason(token: string, number: number): Chainable<string>;
+
+      /** Load a champion then add it to a game account roster. */
+      apiGiveChampion(
+        adminToken: string,
+        ownerToken: string,
+        gameAccountId: string,
+        name: string,
+        championClass: string,
+        rarity?: string,
+        options?: { signature?: number; is_preferred_attacker?: boolean; ascension?: number },
+      ): Chainable<{ championId: string; championUser: any }>;
+
       setupAllianceWithMember(
         tokenPrefix: string,
         championName: string,

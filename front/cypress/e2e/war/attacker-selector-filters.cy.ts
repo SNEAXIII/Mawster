@@ -1,4 +1,4 @@
-import { setupAttackerScenario } from '../../support/e2e';
+import { setupAttackerScenario, openWarNode } from '../../support/e2e';
 
 /** Pseudos built by setupAttackerScenario — mirrors its `${prefix}Owner`.slice(0, 16). */
 const ownerPseudo = (prefix: string) => `${prefix}Owner`.slice(0, 16);
@@ -7,7 +7,7 @@ const memberPseudo = (prefix: string) => `${prefix}Member`.slice(0, 16);
 /** Log in, switch to attackers mode and open the selector on BG1 node 10. */
 function openAttackerSelector(userId: string) {
   cy.goToWarMode(userId, 'attackers');
-  cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+  openWarNode(10);
   cy.getByCy('war-attacker-search').should('be.visible');
 }
 
@@ -315,7 +315,7 @@ describe('War – WarAttackerSelector rarity filter', () => {
       // Close and reopen the dialog — preference persisted via localStorage
       cy.get('body').type('{esc}');
       cy.getByCy('war-attacker-search').should('not.exist');
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('war-attacker-search').should('be.visible');
       expectHidden('Wolverine');
       expectVisible('Storm');

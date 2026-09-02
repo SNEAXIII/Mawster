@@ -181,11 +181,12 @@ export default function CsvImportForm() {
     }
   }
 
-  const blockedReason = !selectedAllianceId
-    ? kb.importBlockedAlliance
-    : pendingCount > 0
-      ? kb.importBlockedUnresolved.replace('{count}', String(pendingCount))
-      : null
+  const resolveBlockedReason = () => {
+    if (!selectedAllianceId) return kb.importBlockedAlliance
+    if (pendingCount > 0) return kb.importBlockedUnresolved.replace('{count}', String(pendingCount))
+    return null
+  }
+  const blockedReason = resolveBlockedReason()
 
   return (
     <div className='space-y-6'>

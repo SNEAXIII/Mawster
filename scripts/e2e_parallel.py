@@ -94,10 +94,26 @@ OS = _get_os_model()
 NPM = OS.npm
 NPX = OS.npx
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mKHFABCDJG]")
+# Mirrors specPattern in front/cypress.config.ts.
+SPEC_GLOB = "*.cy.ts"
+E2E_DIR = FRONT_DIR / "cypress" / "e2e"
+RESULTS_DIR = FRONT_DIR / "cypress" / "results"
+# Next build output for E2E, separate from the dev .next. The same value
+# is spelled out in .github/workflows/api_front__test_lint_build.yaml and
+# front/tsconfig.json, so renaming it here alone is not enough.
+NEXT_E2E_DIST = ".next-e2e"
+# Logged by the backend dev controller (api/src/controllers/dev_controller.py)
+# at the start of each test; parse_backend_markers splits the backend log on it
+# to attribute log lines to a test.
+TEST_START_MARKER = "===TEST_START==="
 
 
 def worker_log_dir(worker: int) -> Path:
-    return FRONT_DIR / "cypress" / "results" / "workers" / f"worker-{worker}"
+    return RESULTS_DIR / "workers" / f"worker-{worker}"
+
+
+def localhost_url(port: int, path: str = "") -> str:
+    return f"http://localhost:{port}{path}"
 
 
 def log(msg: str) -> None:
@@ -284,8 +300,8 @@ def parse_backend_markers(backend_log: Path) -> dict[str, list[str]]:
     current_lines: list[str] = []
 
     for line in lines:
-        if "===TEST_START===" in line:
-            idx = line.index("===TEST_START===") + len("===TEST_START===")
+        if TEST_START_MARKER in line:
+            idx = line.index(TEST_START_MARKER) + len(TEST_START_MARKER)
             current_title = line[idx:].strip()
             current_lines = []
         elif "===TEST_END===" in line:
@@ -348,7 +364,7 @@ def build_merged_report(
         "failures": [asdict(f) for f in all_failures],
     }
 
-    out = FRONT_DIR / "cypress" / "results" / "report.json"
+    out = RESULTS_DIR / "report.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     log(f"Report written → {out.relative_to(ROOT)}  ({len(all_failures)} failure(s))")
@@ -449,7 +465,7 @@ def build_frontend(base_env: dict) -> None:
         "API_PORT": str(BASE_API_PORT),  # placeholder — rewrites are runtime-read anyway
         "API_SERVER_HOST": "localhost",
         "NEXT_PUBLIC_DEV_MODE": "true",
-        "NEXT_DIST_DIR": ".next-e2e",
+        "NEXT_DIST_DIR": NEXT_E2E_DIST,
         "NEXT_E2E_BUILD": "true",
         "PYTHONIOENCODING": "utf-8",
     }
@@ -473,9 +489,9 @@ def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subproce
         "PORT": str(front_port),
         "API_PORT": str(api_port),
         "API_SERVER_HOST": "localhost",
-        "NEXTAUTH_URL": f"http://localhost:{front_port}",
+        "NEXTAUTH_URL": localhost_url(front_port),
         "WORKER_ID": str(worker),
-        "NEXT_DIST_DIR": ".next-e2e",
+        "NEXT_DIST_DIR": NEXT_E2E_DIST,
         "NEXT_E2E_BUILD": "true",
         "DEV_MODE": "true",
         "PYTHONIOENCODING": "utf-8",
@@ -523,7 +539,7 @@ def get_spec_files(include_vision: bool = False) -> list[Path]:
 
     Vision specs are excluded unless asked for: see VISION_SPEC_MARKER.
     """
-    specs = sorted((FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts"))
+    specs = sorted(E2E_DIR.rglob(SPEC_GLOB))
     if include_vision:
         return specs
     return [s for s in specs if not is_vision_spec(s)]
@@ -573,7 +589,7 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
         "run",
         "--spec",
         spec_arg,
-        "--env",
+        "--expose",
         f"backendUrl=http://localhost:{api_port}",
         "--config",
         (
@@ -632,22 +648,19 @@ def resolve_spec_paths(raw_specs: str) -> set[Path]:
     for raw in [s.strip() for s in raw_specs.split(",") if s.strip()]:
         spec_path = Path(raw)
         if not spec_path.is_absolute():
-            candidate = FRONT_DIR / "cypress" / "e2e" / raw
+            candidate = E2E_DIR / raw
             if not candidate.exists():
                 candidate = FRONT_DIR / raw
             spec_path = candidate
         if not spec_path.exists():
-            available = sorted(
-                p.relative_to(FRONT_DIR / "cypress" / "e2e")
-                for p in (FRONT_DIR / "cypress" / "e2e").rglob("*.cy.ts")
-            )
+            available = sorted(p.relative_to(E2E_DIR) for p in E2E_DIR.rglob(SPEC_GLOB))
             log(f"ERROR: spec not found: {raw}")
             log("Available specs:")
             for s in available:
                 log(f"  {s}")
             sys.exit(1)
         if spec_path.is_dir():
-            resolved_specs.update(spec_path.rglob("*.cy.ts"))
+            resolved_specs.update(spec_path.rglob(SPEC_GLOB))
         else:
             resolved_specs.add(spec_path)
     return resolved_specs
@@ -773,7 +786,7 @@ def main() -> None:
                     OS.kill_proc(p)
         # Remove the shared e2e build dir (only if we built it)
         if not args.skip_build:
-            next_dir = FRONT_DIR / ".next-e2e"
+            next_dir = FRONT_DIR / NEXT_E2E_DIST
             if next_dir.exists():
                 shutil.rmtree(next_dir, ignore_errors=True)
                 log(f"Removed {next_dir.name}")
@@ -846,11 +859,11 @@ def main() -> None:
     def health_check_worker(worker: int) -> None:
         try:
             wait_for_http(
-                f"http://localhost:{BASE_API_PORT + worker}",
+                localhost_url(BASE_API_PORT + worker),
                 f"Backend {worker}",
             )
             wait_for_http(
-                f"http://localhost:{BASE_FRONT_PORT + worker}/api/auth/providers",
+                localhost_url(BASE_FRONT_PORT + worker, "/api/auth/providers"),
                 f"Frontend {worker}",
             )
         except TimeoutError as exc:

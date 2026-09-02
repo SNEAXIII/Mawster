@@ -628,7 +628,7 @@ class VisionImportService:
     @classmethod
     async def list_predictions(
         cls, session: SessionDep, import_id: uuid.UUID
-    ) -> list["VisionPredictionResponse"]:
+    ) -> list[VisionPredictionResponse]:
         """All predictions of an import, ordered by job then id, carrying the crop
         index parsed out of the stored crop_key and a stable per-import job index."""
 
@@ -678,7 +678,7 @@ class VisionImportService:
         return rows
 
     @staticmethod
-    def _margin(candidates: list["VisionPredictionCandidate"]) -> float | None:
+    def _margin(candidates: list[VisionPredictionCandidate]) -> float | None:
         """Signed gap between the winner and the runner-up, None below two rows.
 
         This is the real confidence signal. Measured on ground truth, both

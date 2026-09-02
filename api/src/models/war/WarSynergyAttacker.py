@@ -6,12 +6,12 @@ from sqlmodel import Field, Relationship
 
 from src.models.Base import (
     FK_CHAMPION_USER,
-    FK_WAR,
     Battlegroup,
     ChampionUserFk,
     GameAccountFk,
     TimestampMixin,
     UUIDBase,
+    WarFk,
 )
 
 if TYPE_CHECKING:
@@ -20,7 +20,9 @@ if TYPE_CHECKING:
     from src.models.war.War import War
 
 
-class WarSynergyAttacker(UUIDBase, ChampionUserFk, TimestampMixin, GameAccountFk, table=True):
+class WarSynergyAttacker(
+    UUIDBase, ChampionUserFk, TimestampMixin, GameAccountFk, WarFk, table=True
+):
     __tablename__ = "war_synergy_attacker"
     __table_args__ = (
         sa.UniqueConstraint(
@@ -31,7 +33,6 @@ class WarSynergyAttacker(UUIDBase, ChampionUserFk, TimestampMixin, GameAccountFk
         ),
     )
 
-    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
     battlegroup: Battlegroup
     target_champion_user_id: uuid.UUID = Field(foreign_key=FK_CHAMPION_USER)
 

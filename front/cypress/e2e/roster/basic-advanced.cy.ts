@@ -108,18 +108,18 @@ describe('Roster – Basic (advanced)', () => {
   it('returns error when adding champion with invalid rarity (API)', () => {
     setupRosterUser('roster-badrarity', 'BadRarityPlayer').then(({ adminData, userData, accountId }) => {
       cy.apiLoadChampion(adminData.access_token, 'BadRarity', 'Science').then((champs) => {
-        cy.request({
-          method: 'POST',
-          url: `${BACKEND}/champion-users`,
-          headers: { Authorization: `Bearer ${userData.access_token}` },
-          body: {
+        cy.apiRequest(
+          userData.access_token,
+          'POST',
+          '/champion-users',
+          {
             game_account_id: accountId,
             champion_id: champs[0].id,
             rarity: 'invalid-rarity',
             signature: 0,
           },
-          failOnStatusCode: false,
-        }).then((res) => {
+          { failOnStatusCode: false },
+        ).then((res) => {
           expect(res.status).to.be.oneOf([400, 422]);
         });
       });

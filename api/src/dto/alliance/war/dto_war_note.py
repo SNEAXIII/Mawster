@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from src.dto.mixins import WarCoords
 from src.utils.sanitize import sanitize_text
 
 MAX_NOTE_LENGTH = 2000
@@ -17,13 +18,11 @@ class WarFightNoteUpsertRequest(BaseModel):
         return sanitize_text(value) if isinstance(value, str) else value
 
 
-class WarFightNoteResponse(BaseModel):
+class WarFightNoteResponse(WarCoords):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     war_id: uuid.UUID
-    battlegroup: int
-    node_number: int
     content: str
     updated_by_pseudo: str | None = None
     updated_at: datetime

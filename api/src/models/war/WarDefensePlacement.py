@@ -6,17 +6,16 @@ from sqlmodel import Field, Relationship
 
 from src.models.Base import (
     FK_CHAMPION_USER,
-    FK_WAR,
     Ascension,
-    Battlegroup,
     ChampionFk,
     KoCount,
-    NodeNumber,
     PlacedByFk,
     Rank,
     Stars,
     TimestampMixin,
     UUIDBase,
+    WarCoords,
+    WarFk,
 )
 
 if TYPE_CHECKING:
@@ -26,15 +25,14 @@ if TYPE_CHECKING:
     from src.models.war.War import War
 
 
-class WarDefensePlacement(UUIDBase, PlacedByFk, ChampionFk, TimestampMixin, table=True):
+class WarDefensePlacement(
+    UUIDBase, PlacedByFk, ChampionFk, TimestampMixin, WarFk, WarCoords, table=True
+):
     __tablename__ = "war_defense_placement"
     __table_args__ = (
         sa.UniqueConstraint("war_id", "battlegroup", "node_number", name="uq_war_defense_node"),
     )
 
-    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
-    battlegroup: Battlegroup
-    node_number: NodeNumber
     stars: Stars
     rank: Rank
     ascension: Ascension = 0

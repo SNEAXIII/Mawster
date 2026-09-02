@@ -22,7 +22,10 @@ export default function KnowledgeBaseTableRow({
 
   return (
     <tr className='border-t border-border hover:bg-muted/30 transition-colors'>
-      <td className={cn(COMPACT_COL, 'py-2 whitespace-nowrap')}>
+      <td
+        className={cn(COMPACT_COL, 'py-2 whitespace-nowrap')}
+        data-cy='fight-record-player'
+      >
         <div className='flex items-center justify-center gap-1'>
           {r.game_account_pseudo}
           {r.is_planning_error && (
@@ -48,6 +51,7 @@ export default function KnowledgeBaseTableRow({
         ascension={r.ascension}
         isSaga={r.is_saga_attacker}
         sagaMode='attacker'
+        dataCy='fight-record-attacker'
       />
       <ChampionCell
         name={r.defender_champion_name}
@@ -57,10 +61,22 @@ export default function KnowledgeBaseTableRow({
         ascension={r.defender_ascension}
         isSaga={r.defender_is_saga_defender}
         sagaMode='defender'
+        dataCy='fight-record-defender'
       />
-      <ChampionIconList champions={r.synergies} />
-      <ChampionIconList champions={r.prefights} />
-      <td className={cn(COMPACT_COL, 'py-2')}>{r.node_number}</td>
+      <td
+        className={cn(COMPACT_COL, 'py-2')}
+        data-cy='fight-record-node'
+      >
+        {r.node_number}
+      </td>
+      <ChampionIconList
+        champions={r.synergies}
+        dataCy='fight-record-synergies'
+      />
+      <ChampionIconList
+        champions={r.prefights}
+        dataCy='fight-record-prefights'
+      />
       <td
         className={cn(COMPACT_COL, 'py-2', r.ko_count ? 'text-red-500' : 'text-green-500')}
         data-cy='fight-record-ko'

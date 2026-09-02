@@ -1,17 +1,17 @@
 import uuid
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import ConfigDict, model_validator
+
+from src.dto.mixins import PlayerIdentity
 
 
-class AllianceRosterEntryResponse(BaseModel):
+class AllianceRosterEntryResponse(PlayerIdentity):
     """A single alliance member's champion entry — solo RosterEntry shape + owner identity."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    game_account_id: uuid.UUID
-    game_pseudo: str
     alliance_group: int | None = None
     champion_id: uuid.UUID
     champion_name: str

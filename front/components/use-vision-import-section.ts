@@ -59,11 +59,13 @@ export function useVisionImportSection({
     setBannerRefreshKey((key) => key + 1)
   }
 
-  const visionLabel = !vision.uploading
-    ? t.roster.importExport.importVision
-    : vision.importId == null
+  // While uploading, the import id appears only once the screens are queued — before that
+  // the user is still waiting on the upload itself.
+  const uploadingLabel =
+    vision.importId == null
       ? t.roster.importExport.visionUploading
       : t.roster.importExport.visionProcessing
+  const visionLabel = vision.uploading ? uploadingLabel : t.roster.importExport.importVision
 
   return {
     vision,

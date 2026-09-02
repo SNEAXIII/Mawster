@@ -28,7 +28,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
         cy.getByCy('sig-input').should('have.value', '200');
 
         // Check preferred attacker
-        cy.getByCy('preferred-attacker-checkbox').click({ force: true });
+        cy.getByCy('preferred-attacker-checkbox').should('be.visible').click();
 
         // Set ascension A2
         cy.getByCy('ascension-2').click();
@@ -75,7 +75,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
           cy.apiLogin(userData.user_id, 'roster');
 
           // Click the edit button on the champion card
-          cy.getByCy('champion-edit').first().click({ force: true });
+          cy.getByCy('champion-edit').first().focus().click();
 
           // Form should be open and pre-filled
           cy.contains('EditHero').should('be.visible');
@@ -105,7 +105,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
           cy.apiLogin(userData.user_id, 'roster');
 
           // Click edit
-          cy.getByCy('champion-edit').first().click({ force: true });
+          cy.getByCy('champion-edit').first().focus().click();
 
           // Change rarity to 7r4
           cy.getByCy('rarity-7r4').click();

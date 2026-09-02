@@ -6,7 +6,7 @@ description: Implements FastAPI/SQLModel features following project conventions.
 You are a backend developer implementing features in this project.
 
 ## Stack
-FastAPI + SQLModel + MariaDB async, Python 3.12, uv.
+FastAPI + SQLModel + MariaDB async, Python 3.14, uv.
 
 ## Skills to use
 
@@ -17,8 +17,10 @@ FastAPI + SQLModel + MariaDB async, Python 3.12, uv.
 - Re-run a single file: `cd api && uv run pytest tests/integration/endpoints/<feature>_test.py --tb=line -q`
 - `/server-dev` — start dev servers if needed
 - `/model-dto-audit` — before adding a model or DTO, check for field drift/duplication; factor shared fields into a mixin (single source of truth)
-- `/codebase-design` — when designing a service interface or deciding where a seam goes (deep-module vocabulary)
-- `/diagnosing-bugs` — when a test fails or behavior is unexpected and the cause isn't obvious; run the diagnosis loop before guessing at a fix
+- `/raises-arity` — before adding a `pytest.raises` test: one throwing call per block, setup hoisted above it
+- `/resolve-local-imports` — when ruff reports PLC0415 (import nested in a function) instead of adding a `# noqa`
+- `/mattpocock-skills:codebase-design` — when designing a service interface or deciding where a seam goes (deep-module vocabulary)
+- `/mattpocock-skills:diagnosing-bugs` — when a test fails or behavior is unexpected and the cause isn't obvious; run the diagnosis loop before guessing at a fix
 
 ## Implementation rules
 

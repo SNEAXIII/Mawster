@@ -1,4 +1,4 @@
-import { setupAdmin, BACKEND } from '../../support/e2e';
+import { setupAdmin } from '../../support/e2e';
 
 describe('Admin — champions list & filters', () => {
   let adminToken: string;
@@ -86,7 +86,8 @@ describe('Admin — champions list & filters', () => {
       // mid-exit-animation swallows the toggle and the content never remounts.
       cy.get('[role="menu"]').should('not.exist');
       cy.getByCy('filter-class').click();
-      cy.contains('[role="menuitemradio"]', 'All').click({ force: true });
+      cy.get('[role="menu"]').should('be.visible');
+      cy.contains('[role="menuitemradio"]', 'All').click();
       cy.getByCy('champion-row-Iron Man').should('be.visible');
       cy.getByCy('champion-row-Wolverine').should('be.visible');
     });

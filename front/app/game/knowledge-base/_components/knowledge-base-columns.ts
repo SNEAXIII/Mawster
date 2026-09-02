@@ -65,10 +65,10 @@ export function buildKnowledgeBaseColumns(
     { id: 'player', col: null, label: labels.player, compact: true },
     { id: 'attacker', col: 'champion_name', label: labels.attacker, compact: true },
     { id: 'defender', col: 'defender_champion_name', label: labels.defender, compact: true },
+    { id: 'node', col: 'node_number', label: labels.node, compact: true },
     // At most 2 synergies and 3 prefights per record — both fit in their content width.
     { id: 'synergies', col: null, label: labels.synergies, compact: true },
     { id: 'prefights', col: null, label: labels.prefights, compact: true },
-    { id: 'node', col: 'node_number', label: labels.node, compact: true },
     { id: 'ko', col: 'ko_count', label: labels.ko, compact: true },
     { id: 'alliance', col: 'alliance_name', label: labels.alliance, compact: true },
     { id: 'season', col: 'season_number', label: labels.season, compact: true },

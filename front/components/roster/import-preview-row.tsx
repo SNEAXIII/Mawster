@@ -36,10 +36,13 @@ export interface PreviewRow {
   // Set once the user picks a champion by hand. The model's margin no longer
   // describes this row, so the badge stops showing it.
   corrected?: boolean
+  // Excluded from the import by the user. The only way out for a row the model
+  // read as garbage and that no correction can rescue (a false detection).
+  ignored?: boolean
 }
 
 export type PreviewRowPatch = Partial<
-  Pick<PreviewRow, 'newRarity' | 'newSignature' | 'ascension' | 'champion_name'>
+  Pick<PreviewRow, 'newRarity' | 'newSignature' | 'ascension' | 'champion_name' | 'ignored'>
 >
 
 interface ImportPreviewRowProps {
@@ -62,16 +65,14 @@ export default function ImportPreviewRow({ row, index, onRowChange }: ImportPrev
     )
   }
 
+  const rowBackground = () => {
+    if (row.isNew) return 'bg-green-50 dark:bg-green-950/30'
+    if (row.hasChanges) return 'bg-blue-50 dark:bg-blue-950/30'
+    return ''
+  }
+
   return (
-    <div
-      className={`py-2.5 flex items-center gap-3 ${
-        row.isNew
-          ? 'bg-green-50 dark:bg-green-950/30'
-          : row.hasChanges
-            ? 'bg-blue-50 dark:bg-blue-950/30'
-            : ''
-      }`}
-    >
+    <div className={`py-2.5 flex items-center gap-3 ${rowBackground()}`}>
       {/* Champion portrait */}
       <div className='shrink-0'>
         <ChampionPortrait
@@ -97,7 +98,7 @@ export default function ImportPreviewRow({ row, index, onRowChange }: ImportPrev
 
       {/* Status badge + diff */}
       <div className='shrink-0 text-right text-xs whitespace-nowrap'>
-        {row.isNew ? (
+        {row.isNew && (
           <div>
             <span className='inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5'>
               {t.roster.importExport.badgeNew}
@@ -107,7 +108,8 @@ export default function ImportPreviewRow({ row, index, onRowChange }: ImportPrev
               {(row.ascension ?? 0) > 0 && ` · ${ascLabel} ${row.ascension}`}
             </div>
           </div>
-        ) : row.hasChanges ? (
+        )}
+        {!row.isNew && row.hasChanges && (
           <div className='space-y-0.5'>
             {row.oldRarity !== row.newRarity && (
               <div className='flex items-center gap-1 justify-end'>
@@ -142,7 +144,8 @@ export default function ImportPreviewRow({ row, index, onRowChange }: ImportPrev
               </div>
             )}
           </div>
-        ) : (
+        )}
+        {!row.isNew && !row.hasChanges && (
           <span className='text-gray-400 italic'>{t.roster.importExport.badgeUnchanged}</span>
         )}
       </div>

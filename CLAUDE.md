@@ -2,7 +2,7 @@
 
 Mawster — MCOC (Marvel Contest of Champions) alliance management tool.
 
-- **Backend**: FastAPI + SQLModel + MariaDB (async), Python 3.12, **uv**
+- **Backend**: FastAPI + SQLModel + MariaDB (async), Python 3.14, **uv**
 - **Frontend**: Next.js App Router, React 19, Tailwind CSS 4, shadcn/ui
 - **Auth**: Discord OAuth2 → NextAuth 5 → Backend JWT (HS256)
 - **i18n**: `useI18n()` hook — `front/app/i18n/locales/en.ts` & `fr.ts`
@@ -161,9 +161,11 @@ Tools: `ctx_batch_execute` (research) → `ctx_search` (follow-up) → `ctx_exec
 
 > After any MCP server modification (new tool, param, schema): tell user to **restart Claude Code**.
 
-Declared in `.mcp.json` — there is no other project MCP server:
+The project declares **no** MCP server of its own — there is no `.mcp.json`:
 
-- **context-mode**: keeps output out of context window
+- **context-mode** (keeps output out of the context window) comes from the plugin enabled in
+  `.claude/settings.json`. Its tools are prefixed `mcp__plugin_context-mode_context-mode__`.
+  Never re-declare it in a `.mcp.json`: it would load a second copy of every tool.
 
 GitHub operations (PRs, issues, reviews) go through the `gh` CLI. Backend tests, servers and E2E run as plain commands (`make`, `docker compose`, `scripts/e2e_parallel.py`) — see `docs/mcp.md`.
 

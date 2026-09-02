@@ -1,4 +1,4 @@
-import { setupDefenseOwner, setupDefenseOwnerAndMember } from '../../support/e2e';
+import { setupDefenseOwner, setupDefenseOwnerAndMember, openWarNode } from '../../support/e2e';
 
 interface Owner {
   tok: string;
@@ -47,7 +47,7 @@ function giveChampionAndPlace(
 
 // The champion selector is a dialog opened by clicking a node on the defense map.
 function openSelectorOnNode1() {
-  cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+  openWarNode(1);
 }
 
 // What a filter left on screen and what it removed — the two assertions every

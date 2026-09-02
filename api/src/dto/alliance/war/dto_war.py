@@ -5,6 +5,8 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.dto.admin.dto_champion import ChampionResponse
+from src.dto.mixins import PlayerIdentity, WarCoords
+from src.game_types import Ascension, KoCount, NodeNumber, Rank, Stars
 from src.Messages.war_messages import BANNED_CHAMPION_LIST_TOO_LONG
 
 MAX_BANNED_CHAMPIONS = 7
@@ -76,20 +78,18 @@ class WarResponse(BaseModel):
 
 
 class WarPlacementCreateRequest(BaseModel):
-    node_number: int = Field(..., ge=1, le=50)
+    node_number: NodeNumber
     champion_id: uuid.UUID
-    stars: int = Field(..., ge=6, le=7)
-    rank: int = Field(..., ge=1, le=6)
-    ascension: int = Field(default=0, ge=0, le=2)
+    stars: Stars
+    rank: Rank
+    ascension: Ascension = 0
 
 
-class WarPlacementResponse(BaseModel):
+class WarPlacementResponse(WarCoords):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     war_id: uuid.UUID
-    battlegroup: int
-    node_number: int
     champion_id: uuid.UUID
     champion_name: str
     champion_class: str
@@ -174,13 +174,11 @@ class WarAttackerAssignRequest(BaseModel):
 
 
 class WarKoUpdateRequest(BaseModel):
-    ko_count: int = Field(..., ge=0)
+    ko_count: KoCount
 
 
-class AvailableAttackerResponse(BaseModel):
+class AvailableAttackerResponse(PlayerIdentity):
     champion_user_id: uuid.UUID
-    game_account_id: uuid.UUID
-    game_pseudo: str
     champion_id: uuid.UUID
     champion_name: str
     champion_alias: str | None = None
@@ -194,11 +192,9 @@ class AvailableAttackerResponse(BaseModel):
     is_saga_defender: bool = False
 
 
-class AvailablePrefightAttackerResponse(BaseModel):
+class AvailablePrefightAttackerResponse(PlayerIdentity):
     model_config = ConfigDict(from_attributes=True)
     champion_user_id: uuid.UUID
-    game_account_id: uuid.UUID
-    game_pseudo: str
     champion_id: uuid.UUID
     champion_name: str
     champion_alias: str | None = None
@@ -216,13 +212,12 @@ class WarSynergyCreateRequest(BaseModel):
     target_champion_user_id: uuid.UUID
 
 
-class WarSynergyResponse(BaseModel):
+class WarSynergyResponse(PlayerIdentity):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     war_id: uuid.UUID
     battlegroup: int
-    game_account_id: uuid.UUID
     champion_user_id: uuid.UUID
     target_champion_user_id: uuid.UUID
     champion_name: str
@@ -233,7 +228,6 @@ class WarSynergyResponse(BaseModel):
     is_saga_attacker: bool = False
     is_saga_defender: bool = False
     target_champion_name: str
-    game_pseudo: str
     created_at: datetime
 
     @model_validator(mode="before")
@@ -277,16 +271,15 @@ class WarEndRequest(BaseModel):
 
 class WarPrefightCreateRequest(BaseModel):
     champion_user_id: uuid.UUID
-    target_node_number: int = Field(..., ge=1, le=50)
+    target_node_number: NodeNumber
 
 
-class WarPrefightResponse(BaseModel):
+class WarPrefightResponse(PlayerIdentity):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     war_id: uuid.UUID
     battlegroup: int
-    game_account_id: uuid.UUID
     champion_user_id: uuid.UUID
     target_node_number: int
     champion_name: str
@@ -296,7 +289,6 @@ class WarPrefightResponse(BaseModel):
     ascension: int = 0
     is_saga_attacker: bool = False
     is_saga_defender: bool = False
-    game_pseudo: str
     created_at: datetime
 
     @model_validator(mode="before")

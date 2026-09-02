@@ -26,8 +26,8 @@ import ast
 import sys
 from pathlib import Path
 
-# .claude/skills/raises-arity/scripts/ -> repo root -> api/tests
-DEFAULT_TARGET = Path(__file__).resolve().parents[4] / "api" / "tests"
+# scripts/ -> repo root -> api/tests
+DEFAULT_TARGET = Path(__file__).resolve().parents[1] / "api" / "tests"
 
 # Calls that do not count towards the budget. A UUID generator draws a random value and
 # has no failure mode a test could ever be asserting on, so hoisting it above the block

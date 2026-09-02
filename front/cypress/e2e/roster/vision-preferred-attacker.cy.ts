@@ -31,6 +31,8 @@ describe('Roster – Vision import preserves preferred attacker', () => {
       // Baseline: Hulk is the only preferred attacker.
       cy.getByCy('preferred-attacker-name').should('have.length', 1);
 
+      // The file input is visually hidden (class='hidden'), so selectFile cannot
+      // wait for it to be actionable — force is the only way to attach a fixture.
       cy.get('[data-cy="vision-input"]').selectFile('cypress/fixtures/vision/sample-roster.png', {
         force: true,
       });

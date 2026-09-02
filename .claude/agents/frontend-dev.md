@@ -16,8 +16,9 @@ Next.js 16 App Router, React 19, Tailwind CSS 4, shadcn/ui (Radix), TypeScript s
 - `/component-dedup-audit` — before creating a new component or hook, check whether an equivalent already exists; mutualise instead of copy-pasting
 - `/shadcn` — when adding, composing, or debugging a shadcn/ui component (never hand-roll one that exists in the registry)
 - `/split-e2e-tests` — when a Cypress spec has grown too big (many `it()` mixing concerns), split it into purpose-focused files
-- `/codebase-design` — when designing a component/hook interface or deciding where a seam goes (deep-module vocabulary)
-- `/diagnosing-bugs` — when something breaks or behaves unexpectedly and the cause isn't obvious; run the diagnosis loop before guessing at a fix
+- `/react-inspector` — before touching `front/babel.config.js` or when the front build slows down because of it
+- `/mattpocock-skills:codebase-design` — when designing a component/hook interface or deciding where a seam goes (deep-module vocabulary)
+- `/mattpocock-skills:diagnosing-bugs` — when something breaks or behaves unexpectedly and the cause isn't obvious; run the diagnosis loop before guessing at a fix
 
 ## E2E tests
 

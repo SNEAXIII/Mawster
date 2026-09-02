@@ -1,22 +1,21 @@
 import uuid
 from datetime import UTC, datetime
-from typing import Annotated
 
 from sqlmodel import Field, SQLModel
 
-# War-grid coordinate types — single source of truth for the bounds, shared by every
-# war/defense model so the constraints can never drift apart between tables.
-Battlegroup = Annotated[int, Field(ge=1, le=3)]
-NodeNumber = Annotated[int, Field(ge=1, le=50)]
-
-# Champion-stat types — same single-source-of-truth idea for the in-game stat ranges.
-# Used by both the canonical models (ChampionUser, WarDefensePlacement) and the war
-# fight-record snapshots, so a record can never silently store an out-of-range stat.
-Stars = Annotated[int, Field(ge=6, le=7)]
-Rank = Annotated[int, Field(ge=1, le=6)]
-Ascension = Annotated[int, Field(ge=0, le=2)]
-KoCount = Annotated[int, Field(ge=0)]
-
+# The bounded scalar types live in src.game_types so the DTOs can share them without
+# importing a model. Re-exported here because every model already reaches for them
+# through this module.
+from src.game_types import (  # noqa: F401
+    Ascension,
+    Battlegroup,
+    KoCount,
+    NodeNumber,
+    Rank,
+    Signature,
+    Stars,
+    Tier,
+)
 
 # Foreign-key targets, spelled once each. A table rename otherwise leaves stale strings
 # scattered across the models, and SQLModel only notices at mapper configuration time.
@@ -93,6 +92,37 @@ class PlacedByFk(SQLModel):
     """
 
     placed_by_id: uuid.UUID | None = Field(default=None, foreign_key=FK_GAME_ACCOUNT)
+
+
+class WarFk(SQLModel):
+    """Adds the FK to the ``war`` a row belongs to.
+
+    WarBan keeps its own indexed version; every other war-scoped table declares the
+    column here rather than restating it.
+    """
+
+    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
+
+
+class WarCoords(SQLModel):
+    """Adds the pair of coordinates locating a row on the war map.
+
+    Battlegroup and node always travel together: a node number means nothing without
+    the battlegroup it belongs to.
+    """
+
+    battlegroup: Battlegroup
+    node_number: NodeNumber
+
+
+class SoftDelete(SQLModel):
+    """Adds the soft-delete timestamp.
+
+    A deleted row keeps its history readable — past wars, placements and stats still
+    resolve — so deletion is a timestamp, never a DELETE.
+    """
+
+    deleted_at: datetime | None = Field(default=None)
 
 
 class AllianceFk(SQLModel):

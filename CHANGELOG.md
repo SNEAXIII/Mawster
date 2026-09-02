@@ -3,6 +3,24 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.7.0](https://github.com/SNEAXIII/Mawster/compare/v1.6.3...v1.7.0) (2026-09-02)
+
+
+### Ajouté
+
+* show node before synergies in knowledge base table ([#478](https://github.com/SNEAXIII/Mawster/issues/478)) ([be39932](https://github.com/SNEAXIII/Mawster/commit/be39932f13926e5d4b408e368792891dce318ceb))
+
+
+### Corrigé
+
+* block unreadable rows in AI import instead of failing the whole batch ([#479](https://github.com/SNEAXIII/Mawster/issues/479)) ([7b659c9](https://github.com/SNEAXIII/Mawster/commit/7b659c97cae0092804cd046a5ef5055aef021270))
+
+
+### Modifié
+
+* factor the repeated model and DTO fields into mixins ([8f66878](https://github.com/SNEAXIII/Mawster/commit/8f668789be606fe934af3fbcdca85e4a63a2aeb0))
+* replace nested ternaries with lookups and guards ([#480](https://github.com/SNEAXIII/Mawster/issues/480)) ([e4e8c33](https://github.com/SNEAXIII/Mawster/commit/e4e8c337a76a3257653f0e8178a01e22d4219e7e))
+
 ## [1.6.3](https://github.com/SNEAXIII/Mawster/compare/v1.6.2...v1.6.3) (2026-09-01)
 
 

@@ -1,4 +1,11 @@
-import { setupUser, setupDefenseOwner, setupDefenseOwnerAndMember, setupOwnerMemberAlliance } from '../../support/e2e';
+import {
+  setupUser,
+  setupDefenseOwner,
+  setupDefenseOwnerAndMember,
+  setupOwnerMemberAlliance,
+  openWarNode,
+  seedDefender,
+} from '../../support/e2e';
 
 describe('Defense – Permissions', () => {
   beforeEach(() => {
@@ -22,11 +29,14 @@ describe('Defense – Permissions', () => {
   it('clear all button is visible when defenders are placed (owner)', () => {
     setupDefenseOwner('def-perm-clr', 'ClrOwnPlyr', 'ClrOwnAll', 'CO').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy
-            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
-        );
+        seedDefender({
+          adminToken: adminData.access_token,
+          ownerToken: ownerData.access_token,
+          allianceId,
+          gameAccountId: ownerAccId,
+          name: 'Spider-Man',
+          championClass: 'Cosmic',
+        });
 
         cy.apiLogin(ownerData.user_id, 'defense');
         cy.getByCy('defense-clear-all').should('be.visible');
@@ -37,11 +47,14 @@ describe('Defense – Permissions', () => {
   it('clear all button is hidden from a regular member even with placements', () => {
     setupDefenseOwnerAndMember('def-perm-clr-mem', 'ClrMemOwn', 'ClrMember', 'ClrMemAll', 'CM').then(
       ({ adminData, ownerData, memberData, allianceId, ownerAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
-          cy
-            .apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3')
-            .then((cu) => cy.apiPlaceDefender(ownerData.access_token, allianceId, 1, 1, cu.id, ownerAccId)),
-        );
+        seedDefender({
+          adminToken: adminData.access_token,
+          ownerToken: ownerData.access_token,
+          allianceId,
+          gameAccountId: ownerAccId,
+          name: 'Spider-Man',
+          championClass: 'Cosmic',
+        });
 
         cy.apiLogin(memberData.user_id, 'defense');
         cy.getByCy('defense-clear-all').should('not.exist');
@@ -70,7 +83,7 @@ describe('Defense – Permissions', () => {
     setupOwnerMemberAlliance('def-perm-click', 'ClickOwn', 'ClickMem', 'ClickAll', 'CK').then(({ memberData }) => {
       cy.apiLogin(memberData.user_id, 'defense');
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       // Selector dialog should NOT appear
       cy.contains('Select Champion').should('not.exist');
     });

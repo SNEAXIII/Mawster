@@ -1,4 +1,4 @@
-import { setupRosterUser, BACKEND } from '../../support/e2e';
+import { setupRosterUser } from '../../support/e2e';
 
 describe('Roster – Champion Upgrade', () => {
   beforeEach(() => {
@@ -21,7 +21,7 @@ describe('Roster – Champion Upgrade', () => {
         cy.getByCy('rarity-group-7r1').contains('Hercules').should('be.visible');
 
         // Click the upgrade button on the champion card
-        cy.getByCy('champion-upgrade').first().click({ force: true });
+        cy.getByCy('champion-upgrade').first().focus().click();
 
         // Confirm upgrade in the dialog
         cy.get('[role="alertdialog"]').should('be.visible');
@@ -62,10 +62,7 @@ describe('Roster – Champion Upgrade', () => {
     setupRosterUser('upg-past', 'MaxPastPlayer').then(({ adminData, userData, accountId }) => {
       cy.apiLoadChampion(adminData.access_token, 'MaxPastHero', 'Skill').then((champs) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r6').then((cu) => {
-          cy.request({
-            method: 'PATCH',
-            url: `${BACKEND}/champion-users/${cu.id}/upgrade`,
-            headers: { Authorization: `Bearer ${userData.access_token}` },
+          cy.apiRequest(userData.access_token, 'PATCH', `/champion-users/${cu.id}/upgrade`, undefined, {
             failOnStatusCode: false,
           }).then((res) => {
             expect(res.status).to.be.oneOf([400, 422]);
@@ -90,17 +87,17 @@ describe('Roster – Champion Upgrade', () => {
         cy.getByCy('rarity-group-7r1').contains('MultUpHero').should('be.visible');
 
         // Upgrade 7r1 → 7r2
-        cy.getByCy('champion-upgrade').first().click({ force: true });
+        cy.getByCy('champion-upgrade').first().focus().click();
         cy.get('[role="alertdialog"]').contains('button', 'Upgrade').click();
         cy.getByCy('rarity-group-7r2').contains('MultUpHero').should('be.visible');
 
         // Upgrade 7r2 → 7r3
-        cy.getByCy('champion-upgrade').first().click({ force: true });
+        cy.getByCy('champion-upgrade').first().focus().click();
         cy.get('[role="alertdialog"]').contains('button', 'Upgrade').click();
         cy.getByCy('rarity-group-7r3').contains('MultUpHero').should('be.visible');
 
         // Upgrade 7r3 → 7r4
-        cy.getByCy('champion-upgrade').first().click({ force: true });
+        cy.getByCy('champion-upgrade').first().focus().click();
         cy.get('[role="alertdialog"]').contains('button', 'Upgrade').click();
         cy.getByCy('rarity-group-7r4').contains('MultUpHero').should('be.visible');
       });

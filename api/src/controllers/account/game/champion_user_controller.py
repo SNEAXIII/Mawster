@@ -32,7 +32,7 @@ async def _get_own_champion_user(
     session: SessionDep,
     champion_user_id: uuid.UUID,
     current_user_id: uuid.UUID,
-) -> "ChampionUser":
+) -> ChampionUser:
     """Load a champion user and verify it belongs to the current user. Raises 404/403."""
     champion_user = await ChampionUserService.get_champion_user(session, champion_user_id)
     if champion_user is None:

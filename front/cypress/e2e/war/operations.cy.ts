@@ -1,4 +1,4 @@
-import { setupWarOwner, setupAttackerScenario } from '../../support/e2e';
+import { setupWarOwner, setupAttackerScenario, openWarNode } from '../../support/e2e';
 
 describe('War – Operations (declare, place, remove)', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('War – Operations (declare, place, remove)', () => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'PlaceEnemy').then(() => {
         cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('war-champion-search').type('Iron Man');
         cy.getByCy('war-champion-card-Iron-Man').click();
         cy.getByCy('war-confirm-place').click();
@@ -55,7 +55,7 @@ describe('War – Operations (declare, place, remove)', () => {
             cy.getByCy('war-mode-defenders').click();
 
             cy.getByCy('war-node-5').scrollIntoView().should('not.contain', '+');
-            cy.getByCy('war-node-5').find('button').click({ force: true });
+            cy.getByCy('war-node-5').find('button').focus().click();
 
             cy.contains('Defender removed').should('be.visible');
             cy.getByCy('war-node-5').should('contain', '+');
@@ -91,7 +91,7 @@ describe('War – Operations (declare, place, remove)', () => {
       cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-mode-defenders').click();
 
-      cy.getByCy('war-node-10').scrollIntoView().click({ force: true });
+      openWarNode(10);
       cy.getByCy('attacker-entry-node-10').should('be.visible');
     });
   });
@@ -101,7 +101,7 @@ describe('War – Operations (declare, place, remove)', () => {
       cy.apiLogin(ownerData.user_id, 'war');
       cy.getByCy('war-mode-defenders').click();
 
-      cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+      openWarNode(1);
       cy.getByCy('attacker-entry-node-1').should('not.exist');
     });
   });
@@ -114,7 +114,7 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.apiLogin(ownerData.user_id, 'war');
         cy.getByCy('war-mode-defenders').click();
 
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('war-champion-search').should('be.visible');
 
         // Close via Escape — regression: hand-rolled overlay didn't support Escape
@@ -122,7 +122,7 @@ describe('War – Operations (declare, place, remove)', () => {
         cy.getByCy('war-champion-search').should('not.exist');
 
         // Page should still be functional — reopen the selector
-        cy.getByCy('war-node-1').scrollIntoView().click({ force: true });
+        openWarNode(1);
         cy.getByCy('war-champion-search').should('be.visible');
       });
     });

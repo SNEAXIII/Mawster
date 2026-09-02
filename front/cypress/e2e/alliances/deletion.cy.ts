@@ -46,14 +46,12 @@ describe('Alliances – Deletion', () => {
   // =========================================================================
 
   it('leader cannot delete while another member remains', () => {
-    setupOwnerMemberAlliance('del-busy', 'BusyOwner', 'BusyMember', 'BusyAlliance', 'BUSY').then(
-      ({ ownerData }) => {
-        cy.apiLogin(ownerData.user_id, 'alliances');
+    setupOwnerMemberAlliance('del-busy', 'BusyOwner', 'BusyMember', 'BusyAlliance', 'BUSY').then(({ ownerData }) => {
+      cy.apiLogin(ownerData.user_id, 'alliances');
 
-        cy.getByCy('alliance-card-BusyAlliance').should('be.visible');
-        cy.getByCy('alliance-delete-toggle').should('be.disabled');
-      },
-    );
+      cy.getByCy('alliance-card-BusyAlliance').should('be.visible');
+      cy.getByCy('alliance-delete-toggle').should('be.disabled');
+    });
   });
 
   // =========================================================================

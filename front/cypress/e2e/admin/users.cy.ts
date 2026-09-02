@@ -1,4 +1,4 @@
-import { setupUser, BACKEND } from '../../support/e2e';
+import { setupUser, confirmAction } from '../../support/e2e';
 
 // Every row action follows the same shape: optionally put the user in the state
 // the action needs, run it from the row menu, then assert the row's new state.
@@ -68,17 +68,12 @@ describe('Admin — users panel', () => {
   function runRowAction(action: 'promote' | 'demote' | 'disable' | 'enable' | 'delete-user') {
     openUsersTab();
     cy.getByCy(`user-row-${regularUserLogin}`).find('button').first().click();
-    cy.getByCy(`${action}-${regularUserLogin}`).click();
-    cy.getByCy('confirmation-dialog-confirm').click();
+    confirmAction(`${action}-${regularUserLogin}`);
   }
 
   // Put the user in the state an action needs, without going through the UI.
   function adminPatch(action: 'promote' | 'disable') {
-    cy.request({
-      method: 'PATCH',
-      url: `${BACKEND}/admin/users/${action}/${regularUserId}`,
-      headers: { Authorization: `Bearer ${superAdminToken}` },
-    });
+    cy.apiRequest(superAdminToken, 'PATCH', `/admin/users/${action}/${regularUserId}`);
   }
 
   it('user list visible with correct role badge', () => {

@@ -4,6 +4,9 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from src.dto.mixins import PlayerIdentity
+from src.game_types import Battlegroup, Tier
+
 
 class AllianceCreateRequest(BaseModel):
     """DTO to create a new alliance. The owner is the game account that creates it."""
@@ -28,14 +31,12 @@ class AllianceMemberResponse(BaseModel):
     is_officer: bool = False
 
 
-class AllianceOfficerResponse(BaseModel):
+class AllianceOfficerResponse(PlayerIdentity):
     """An officer (officer) of an alliance."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    game_account_id: uuid.UUID
-    game_pseudo: str
     assigned_at: datetime
 
     @model_validator(mode="before")
@@ -122,7 +123,7 @@ class AllianceAddMemberRequest(BaseModel):
 class AllianceSetGroupRequest(BaseModel):
     """DTO to assign a member to a group (1, 2, 3) or remove from group (null)."""
 
-    group: int | None = Field(None, ge=1, le=3, examples=[1])
+    group: Battlegroup | None = Field(None, examples=[1])
 
 
 class AllianceRoleEntry(BaseModel):
@@ -152,7 +153,7 @@ class AllianceUpdateEloRequest(BaseModel):
 
 
 class AllianceUpdateTierRequest(BaseModel):
-    tier: int = Field(..., ge=1, le=20)
+    tier: Tier
 
 
 class AllianceDeleteRequest(BaseModel):

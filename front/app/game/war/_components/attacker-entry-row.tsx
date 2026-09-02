@@ -58,6 +58,8 @@ export default function AttackerEntryRow({
   const swordsSize = isFull ? 'w-6 h-6' : 'w-3 h-3'
   const boxPaddingSize = isFull ? 'px-7 py-2' : 'px-2 py-1.5'
 
+  const showAttackerActions = Boolean(placement.attacker_champion_user_id) && !readonly
+
   return (
     <div
       className={cn(
@@ -70,7 +72,7 @@ export default function AttackerEntryRow({
       data-attacker={placement.attacker_champion_name ?? ''}
     >
       <div className='flex items-center gap-1 shrink-0'>
-        {placement.attacker_champion_user_id && !readonly ? (
+        {showAttackerActions && (
           <NodeActionsPopover
             nodeNumber={placement.node_number}
             gameAccountId={placement.attacker_game_account_id ?? ''}
@@ -84,7 +86,8 @@ export default function AttackerEntryRow({
             is_saga_defender={placement.attacker_is_saga_defender ?? false}
             canManage={!isVisitor}
           />
-        ) : placement.attacker_image_url ? (
+        )}
+        {!showAttackerActions && placement.attacker_image_url && (
           <ChampionPortrait
             imageUrl={placement.attacker_image_url}
             name={placement.attacker_champion_name ?? ''}
@@ -96,7 +99,8 @@ export default function AttackerEntryRow({
             is_saga_defender={placement.attacker_is_saga_defender ?? false}
             sagaMode='attacker'
           />
-        ) : (
+        )}
+        {!showAttackerActions && !placement.attacker_image_url && (
           <div
             className='rounded shrink-0 bg-muted border border-dashed border-muted-foreground/40 flex items-center justify-center text-muted-foreground/60'
             style={{ width: portraitSize - 8, height: portraitSize - 8 }}
