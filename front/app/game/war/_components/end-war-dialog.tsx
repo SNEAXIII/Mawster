@@ -36,7 +36,7 @@ export default function EndWarDialog({
   const [confirmInput, setConfirmInput] = useState('')
 
   const parsedElo = eloInput === '' ? null : Number(eloInput)
-  const eloValid = !hasSeason || (parsedElo !== null && !isNaN(parsedElo) && parsedElo > 0)
+  const eloValid = !hasSeason || (parsedElo !== null && !Number.isNaN(parsedElo) && parsedElo > 0)
   const signedElo = parsedElo === null ? null : win ? parsedElo : -parsedElo
   // Mirrors the backend clamp in WarService.end_war so the preview never
   // promises an ELO the API will not actually store.

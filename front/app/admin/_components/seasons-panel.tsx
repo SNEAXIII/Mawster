@@ -47,8 +47,8 @@ export default function SeasonsPanel() {
   }, [])
 
   const handleCreate = async () => {
-    const n = parseInt(newNumber, 10)
-    if (isNaN(n)) return
+    const n = Number.parseInt(newNumber, 10)
+    if (Number.isNaN(n)) return
     try {
       await createSeason(n, newFormat)
       setNewNumber('')

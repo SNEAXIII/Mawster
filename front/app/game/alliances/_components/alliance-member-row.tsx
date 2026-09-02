@@ -57,7 +57,7 @@ export default function AllianceMemberRow({
     (groupCounts[g] ?? 0) >= MAX_PER_GROUP && member.alliance_group !== g
 
   const handleSetGroup = async (val: string) => {
-    const group = val === 'none' ? null : parseInt(val)
+    const group = val === 'none' ? null : Number.parseInt(val)
     setIsChangingGroup(true)
     try {
       await setMemberGroup(allianceId, member.id, group)

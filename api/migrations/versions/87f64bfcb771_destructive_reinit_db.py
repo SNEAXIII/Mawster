@@ -18,6 +18,12 @@ down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+game_account_id = "game_account.id"
+champion_id = "champion.id"
+alliance_id = "alliance.id"
+champion_user_id = "champion_user.id"
+war_id = "war.id"
+
 
 def upgrade() -> None:
     """Upgrade schema."""
@@ -29,7 +35,7 @@ def upgrade() -> None:
         sa.Column("tag", sqlmodel.sql.sqltypes.AutoString(length=5), nullable=False),
         sa.Column("owner_id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(["owner_id"], ["game_account.id"], use_alter=True),
+        sa.ForeignKeyConstraint(["owner_id"], [game_account_id], use_alter=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -84,7 +90,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["alliance_id"],
-            ["alliance.id"],
+            [alliance_id],
         ),
         sa.ForeignKeyConstraint(
             ["user_id"],
@@ -118,15 +124,15 @@ def upgrade() -> None:
         sa.Column("responded_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(
             ["alliance_id"],
-            ["alliance.id"],
+            [alliance_id],
         ),
         sa.ForeignKeyConstraint(
             ["game_account_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.ForeignKeyConstraint(
             ["invited_by_game_account_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -138,11 +144,11 @@ def upgrade() -> None:
         sa.Column("assigned_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["alliance_id"],
-            ["alliance.id"],
+            [alliance_id],
         ),
         sa.ForeignKeyConstraint(
             ["game_account_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -158,11 +164,11 @@ def upgrade() -> None:
         sa.Column("ascension", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["champion_id"],
-            ["champion.id"],
+            [champion_id],
         ),
         sa.ForeignKeyConstraint(
             ["game_account_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -177,11 +183,11 @@ def upgrade() -> None:
         sa.Column("season_id", sa.Uuid(), nullable=True),
         sa.ForeignKeyConstraint(
             ["alliance_id"],
-            ["alliance.id"],
+            [alliance_id],
         ),
         sa.ForeignKeyConstraint(
             ["created_by_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.ForeignKeyConstraint(
             ["season_id"],
@@ -201,19 +207,19 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["alliance_id"],
-            ["alliance.id"],
+            [alliance_id],
         ),
         sa.ForeignKeyConstraint(
             ["champion_user_id"],
-            ["champion_user.id"],
+            [champion_user_id],
         ),
         sa.ForeignKeyConstraint(
             ["game_account_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.ForeignKeyConstraint(
             ["placed_by_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("alliance_id", "battlegroup", "node_number", name="uq_defense_node"),
@@ -228,11 +234,11 @@ def upgrade() -> None:
         sa.Column("done_at", sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(
             ["champion_user_id"],
-            ["champion_user.id"],
+            [champion_user_id],
         ),
         sa.ForeignKeyConstraint(
             ["requester_game_account_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -243,11 +249,11 @@ def upgrade() -> None:
         sa.Column("champion_id", sa.Uuid(), nullable=False),
         sa.ForeignKeyConstraint(
             ["champion_id"],
-            ["champion.id"],
+            [champion_id],
         ),
         sa.ForeignKeyConstraint(
             ["war_id"],
-            ["war.id"],
+            [war_id],
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("war_id", "champion_id", name="uq_war_ban_champion"),
@@ -269,19 +275,19 @@ def upgrade() -> None:
         sa.Column("ko_count", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
             ["attacker_champion_user_id"],
-            ["champion_user.id"],
+            [champion_user_id],
         ),
         sa.ForeignKeyConstraint(
             ["champion_id"],
-            ["champion.id"],
+            [champion_id],
         ),
         sa.ForeignKeyConstraint(
             ["placed_by_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.ForeignKeyConstraint(
             ["war_id"],
-            ["war.id"],
+            [war_id],
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("war_id", "battlegroup", "node_number", name="uq_war_defense_node"),
@@ -297,15 +303,15 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["champion_user_id"],
-            ["champion_user.id"],
+            [champion_user_id],
         ),
         sa.ForeignKeyConstraint(
             ["game_account_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.ForeignKeyConstraint(
             ["war_id"],
-            ["war.id"],
+            [war_id],
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
@@ -327,19 +333,19 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
             ["champion_user_id"],
-            ["champion_user.id"],
+            [champion_user_id],
         ),
         sa.ForeignKeyConstraint(
             ["game_account_id"],
-            ["game_account.id"],
+            [game_account_id],
         ),
         sa.ForeignKeyConstraint(
             ["target_champion_user_id"],
-            ["champion_user.id"],
+            [champion_user_id],
         ),
         sa.ForeignKeyConstraint(
             ["war_id"],
-            ["war.id"],
+            [war_id],
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(

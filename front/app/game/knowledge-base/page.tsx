@@ -7,7 +7,7 @@ import HistoryTab from './_components/history-tab'
 import MatchupsTab from './_components/matchups-tab'
 
 type KnowledgeBaseTab = 'history' | 'matchups'
-const TABS: KnowledgeBaseTab[] = ['history', 'matchups']
+const TABS = new Set<KnowledgeBaseTab>(['history', 'matchups'])
 
 function KnowledgeBaseContent() {
   const { t } = useI18n()
@@ -17,7 +17,7 @@ function KnowledgeBaseContent() {
 
   const initialTab = searchParams.get('tab') as KnowledgeBaseTab
   const [activeTab, setActiveTab] = useState<KnowledgeBaseTab>(
-    TABS.includes(initialTab) ? initialTab : 'history'
+    TABS.has(initialTab) ? initialTab : 'history'
   )
 
   const isFirstRender = useRef(true)
