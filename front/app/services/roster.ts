@@ -101,7 +101,7 @@ export function getStarFrameUrl(rarity: string): string {
 
 /** Extract the rank part from a rarity string, e.g. '7r5' → 'R5' */
 export function getRankLabel(rarity: string): string {
-  const parts = rarity.match(/(\d+)r(\d+)/)
+  const parts = rarity.match(/^(\d+)r(\d+)$/)
   if (!parts) return rarity.toUpperCase()
   return `R${parts[2]}`
 }
