@@ -5,13 +5,12 @@ from sqlmodel import Relationship
 
 from src.models.Base import (
     AllianceFk,
-    Battlegroup,
     ChampionUserFk,
     GameAccountFk,
-    NodeNumber,
     PlacedByFk,
     TimestampMixin,
     UUIDBase,
+    WarCoords,
 )
 
 if TYPE_CHECKING:
@@ -27,15 +26,13 @@ class DefensePlacement(
     AllianceFk,
     GameAccountFk,
     TimestampMixin,
+    WarCoords,
     table=True,
 ):
     __tablename__ = "defense_placement"
     __table_args__ = (
         sa.UniqueConstraint("alliance_id", "battlegroup", "node_number", name="uq_defense_node"),
     )
-
-    battlegroup: Battlegroup
-    node_number: NodeNumber
 
     # Relations
     alliance: "Alliance" = Relationship(

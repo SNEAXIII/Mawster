@@ -1,23 +1,22 @@
-import uuid
 from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
 from src.models.Base import (
-    FK_WAR,
     AllianceFk,
     Ascension,
-    Battlegroup,
     ChampionFk,
     DefenderChampionFk,
     GameAccountFk,
     KoCount,
-    NodeNumber,
     Rank,
     SeasonFk,
     Stars,
+    Tier,
     TimestampMixin,
     UUIDBase,
+    WarCoords,
+    WarFk,
 )
 
 if TYPE_CHECKING:
@@ -38,14 +37,13 @@ class WarFightRecord(
     ChampionFk,
     TimestampMixin,
     GameAccountFk,
+    WarFk,
+    WarCoords,
     table=True,
 ):
     __tablename__ = "war_fight_record"
 
-    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
-    battlegroup: Battlegroup
-    node_number: NodeNumber
-    tier: int
+    tier: Tier
     stars: Stars
     rank: Rank
     ascension: Ascension

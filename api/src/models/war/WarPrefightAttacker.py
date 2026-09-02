@@ -1,17 +1,16 @@
-import uuid
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
-from sqlmodel import Field, Relationship
+from sqlmodel import Relationship
 
 from src.models.Base import (
-    FK_WAR,
     Battlegroup,
     ChampionUserFk,
     GameAccountFk,
     NodeNumber,
     TimestampMixin,
     UUIDBase,
+    WarFk,
 )
 
 if TYPE_CHECKING:
@@ -20,7 +19,9 @@ if TYPE_CHECKING:
     from src.models.war.War import War
 
 
-class WarPrefightAttacker(UUIDBase, ChampionUserFk, TimestampMixin, GameAccountFk, table=True):
+class WarPrefightAttacker(
+    UUIDBase, ChampionUserFk, TimestampMixin, GameAccountFk, WarFk, table=True
+):
     __tablename__ = "war_prefight_attacker"
     __table_args__ = (
         sa.UniqueConstraint(
@@ -32,7 +33,6 @@ class WarPrefightAttacker(UUIDBase, ChampionUserFk, TimestampMixin, GameAccountF
         ),
     )
 
-    war_id: uuid.UUID = Field(foreign_key=FK_WAR)
     battlegroup: Battlegroup
     target_node_number: NodeNumber
 
