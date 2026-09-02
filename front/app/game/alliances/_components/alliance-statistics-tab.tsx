@@ -160,6 +160,16 @@ export default function AllianceStatisticsTab({
     // reset affordance has to show.
     (seasons.length > 0 && selectedSeasonId !== null && selectedSeasonId !== seasons[0].id)
 
+  // A war selection keeps the table on screen even when the season has no rows yet:
+  // the war's own stats are what the user asked for.
+  const resolveStatsView = () => {
+    if (statsLoading) return 'loading'
+    if (statsError) return 'error'
+    if (seasonStats.length === 0 && selectedWarId === null) return 'empty'
+    return 'ready'
+  }
+  const statsView = resolveStatsView()
+
   return (
     <div className='flex flex-col gap-4'>
       {rankingSeasonStatus === 'ended' && rankingSeasonNumber !== null && (
@@ -189,9 +199,10 @@ export default function AllianceStatisticsTab({
         />
       </CollapsibleSection>
 
-      {statsLoading ? (
+      {statsView === 'loading' && (
         <p className='text-sm text-muted-foreground py-6 text-center'>{stat.loading}</p>
-      ) : statsError ? (
+      )}
+      {statsView === 'error' && (
         <div className='flex flex-col items-center gap-2 py-6'>
           <p className='text-sm text-destructive'>{statsError}</p>
           <Button
@@ -202,14 +213,16 @@ export default function AllianceStatisticsTab({
             {stat.retry}
           </Button>
         </div>
-      ) : seasonStats.length === 0 && selectedWarId === null ? (
+      )}
+      {statsView === 'empty' && (
         <p
           className='text-sm text-muted-foreground py-6 text-center'
           data-cy='statistics-empty'
         >
           {stat.empty}
         </p>
-      ) : (
+      )}
+      {statsView === 'ready' && (
         <>
           <div className='flex flex-wrap items-center gap-3'>
             <Select

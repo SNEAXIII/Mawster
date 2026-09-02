@@ -55,7 +55,8 @@ export function ChampionDetailModal({
 
   const SortHead = ({ field, label }: { field: SortField; label: string }) => {
     const active = sortField === field
-    const Icon = active ? (sortDir === 'asc' ? ChevronUp : ChevronDown) : ChevronsUpDown
+    const DirectionIcon = sortDir === 'asc' ? ChevronUp : ChevronDown
+    const Icon = active ? DirectionIcon : ChevronsUpDown
     return (
       <TableHead className='text-right'>
         <button

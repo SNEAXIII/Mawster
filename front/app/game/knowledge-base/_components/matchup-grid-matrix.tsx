@@ -40,6 +40,18 @@ export default function MatchupGridMatrix({ defenders, nodes, cells, columns }: 
     if (nodeEntry) setSelected({ defender: row, node: nodeEntry, cell })
   }
 
+  const cellContent = (cell: MatchupGridCell | null) => {
+    if (!cell) return ''
+    if (cell.is_discouraged)
+      return (
+        <X
+          className='h-4 w-4 text-destructive'
+          aria-label={kb.verdictDiscouraged}
+        />
+      )
+    return <span className={`${SCORE_BADGE_CLASS} ${scoreClass(cell.score)}`}>{cell.score}</span>
+  }
+
   return (
     <>
       <table
@@ -95,18 +107,7 @@ export default function MatchupGridMatrix({ defenders, nodes, cells, columns }: 
                     data-cy-node={String(node)}
                     onClick={() => cell && openDetail(row, node, cell)}
                   >
-                    {!cell ? (
-                      ''
-                    ) : cell.is_discouraged ? (
-                      <X
-                        className='h-4 w-4 text-destructive'
-                        aria-label={kb.verdictDiscouraged}
-                      />
-                    ) : (
-                      <span className={`${SCORE_BADGE_CLASS} ${scoreClass(cell.score)}`}>
-                        {cell.score}
-                      </span>
-                    )}
+                    {cellContent(cell)}
                   </td>
                 )
               })}

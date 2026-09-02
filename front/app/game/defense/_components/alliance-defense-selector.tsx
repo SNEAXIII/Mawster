@@ -250,13 +250,15 @@ export default function AllianceDefenseSelector({
               />
             </div>
             <div className='overflow-y-auto flex-1 pr-1 mt-3'>
-              {!ready ? (
+              {!ready && (
                 <p className='text-muted-foreground text-sm text-center py-8'>{t.common.loading}</p>
-              ) : filtered.length === 0 ? (
+              )}
+              {ready && filtered.length === 0 && (
                 <p className='text-muted-foreground text-sm text-center py-8'>
                   {t.game.defense.noChampionsAvailable}
                 </p>
-              ) : (
+              )}
+              {ready && filtered.length > 0 && (
                 <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
                   {filtered.map((champ) => {
                     const classColors = getClassColors(champ.champion_class)

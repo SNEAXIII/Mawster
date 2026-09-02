@@ -16,8 +16,14 @@ interface CustomDotProps {
   payload?: RankingHistoryPoint
 }
 
+function dotColor(win: RankingHistoryPoint['win'] | undefined) {
+  if (win === true) return '#22c55e'
+  if (win === false) return '#ef4444'
+  return '#94a3b8'
+}
+
 function WinLossDot({ cx = 0, cy = 0, payload }: CustomDotProps) {
-  const color = payload?.win === true ? '#22c55e' : payload?.win === false ? '#ef4444' : '#94a3b8'
+  const color = dotColor(payload?.win)
   return (
     <Dot
       cx={cx}

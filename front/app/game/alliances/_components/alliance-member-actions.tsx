@@ -66,6 +66,14 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false)
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false)
 
+  const actionErrors: Record<AllianceMemberAction, string> = {
+    [AllianceMemberAction.PROMOTE]: t.game.alliances.officerAddError,
+    [AllianceMemberAction.DEMOTE]: t.game.alliances.officerRemoveError,
+    [AllianceMemberAction.TRANSFER_OWNER]: t.game.alliances.transferOwnerError,
+    [AllianceMemberAction.LEAVE]: t.game.alliances.leaveError,
+    [AllianceMemberAction.REMOVE]: t.game.alliances.memberRemoveError,
+  }
+
   const handleAction = async (action: AllianceMemberAction) => {
     setIsLoading((prev) => ({ ...prev, [action]: true }))
     try {
@@ -100,16 +108,7 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
       onRefresh()
     } catch (err: unknown) {
       console.error(err)
-      const errorMsg =
-        action === AllianceMemberAction.PROMOTE
-          ? t.game.alliances.officerAddError
-          : action === AllianceMemberAction.DEMOTE
-            ? t.game.alliances.officerRemoveError
-            : action === AllianceMemberAction.TRANSFER_OWNER
-              ? t.game.alliances.transferOwnerError
-              : action === AllianceMemberAction.LEAVE
-                ? t.game.alliances.leaveError
-                : t.game.alliances.memberRemoveError
+      const errorMsg = actionErrors[action]
       const errMessage = err instanceof Error ? err.message : undefined
       toast.error(errMessage || errorMsg)
     } finally {

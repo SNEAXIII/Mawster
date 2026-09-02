@@ -45,9 +45,10 @@ export function ProfileStatsTab() {
         onSeasonChange={vm.setSeasonId}
       />
 
-      {vm.loading && !vm.stats ? (
+      {vm.loading && !vm.stats && (
         <p className='text-sm text-muted-foreground py-6 text-center'>{s.loading}</p>
-      ) : vm.error && !vm.stats ? (
+      )}
+      {!vm.loading && vm.error && !vm.stats && (
         <div className='flex flex-col items-center gap-2 py-6'>
           <p className='text-sm text-destructive'>{s.error}</p>
           <Button
@@ -58,7 +59,8 @@ export function ProfileStatsTab() {
             {s.retry}
           </Button>
         </div>
-      ) : vm.stats ? (
+      )}
+      {vm.stats && (
         <>
           <div
             className={`flex flex-col lg:flex-row gap-6 transition-opacity ${vm.loading ? 'opacity-60' : ''}`}
@@ -99,7 +101,7 @@ export function ProfileStatsTab() {
             playerName={currentName}
           />
         </>
-      ) : null}
+      )}
     </div>
   )
 }

@@ -25,6 +25,11 @@ export default function MasteryMiniView({
   const [mode, setMode] = useState<MasteryMode>(defaultMode)
 
   const modes: MasteryMode[] = ['all', 'offense', 'defense']
+  const modeLabels: Record<MasteryMode, string> = {
+    all: t.mastery.modeAll,
+    offense: t.mastery.modeOffense,
+    defense: t.mastery.modeDefense,
+  }
 
   if (masteries.length === 0) {
     return <p className='text-sm text-muted-foreground'>{t.mastery.noMasteries}</p>
@@ -44,11 +49,7 @@ export default function MasteryMiniView({
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            {m === 'all'
-              ? t.mastery.modeAll
-              : m === 'offense'
-                ? t.mastery.modeOffense
-                : t.mastery.modeDefense}
+            {modeLabels[m]}
           </button>
         ))}
       </div>

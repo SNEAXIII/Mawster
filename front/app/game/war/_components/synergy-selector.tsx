@@ -82,11 +82,13 @@ export default function SynergySelectorDialog({
           />
         </div>
         <div className='overflow-y-auto p-4'>
-          {loading ? (
+          {loading && (
             <p className='text-sm text-muted-foreground'>{t.game.war.availableAttackersError}</p>
-          ) : filtered.length === 0 ? (
+          )}
+          {!loading && filtered.length === 0 && (
             <p className='text-sm text-muted-foreground'>{t.game.war.noAvailableAttackers}</p>
-          ) : (
+          )}
+          {!loading && filtered.length > 0 && (
             <div className='grid grid-cols-3 gap-2'>
               {filtered.map((a) => (
                 <button
