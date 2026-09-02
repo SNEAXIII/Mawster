@@ -17,7 +17,7 @@ describe('Knowledge Base', () => {
       cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
       cy.getByCy('fight-records-table')
         .find('tbody tr')
-        .each(($tr) => cy.wrap($tr).find('td').eq(0).should('have.text', pseudo));
+        .each(($tr) => cy.wrap($tr).find('[data-cy="fight-record-player"]').should('have.text', pseudo));
 
       const partial = pseudo.toLowerCase().slice(0, 4);
       cy.getByCy('filter-player').should('be.visible').clear();

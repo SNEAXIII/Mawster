@@ -1,8 +1,5 @@
 import { setupWarOwner } from '../../support/e2e';
 
-// Column indices (0-based) — see display.cy.ts:
-// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: KO | 7: Alliance | 8: Season | 9: Tier | 10: Date | 11: Note
-
 // The attacker/defender pair the CSV rows reference in most of these tests.
 const MAGIK_AND_SERPENT: Array<[string, string]> = [
   ['Magik', 'Mystic'],
@@ -59,9 +56,9 @@ describe('Knowledge Base – CSV Import combined records', () => {
         cy.get('tbody tr')
           .first()
           .within(() => {
-            cy.get('td').eq(1).should('contain.text', 'Magik');
-            cy.get('td').eq(2).should('contain.text', 'Serpent');
-            cy.get('td').eq(5).should('contain.text', '15');
+            cy.getByCy('fight-record-attacker').should('contain.text', 'Magik');
+            cy.getByCy('fight-record-defender').should('contain.text', 'Serpent');
+            cy.getByCy('fight-record-node').should('have.text', '15');
             cy.getByCy('fight-record-ko').should('have.text', '2');
           });
       });
@@ -78,7 +75,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
           .find('tbody tr')
           .first()
           .within(() => {
-            cy.get('td').eq(5).should('contain.text', '20');
+            cy.getByCy('fight-record-node').should('have.text', '20');
             cy.getByCy('fight-record-ko').should('have.text', '0');
           });
       },
