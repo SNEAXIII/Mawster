@@ -121,9 +121,9 @@ function RosterChampionCard({
         )}
       </div>
 
-      {/* Action bar — always visible on touch, hover on desktop */}
+      {/* Action bar — always visible on touch, hover or keyboard focus on desktop */}
       {!readOnly && (
-        <div className='absolute inset-x-0 top-0 z-40 flex justify-end gap-0.5 rounded-t bg-gradient-to-b from-black/85 to-transparent p-0.5 pb-3 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100'>
+        <div className='absolute inset-x-0 top-0 z-40 flex justify-end gap-0.5 rounded-t bg-gradient-to-b from-black/85 to-transparent p-0.5 pb-3 opacity-100 transition-opacity sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100'>
           {onTogglePreferredAttacker && (
             <CardAction
               className={
