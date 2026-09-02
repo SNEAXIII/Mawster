@@ -47,7 +47,7 @@ export default function PortraitLabControls({
     <div className='flex flex-col gap-4 rounded-md border border-border bg-card p-4'>
       <div className='flex flex-wrap items-end gap-6'>
         <label className={FIELD_CLASS}>
-          Champion
+          <span>Champion</span>
           <select
             className={SELECT_CLASS}
             value={state.championIndex}
@@ -66,7 +66,7 @@ export default function PortraitLabControls({
         </label>
 
         <label className={FIELD_CLASS}>
-          Frame
+          <span>Frame</span>
           <select
             className={SELECT_CLASS}
             value={state.stars}
@@ -79,7 +79,7 @@ export default function PortraitLabControls({
         </label>
 
         <label className={FIELD_CLASS}>
-          Ascension
+          <span>Ascension</span>
           <select
             className={SELECT_CLASS}
             value={state.ascension}
@@ -121,7 +121,7 @@ export default function PortraitLabControls({
         </div>
 
         <label className='flex min-w-64 flex-1 flex-col gap-1 text-xs text-muted-foreground'>
-          Size — {state.size}px
+          <span>Size — {state.size}px</span>
           <input
             type='range'
             min={20}
@@ -155,7 +155,9 @@ export default function PortraitLabControls({
               key={key}
               className={FIELD_CLASS}
             >
-              {label} — {state.window[key].toFixed(4)}
+              <span>
+                {label} — {state.window[key].toFixed(4)}
+              </span>
               <input
                 type='range'
                 min={min}
