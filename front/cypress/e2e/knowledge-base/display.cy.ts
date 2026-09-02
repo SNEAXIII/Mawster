@@ -1,8 +1,5 @@
 import { setupKnowledgeBaseFast, setupKnowledgeBase } from '../../support/e2e';
 
-// Column indices (0-based):
-// 0: Player | 1: Attacker | 2: Defender | 3: Synergies | 4: Prefights | 5: Node | 6: KO | 7: Alliance | 8: Season | 9: Tier | 10: Date | 11: Note
-//
 // Dev endpoint alternates champions per node:
 //   odd  nodes: attacker=Iron Man,       defender=Captain America
 //   even nodes: attacker=Captain America, defender=Iron Man
@@ -48,7 +45,7 @@ describe('Knowledge Base', () => {
       cy.getByCy('fight-records-table')
         .find('tbody tr')
         .each(($tr) => {
-          cy.wrap($tr).find('td').eq(0).should('have.text', pseudo);
+          cy.wrap($tr).find('[data-cy="fight-record-player"]').should('have.text', pseudo);
         });
     });
   });
@@ -61,8 +58,8 @@ describe('Knowledge Base', () => {
         .find('tbody tr')
         .each(($tr) => {
           cy.wrap($tr).within(() => {
-            cy.get('td').eq(3).find('img, span').should('have.length', 0);
-            cy.get('td').eq(4).find('img, span').should('have.length', 0);
+            cy.getByCy('fight-record-synergies').find('img, span').should('have.length', 0);
+            cy.getByCy('fight-record-prefights').find('img, span').should('have.length', 0);
           });
         });
     });

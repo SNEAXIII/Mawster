@@ -25,6 +25,7 @@ type ChampionCellProps = Readonly<{
   ascension?: number | null
   isSaga?: boolean | null
   sagaMode: 'attacker' | 'defender'
+  dataCy: string
 }>
 
 /**
@@ -40,10 +41,14 @@ export function ChampionCell({
   ascension,
   isSaga,
   sagaMode,
+  dataCy,
 }: ChampionCellProps) {
   const exporting = useExportMode()
   return (
-    <td className={cn(COMPACT_COL, 'py-1')}>
+    <td
+      className={cn(COMPACT_COL, 'py-1')}
+      data-cy={dataCy}
+    >
       <div
         className='flex flex-col items-center'
         title={shortenChampionName(name)}
@@ -71,16 +76,20 @@ export function ChampionCell({
 
 type ChampionIconListProps = Readonly<{
   champions: ReadonlyArray<SynergyRecord | PrefightRecord>
+  dataCy: string
 }>
 
 /**
  * Synergy / prefight cell — a row of small unframed thumbnails, the name only in
  * the tooltip. Both columns render the same thing off the same record shape.
  */
-export function ChampionIconList({ champions }: ChampionIconListProps) {
+export function ChampionIconList({ champions, dataCy }: ChampionIconListProps) {
   const exporting = useExportMode()
   return (
-    <td className={cn(COMPACT_COL, 'py-2')}>
+    <td
+      className={cn(COMPACT_COL, 'py-2')}
+      data-cy={dataCy}
+    >
       <div className='flex items-center justify-center gap-1'>
         {champions.map((c) => {
           // Full-resolution source while exporting: the capture is upscaled, a
