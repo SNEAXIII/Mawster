@@ -38,6 +38,14 @@ class Settings(BaseSettings):
     API_PORT: int = Field(... if IS_PROD else 8000)
     EMAIL_PEPPER: str = Field(... if IS_PROD else "dev-email-pepper")
     EMAIL_PEPPER_VERSION: int = Field(default=1)
+    # --- OAuth audience ------------------------------------------------------
+    # L'application à laquelle un access token doit avoir été délivré. Sans ce
+    # contrôle, un token émis pour n'importe quelle autre application résout
+    # quand même vers un profil valide, et Mawster signerait un JWT pour cet
+    # utilisateur. Obligatoire en prod : un déploiement incapable de vérifier
+    # l'audience doit refuser de démarrer plutôt que d'accepter tous les tokens.
+    DISCORD_CLIENT_ID: str = Field(... if IS_PROD else "dev-discord-client-id")
+    GOOGLE_CLIENT_ID: str = Field(... if IS_PROD else "dev-google-client-id")
     # --- Vision (roster import) ---------------------------------------------
     RABBITMQ_URL: str = Field(... if _VISION_REQUIRED else "amqp://mawster:mawster@localhost:5672/")
     RUSTFS_ENDPOINT: str = Field(... if _VISION_REQUIRED else "http://localhost:9000")
