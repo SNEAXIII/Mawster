@@ -3,6 +3,15 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.8.1](https://github.com/SNEAXIII/Mawster/compare/v1.8.0...v1.8.1) (2026-09-03)
+
+
+### Corrigé
+
+* restrict the eligible-* listings to owners and officers ([820d82f](https://github.com/SNEAXIII/Mawster/commit/820d82f21897082c8e306d3dadd3300c123ac315))
+* restrict the eligible-* listings to owners and officers ([b9213e2](https://github.com/SNEAXIII/Mawster/commit/b9213e2d5424bdf55b55d49164d00597dcca3b91))
+* scope the invitation candidate listings to their alliance ([2fa5647](https://github.com/SNEAXIII/Mawster/commit/2fa564768739089b2ff808c7e6698450c0390156))
+
 ## [1.8.0](https://github.com/SNEAXIII/Mawster/compare/v1.7.1...v1.8.0) (2026-09-03)
 
 
