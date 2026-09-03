@@ -3,6 +3,14 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.7.1](https://github.com/SNEAXIII/Mawster/compare/v1.7.0...v1.7.1) (2026-09-02)
+
+
+### Modifié
+
+* store requested rarity as typed stars and rank ([1299674](https://github.com/SNEAXIII/Mawster/commit/129967411ad3d91dbcf63e8f30e1933fcb770031))
+* store requested rarity as typed stars and rank ([3c10515](https://github.com/SNEAXIII/Mawster/commit/3c105159027c484997c42ad6da8993d580fce0fd))
+
 ## [1.7.0](https://github.com/SNEAXIII/Mawster/compare/v1.6.3...v1.7.0) (2026-09-02)
 
 
