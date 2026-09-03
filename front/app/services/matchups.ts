@@ -124,7 +124,9 @@ export interface MatchupDefenderGridResponse {
   cells: MatchupDefenderGridCell[]
 }
 
-function toQuery(params: Record<string, any>): string {
+// Generic over the object rather than Record<string, unknown>: an interface has no index
+// signature, so MatchupFilters and friends are not assignable to that Record.
+function toQuery<T extends object>(params: T): string {
   const search = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
     if (value !== null && value !== undefined && value !== '') {

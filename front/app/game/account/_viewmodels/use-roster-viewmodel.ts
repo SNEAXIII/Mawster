@@ -243,7 +243,7 @@ export function useRosterViewModel() {
         toast.error((e as Error).message || t.roster.preferredAttackerToggle)
       }
     },
-    [selectedAccountId]
+    [selectedAccountId, t]
   )
 
   const confirmAscend = useCallback(async () => {
