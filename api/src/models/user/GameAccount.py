@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from src.models.alliance.Alliance import Alliance
     from src.models.alliance.AllianceInvitation import AllianceInvitation
     from src.models.alliance.AllianceOfficer import AllianceOfficer
+    from src.models.alliance.AllianceStrategist import AllianceStrategist
     from src.models.alliance.AllianceVisitor import AllianceVisitor
     from src.models.champion.ChampionUser import ChampionUser
     from src.models.champion.RequestedUpgrade import RequestedUpgrade
@@ -45,6 +46,7 @@ class GameAccount(UUIDBase, UserFk, TimestampMixin, SoftDelete, table=True):
     )
     roster: list["ChampionUser"] = Relationship(back_populates="game_account")
     officer_entries: list["AllianceOfficer"] = Relationship(back_populates="game_account")
+    strategist_entries: list["AllianceStrategist"] = Relationship(back_populates="game_account")
     received_invitations: list["AllianceInvitation"] = Relationship(
         back_populates="game_account",
         sa_relationship_kwargs={"foreign_keys": "[AllianceInvitation.game_account_id]"},
