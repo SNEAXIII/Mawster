@@ -335,6 +335,49 @@ class AllianceService:
         return account
 
     @classmethod
+    async def is_officer_of_any_alliance(
+        cls,
+        session: SessionDep,
+        user_id: uuid.UUID,
+    ) -> bool:
+        """True if the user owns or officers at least one live alliance.
+
+        The alliance-less listings (`/eligible-members`) carry no alliance in
+        their path, so this is the narrowest guard they can express — and it
+        still keeps the whole player base out of a plain member's reach.
+        """
+        account_ids = await cls._get_user_account_ids(session, user_id)
+        if not account_ids:
+            return False
+        owned = await session.exec(
+            select(Alliance.id).where(
+                Alliance.owner_id.in_(account_ids),  # type: ignore[attr-defined]
+                Alliance.deleted_at.is_(None),  # type: ignore[union-attr]
+            )
+        )
+        if owned.first() is not None:
+            return True
+        officer = await session.exec(
+            select(AllianceOfficer.id).where(
+                AllianceOfficer.game_account_id.in_(account_ids)  # type: ignore[attr-defined]
+            )
+        )
+        return officer.first() is not None
+
+    @classmethod
+    async def require_officer_of_any_alliance(
+        cls,
+        session: SessionDep,
+        user_id: uuid.UUID,
+    ) -> None:
+        """Raise 403 unless the user owns or officers at least one alliance."""
+        if not await cls.is_officer_of_any_alliance(session, user_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=OWNER_OR_OFFICER_REQUIRED,
+            )
+
+    @classmethod
     async def require_officer_account(
         cls,
         session: SessionDep,

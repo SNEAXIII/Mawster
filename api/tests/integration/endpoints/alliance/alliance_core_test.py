@@ -764,3 +764,118 @@ class TestLeaveAsVisitor:
             headers=HEADERS_USER2,
         )
         assert resp.status_code == 204
+
+
+# =========================================================================
+# GET /alliances/{id}/eligible-officers | /eligible-visitors | /eligible-members
+# =========================================================================
+
+
+class TestEligibleEndpointsAuthorization:
+    """The eligible-* listings hand out a full roster (`eligible-officers`) or the
+    whole alliance-less player base (`eligible-members`, `eligible-visitors`).
+    Only an owner or an officer may read them."""
+
+    @pytest.mark.asyncio
+    async def test_plain_member_cannot_list_eligible_officers(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-officers", headers=HEADERS_USER2
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_officer_can_list_eligible_officers(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_officer(alliance, officer_acc)
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-officers", headers=HEADERS_USER2
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_officer_of_another_alliance_cannot_list_eligible_officers(self):
+        """Leading one alliance grants nothing over another one's roster."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_alliance_with_owner(
+            user_id=USER2_ID,
+            game_pseudo=GAME_PSEUDO_2,
+            alliance_name="OtherAlliance",
+            alliance_tag="OTA",
+        )
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-officers", headers=HEADERS_USER2
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_plain_member_cannot_list_eligible_visitors(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-visitors", headers=HEADERS_USER2
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_officer_can_list_eligible_visitors(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_officer(alliance, officer_acc)
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-visitors", headers=HEADERS_USER2
+        )
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_user_without_alliance_cannot_list_eligible_members(self):
+        await _setup_2_users()
+        await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_get_request(f"{ENDPOINT}/eligible-members", headers=HEADERS_USER2)
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_plain_member_cannot_list_eligible_members(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_get_request(f"{ENDPOINT}/eligible-members", headers=HEADERS_USER2)
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_officer_can_list_eligible_members(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        officer_acc = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_officer(alliance, officer_acc)
+
+        response = await execute_get_request(f"{ENDPOINT}/eligible-members", headers=HEADERS_USER2)
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "path",
+        [
+            "eligible-members",
+            f"{uuid.uuid4()}/eligible-officers",
+            f"{uuid.uuid4()}/eligible-visitors",
+        ],
+    )
+    async def test_unauthenticated_returns_401(self, path):
+        """No auth header → 401 (router-level dependency rejects)."""
+        response = await execute_get_request(f"{ENDPOINT}/{path}")
+        assert response.status_code == 401

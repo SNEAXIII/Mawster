@@ -43,22 +43,47 @@ async def get_eligible_owners(
 @alliance_core_controller.get(
     "/{alliance_id}/eligible-officers", response_model=list[GameAccountResponse]
 )
-async def get_eligible_officers(alliance_id: uuid.UUID, session: SessionDep):
-    """Get members of the alliance eligible to become officers (not owner, not already officer)."""
+async def get_eligible_officers(
+    alliance_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get members of the alliance eligible to become officers (not owner, not already officer).
+
+    Officers/owner only — the response is the alliance roster, and only they can
+    act on it.
+    """
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
     return await AllianceService.get_eligible_officers(session, alliance_id)
 
 
 @alliance_core_controller.get("/eligible-members", response_model=list[GameAccountResponse])
-async def get_eligible_members(session: SessionDep):
-    """Get all game accounts NOT in any alliance (can be invited)."""
+async def get_eligible_members(
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get all game accounts NOT in any alliance (can be invited).
+
+    Reserved to owners and officers: the list is the whole player base minus the
+    accounts already in an alliance, so a plain member has no business reading it.
+    """
+    await AllianceService.require_officer_of_any_alliance(session, current_user.id)
     return await AllianceService.get_eligible_members(session)
 
 
 @alliance_core_controller.get(
     "/{alliance_id}/eligible-visitors", response_model=list[GameAccountResponse]
 )
-async def get_eligible_visitors(alliance_id: uuid.UUID, session: SessionDep):
-    """Get all game accounts that can be invited as visitors."""
+async def get_eligible_visitors(
+    alliance_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get all game accounts that can be invited as visitors.
+
+    Officers/owner only — same reason as `/eligible-members`.
+    """
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
     return await AllianceService.get_eligible_visitors(session, alliance_id)
 
 

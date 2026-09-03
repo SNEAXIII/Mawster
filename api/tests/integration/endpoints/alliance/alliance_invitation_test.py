@@ -418,6 +418,8 @@ class TestEligibility:
     @pytest.mark.asyncio
     async def test_eligible_members(self):
         await _setup_2_users()
+        # The listing is officer-only, so the caller needs an alliance to lead.
+        await push_alliance_with_owner(user_id=USER_ID)
         await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_get_request(f"{ENDPOINT}/eligible-members", headers=HEADERS_USER1)
