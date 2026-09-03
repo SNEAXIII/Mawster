@@ -56,6 +56,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
     selectedBg,
     handleBgChange,
     canManageWar,
+    canPlaceWar,
     warMode,
     setWarMode,
     warLoading,
@@ -208,8 +209,8 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
             ))}
           </div>
 
-          {/* Mode toggle — visible to officers only */}
-          {canManageWar && (
+          {/* Mode toggle — visible to officers and strategists */}
+          {canPlaceWar && (
             <div
               className='flex gap-1 rounded-md border p-1'
               data-cy='war-mode-toggle'
@@ -233,7 +234,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
             </div>
           )}
           {/* Clear BG button */}
-          {canManageWar && placements.length > 0 && (
+          {canPlaceWar && placements.length > 0 && (
             <Button
               variant='outline'
               onClick={() => setShowClearConfirm(true)}
@@ -345,7 +346,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
                   placements={placements}
                   onNodeClick={handleNodeClick}
                   onRemove={handleRemoveDefender}
-                  canManage={canManageWar && warMode === WarMode.Defenders && !exporting}
+                  canManage={canPlaceWar && warMode === WarMode.Defenders && !exporting}
                   dimmedNodes={exporting ? undefined : dimmedNodes}
                   prefightNodes={prefightNodes}
                   noteNodes={noteNodes}
