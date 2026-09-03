@@ -1,10 +1,10 @@
 'use client'
 
 import React from 'react'
-import { Crown, Shield } from 'lucide-react'
+import { Crown, MapPlus, Shield } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 
-export type MemberRole = 'owner' | 'officer' | 'member'
+export type MemberRole = 'owner' | 'officer' | 'strategist' | 'member'
 
 interface UsernameEnrichedProps {
   pseudo: string
@@ -22,6 +22,7 @@ interface UsernameEnrichedProps {
  *
  * - Crown (yellow) for leaders
  * - Shield (purple) for officers
+ * - Map pin (sky) for strategists
  * - [GX] prefix when group is set
  * - Highlighted style when isMine
  */
@@ -51,6 +52,7 @@ export default function UsernameEnriched({
       )}
       {role === 'owner' && <Crown className='h-3 w-3 text-yellow-500 shrink-0' />}
       {role === 'officer' && <Shield className='h-3 w-3 text-purple-500 shrink-0' />}
+      {role === 'strategist' && <MapPlus className='h-3 w-3 text-sky-500 shrink-0' />}
       <span className='truncate'>{pseudo}</span>
     </span>
   )
@@ -59,8 +61,13 @@ export default function UsernameEnriched({
 /**
  * Helper to derive MemberRole from boolean flags.
  */
-export function getMemberRole(isOwner: boolean, isOfficer: boolean): MemberRole {
+export function getMemberRole(
+  isOwner: boolean,
+  isOfficer: boolean,
+  isStrategist = false
+): MemberRole {
   if (isOwner) return 'owner'
   if (isOfficer) return 'officer'
+  if (isStrategist) return 'strategist'
   return 'member'
 }

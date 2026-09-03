@@ -23,6 +23,7 @@ interface AllianceMember {
   game_pseudo: string
   is_owner: boolean
   is_officer: boolean
+  is_strategist: boolean
   alliance_group: number | null
 }
 
@@ -84,7 +85,7 @@ export default function AllianceMemberRow({
         <div className='min-w-0 max-w-full'>
           <UsernameEnriched
             pseudo={member.game_pseudo}
-            role={getMemberRole(member.is_owner, member.is_officer)}
+            role={getMemberRole(member.is_owner, member.is_officer, member.is_strategist)}
             isMine={memberIsMine}
           />
         </div>

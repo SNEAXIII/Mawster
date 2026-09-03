@@ -114,7 +114,8 @@ export default function AllianceCard({
         const rank = (m: typeof a) => {
           if (m.is_owner) return 0
           if (m.is_officer) return 1
-          return 2
+          if (m.is_strategist) return 2
+          return 3
         }
         return rank(a) - rank(b)
       }),
