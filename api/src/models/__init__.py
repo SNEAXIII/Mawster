@@ -3,6 +3,7 @@ from sqlmodel import SQLModel  # noqa: F401
 from src.models.alliance.Alliance import Alliance  # noqa: F401
 from src.models.alliance.AllianceInvitation import AllianceInvitation  # noqa: F401
 from src.models.alliance.AllianceOfficer import AllianceOfficer  # noqa: F401
+from src.models.alliance.AllianceStrategist import AllianceStrategist  # noqa: F401
 from src.models.alliance.AllianceVisitor import AllianceVisitor  # noqa: F401
 from src.models.alliance.DefensePlacement import DefensePlacement  # noqa: F401
 from src.models.champion.Champion import Champion  # noqa: F401

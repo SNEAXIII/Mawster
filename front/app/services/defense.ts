@@ -63,6 +63,7 @@ export interface BgMember {
   max_defenders: number
   is_owner: boolean
   is_officer: boolean
+  is_strategist: boolean
 }
 
 async function throwOnError(response: Response, fallback: string) {

@@ -85,7 +85,7 @@ export default function DefensePageContent({
             selectedBg={vm.selectedBg}
             onBgChange={vm.handleBgChange}
             onClearClick={() => defenseActions.setClearConfirmOpen(true)}
-            canManage={vm.userCanManage}
+            canManage={vm.userCanPlace}
             defenseSummary={defenseActions.defenseSummary}
             onExportMapClick={handleExportMap}
             onExportListClick={handleExportList}
@@ -93,7 +93,7 @@ export default function DefensePageContent({
           />
           <DefenseGrid
             onNodeClick={vm.handleNodeClick}
-            canManage={vm.userCanManage}
+            canManage={vm.userCanPlace}
             exportDefenseMapRef={exportDefenseMapRef}
             exportDefenseAssignementsRef={exportDefenseAssignementsRef}
             exporting={exporting}

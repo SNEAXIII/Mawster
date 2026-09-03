@@ -12,11 +12,21 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { TextConfirmationDialog } from '@/components/text-confirmation-dialog'
-import { Crown, MoreHorizontal, ShieldCheck, ShieldMinus, UserMinus } from 'lucide-react'
+import {
+  Crown,
+  MapPlus,
+  MapMinus,
+  MoreHorizontal,
+  ShieldCheck,
+  ShieldMinus,
+  UserMinus,
+} from 'lucide-react'
 import {
   type Alliance,
   addOfficer,
+  addStrategist,
   removeOfficer,
+  removeStrategist,
   removeMember,
   transferOwnership,
 } from '@/app/services/game'
@@ -25,6 +35,8 @@ import { useAllianceRole } from '@/hooks/use-alliance-role'
 const AllianceMemberAction = {
   PROMOTE: 'promote',
   DEMOTE: 'demote',
+  PROMOTE_STRATEGIST: 'promote_strategist',
+  DEMOTE_STRATEGIST: 'demote_strategist',
   REMOVE: 'remove',
   LEAVE: 'leave',
   TRANSFER_OWNER: 'transfer_owner',
@@ -37,6 +49,7 @@ interface AllianceMember {
   game_pseudo: string
   is_owner: boolean
   is_officer: boolean
+  is_strategist: boolean
 }
 
 interface AllianceMemberActionsProps {
@@ -57,6 +70,8 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
   const [isLoading, setIsLoading] = useState<Record<AllianceMemberAction, boolean>>({
     promote: false,
     demote: false,
+    promote_strategist: false,
+    demote_strategist: false,
     remove: false,
     leave: false,
     transfer_owner: false,
@@ -69,6 +84,8 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
   const actionErrors: Record<AllianceMemberAction, string> = {
     [AllianceMemberAction.PROMOTE]: t.game.alliances.officerAddError,
     [AllianceMemberAction.DEMOTE]: t.game.alliances.officerRemoveError,
+    [AllianceMemberAction.PROMOTE_STRATEGIST]: t.game.alliances.strategistAddError,
+    [AllianceMemberAction.DEMOTE_STRATEGIST]: t.game.alliances.strategistRemoveError,
     [AllianceMemberAction.TRANSFER_OWNER]: t.game.alliances.transferOwnerError,
     [AllianceMemberAction.LEAVE]: t.game.alliances.leaveError,
     [AllianceMemberAction.REMOVE]: t.game.alliances.memberRemoveError,
@@ -86,6 +103,14 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
         case AllianceMemberAction.DEMOTE:
           await removeOfficer(allianceId, member.id)
           toast.success(t.game.alliances.officerRemoveSuccess)
+          break
+        case AllianceMemberAction.PROMOTE_STRATEGIST:
+          await addStrategist(allianceId, member.id)
+          toast.success(t.game.alliances.strategistAddSuccess)
+          break
+        case AllianceMemberAction.DEMOTE_STRATEGIST:
+          await removeStrategist(allianceId, member.id)
+          toast.success(t.game.alliances.strategistRemoveSuccess)
           break
         case AllianceMemberAction.REMOVE:
           await removeMember(allianceId, member.id)
@@ -118,11 +143,23 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
 
   const canPromote = userIsOwner && !member.is_owner && !member.is_officer
   const canDemote = userIsOwner && !member.is_owner && member.is_officer
+  const canPromoteStrategist =
+    userCanManage && !member.is_owner && !member.is_officer && !member.is_strategist
+  const canDemoteStrategist = userCanManage && !member.is_owner && member.is_strategist
   const canLeave = !member.is_owner && memberIsMine
   const canExclude = !member.is_owner && !memberIsMine && userCanManage
   const canTransferOwner = userIsOwner && member.is_officer && !member.is_owner
 
-  if (!canPromote && !canDemote && !canLeave && !canExclude && !canTransferOwner) return null
+  if (
+    !canPromote &&
+    !canDemote &&
+    !canPromoteStrategist &&
+    !canDemoteStrategist &&
+    !canLeave &&
+    !canExclude &&
+    !canTransferOwner
+  )
+    return null
 
   return (
     <>
@@ -147,6 +184,28 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
             >
               <ShieldCheck className='mr-2 size-4' />
               {t.game.alliances.promoteOfficer}
+            </DropdownMenuItem>
+          )}
+          {canPromoteStrategist && (
+            <DropdownMenuItem
+              onClick={() => handleAction(AllianceMemberAction.PROMOTE_STRATEGIST)}
+              className='text-sky-500 flex items-center'
+              disabled={isLoading.promote_strategist}
+              data-cy={`promote-strategist-${member.game_pseudo}`}
+            >
+              <MapPlus className='mr-2 size-4' />
+              {t.game.alliances.promoteStrategist}
+            </DropdownMenuItem>
+          )}
+          {canDemoteStrategist && (
+            <DropdownMenuItem
+              onClick={() => handleAction(AllianceMemberAction.DEMOTE_STRATEGIST)}
+              className='text-sky-500/70 flex items-center'
+              disabled={isLoading.demote_strategist}
+              data-cy={`demote-strategist-${member.game_pseudo}`}
+            >
+              <MapMinus className='mr-2 size-4' />
+              {t.game.alliances.demoteStrategist}
             </DropdownMenuItem>
           )}
           {canTransferOwner && (

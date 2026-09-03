@@ -48,6 +48,7 @@ interface AllianceContextValue {
   isMine: (gameAccountId: string) => boolean
   isOwner: (alliance: Alliance) => boolean
   canManage: (alliance: Alliance) => boolean
+  canPlace: (alliance: Alliance) => boolean
   getRoleFor: (allianceId: string) => AllianceRoleEntry | undefined
   rolesLoading: boolean
   // Invitations
@@ -69,6 +70,7 @@ const AllianceContext = createContext<AllianceContextValue>({
   isMine: () => false,
   isOwner: () => false,
   canManage: () => false,
+  canPlace: () => false,
   getRoleFor: () => undefined,
   rolesLoading: true,
   myInvitations: [],
@@ -189,6 +191,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
       isMine: (gameAccountId: string) => accountIdSet.has(gameAccountId),
       isOwner: (alliance: Alliance) => roles[alliance.id]?.is_owner ?? false,
       canManage: (alliance: Alliance) => roles[alliance.id]?.can_manage ?? false,
+      canPlace: (alliance: Alliance) => roles[alliance.id]?.can_place ?? false,
       getRoleFor: (allianceId: string) => roles[allianceId],
       rolesLoading,
       myInvitations,

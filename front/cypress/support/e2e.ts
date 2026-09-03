@@ -426,6 +426,20 @@ Cypress.Commands.add('apiAddOfficer', (token: string, allianceId: string, gameAc
   });
 });
 
+// ── Grant the strategist rank (direct backend call) ─────────────────────────
+
+Cypress.Commands.add('apiAddStrategist', (token: string, allianceId: string, gameAccountId: string) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/alliances/${allianceId}/strategists`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: { game_account_id: gameAccountId },
+  }).then((res) => {
+    expect(res.status).to.eq(201);
+    return res.body;
+  });
+});
+
 // ── Upsert a matchup rating (officer/owner only) ─────────────────────────────
 
 Cypress.Commands.add(

@@ -5,6 +5,7 @@ from datetime import datetime
 
 from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.AllianceStrategist import AllianceStrategist
 from src.models.alliance.AllianceVisitor import AllianceVisitor
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
@@ -68,6 +69,17 @@ def get_officer(
     game_account_id: uuid.UUID,
 ) -> AllianceOfficer:
     return AllianceOfficer(
+        id=uuid.uuid4(),
+        alliance_id=alliance_id,
+        game_account_id=game_account_id,
+    )
+
+
+def get_strategist(
+    alliance_id: uuid.UUID,
+    game_account_id: uuid.UUID,
+) -> AllianceStrategist:
+    return AllianceStrategist(
         id=uuid.uuid4(),
         alliance_id=alliance_id,
         game_account_id=game_account_id,
@@ -142,6 +154,16 @@ async def push_officer(
     officer = get_officer(alliance_id=alliance.id, game_account_id=game_account.id)
     await load_objects([officer])
     return officer
+
+
+async def push_strategist(
+    alliance: Alliance,
+    game_account: GameAccount,
+) -> AllianceStrategist:
+    """Promote an existing alliance member to strategist. Returns the row."""
+    strategist = get_strategist(alliance_id=alliance.id, game_account_id=game_account.id)
+    await load_objects([strategist])
+    return strategist
 
 
 async def push_visitor(

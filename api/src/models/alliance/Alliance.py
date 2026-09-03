@@ -14,6 +14,7 @@ from src.models.Base import (
 if TYPE_CHECKING:
     from src.models.alliance.AllianceInvitation import AllianceInvitation
     from src.models.alliance.AllianceOfficer import AllianceOfficer
+    from src.models.alliance.AllianceStrategist import AllianceStrategist
     from src.models.alliance.AllianceVisitor import AllianceVisitor
     from src.models.user.GameAccount import GameAccount
 
@@ -45,6 +46,7 @@ class Alliance(UUIDBase, TimestampMixin, SoftDelete, table=True):
         sa_relationship_kwargs={"foreign_keys": "[GameAccount.alliance_id]"},
     )
     officers: list["AllianceOfficer"] = Relationship(back_populates="alliance")
+    strategists: list["AllianceStrategist"] = Relationship(back_populates="alliance")
     invitations: list["AllianceInvitation"] = Relationship(
         back_populates="alliance",
         sa_relationship_kwargs={"foreign_keys": "[AllianceInvitation.alliance_id]"},

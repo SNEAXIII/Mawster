@@ -540,7 +540,8 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
                     RequestedUpgrade(
                         champion_user_id=cu.id,
                         requester_game_account_id=requester.id,
-                        requested_rarity=rarity,
+                        requested_stars=int(rarity[0]),
+                        requested_rank=int(rarity[2]),
                         created_at=NOW - timedelta(days=days_created),
                         done_at=NOW - timedelta(days=days_done) if days_done is not None else None,
                     )

@@ -34,6 +34,21 @@ The single Player an Alliance belongs to.
 A Player granted administration rights over an Alliance — placing defense, running
 wars, inviting.
 
+**Strategist**:
+A Player granted placement rights over an Alliance, and no authority over its people:
+they lay out the Defense Assignment for anyone and record the enemy defenders on the
+War map, across all three Battlegroups. They invite nobody, remove nobody, promote
+nobody. Ranks between a plain member and an Officer — the two are exclusive, and an
+Officer demoted falls back to plain member, never to Strategist.
+_Table_: `alliance_strategist`.
+_Avoid_: planner, planneur, deputy.
+_Debt_: the rule granting the placement right is spelled three times —
+`AllianceService.can_place`, and again inline in each of the two maps
+`get_my_roles` returns. Changing who may place means changing all three, and
+only the first is covered by a guard test. They cannot simply call each other:
+`can_place` queries, while `get_my_roles` reads relationships already loaded in
+a loop. A pure predicate over the four id sets, called by all three, is the fix.
+
 **Visitor**:
 A Player attached to an Alliance in read-only: sees everything a plain member sees,
 changes nothing. Permanent, with no expiry — a read-only member, not a guest pass.
@@ -221,8 +236,13 @@ An Officer asking a Player — another Officer included — to take one of their
 Entries up to a given rank, so it can be used in war. Marked done when the Player has
 ranked it.
 _Table_: `requested_upgrade`.
-_Debt_: `requested_rarity` stores "7r3" as free text, while stars and rank are typed
-integers everywhere else. Unvalidated and case-sensitive — acknowledged debt.
+
+**Rarity**:
+A Roster Entry's stars and rank taken together, written the way the game does: "7r3".
+A wire and display format only — stored as the typed `stars`/`rank` pair on both sides
+(`ChampionUser`, `RequestedUpgrade`), parsed and compared through `ChampionRarity`.
+Ordered on the (stars, rank) pair, never on the code — a star level outranks a rank.
+_Avoid_: rarity string, rank code.
 
 ### Masteries
 

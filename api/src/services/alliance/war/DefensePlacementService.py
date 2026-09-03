@@ -18,6 +18,7 @@ from src.Messages.defense_messages import (
 )
 from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.AllianceStrategist import AllianceStrategist
 from src.models.alliance.DefensePlacement import DefensePlacement
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
@@ -417,6 +418,11 @@ class DefensePlacementService:
         )
         officer_ids: set[uuid.UUID] = {o.game_account_id for o in officers_result.all()}
 
+        strategists_result = await session.exec(
+            select(AllianceStrategist).where(AllianceStrategist.alliance_id == alliance_id)
+        )
+        strategist_ids: set[uuid.UUID] = {s.game_account_id for s in strategists_result.all()}
+
         return [
             {
                 "game_account_id": str(m.id),
@@ -425,6 +431,7 @@ class DefensePlacementService:
                 "max_defenders": params.max_defenders_per_player,
                 "is_owner": m.id == owner_game_account_id,
                 "is_officer": m.id in officer_ids,
+                "is_strategist": m.id in strategist_ids,
             }
             for m in members
         ]

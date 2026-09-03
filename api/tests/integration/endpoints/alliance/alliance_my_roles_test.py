@@ -6,6 +6,7 @@ from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_member,
     push_officer,
+    push_strategist,
 )
 from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.utils.utils_client import create_auth_headers, execute_get_request
@@ -25,7 +26,8 @@ HEADERS_USER2 = create_auth_headers(user_id=str(USER2_ID))
 ENDPOINT = "/alliances/my-roles"
 
 
-async def _setup_two_users():
+async def _setup_2_users():
+    """Insert two standard test users."""
     u1 = get_generic_user(is_base_id=True)
     u2 = get_generic_user(login=USER2_LOGIN, email=USER2_EMAIL)
     u2.id = USER2_ID
@@ -62,7 +64,7 @@ class TestGetMyRolesRolesByAccount:
 
     @pytest.mark.asyncio
     async def test_member_account_has_no_elevated_role(self):
-        await _setup_two_users()
+        await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         member_acc = await push_member(alliance=alliance, user_id=USER2_ID)
         response = await execute_get_request(ENDPOINT, headers=HEADERS_USER2)
@@ -77,7 +79,7 @@ class TestGetMyRolesRolesByAccount:
 
     @pytest.mark.asyncio
     async def test_officer_account_is_marked_as_officer(self):
-        await _setup_two_users()
+        await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         officer_acc = await push_member(alliance=alliance, user_id=USER2_ID)
         await push_officer(alliance=alliance, game_account=officer_acc)
@@ -113,3 +115,48 @@ class TestGetMyRolesRolesByAccount:
     async def test_unauthenticated_returns_401(self):
         response = await execute_get_request(ENDPOINT)
         assert response.status_code == 401
+
+
+class TestMyRolesStrategist:
+    @pytest.mark.asyncio
+    async def test_strategist_gets_can_place_but_not_can_manage(self):
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner()
+        member = await push_member(alliance, USER2_ID, GAME_PSEUDO_2)
+        await push_strategist(alliance, member)
+
+        response = await execute_get_request(ENDPOINT, headers=HEADERS_USER2)
+
+        assert response.status_code == 200
+        entry = response.json()["roles"][str(alliance.id)]
+        assert entry["is_strategist"] is True
+        assert entry["can_place"] is True
+        assert entry["can_manage"] is False
+        assert entry["is_officer"] is False
+
+    @pytest.mark.asyncio
+    async def test_officer_can_place_without_being_a_strategist(self):
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner()
+        member = await push_member(alliance, USER2_ID, GAME_PSEUDO_2)
+        await push_officer(alliance, member)
+
+        response = await execute_get_request(ENDPOINT, headers=HEADERS_USER2)
+
+        entry = response.json()["roles"][str(alliance.id)]
+        assert entry["is_strategist"] is False
+        assert entry["can_place"] is True
+        assert entry["can_manage"] is True
+
+    @pytest.mark.asyncio
+    async def test_plain_member_can_neither_place_nor_manage(self):
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner()
+        await push_member(alliance, USER2_ID, GAME_PSEUDO_2)
+
+        response = await execute_get_request(ENDPOINT, headers=HEADERS_USER2)
+
+        entry = response.json()["roles"][str(alliance.id)]
+        assert entry["is_strategist"] is False
+        assert entry["can_place"] is False
+        assert entry["can_manage"] is False

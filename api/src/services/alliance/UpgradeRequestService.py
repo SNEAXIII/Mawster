@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import and_, select
+from sqlmodel import and_, or_, select
 from starlette import status
 
 from src.enums.ChampionRarity import ChampionRarity
@@ -31,7 +31,8 @@ class UpgradeRequestService:
         requested_rarity: str,
     ) -> RequestedUpgrade:
         """Create a new upgrade request for a champion user entry."""
-        if requested_rarity not in VALID_RARITIES:
+        rarity = ChampionRarity.from_code(requested_rarity)
+        if rarity is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=invalid_requested_rarity(
@@ -54,12 +55,13 @@ class UpgradeRequestService:
                 detail=CHAMPION_USER_ENTRY_NOT_FOUND,
             )
 
-        # requested_rarity must be higher than current
-        current = champion_user.rarity
-        if requested_rarity <= current:
+        # The target must be higher than what the player already has, compared on the
+        # (stars, rank) pair rather than on the code — ordering never depends on how a
+        # rarity happens to be spelled.
+        if rarity.order <= (champion_user.stars, champion_user.rank):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=requested_rarity_must_be_higher(requested_rarity, current),
+                detail=requested_rarity_must_be_higher(rarity.value, champion_user.rarity),
             )
 
         # A champion should carry at most one pending upgrade request: the target
@@ -78,7 +80,7 @@ class UpgradeRequestService:
 
         if existing_pending:
             # Re-requesting the rarity that is already pending is a conflict.
-            if any(req.requested_rarity == requested_rarity for req in existing_pending):
+            if any(req.requested_rarity == rarity.value for req in existing_pending):
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=UPGRADE_REQUEST_ALREADY_EXISTS,
@@ -86,7 +88,8 @@ class UpgradeRequestService:
             # Retarget the first pending request and drop any stale duplicates so the
             # invariant "one pending request per champion" holds even for legacy rows.
             primary, *duplicates = existing_pending
-            primary.requested_rarity = requested_rarity
+            primary.requested_stars = rarity.stars
+            primary.requested_rank = rarity.rank
             primary.requester_game_account_id = requester_game_account_id
             session.add(primary)
             for stale in duplicates:
@@ -98,7 +101,8 @@ class UpgradeRequestService:
         upgrade_request = RequestedUpgrade(
             champion_user_id=champion_user_id,
             requester_game_account_id=requester_game_account_id,
-            requested_rarity=requested_rarity,
+            requested_stars=rarity.stars,
+            requested_rank=rarity.rank,
         )
         session.add(upgrade_request)
         await session.commit()
@@ -174,12 +178,19 @@ class UpgradeRequestService:
         cls, session: SessionDep, champion_user: ChampionUser
     ) -> None:
         """Mark pending upgrade requests as done if the champion has reached the requested rarity."""
-        current_rarity = champion_user.rarity
         stmt = select(RequestedUpgrade).where(
             and_(
                 RequestedUpgrade.champion_user_id == champion_user.id,
                 RequestedUpgrade.done_at.is_(None),  # type: ignore[union-attr]
-                RequestedUpgrade.requested_rarity <= current_rarity,
+                # Reached: fewer stars than the champion now has, or the same stars
+                # and a rank the champion has caught up with.
+                or_(
+                    RequestedUpgrade.requested_stars < champion_user.stars,
+                    and_(
+                        RequestedUpgrade.requested_stars == champion_user.stars,
+                        RequestedUpgrade.requested_rank <= champion_user.rank,
+                    ),
+                ),
             )
         )
         result = await session.exec(stmt)

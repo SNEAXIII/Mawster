@@ -6,7 +6,9 @@ from starlette import status
 
 from src.dto.alliance.dto_alliance import (
     AllianceAddOfficerRequest,
+    AllianceAddStrategistRequest,
     AllianceRemoveOfficerRequest,
+    AllianceRemoveStrategistRequest,
     AllianceResponse,
     AllianceSetGroupRequest,
     AllianceTransferOwnerRequest,
@@ -88,6 +90,57 @@ async def remove_officer(
     updated = await AllianceService.remove_officer(
         session=session, alliance_id=alliance_id, game_account_id=body.game_account_id
     )
+    return _to_response(updated)
+
+
+@alliance_member_controller.post(
+    "/{alliance_id}/strategists",
+    response_model=AllianceResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_strategist(
+    alliance_id: uuid.UUID,
+    body: AllianceAddStrategistRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Grant the strategist rank. The owner or any officer can do this."""
+    alliance = await AllianceService.get_alliance(session, alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
+    await AllianceService.add_strategist(
+        session=session, alliance_id=alliance_id, game_account_id=body.game_account_id
+    )
+    # The alliance loaded above is still cached in the session's identity map
+    # with its pre-promotion `strategists` collection (commit doesn't expire
+    # attributes here — see `expire_on_commit=False` in src/utils/db.py).
+    # Expire and re-fetch so the response reflects the new row, the same way
+    # `transfer_ownership` already does for its own reload.
+    session.expire_all()
+    updated = await AllianceService.get_alliance(session, alliance_id)
+    return _to_response(updated)
+
+
+@alliance_member_controller.delete("/{alliance_id}/strategists", response_model=AllianceResponse)
+async def remove_strategist(
+    alliance_id: uuid.UUID,
+    body: AllianceRemoveStrategistRequest,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Revoke the strategist rank. The owner or any officer can do this."""
+    alliance = await AllianceService.get_alliance(session, alliance_id)
+    if alliance is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
+    await AllianceService.remove_strategist(
+        session=session, alliance_id=alliance_id, game_account_id=body.game_account_id
+    )
+    # Same identity-map staleness as `add_strategist` above — re-fetch after
+    # expiring so the response reflects the demotion.
+    session.expire_all()
+    updated = await AllianceService.get_alliance(session, alliance_id)
     return _to_response(updated)
 
 

@@ -16,7 +16,7 @@ export function useDefenseViewModel({
   initialAllianceId,
   initialBg,
 }: UseDefenseViewModelOptions = {}) {
-  const { canManage, isOwner } = useAllianceRole()
+  const { canPlace } = useAllianceRole()
 
   const {
     alliances,
@@ -28,9 +28,9 @@ export function useDefenseViewModel({
   } = useAllianceSelector({ initialAllianceId, initialBg })
 
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId)
-  const userCanManage = selectedAlliance
-    ? canManage(selectedAlliance) || isOwner(selectedAlliance)
-    : false
+  // Placement rights, not management rights: strategists place, officers and the
+  // owner keep everything else.
+  const userCanPlace = selectedAlliance ? canPlace(selectedAlliance) : false
 
   const defenseActions = useDefenseActions(selectedAllianceId, selectedBg)
 
@@ -44,7 +44,7 @@ export function useDefenseViewModel({
   }, [alliances])
 
   const handleNodeClick = (nodeNumber: number) => {
-    if (!userCanManage) return
+    if (!userCanPlace) return
     defenseActions.setSelectorNode(nodeNumber)
   }
 
@@ -64,7 +64,7 @@ export function useDefenseViewModel({
     selectedAllianceId,
     selectedBg,
     loading,
-    userCanManage,
+    userCanPlace,
     defenseActions,
     handleNodeClick,
     handleBgChange,
