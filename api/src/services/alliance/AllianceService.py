@@ -638,10 +638,14 @@ class AllianceService:
             officer_ids = {off.game_account_id for off in alliance.officers}
             is_officer = bool(user_account_ids & officer_ids)
             can_manage = is_owner or is_officer
+            strategist_ids = {s.game_account_id for s in alliance.strategists}
+            is_strategist = bool(user_account_ids & strategist_ids)
             roles[str(alliance.id)] = {
                 "is_owner": is_owner,
                 "is_officer": is_officer,
                 "can_manage": can_manage,
+                "is_strategist": is_strategist,
+                "can_place": can_manage or is_strategist,
             }
 
         for acc in user_accounts:
@@ -651,10 +655,14 @@ class AllianceService:
             officer_ids = {off.game_account_id for off in alliance.officers}
             acc_is_owner = alliance.owner_id == acc.id
             acc_is_officer = acc.id in officer_ids
+            strategist_ids = {s.game_account_id for s in alliance.strategists}
+            acc_is_strategist = acc.id in strategist_ids
             roles_by_account[str(acc.id)] = {
                 "is_owner": acc_is_owner,
                 "is_officer": acc_is_officer,
                 "can_manage": acc_is_owner or acc_is_officer,
+                "is_strategist": acc_is_strategist,
+                "can_place": acc_is_owner or acc_is_officer or acc_is_strategist,
             }
 
         return {

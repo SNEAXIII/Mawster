@@ -29,6 +29,7 @@ class AllianceMemberResponse(BaseModel):
     alliance_group: int | None = None
     is_owner: bool = False
     is_officer: bool = False
+    is_strategist: bool = False
 
 
 class AllianceOfficerResponse(PlayerIdentity):
@@ -77,6 +78,7 @@ class AllianceResponse(BaseModel):
         if isinstance(data, dict):
             return data
         officer_ids = {adj.game_account_id for adj in data.officers}
+        strategist_ids = {s.game_account_id for s in data.strategists}
         return {
             "id": data.id,
             "name": data.name,
@@ -95,6 +97,7 @@ class AllianceResponse(BaseModel):
                     "alliance_group": m.alliance_group,
                     "is_owner": m.id == data.owner_id,
                     "is_officer": m.id in officer_ids,
+                    "is_strategist": m.id in strategist_ids,
                 }
                 for m in data.members
             ],
@@ -110,6 +113,18 @@ class AllianceAddOfficerRequest(BaseModel):
 
 class AllianceRemoveOfficerRequest(BaseModel):
     """DTO to remove an officer from an alliance."""
+
+    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+
+
+class AllianceAddStrategistRequest(BaseModel):
+    """DTO to grant the strategist rank in an alliance."""
+
+    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
+
+
+class AllianceRemoveStrategistRequest(BaseModel):
+    """DTO to revoke the strategist rank in an alliance."""
 
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
 
@@ -132,6 +147,8 @@ class AllianceRoleEntry(BaseModel):
     is_owner: bool = False
     is_officer: bool = False
     can_manage: bool = False
+    is_strategist: bool = False
+    can_place: bool = False
 
 
 class AllianceMyRolesResponse(BaseModel):
