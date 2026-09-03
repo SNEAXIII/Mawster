@@ -15,6 +15,7 @@ from tests.integration.endpoints.setup.user_setup import get_generic_user
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_delete_request,
+    execute_get_request,
     execute_post_request,
 )
 from tests.utils.utils_constant import (
@@ -107,3 +108,19 @@ class TestStrategistStaysOutOfManagement:
         )
 
         assert response.status_code == 403
+
+
+class TestBgMemberPayload:
+    @pytest.mark.asyncio
+    async def test_bg_members_carry_the_strategist_flag(self):
+        alliance, member, _roster_entry = await _setup_strategist()
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/defense/bg/1/members",
+            headers=HEADERS_USER2,
+        )
+
+        assert response.status_code == 200
+        row = next(m for m in response.json() if m["game_account_id"] == str(member.id))
+        assert row["is_strategist"] is True
+        assert row["is_officer"] is False
