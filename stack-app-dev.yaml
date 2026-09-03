@@ -57,8 +57,8 @@ services:
       ALLOWED_ORIGINS: https://www.dev.mawster.app
       # Applications auxquelles un access token doit avoir ete delivre. Sans elles,
       # un token emis pour une autre application authentifierait son porteur ici.
-      DISCORD_CLIENT_ID: CHANGE_ME_discord_application_id
-      GOOGLE_CLIENT_ID: CHANGE_ME_google_oauth_client_id
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       API_PORT: '8000'
       EMAIL_PEPPER_VERSION: '1'
       SECRET_KEY: ${SECRET_KEY}

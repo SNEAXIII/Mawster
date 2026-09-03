@@ -123,10 +123,6 @@ services:
       MARIADB_PORT: '3306'
       MARIADB_DATABASE: mawster
       ALLOWED_ORIGINS: https://www.mawster.app
-      # Applications auxquelles un access token doit avoir ete delivre. Sans elles,
-      # un token emis pour une autre application authentifierait son porteur ici.
-      DISCORD_CLIENT_ID: CHANGE_ME_discord_application_id
-      GOOGLE_CLIENT_ID: CHANGE_ME_google_oauth_client_id
       API_PORT: '8000'
       EMAIL_PEPPER_VERSION: '1'
       # Vision: the API publishes jobs to RabbitMQ and reads crops/results from
@@ -144,6 +140,10 @@ services:
       - mawster_secret_key
       - mawster_db_password
       - mawster_email_pepper
+      # Deja montes sur le front : l'API en a besoin pour verifier que le token
+      # recu a bien ete emis pour ces applications-la.
+      - mawster_discord_client_id
+      - mawster_google_client_id
       - mawster_rabbitmq_pass
       - mawster_rustfs_access_key
       - mawster_rustfs_secret_key
