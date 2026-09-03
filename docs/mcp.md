@@ -6,10 +6,7 @@ E2E passent par des commandes normales, exposées via les skills de `.claude/ski
 Un seul serveur est chargé, `context-mode`, et il vient du **plugin** déclaré dans
 `.claude/settings.json`. Ne jamais le re-déclarer dans un `.mcp.json` : Claude chargerait deux
 exemplaires de chaque outil (`mcp__context-mode__*` **et**
-`mcp__plugin_context-mode_context-mode__*`). C'est déjà arrivé ; le `.mcp.json` a été supprimé.
-
-Les serveurs `server-runner`, `cypress-runner`, `pytest-runner`, `db-manager` et `github` ont été
-retirés — le dossier `mcp/` n'existe plus.
+`mcp__plugin_context-mode_context-mode__*`).
 
 GitHub passe par le CLI `gh`, authentifié une fois via `gh auth login` (`/main-pr`, `/release-pr`).
 
