@@ -26,7 +26,7 @@ class MasteryService:
     async def get_for_account(
         cls, session: SessionDep, game_account_id: uuid.UUID
     ) -> list[GameAccountMasteryResponse]:
-        all_masteries = list((await session.exec(select(Mastery))).all())
+        all_masteries = (await session.exec(select(Mastery))).all()
         saved_rows = list(
             (
                 await session.exec(

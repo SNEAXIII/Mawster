@@ -97,8 +97,7 @@ if IS_TESTING:
         DiscordAuthService,
     )
 
-    # NOSONAR S7503
-    async def _fake_verify(cls, access_token: str) -> dict:
+    async def _fake_verify(cls, access_token: str) -> dict:  # NOSONAR S7503
         if not access_token:
             raise DISCORD_TOKEN_INVALID_EXCEPTION
         token_hash = hashlib.sha256(access_token.encode()).hexdigest()[:16]
