@@ -38,9 +38,10 @@ export function rarityLabel(rarity: string, signature: number, ascension?: numbe
 
 // ─── Member role ─────────────────────────────────────────
 
-/** Numeric sort weight: owner (0) < officer (1) < member (2). */
+/** Numeric sort weight: owner (0) < officer (1) < strategist (2) < member (3). */
 export function memberRoleOrder(member: BgMember): number {
   if (member.is_owner) return 0
   if (member.is_officer) return 1
-  return 2
+  if (member.is_strategist) return 2
+  return 3
 }

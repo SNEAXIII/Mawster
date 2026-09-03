@@ -93,7 +93,7 @@ export default function DefenseSidePanel({
                 <div className='flex items-center justify-between mb-2'>
                   <UsernameEnriched
                     pseudo={member.game_pseudo}
-                    role={getMemberRole(member.is_owner, member.is_officer)}
+                    role={getMemberRole(member.is_owner, member.is_officer, member.is_strategist)}
                     isMine={isMine(member.game_account_id)}
                   />
                   <div className='flex items-center gap-2'>

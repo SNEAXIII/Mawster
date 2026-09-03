@@ -1,6 +1,7 @@
 import os
 import time
 from pathlib import Path
+from uuid import uuid4
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -16,7 +17,7 @@ IS_ECHO_ASYNC = False
 # When running without xdist the var is absent → single "test.db".
 Path("temp").mkdir(exist_ok=True)
 _worker = os.environ.get("PYTEST_XDIST_WORKER", "")
-DB_NAME = f"temp/test_{_worker}.db" if _worker else "temp/test.db"
+DB_NAME = f"temp/test_{_worker}_{uuid4()}.db" if _worker else "temp/test.db"
 
 sqlite_sync_engine = create_engine(
     f"sqlite:///{DB_NAME}",

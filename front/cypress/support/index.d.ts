@@ -123,6 +123,11 @@ declare global {
       apiAddOfficer(token: string, allianceId: string, gameAccountId: string): Chainable<any>;
 
       /**
+       * Grant the strategist rank to a member via backend API. Owner or officer token.
+       */
+      apiAddStrategist(token: string, allianceId: string, gameAccountId: string): Chainable<any>;
+
+      /**
        * Upsert one or two matchup ratings for a champion (POST /alliances/{id}/matchups).
        * Officer/owner token only. A single call may carry at most one `defender` and one
        * `node` target (the API rejects duplicate target types).

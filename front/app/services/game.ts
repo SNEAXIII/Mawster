@@ -29,6 +29,7 @@ export interface AllianceMember {
   alliance_group: number | null
   is_owner: boolean
   is_officer: boolean
+  is_strategist: boolean
 }
 
 export interface Alliance {
@@ -267,6 +268,8 @@ export interface AllianceRoleEntry {
   is_owner: boolean
   is_officer: boolean
   can_manage: boolean
+  is_strategist: boolean
+  can_place: boolean
 }
 
 export interface AllianceMyRoles {
@@ -441,6 +444,30 @@ export async function removeOfficer(allianceId: string, gameAccountId: string): 
     body: JSON.stringify({ game_account_id: gameAccountId }),
   })
   await throwOnError(response, "Erreur lors du retrait de l'officer")
+  return response.json()
+}
+
+// ─── Strategists ─────────────────────────────────────────
+export async function addStrategist(allianceId: string, gameAccountId: string): Promise<Alliance> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/strategists`, {
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ game_account_id: gameAccountId }),
+  })
+  await throwOnError(response, "Erreur lors de l'ajout du stratège")
+  return response.json()
+}
+
+export async function removeStrategist(
+  allianceId: string,
+  gameAccountId: string
+): Promise<Alliance> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/strategists`, {
+    method: 'DELETE',
+    headers: jsonHeaders,
+    body: JSON.stringify({ game_account_id: gameAccountId }),
+  })
+  await throwOnError(response, 'Erreur lors du retrait du stratège')
   return response.json()
 }
 

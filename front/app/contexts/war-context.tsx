@@ -62,6 +62,7 @@ interface WarContextValue {
   handleBgChange: (bg: number) => void
   loading: boolean
   canManageWar: boolean
+  canPlaceWar: boolean
   isVisitor: boolean
   isMine: (gameAccountId: string) => boolean
 
@@ -158,7 +159,7 @@ export function WarProvider({
   initialBg?: number
 }>) {
   const { t } = useI18n()
-  const { canManage, isMine } = useAllianceRole()
+  const { canManage, canPlace, isMine } = useAllianceRole()
 
   const {
     alliances,
@@ -200,6 +201,7 @@ export function WarProvider({
   const placements = useMemo<WarPlacement[]>(() => warSummary?.placements ?? [], [warSummary])
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId)
   const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false
+  const canPlaceWar = selectedAlliance ? canPlace(selectedAlliance) : false
   const isVisitor = useMemo(
     () => alliances.find((a) => a.id === selectedAllianceId)?.isVisitor ?? false,
     [alliances, selectedAllianceId]
@@ -317,14 +319,14 @@ export function WarProvider({
           break
         }
         case WarMode.Defenders:
-          if (!selectedAlliance || !canManage(selectedAlliance)) return
+          if (!selectedAlliance || !canPlace(selectedAlliance)) return
           setSelectorNode(nodeNumber)
           break
         case WarMode.Export:
           break
       }
     },
-    [activeWarId, warMode, placements, t, selectedAlliance, canManage]
+    [activeWarId, warMode, placements, t, selectedAlliance, canPlace]
   )
 
   const handleCreateWar = async (opponentName: string, bannedChampionIds: string[]) => {
@@ -778,6 +780,7 @@ export function WarProvider({
       handleBgChange,
       loading,
       canManageWar,
+      canPlaceWar,
       isVisitor,
       isMine,
       currentWar,
@@ -834,6 +837,7 @@ export function WarProvider({
       handleBgChange,
       loading,
       canManageWar,
+      canPlaceWar,
       isVisitor,
       currentWar,
       activeWarId,

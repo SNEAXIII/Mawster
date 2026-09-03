@@ -9,6 +9,7 @@ export interface AllianceRoleAPI {
   isMine: (gameAccountId: string) => boolean
   isOwner: (alliance: Alliance) => boolean
   canManage: (alliance: Alliance) => boolean
+  canPlace: (alliance: Alliance) => boolean
   getRoleFor: (
     allianceId: string
   ) => ReturnType<ReturnType<typeof useAllianceContext>['getRoleFor']>
@@ -39,6 +40,7 @@ export function useAllianceRole(): AllianceRoleAPI {
     isMine: ctx.isMine,
     isOwner: ctx.isOwner,
     canManage: ctx.canManage,
+    canPlace: ctx.canPlace,
     getRoleFor: ctx.getRoleFor,
     loading: ctx.rolesLoading,
     refresh: ctx.refreshRoles,
