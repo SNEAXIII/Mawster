@@ -24,7 +24,6 @@ export interface DeletedGameAccount {
 
 export interface AllianceMember {
   id: string
-  user_id: string
   game_pseudo: string
   alliance_group: number | null
   is_owner: boolean

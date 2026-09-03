@@ -24,7 +24,6 @@ class AllianceMemberResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    user_id: uuid.UUID
     game_pseudo: str
     alliance_group: int | None = None
     is_owner: bool = False
@@ -54,28 +53,68 @@ class AllianceOfficerResponse(PlayerIdentity):
         }
 
 
-class AllianceResponse(BaseModel):
-    """Full alliance response with members and officers."""
+class AlliancePublicFields(BaseModel):
+    """What an Alliance shows to whoever holds no rank in it.
+
+    Everything here is impersonal: no Player is named. The interior — who plays
+    there and who leads it — lives in `AllianceResponse` and is reserved to the
+    alliance's own members and Visitors.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     name: str
     tag: str
-    owner_id: uuid.UUID
-    owner_pseudo: str
     created_at: datetime
     elo: int = 0
     tier: int = 20
+    member_count: int = 0
+
+
+class AllianceListingResponse(AlliancePublicFields):
+    """An Alliance seen from outside."""
+
+    @model_validator(mode="before")
+    @classmethod
+    def count_members(cls, data: Any) -> Any:
+        """Turn the members relationship into a count, and drop the rest.
+
+        Only an ORM Alliance needs flattening: the endpoint that serves both this
+        and `AllianceResponse` hands the union an already-built model, which must
+        pass through untouched.
+        """
+        if isinstance(data, (dict, AlliancePublicFields)):
+            return data
+        return {
+            "id": data.id,
+            "name": data.name,
+            "tag": data.tag,
+            "created_at": data.created_at,
+            "elo": data.elo,
+            "tier": data.tier,
+            "member_count": len(data.members),
+        }
+
+
+class AllianceResponse(AlliancePublicFields):
+    """Full alliance response with members and officers."""
+
+    owner_id: uuid.UUID
+    owner_pseudo: str
     officers: list[AllianceOfficerResponse] = []
     members: list[AllianceMemberResponse] = []
-    member_count: int = 0
 
     @model_validator(mode="before")
     @classmethod
     def flatten_relations(cls, data: Any) -> Any:
-        """Flatten `.owner`, `.officers`, `.members` relationships."""
-        if isinstance(data, dict):
+        """Flatten `.owner`, `.officers`, `.members` relationships.
+
+        A dict or an already-built model passes through: the facade returned by
+        `GET /alliances/{id}` reaches this union too, and has no relationships to
+        flatten.
+        """
+        if isinstance(data, (dict, AlliancePublicFields)):
             return data
         officer_ids = {adj.game_account_id for adj in data.officers}
         strategist_ids = {s.game_account_id for s in data.strategists}
@@ -92,7 +131,6 @@ class AllianceResponse(BaseModel):
             "members": [
                 {
                     "id": m.id,
-                    "user_id": m.user_id,
                     "game_pseudo": m.game_pseudo,
                     "alliance_group": m.alliance_group,
                     "is_owner": m.id == data.owner_id,

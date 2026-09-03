@@ -199,9 +199,25 @@ class TestUpdateAlliance:
         assert response.json()["name"] == "NewName"
 
     @pytest.mark.asyncio
-    async def test_non_owner_cannot_update(self):
+    async def test_outsider_cannot_update(self):
+        """USER2 has no account in the alliance: they learn nothing, not even that
+        it exists."""
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_put_request(
+            f"{ENDPOINT}/{alliance.id}",
+            {"name": "Hacked", "tag": "H", "owner_id": str(uuid.uuid4())},
+            headers=HEADERS_USER2,
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_plain_member_cannot_update(self):
+        """A member is inside: they get an honest "you are not the owner"."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_put_request(
             f"{ENDPOINT}/{alliance.id}",
@@ -230,9 +246,22 @@ class TestDeleteAlliance:
         assert response.status_code == 204
 
     @pytest.mark.asyncio
-    async def test_non_owner_cannot_delete(self):
+    async def test_outsider_cannot_delete(self):
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}",
+            headers=HEADERS_USER2,
+            payload={"name": ALLIANCE_NAME},
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_plain_member_cannot_delete(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         response = await execute_delete_request(
             f"{ENDPOINT}/{alliance.id}",
@@ -815,7 +844,7 @@ class TestEligibleEndpointsAuthorization:
         response = await execute_get_request(
             f"{ENDPOINT}/{alliance.id}/eligible-members", headers=HEADERS_USER2
         )
-        assert response.status_code == 403
+        assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_plain_member_cannot_list_eligible_visitors(self):
@@ -854,7 +883,7 @@ class TestEligibleEndpointsAuthorization:
         response = await execute_get_request(
             f"{ENDPOINT}/{alliance.id}/eligible-visitors", headers=HEADERS_USER2
         )
-        assert response.status_code == 403
+        assert response.status_code == 404
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("listing", ["eligible-members", "eligible-visitors"])
@@ -878,3 +907,76 @@ class TestEligibleEndpointsAuthorization:
         )
         assert response.status_code == 200
         assert str(gone.id) not in [a["id"] for a in response.json()]
+
+
+# =========================================================================
+# The public facade
+# =========================================================================
+
+
+class TestAllianceFacade:
+    """An Alliance exists publicly; its people do not. Members and Visitors see
+    the interior, everyone else sees name, tag, Elo, Tier and a head count."""
+
+    @pytest.mark.asyncio
+    async def test_member_sees_the_interior(self):
+        await _setup_2_users()
+        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+
+        assert response.status_code == 200
+        body = response.json()
+        assert [m["id"] for m in body["members"]] == [str(owner.id)]
+        assert body["owner_pseudo"] == GAME_PSEUDO
+
+    @pytest.mark.asyncio
+    async def test_visitor_sees_the_interior(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_visitor(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER2)
+
+        assert response.status_code == 200
+        assert len(response.json()["members"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_outsider_sees_only_the_facade(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER2)
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["id"] == str(alliance.id)
+        assert body["name"] == ALLIANCE_NAME
+        assert body["member_count"] == 1
+        for hidden in ("members", "officers", "owner_id", "owner_pseudo"):
+            assert hidden not in body
+
+    @pytest.mark.asyncio
+    async def test_the_listing_names_nobody(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_get_request(ENDPOINT, headers=HEADERS_USER2)
+
+        assert response.status_code == 200
+        row = next(a for a in response.json() if a["id"] == str(alliance.id))
+        assert row["member_count"] == 2
+        for hidden in ("members", "officers", "owner_id", "owner_pseudo"):
+            assert hidden not in row
+
+    @pytest.mark.asyncio
+    async def test_a_roster_never_cites_an_account(self):
+        """ADR 0001: the game domain names Players, never the Account behind them."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_get_request(f"{ENDPOINT}/{alliance.id}", headers=HEADERS_USER1)
+
+        assert response.status_code == 200
+        assert all("user_id" not in m for m in response.json()["members"])

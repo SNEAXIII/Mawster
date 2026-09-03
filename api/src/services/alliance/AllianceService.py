@@ -261,18 +261,35 @@ class AllianceService:
     # ---- Require methods (raise HTTPException on failure) ----
 
     @classmethod
+    async def _refuse_rank(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+        detail: str,
+    ) -> HTTPException:
+        """Build the refusal for someone who lacks a rank.
+
+        403 for a Player who belongs to the alliance — member or Visitor — because
+        they already know it exists and deserve to be told what they are missing.
+        404 for anyone else, including on an alliance that does not exist: an
+        outsider learns nothing about an interior that is none of their business.
+        """
+        if await cls.is_visitor(session, user_id, alliance_id):
+            return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+
+    @classmethod
     async def require_owner(
         cls,
         session: SessionDep,
         alliance_id: uuid.UUID,
         user_id: uuid.UUID,
     ) -> None:
-        """Raise 403 if user is not the alliance owner."""
+        """Raise 403 if the user belongs to the alliance without owning it, 404 if
+        they do not belong to it at all."""
         if not await cls.is_owner(session, user_id, alliance_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=OWNER_REQUIRED,
-            )
+            raise await cls._refuse_rank(session, alliance_id, user_id, OWNER_REQUIRED)
 
     @classmethod
     async def require_officer(
@@ -281,12 +298,10 @@ class AllianceService:
         alliance_id: uuid.UUID,
         user_id: uuid.UUID,
     ) -> None:
-        """Raise 403 if user is not an officer or owner of the alliance."""
+        """Raise 403 if the user belongs to the alliance without leading it, 404 if
+        they do not belong to it at all."""
         if not await cls.is_officer(session, user_id, alliance_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=OWNER_OR_OFFICER_REQUIRED,
-            )
+            raise await cls._refuse_rank(session, alliance_id, user_id, OWNER_OR_OFFICER_REQUIRED)
 
     @classmethod
     async def _require_privileged_account(
@@ -308,8 +323,8 @@ class AllianceService:
         alliance = await cls._load_alliance_with_relations(session, alliance_id)
         if alliance is None:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=message,
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=ALLIANCE_NOT_FOUND,
             )
         user_account_ids = await cls._get_user_account_ids(session, user_id)
 
@@ -319,19 +334,13 @@ class AllianceService:
         else:
             matching = user_account_ids & extra_ids(alliance)
             if not matching:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=message,
-                )
+                raise await cls._refuse_rank(session, alliance_id, user_id, message)
             privileged_id = next(iter(matching))
 
         # alliance.members is already eagerly loaded — no extra query needed
         account = next((m for m in alliance.members if m.id == privileged_id), None)
         if account is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=message,
-            )
+            raise await cls._refuse_rank(session, alliance_id, user_id, message)
         return account
 
     @classmethod
@@ -357,12 +366,10 @@ class AllianceService:
         alliance_id: uuid.UUID,
         user_id: uuid.UUID,
     ) -> None:
-        """Raise 403 if the user is neither owner, officer nor strategist."""
+        """Raise 403 if the user belongs to the alliance but may not place, 404 if
+        they do not belong to it at all."""
         if not await cls.can_place(session, user_id, alliance_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=STRATEGIST_REQUIRED,
-            )
+            raise await cls._refuse_rank(session, alliance_id, user_id, STRATEGIST_REQUIRED)
 
     @classmethod
     async def require_strategist_account(
@@ -434,9 +441,8 @@ class AllianceService:
         if common:
             return next(a for a in user_accounts if a.id in common)
 
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=OWNER_OR_OFFICER_REQUIRED,
+        raise await cls._refuse_rank(
+            session, alliance.id, current_user_id, OWNER_OR_OFFICER_REQUIRED
         )
 
     @classmethod
@@ -446,10 +452,7 @@ class AllianceService:
         """Check that the current user owns a game account that is the alliance owner."""
         user_account_ids = await cls._get_user_account_ids(session, current_user_id)
         if alliance.owner_id not in user_account_ids:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=OWNER_REQUIRED,
-            )
+            raise await cls._refuse_rank(session, alliance.id, current_user_id, OWNER_REQUIRED)
 
     @classmethod
     async def _assert_can_remove_member(
@@ -478,9 +481,8 @@ class AllianceService:
         # Check if caller is officer
         officer_ids = {off.game_account_id for off in alliance.officers}
         if not (user_account_ids & officer_ids):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=OWNER_OR_OFFICER_REQUIRED,
+            raise await cls._refuse_rank(
+                session, alliance.id, current_user_id, OWNER_OR_OFFICER_REQUIRED
             )
 
         # Caller is officer — cannot remove another officer
