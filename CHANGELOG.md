@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.8.0](https://github.com/SNEAXIII/Mawster/compare/v1.7.1...v1.8.0) (2026-09-03)
+
+
+### Ajouté
+
+* add the Strategist alliance rank ([#484](https://github.com/SNEAXIII/Mawster/issues/484)) ([c0655b9](https://github.com/SNEAXIII/Mawster/commit/c0655b9892d6abf30f1cec597754a6d2c6130247))
+
 ## [1.7.1](https://github.com/SNEAXIII/Mawster/compare/v1.7.0...v1.7.1) (2026-09-02)
 
 
