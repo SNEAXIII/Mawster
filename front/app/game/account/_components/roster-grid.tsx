@@ -21,7 +21,7 @@ export default function RosterGrid({
   upgradeRequests,
   isFiltered = false,
   ...cardActions
-}: RosterGridProps) {
+}: Readonly<RosterGridProps>) {
   const { t } = useI18n()
 
   /** champion_user_id → pending request id, built once instead of scanning per card */

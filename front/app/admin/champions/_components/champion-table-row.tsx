@@ -109,7 +109,7 @@ export default function ChampionTableRow({
             </Button>
           </div>
         ) : (
-          <span className='text-muted-foreground text-xs'>{champion.alias || '-'}</span>
+          <span className='text-muted-foreground text-xs'>{champion.alias ?? '-'}</span>
         )}
       </td>
 

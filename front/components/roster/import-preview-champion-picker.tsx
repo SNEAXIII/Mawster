@@ -31,7 +31,7 @@ export default function ImportPreviewChampionPicker({
   championImageUrl,
   candidates,
   onPick,
-}: ImportPreviewChampionPickerProps) {
+}: Readonly<ImportPreviewChampionPickerProps>) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [champions, setChampions] = useState<CatalogChampion[]>([])

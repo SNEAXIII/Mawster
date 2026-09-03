@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -57,17 +57,17 @@ export default function SeasonsPanel() {
   }
   const pendingCopy = confirmCopy[confirm?.action ?? 'open']
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setSeasons(await listSeasons())
     } catch {
       setError(t.game.season.admin.createError)
     }
-  }
+  }, [t])
 
   useEffect(() => {
     load()
-  }, [])
+  }, [load])
 
   const handleCreate = async () => {
     const n = Number.parseInt(newNumber, 10)

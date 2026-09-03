@@ -38,7 +38,7 @@ export default function WarFormDialog({
   mode = 'create',
   initialOpponentName = '',
   initialBannedIds = [],
-}: WarFormDialogProps) {
+}: Readonly<WarFormDialogProps>) {
   const { t } = useI18n()
   const [opponentName, setOpponentName] = useState(initialOpponentName)
   const [loading, setLoading] = useState(false)

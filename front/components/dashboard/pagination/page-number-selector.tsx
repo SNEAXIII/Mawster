@@ -14,7 +14,7 @@ export default function PageNumberSelector({
   usersPerPage,
   onValueChange,
   defaultSize = 10,
-}: PageNumberSelectorProps) {
+}: Readonly<PageNumberSelectorProps>) {
   const { t } = useI18n()
 
   const sizes = [5, 10, 20, 50, 100]

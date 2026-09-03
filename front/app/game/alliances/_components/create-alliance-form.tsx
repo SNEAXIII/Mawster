@@ -40,7 +40,7 @@ export default function CreateAllianceForm({
   onTagChange,
   onOwnerChange,
   onSubmit,
-}: CreateAllianceFormProps) {
+}: Readonly<CreateAllianceFormProps>) {
   const { t } = useI18n()
 
   return (

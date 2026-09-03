@@ -25,7 +25,7 @@ export default function SeasonSelect({
   getLabel,
   className = 'w-36',
   'data-cy': dataCy,
-}: SeasonSelectProps) {
+}: Readonly<SeasonSelectProps>) {
   return (
     <Select
       value={value ?? ''}

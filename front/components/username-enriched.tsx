@@ -40,7 +40,7 @@ export default function UsernameEnriched({
         'inline-flex items-center gap-1 font-medium',
         textSize,
         isMine
-          ? 'bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent font-semibold'
+          ? 'bg-linear-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent font-semibold'
           : 'text-foreground',
         className
       )}

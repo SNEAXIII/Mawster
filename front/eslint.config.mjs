@@ -3,6 +3,7 @@ import tseslint from 'typescript-eslint'
 import prettierConfig from 'eslint-config-prettier'
 import reactHooks from 'eslint-plugin-react-hooks'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
+import sonarjs from 'eslint-plugin-sonarjs'
 
 export default tseslint.config(
   js.configs.recommended,
@@ -13,6 +14,7 @@ export default tseslint.config(
   {
     plugins: {
       'react-hooks': reactHooks,
+      sonarjs,
     },
     rules: {
       'react-hooks/exhaustive-deps': 'warn',
@@ -39,6 +41,35 @@ export default tseslint.config(
       // `<UsernameEnriched role='owner' />` is a domain prop (owner/officer/member), not
       // an ARIA role. ignoreNonDOM keeps the rule on real DOM elements, where it belongs.
       'jsx-a11y/aria-role': ['error', { ignoreNonDOM: true }],
+    },
+  },
+  {
+    // Both rules below need type information, and a rule that needs it and does not get
+    // it either crashes the run or silently reports nothing. Hence this block: only the
+    // sources go through the TS program — `eslint.config.mjs` is not in it.
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      // Sonar S6759: props a component never writes to. Suggestion-only as well, so
+      // `make fix` reports these without repairing them. Only this rule is enabled from
+      // sonarjs — its `recommended` config turns on ~250 rules at once, which this
+      // codebase has never been linted against.
+      'sonarjs/prefer-read-only-props': 'error',
+      // `a ?? b` over `a || b` and over `a !== undefined ? a : b`. Reports suggestions, never
+      // fixes (`meta.fixable` is `none`), so `--fix` will not touch these — the IDE quick-fix
+      // or a human applies them. A warning, not an error:
+      // on a `string`, `||` is often the intent — `champion.alias || '-'` wants the dash for
+      // the empty alias too, and `??` would print nothing. `boolean` is ignored outright:
+      // there `||` is plain boolean logic with no fallback in sight.
+      '@typescript-eslint/prefer-nullish-coalescing': [
+        'warn',
+        { ignorePrimitives: { boolean: true } },
+      ],
     },
   },
   {

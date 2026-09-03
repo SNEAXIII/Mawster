@@ -282,8 +282,10 @@ export function useRosterImportCore({
             oldSignature: row.oldSignature,
             newAscension: row.ascension ?? 0,
             oldAscension: row.oldAscension ?? null,
+            // Same as above: an empty message is no message, fall through to the default.
             error:
-              (err instanceof Error ? err.message : undefined) || t.roster.importExport.serverError,
+              (err instanceof Error && err.message ? err.message : undefined) ??
+              t.roster.importExport.serverError,
           })
         }
       }

@@ -61,6 +61,9 @@ export function useRosterImportVision({
 }: UseRosterImportVisionProps) {
   const { t } = useI18n()
   const core = useRosterImportCore({ roster, selectedAccountId, onRosterUpdated })
+  // See use-roster-import-export.ts: exhaustive-deps cannot see through `core.x`.
+  // `openPreview` is a `useCallback(…, [])`, `setPreviewRows` a useState setter — both stable.
+  const { openPreview, setPreviewRows } = core
 
   const visionInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -149,9 +152,9 @@ export function useRosterImportVision({
         toast.error(t.roster.importExport.visionNoChampions)
         return
       }
-      core.openPreview(rows)
+      openPreview(rows)
     },
-    [buildRowsFromPredictions, core.openPreview, t]
+    [buildRowsFromPredictions, openPreview, t]
   )
 
   // ── Polling ──────────────────────────────────────────────
@@ -222,7 +225,7 @@ export function useRosterImportVision({
   // ── Manual corrections from the editable review row ─────
   const onRowChange = useCallback(
     (index: number, patch: PreviewRowPatch) => {
-      core.setPreviewRows((prev) =>
+      setPreviewRows((prev) =>
         prev.map((row, i) => {
           if (i !== index) return row
           const updated = { ...row, ...patch }
@@ -249,7 +252,7 @@ export function useRosterImportVision({
         })
       )
     },
-    [core.setPreviewRows, roster]
+    [setPreviewRows, roster]
   )
 
   // ── Archive the confirmed dataset (best-effort) ─────────

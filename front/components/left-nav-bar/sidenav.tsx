@@ -14,7 +14,7 @@ export default function SideNavBar() {
   const { data: session } = useSession()
   const { t } = useI18n()
   const isAuthenticated = Boolean(session && !session.error && session.user)
-  const userRole: Role = (isAuthenticated ? (session?.user.role as Role) : null) || Role.all
+  const userRole: Role = (isAuthenticated ? (session?.user.role as Role) : null) ?? Role.all
   const { hasAlliance } = useAllianceContext()
 
   return (

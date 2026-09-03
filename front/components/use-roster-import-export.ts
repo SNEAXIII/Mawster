@@ -129,6 +129,11 @@ export function useRosterImportExport({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const core = useRosterImportCore({ roster, selectedAccountId, onRosterUpdated })
+  // Pulled out of `core` so the dependency array can name the function itself.
+  // exhaustive-deps does not track `core.x` and asks for the whole `core` object, which
+  // is rebuilt every render — depending on it would defeat the useCallback. `openPreview`
+  // is a `useCallback(…, [])` over two setters, so it is stable for the hook's lifetime.
+  const { openPreview } = core
 
   // ── Export ─────────────────────────────────────────────
   const handleExport = useCallback(() => {
@@ -198,12 +203,12 @@ export function useRosterImportExport({
           return raritySortValue(b.newRarity) - raritySortValue(a.newRarity)
         })
 
-        core.openPreview(rows)
+        openPreview(rows)
       } catch (err: unknown) {
         toast.error((err as Error).message || t.roster.importExport.fileReadError)
       }
     },
-    [roster, t, core.openPreview]
+    [roster, t, openPreview]
   )
 
   return {

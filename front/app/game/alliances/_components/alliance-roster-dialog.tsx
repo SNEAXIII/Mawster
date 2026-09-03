@@ -27,7 +27,7 @@ export default function AllianceRosterDialog({
   gameAccountId,
   gamePseudo,
   canRequestUpgrade = false,
-}: AllianceRosterDialogProps) {
+}: Readonly<AllianceRosterDialogProps>) {
   const { t } = useI18n()
   const [roster, setRoster] = useState<RosterEntry[]>([])
   const [masteries, setMasteries] = useState<MasteryEntry[]>([])

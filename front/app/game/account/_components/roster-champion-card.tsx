@@ -62,7 +62,7 @@ function RosterChampionCard({
   readOnly = false,
   pendingRequestId,
   onCancelRequest,
-}: RosterChampionCardProps) {
+}: Readonly<RosterChampionCardProps>) {
   const { t } = useI18n()
   const classColors = getClassColors(entry.champion_class)
   const nextRarity = getNextRarity(entry.rarity)

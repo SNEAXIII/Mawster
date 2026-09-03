@@ -51,7 +51,11 @@ interface ImportPreviewRowProps {
   onRowChange?: (index: number, patch: PreviewRowPatch) => void
 }
 
-export default function ImportPreviewRow({ row, index, onRowChange }: ImportPreviewRowProps) {
+export default function ImportPreviewRow({
+  row,
+  index,
+  onRowChange,
+}: Readonly<ImportPreviewRowProps>) {
   const { t } = useI18n()
   const ascLabel = t.roster.importExport.ascLabel.toLowerCase()
 

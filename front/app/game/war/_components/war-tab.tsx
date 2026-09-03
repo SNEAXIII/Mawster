@@ -49,7 +49,7 @@ const WarAttackerPanel = dynamic(() => import('./war-attacker-panel'), {
   loading: () => <FullPageSpinner />,
 })
 
-export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
+export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => void }>) {
   const { t } = useI18n()
   const {
     currentWar,

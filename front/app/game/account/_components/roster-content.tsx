@@ -56,7 +56,7 @@ export default function RosterContent() {
               <div className='w-full max-w-xs'>
                 <label className='block text-sm font-medium mb-2'>{t.roster.selectAccount}</label>
                 <Select
-                  value={vm.selectedAccountId || ''}
+                  value={vm.selectedAccountId ?? ''}
                   onValueChange={(val) => vm.setSelectedAccountId(val || null)}
                 >
                   <SelectTrigger
