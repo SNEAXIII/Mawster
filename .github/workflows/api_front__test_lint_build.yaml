@@ -165,7 +165,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
-    needs: [e2e-plan, e2e-build, lint-test-python]
+    needs: [e2e-plan, e2e-build, lint-test-python, lint-front]
     strategy:
       fail-fast: false
       matrix:
