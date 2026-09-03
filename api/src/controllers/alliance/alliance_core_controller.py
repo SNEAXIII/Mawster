@@ -8,6 +8,7 @@ from src.dto.account.game.dto_game_account import GameAccountResponse
 from src.dto.alliance.dto_alliance import (
     AllianceCreateRequest,
     AllianceDeleteRequest,
+    AllianceListingResponse,
     AllianceMyRolesResponse,
     AllianceResponse,
     AllianceUpdateEloRequest,
@@ -93,9 +94,13 @@ async def create_alliance(
     return _to_response(alliance)
 
 
-@alliance_core_controller.get("", response_model=list[AllianceResponse])
+@alliance_core_controller.get("", response_model=list[AllianceListingResponse])
 async def get_all_alliances(session: SessionDep):
-    """Get all alliances."""
+    """Get all alliances, as the facade an outsider is entitled to.
+
+    Never the interior: who plays in an alliance is for its own members and
+    Visitors to see.
+    """
     alliances = await AllianceService.get_all_alliances(session)
     return [_to_response(a) for a in alliances]
 
@@ -139,12 +144,24 @@ async def get_accessible_alliances(
     return [_to_response(a) for a in alliances]
 
 
-@alliance_core_controller.get("/{alliance_id}", response_model=AllianceResponse)
-async def get_alliance(alliance_id: uuid.UUID, session: SessionDep):
-    """Get a specific alliance by ID."""
+@alliance_core_controller.get(
+    "/{alliance_id}", response_model=AllianceResponse | AllianceListingResponse
+)
+async def get_alliance(
+    alliance_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get a specific alliance by ID.
+
+    Members and Visitors get the interior — the roster and the officers. Anyone
+    else gets the facade: an alliance exists publicly, its people do not.
+    """
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+    if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
+        return AllianceListingResponse.model_validate(alliance)
     return _to_response(alliance)
 
 

@@ -56,8 +56,13 @@ changes nothing. Permanent, with no expiry — a read-only member, not a guest p
 The rank only means something because an Alliance's interior — its Players, its
 Officers, its Defense Assignment — is closed to whoever holds no rank in it. Being
 outside is the default; a Visitor is how you let someone in without letting them act.
-_Debt_: `GET /alliances` and `GET /alliances/{id}` still hand the roster to any
-authenticated Account, so today a Visitor grant adds nothing on that front.
+
+**Alliance Listing**:
+What an Alliance shows to whoever holds no rank in it: its name, tag, Elo, Tier and how
+many Players it holds. Impersonal by construction — it names nobody, not even the Owner.
+Everything else is the interior, and the interior is read by its own Players and its
+Visitors, nobody else.
+_Avoid_: public alliance, alliance summary, alliance card.
 
 **Admin**:
 An Account with a platform-wide role (admin, super admin). Moderates Accounts and

@@ -117,7 +117,7 @@ class TestImportFightRecords:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_wrong_alliance_returns_403(self, officer_with_champions):
+    async def test_wrong_alliance_returns_404(self, officer_with_champions):
         other_alliance_id = uuid.uuid4()
         _alliance_id, _officer_acc_id, champ_id, defender_id, _season_id = officer_with_champions
         payload = {
@@ -133,7 +133,7 @@ class TestImportFightRecords:
         }
         url = f"/alliances/{other_alliance_id}/fight-records/import"
         response = await execute_post_request(url, payload, HEADERS_USER2)
-        assert response.status_code == 403
+        assert response.status_code == 404
 
 
 def _row(champ_id, defender_id, node_number=15, season_name="S1", ko_count=0):
