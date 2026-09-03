@@ -401,6 +401,19 @@
         "process": "readonly",
         "__dirname": "readonly"
       }
+    },
+    {
+      // Radix's PopoverTrigger renders `aria-controls={open ? contentId : undefined}`, so these
+      // comboboxes get it exactly when the listbox is mounted; pointing at an absent element
+      // while closed would be worse. The rule reads the JSX statically and cannot see that.
+      "files": [
+        "app/game/_components/searchable-player-filter-select.tsx",
+        "app/game/alliances/_components/alliance-invite-member-combo.tsx",
+        "app/game/knowledge-base/_components/champion-filter-select.tsx"
+      ],
+      "rules": {
+        "jsx-a11y/role-has-required-aria-props": "off"
+      }
     }
   ],
   "jsPlugins": ["eslint-plugin-sonarjs"]
