@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Callable
 
 from fastapi import HTTPException
 from sqlalchemy import func
@@ -288,31 +289,39 @@ class AllianceService:
             )
 
     @classmethod
-    async def require_officer_account(
+    async def _require_privileged_account(
         cls,
         session: SessionDep,
         alliance_id: uuid.UUID,
         user_id: uuid.UUID,
+        extra_ids: Callable[[Alliance], set[uuid.UUID]],
+        message: str,
     ) -> GameAccount:
-        """Raise 403 if user is not an officer or owner. Returns their GameAccount in this alliance."""
+        """Resolve the acting GameAccount for a privilege check, owner first.
+
+        Shared by `require_officer_account` and `require_strategist_account`:
+        both rank tiers resolve who is acting the exact same way — the owner
+        wins outright, otherwise the caller-supplied id set (officers, or
+        officers-plus-strategists) decides — and must not be allowed to drift
+        apart by a fix landing in one copy and not the other.
+        """
         alliance = await cls._load_alliance_with_relations(session, alliance_id)
         if alliance is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=OWNER_OR_OFFICER_REQUIRED,
+                detail=message,
             )
         user_account_ids = await cls._get_user_account_ids(session, user_id)
 
-        # Determine the privileged account id (owner first, then any officer)
+        # Determine the privileged account id (owner first, then the extra set)
         if alliance.owner_id in user_account_ids:
             privileged_id = alliance.owner_id
         else:
-            officer_ids = {off.game_account_id for off in alliance.officers}
-            matching = user_account_ids & officer_ids
+            matching = user_account_ids & extra_ids(alliance)
             if not matching:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=OWNER_OR_OFFICER_REQUIRED,
+                    detail=message,
                 )
             privileged_id = next(iter(matching))
 
@@ -321,9 +330,25 @@ class AllianceService:
         if account is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=OWNER_OR_OFFICER_REQUIRED,
+                detail=message,
             )
         return account
+
+    @classmethod
+    async def require_officer_account(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> GameAccount:
+        """Raise 403 if user is not an officer or owner. Returns their GameAccount in this alliance."""
+        return await cls._require_privileged_account(
+            session,
+            alliance_id,
+            user_id,
+            extra_ids=lambda alliance: {off.game_account_id for off in alliance.officers},
+            message=OWNER_OR_OFFICER_REQUIRED,
+        )
 
     @classmethod
     async def require_strategist(
@@ -348,35 +373,19 @@ class AllianceService:
     ) -> GameAccount:
         """Raise 403 unless the user may place. Returns the GameAccount to record
         as the author of the placement."""
-        alliance = await cls._load_alliance_with_relations(session, alliance_id)
-        if alliance is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=STRATEGIST_REQUIRED,
-            )
-        user_account_ids = await cls._get_user_account_ids(session, user_id)
 
-        if alliance.owner_id in user_account_ids:
-            privileged_id = alliance.owner_id
-        else:
+        def _officer_and_strategist_ids(alliance: Alliance) -> set[uuid.UUID]:
             officer_ids = {off.game_account_id for off in alliance.officers}
             strategist_ids = {s.game_account_id for s in alliance.strategists}
-            matching = user_account_ids & (officer_ids | strategist_ids)
-            if not matching:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=STRATEGIST_REQUIRED,
-                )
-            privileged_id = next(iter(matching))
+            return officer_ids | strategist_ids
 
-        # alliance.members is already eagerly loaded — no extra query needed
-        account = next((m for m in alliance.members if m.id == privileged_id), None)
-        if account is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=STRATEGIST_REQUIRED,
-            )
-        return account
+        return await cls._require_privileged_account(
+            session,
+            alliance_id,
+            user_id,
+            extra_ids=_officer_and_strategist_ids,
+            message=STRATEGIST_REQUIRED,
+        )
 
     @classmethod
     async def require_member(
