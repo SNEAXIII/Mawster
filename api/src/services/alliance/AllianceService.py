@@ -15,13 +15,17 @@ from src.Messages.alliance_messages import (
     CANNOT_REMOVE_OWNER,
     GAME_ACCOUNT_ALREADY_IN_ALLIANCE,
     GAME_ACCOUNT_ALREADY_OFFICER,
+    GAME_ACCOUNT_ALREADY_STRATEGIST,
     GAME_ACCOUNT_MUST_BE_MEMBER_TO_BECOME_OFFICER,
+    GAME_ACCOUNT_MUST_BE_MEMBER_TO_BECOME_STRATEGIST,
     GAME_ACCOUNT_NOT_FOUND,
     GAME_ACCOUNT_NOT_MEMBER_OF_ALLIANCE,
     GAME_ACCOUNT_NOT_OFFICER,
+    GAME_ACCOUNT_NOT_STRATEGIST,
     GAME_ACCOUNT_NOT_YOURS,
     INVALID_GROUP_VALUE,
     NOT_ALLIANCE_MEMBER,
+    OFFICER_CANNOT_BE_STRATEGIST,
     OFFICER_CANNOT_REMOVE_OFFICER,
     OWNER_GAME_ACCOUNT_NOT_FOUND,
     OWNER_OR_OFFICER_REQUIRED,
@@ -744,6 +748,14 @@ class AllianceService:
         for off in officers_result.all():
             await session.delete(off)
 
+        # Strategists go the same way as officers — the alliance they ranked in
+        # is gone.
+        strategists_result = await session.exec(
+            select(AllianceStrategist).where(AllianceStrategist.alliance_id == alliance.id)
+        )
+        for strategist in strategists_result.all():
+            await session.delete(strategist)
+
         # Visitors are not members, so an alliance can be "owner only" and still
         # have spectators — drop their access along with the alliance.
         visitors_result = await session.exec(
@@ -833,6 +845,7 @@ class AllianceService:
         officer = officer_result.first()
         if officer:
             await session.delete(officer)
+        await cls._delete_strategist_row(session, alliance_id, game_account_id)
 
         # Their champions leave with them: free the defense nodes they occupied
         await DefensePlacementService.remove_placements_for_member(
@@ -883,6 +896,8 @@ class AllianceService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail=GAME_ACCOUNT_ALREADY_OFFICER,
             )
+        # The ranks are exclusive: an officer is never also a strategist.
+        await cls._delete_strategist_row(session, alliance_id, game_account_id)
         officer = AllianceOfficer(
             alliance_id=alliance_id,
             game_account_id=game_account_id,
@@ -912,6 +927,104 @@ class AllianceService:
                 detail=GAME_ACCOUNT_NOT_OFFICER,
             )
         await session.delete(officer)
+        await session.commit()
+        return await cls._load_alliance_with_relations(session, alliance_id)
+
+    # ---- Strategist management ----
+
+    @classmethod
+    async def _delete_strategist_row(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        game_account_id: uuid.UUID,
+    ) -> None:
+        """Drop the strategist row if there is one.
+
+        Called by every path that supersedes the rank — promotion to officer, kick,
+        leave — so the exclusivity the schema cannot enforce holds in practice.
+        Does not commit: the caller owns the transaction.
+        """
+        result = await session.exec(
+            select(AllianceStrategist).where(
+                AllianceStrategist.alliance_id == alliance_id,
+                AllianceStrategist.game_account_id == game_account_id,
+            )
+        )
+        row = result.first()
+        if row is not None:
+            await session.delete(row)
+
+    @classmethod
+    async def add_strategist(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        game_account_id: uuid.UUID,
+    ) -> Alliance:
+        """Grant the strategist rank to an alliance member.
+
+        The account must already be a member and must not already outrank it: an
+        officer is refused rather than silently downgraded.
+        """
+        game_account = await session.get(GameAccount, game_account_id)
+        if game_account is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=GAME_ACCOUNT_NOT_FOUND,
+            )
+        if game_account.alliance_id != alliance_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=GAME_ACCOUNT_MUST_BE_MEMBER_TO_BECOME_STRATEGIST,
+            )
+        officer_result = await session.exec(
+            select(AllianceOfficer).where(
+                AllianceOfficer.alliance_id == alliance_id,
+                AllianceOfficer.game_account_id == game_account_id,
+            )
+        )
+        if officer_result.first() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=OFFICER_CANNOT_BE_STRATEGIST,
+            )
+        existing = await session.exec(
+            select(AllianceStrategist).where(
+                AllianceStrategist.alliance_id == alliance_id,
+                AllianceStrategist.game_account_id == game_account_id,
+            )
+        )
+        if existing.first() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=GAME_ACCOUNT_ALREADY_STRATEGIST,
+            )
+        session.add(AllianceStrategist(alliance_id=alliance_id, game_account_id=game_account_id))
+        await session.commit()
+        return await cls._load_alliance_with_relations(session, alliance_id)
+
+    @classmethod
+    async def remove_strategist(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        game_account_id: uuid.UUID,
+    ) -> Alliance:
+        """Demote a strategist back to plain member."""
+        result = await session.exec(
+            select(AllianceStrategist).where(
+                AllianceStrategist.alliance_id == alliance_id,
+                AllianceStrategist.game_account_id == game_account_id,
+            )
+        )
+        row = result.first()
+        if row is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=GAME_ACCOUNT_NOT_STRATEGIST,
+            )
+        await session.delete(row)
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance_id)
 
