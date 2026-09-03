@@ -797,6 +797,47 @@ class TestCrossAllianceIsolation:
         )
         assert response.status_code == 404
 
+    @pytest.mark.asyncio
+    async def test_owner_cannot_remove_officer_of_other_alliance(self):
+        """The officer row is looked up by (alliance_id, game_account_id), so an
+        officer of another alliance simply does not exist here → 404."""
+        await _setup_2_users()
+        alliance_a, _ = await push_alliance_with_owner(user_id=USER_ID)
+        alliance_b, _ = await push_alliance_with_owner(
+            user_id=USER2_ID,
+            game_pseudo=GAME_PSEUDO_2,
+            alliance_name="OtherAlliance",
+            alliance_tag="OTHR",
+        )
+        officer_b = await push_member(alliance_b, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_3)
+        await push_officer(alliance_b, officer_b)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance_a.id}/officers",
+            headers=HEADERS_USER1,
+            payload={"game_account_id": str(officer_b.id)},
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_owner_cannot_add_officer_from_other_alliance(self):
+        """`add_officer` rejects a target whose alliance_id is not this one → 400."""
+        await _setup_2_users()
+        alliance_a, _ = await push_alliance_with_owner(user_id=USER_ID)
+        _, owner_b = await push_alliance_with_owner(
+            user_id=USER2_ID,
+            game_pseudo=GAME_PSEUDO_2,
+            alliance_name="OtherAlliance",
+            alliance_tag="OTHR",
+        )
+
+        response = await execute_post_request(
+            f"{ENDPOINT}/{alliance_a.id}/officers",
+            {"game_account_id": str(owner_b.id)},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 400
+
 
 # =========================================================================
 # Officer management edge cases

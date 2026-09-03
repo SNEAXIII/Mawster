@@ -1228,22 +1228,6 @@ class AllianceService:
         return result.all()
 
     @classmethod
-    async def get_eligible_officers(
-        cls, session: SessionDep, alliance_id: uuid.UUID
-    ) -> list[GameAccount]:
-        """Get members of the alliance who are not the owner and not already officers."""
-        alliance = await cls._load_alliance_with_relations(session, alliance_id)
-        if alliance is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ALLIANCE_NOT_FOUND,
-            )
-        officer_ids = {off.game_account_id for off in alliance.officers}
-        return [
-            m for m in alliance.members if m.id != alliance.owner_id and m.id not in officer_ids
-        ]
-
-    @classmethod
     async def get_eligible_members(cls, session: SessionDep) -> list[GameAccount]:
         """Get all game accounts that are NOT in any alliance and do NOT have a pending invitation."""
         # Get IDs of game accounts with pending invitations
@@ -1256,6 +1240,7 @@ class AllianceService:
 
         sql = select(GameAccount).where(
             GameAccount.alliance_id.is_(None),
+            GameAccount.deleted_at.is_(None),
         )
         if pending_ids:
             sql = sql.where(GameAccount.id.notin_(pending_ids))  # type: ignore[union-attr]
@@ -1289,7 +1274,7 @@ class AllianceService:
         )
         excluded_ids |= set(pending_ids_result.all())
 
-        sql = select(GameAccount)
+        sql = select(GameAccount).where(GameAccount.deleted_at.is_(None))
         if excluded_ids:
             sql = sql.where(GameAccount.id.notin_(excluded_ids))  # type: ignore[union-attr]
         result = await session.exec(sql)

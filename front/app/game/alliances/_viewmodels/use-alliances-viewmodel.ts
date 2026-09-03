@@ -109,9 +109,9 @@ export function useAlliancesViewModel() {
     }
   }
 
-  const fetchEligibleMembers = async () => {
+  const fetchEligibleMembers = async (allianceId: string) => {
     try {
-      setEligibleMembers(await getEligibleMembers())
+      setEligibleMembers(await getEligibleMembers(allianceId))
     } catch (err) {
       console.error(err)
     }
@@ -156,13 +156,11 @@ export function useAlliancesViewModel() {
     [t.game.alliances.statistics.loadError]
   )
 
+  // The eligible members are scoped to the alliance doing the inviting, so they
+  // are fetched when the invite dialog opens rather than on every membership
+  // change — there is no alliance to ask about here.
   const refreshMembership = () =>
-    Promise.all([
-      refreshAlliances(),
-      fetchEligibleOwners(),
-      fetchEligibleMembers(),
-      fetchMyAccounts(),
-    ])
+    Promise.all([refreshAlliances(), fetchEligibleOwners(), fetchMyAccounts()])
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -258,7 +256,7 @@ export function useAlliancesViewModel() {
     setMemberAllianceId(allianceId)
     setMemberAccountId('')
     setInviteType('member')
-    void Promise.all([fetchEligibleMembers(), fetchEligibleVisitors(allianceId)])
+    void Promise.all([fetchEligibleMembers(allianceId), fetchEligibleVisitors(allianceId)])
   }
 
   const handleInviteTypeChange = (type: 'member' | 'visitor') => {
@@ -283,7 +281,7 @@ export function useAlliancesViewModel() {
       toast.success(t.game.alliances.inviteSuccess)
       setMemberAllianceId(null)
       setMemberAccountId('')
-      await Promise.all([fetchEligibleMembers(), refreshAlliances()])
+      await Promise.all([fetchEligibleMembers(allianceId), refreshAlliances()])
     } catch (err: unknown) {
       console.error(err)
       toast.error((err as Error).message || t.game.alliances.inviteError)
@@ -323,7 +321,7 @@ export function useAlliancesViewModel() {
     try {
       await cancelInvitation(allianceId, invitationId)
       toast.success(t.game.alliances.cancelInvitationSuccess)
-      await Promise.all([fetchEligibleMembers(), refreshAlliances()])
+      await Promise.all([fetchEligibleMembers(allianceId), refreshAlliances()])
     } catch (err: unknown) {
       console.error(err)
       toast.error((err as Error).message || t.game.alliances.cancelInvitationError)

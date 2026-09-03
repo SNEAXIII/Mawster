@@ -41,24 +41,36 @@ async def get_eligible_owners(
 
 
 @alliance_core_controller.get(
-    "/{alliance_id}/eligible-officers", response_model=list[GameAccountResponse]
+    "/{alliance_id}/eligible-members", response_model=list[GameAccountResponse]
 )
-async def get_eligible_officers(alliance_id: uuid.UUID, session: SessionDep):
-    """Get members of the alliance eligible to become officers (not owner, not already officer)."""
-    return await AllianceService.get_eligible_officers(session, alliance_id)
+async def get_eligible_members(
+    alliance_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get all game accounts NOT in any alliance (can be invited to this one).
 
-
-@alliance_core_controller.get("/eligible-members", response_model=list[GameAccountResponse])
-async def get_eligible_members(session: SessionDep):
-    """Get all game accounts NOT in any alliance (can be invited)."""
+    Scoped to the alliance doing the inviting — inviting is an act of an alliance,
+    never of a player at large — and reserved to its owner and officers: the list
+    is the whole player base minus the accounts already in an alliance.
+    """
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
     return await AllianceService.get_eligible_members(session)
 
 
 @alliance_core_controller.get(
     "/{alliance_id}/eligible-visitors", response_model=list[GameAccountResponse]
 )
-async def get_eligible_visitors(alliance_id: uuid.UUID, session: SessionDep):
-    """Get all game accounts that can be invited as visitors."""
+async def get_eligible_visitors(
+    alliance_id: uuid.UUID,
+    session: SessionDep,
+    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+):
+    """Get all game accounts that can be invited as visitors.
+
+    Officers/owner only — same reason as `/eligible-members`.
+    """
+    await AllianceService.require_officer(session, alliance_id, current_user.id)
     return await AllianceService.get_eligible_visitors(session, alliance_id)
 
 

@@ -418,23 +418,15 @@ class TestEligibility:
     @pytest.mark.asyncio
     async def test_eligible_members(self):
         await _setup_2_users()
+        # Scoped to the inviting alliance, and reserved to its owner and officers.
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
-        response = await execute_get_request(f"{ENDPOINT}/eligible-members", headers=HEADERS_USER1)
-        assert response.status_code == 200
-        assert len(response.json()) >= 1
-
-    @pytest.mark.asyncio
-    async def test_eligible_officers(self):
-        await _setup_2_users()
-        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
-        await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
-
         response = await execute_get_request(
-            f"{ENDPOINT}/{alliance.id}/eligible-officers", headers=HEADERS_USER1
+            f"{ENDPOINT}/{alliance.id}/eligible-members", headers=HEADERS_USER1
         )
         assert response.status_code == 200
-        assert len(response.json()) == 1
+        assert len(response.json()) >= 1
 
     @pytest.mark.asyncio
     async def test_eligible_visitors_includes_free_account(self):
@@ -538,7 +530,9 @@ class TestEligibility:
             headers=HEADERS_USER1,
         )
 
-        response = await execute_get_request(f"{ENDPOINT}/eligible-members", headers=HEADERS_USER1)
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/eligible-members", headers=HEADERS_USER1
+        )
         assert response.status_code == 200
         ids = [a["id"] for a in response.json()]
         assert str(candidate.id) not in ids
