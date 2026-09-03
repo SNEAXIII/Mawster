@@ -1,6 +1,7 @@
 import logging
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from src.enums.VisionImportStatus import VisionImportStatus
@@ -16,6 +17,11 @@ from src.utils.db import SessionDep
 
 logger = logging.getLogger(__name__)
 
+# An import in one of these statuses is over and will never accept another
+# result: VisionResultService drops anything that lands on it. Its jobs must not
+# be requeued — see requeue_pending.
+FINISHED_IMPORT_STATUSES = (VisionImportStatus.CANCELLED, VisionImportStatus.CONFIRMED)
+
 
 class VisionReaperService:
     """Requeues vision jobs stranded in PENDING at API startup.
@@ -25,17 +31,35 @@ class VisionReaperService:
     it up, and the import sits unfinished forever. On startup we re-publish those
     jobs; the worker and result handler are idempotent, so re-publishing a job
     whose message is somehow still queued is harmless.
+
+    Jobs of a finished import are left alone: their result would be dropped on
+    arrival, so requeueing them only burns worker time and, because the drop
+    leaves them PENDING, hands the next startup the exact same batch.
     """
 
     @classmethod
     async def requeue_pending(cls, session: SessionDep, publisher: VisionPublisher) -> int:
-        statement = select(VisionJob).where(
-            VisionJob.status == VisionJobStatus.PENDING,
-            VisionJob.attempts < MAX_ATTEMPTS,
+        statement = (
+            select(VisionJob)
+            .join(VisionImport)
+            .where(
+                VisionJob.status == VisionJobStatus.PENDING,
+                VisionJob.attempts < MAX_ATTEMPTS,
+                VisionImport.status.not_in(FINISHED_IMPORT_STATUSES),
+            )
+            .options(selectinload(VisionJob.vision_import))
         )
         jobs = (await session.exec(statement)).all()
         count = 0
         for job in jobs:
+            if job.vision_import is not None and job.vision_import.status in (
+                FINISHED_IMPORT_STATUSES
+            ):
+                # Same defense in depth as the attempts ceiling below. Cancelling
+                # an import leaves its queued jobs PENDING, and a dropped result
+                # never moves them on — so without this the reaper republishes
+                # the same dead batch at every single restart, forever.
+                continue
             if job.attempts >= MAX_ATTEMPTS:
                 # Defense in depth: the query already filters this, but a job
                 # could reach the ceiling between the SELECT and here (or the

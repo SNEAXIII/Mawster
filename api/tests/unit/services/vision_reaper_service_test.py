@@ -2,8 +2,10 @@ import uuid
 
 import pytest
 
+from src.enums.VisionImportStatus import VisionImportStatus
 from src.enums.VisionJobStatus import VisionJobStatus
 from src.messaging.topology import MAX_ATTEMPTS
+from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.services.account.game.VisionReaperService import VisionReaperService
 
@@ -34,10 +36,17 @@ class FakeSession:
         return FakeResult(self._jobs)
 
 
-def _job(status=VisionJobStatus.PENDING, attempts=0) -> VisionJob:
+def _job(
+    status=VisionJobStatus.PENDING,
+    attempts=0,
+    import_status=VisionImportStatus.PENDING,
+) -> VisionJob:
     job = VisionJob(import_id=uuid.uuid4(), object_key="imports/a/b/screen.png")
     job.status = status
     job.attempts = attempts
+    job.vision_import = VisionImport(
+        game_account_id=uuid.uuid4(), screens_total=1, status=import_status
+    )
     return job
 
 
@@ -57,6 +66,26 @@ async def test_skips_jobs_at_the_attempt_ceiling():
     """A job that already burned its attempts is not resurrected forever."""
 
     jobs = [_job(attempts=MAX_ATTEMPTS)]
+    session, publisher = FakeSession(jobs), FakePublisher()
+
+    count = await VisionReaperService.requeue_pending(session, publisher)
+
+    assert count == 0
+    assert publisher.published == []
+
+
+@pytest.mark.parametrize(
+    "import_status", [VisionImportStatus.CANCELLED, VisionImportStatus.CONFIRMED]
+)
+@pytest.mark.asyncio
+async def test_skips_jobs_of_a_finished_import(import_status):
+    """A finished import drops every result, so requeueing its jobs is pure waste.
+
+    Worse, the drop leaves them PENDING: without this guard the reaper hands the
+    worker the same dead batch at every restart, forever.
+    """
+
+    jobs = [_job(import_status=import_status)]
     session, publisher = FakeSession(jobs), FakePublisher()
 
     count = await VisionReaperService.requeue_pending(session, publisher)
