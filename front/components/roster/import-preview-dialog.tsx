@@ -51,7 +51,7 @@ export default function ImportPreviewDialog({
   onRowChange,
   shareDataset = false,
   onShareDatasetChange,
-}: ImportPreviewDialogProps) {
+}: Readonly<ImportPreviewDialogProps>) {
   const { t } = useI18n()
 
   // Ignored rows are out of the import, so they must not inflate the counts the

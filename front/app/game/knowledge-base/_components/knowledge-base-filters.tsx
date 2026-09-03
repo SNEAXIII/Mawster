@@ -56,7 +56,7 @@ export default function KnowledgeBaseFilters({
   onAllianceChange,
   onSourceChange,
   onClear,
-}: Props) {
+}: Readonly<Props>) {
   const { t } = useI18n()
   const kb = t.game.knowledgeBase
 

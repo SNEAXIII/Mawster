@@ -24,7 +24,7 @@ export function CollapsibleSection({
   className = '',
 }: CollapsibleSectionProps) {
   const [internalOpen, setInternalOpen] = useState(defaultOpen)
-  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const isOpen = controlledOpen ?? internalOpen
 
   function handleOpenChange(nextOpen: boolean) {
     setInternalOpen(nextOpen)

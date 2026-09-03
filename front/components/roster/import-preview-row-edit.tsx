@@ -86,7 +86,7 @@ export default function ImportPreviewRowEdit({
   row,
   index,
   onRowChange,
-}: ImportPreviewRowEditProps) {
+}: Readonly<ImportPreviewRowEditProps>) {
   const { t } = useI18n()
   const emit = (patch: PreviewRowPatch) => onRowChange?.(index, patch)
 

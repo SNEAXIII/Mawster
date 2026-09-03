@@ -60,7 +60,7 @@ function parseCSV(text: string): RawRow[] {
     })
 }
 
-function NameCell({ name, resolved }: { name: string; resolved: boolean }) {
+function NameCell({ name, resolved }: Readonly<{ name: string; resolved: boolean }>) {
   if (resolved) return <span>{name}</span>
   return (
     <span className='inline-flex items-center gap-1.5 font-medium text-amber-500'>
@@ -130,7 +130,7 @@ export default function CsvImportForm() {
           const key = normalizeName(name)
           if (seen.has(key)) continue
           seen.add(key)
-          const match = champs.find((c) => normalizeName(c.name) === key)
+          const match = champs.some((c) => normalizeName(c.name) === key)
           if (!match) {
             unknownMap[key] = null
             labels[key] = name.trim()

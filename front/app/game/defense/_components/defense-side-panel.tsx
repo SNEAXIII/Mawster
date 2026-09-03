@@ -31,7 +31,7 @@ export default function DefenseSidePanel({
   canManage,
   playerFilter,
   onPlayerChange,
-}: DefenseSidePanelProps) {
+}: Readonly<DefenseSidePanelProps>) {
   const { t } = useI18n()
   const { isMine } = useAllianceRole()
   const [masteryTarget, setMasteryTarget] = useState<{
