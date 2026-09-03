@@ -13,6 +13,42 @@ import { BACKEND, setupOwnerMemberAlliance } from '../../support/e2e';
  * Every assertion below is written so that it fails if the permission
  * predicate behind it is wrong, not merely if the page fails to render.
  */
+
+/**
+ * Open one member's actions dropdown. Scoped through the alliance card because
+ * a pseudo identifies a row within an alliance, not within the page.
+ */
+function openMemberMenu(alliance: string, pseudo: string) {
+  cy.getByCy(`alliance-card-${alliance}`)
+    .should('be.visible')
+    .within(() => {
+      cy.getByCy(`member-actions-${pseudo}`).click();
+    });
+}
+
+/**
+ * Assert which of the two strategist entries the currently open menu offers.
+ *
+ * Only meaningful once `openMemberMenu` has run: Radix keeps
+ * `DropdownMenuContent` unmounted until its trigger is clicked, so asserting
+ * `not.exist` on a closed menu would pass however open the permission gate is.
+ */
+function expectStrategistEntries(pseudo: string, offered: { promote: boolean; demote: boolean }) {
+  cy.getByCy(`promote-strategist-${pseudo}`).should(offered.promote ? 'be.visible' : 'not.exist');
+  cy.getByCy(`demote-strategist-${pseudo}`).should(offered.demote ? 'be.visible' : 'not.exist');
+}
+
+/**
+ * Assert a viewer gets no actions at all on a row — the trigger itself is never
+ * rendered. Unlike an unopened menu's contents, a missing trigger is a real
+ * assertion about the permission predicates.
+ */
+function expectNoMemberMenu(alliance: string, pseudo: string) {
+  cy.getByCy(`alliance-card-${alliance}`).within(() => {
+    cy.getByCy(`member-actions-${pseudo}`).should('not.exist');
+  });
+}
+
 describe('Alliance strategist rank', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -23,37 +59,24 @@ describe('Alliance strategist rank', () => {
       ({ ownerData }) => {
         cy.apiLogin(ownerData.user_id, 'alliances');
 
-        // Before promotion: the promote entry is offered, the demote one is not.
-        cy.getByCy('alliance-card-StratAlliance')
-          .should('be.visible')
-          .within(() => {
-            cy.getByCy('member-actions-StratMember').click();
-          });
-        cy.getByCy('promote-strategist-StratMember').should('be.visible');
-        cy.getByCy('demote-strategist-StratMember').should('not.exist');
+        openMemberMenu('StratAlliance', 'StratMember');
+        expectStrategistEntries('StratMember', { promote: true, demote: false });
 
-        // Promote. The entry acts immediately — there is deliberately no
-        // confirmation dialog on this rank, unlike promotion to officer.
+        // The entry acts immediately — there is deliberately no confirmation
+        // dialog on this rank, unlike promotion to officer.
         cy.getByCy('promote-strategist-StratMember').click();
 
-        // The menu now flips: demote offered, promote gone. Both entries are
-        // driven by `member.is_strategist`, and the component refetches the
-        // alliance after acting, so this exercises the read path end to end:
-        // the row written by the POST comes back through GET /alliances.
-        cy.getByCy('alliance-card-StratAlliance').within(() => {
-          cy.getByCy('member-actions-StratMember').click();
-        });
-        cy.getByCy('demote-strategist-StratMember').should('be.visible');
-        cy.getByCy('promote-strategist-StratMember').should('not.exist');
+        // The menu flips. Both entries are driven by `member.is_strategist`,
+        // and the component refetches the alliance after acting, so this
+        // exercises the read path end to end: the row written by the POST comes
+        // back through GET /alliances.
+        openMemberMenu('StratAlliance', 'StratMember');
+        expectStrategistEntries('StratMember', { promote: false, demote: true });
 
-        // Demote, and it flips back.
         cy.getByCy('demote-strategist-StratMember').click();
 
-        cy.getByCy('alliance-card-StratAlliance').within(() => {
-          cy.getByCy('member-actions-StratMember').click();
-        });
-        cy.getByCy('promote-strategist-StratMember').should('be.visible');
-        cy.getByCy('demote-strategist-StratMember').should('not.exist');
+        openMemberMenu('StratAlliance', 'StratMember');
+        expectStrategistEntries('StratMember', { promote: true, demote: false });
       },
     );
   });
@@ -77,19 +100,14 @@ describe('Alliance strategist rank', () => {
       { discord_token: plainToken, game_pseudo: 'GatePlain', join_alliance_token: ownerToken },
     ]).then((users) => {
       const allianceId = users[ownerToken].alliance_id!;
-      const officerAccId = users[officerToken].account_id!;
 
-      cy.apiAddOfficer(users[ownerToken].access_token, allianceId, officerAccId);
+      cy.apiAddOfficer(users[ownerToken].access_token, allianceId, users[officerToken].account_id!);
       cy.apiLogin(users[officerToken].user_id, 'alliances');
 
-      cy.getByCy('alliance-card-GateAlliance')
-        .should('be.visible')
-        .within(() => {
-          cy.getByCy('member-actions-GatePlain').click();
-        });
+      openMemberMenu('GateAlliance', 'GatePlain');
 
       // The officer may delegate placement…
-      cy.getByCy('promote-strategist-GatePlain').should('be.visible');
+      expectStrategistEntries('GatePlain', { promote: true, demote: false });
       // …but may not create a peer. That entry belongs to the owner alone.
       cy.getByCy('promote-officer-GatePlain').should('not.exist');
     });
@@ -101,25 +119,13 @@ describe('Alliance strategist rank', () => {
     setupOwnerMemberAlliance('strat-deny', 'DenyOwner', 'DenyMember', 'DenyAlliance', 'DNY').then(({ memberData }) => {
       cy.apiLogin(memberData.user_id, 'alliances');
 
-      cy.getByCy('alliance-card-DenyAlliance').should('be.visible');
-
-      // The dropdown content is not mounted until the trigger is clicked, so a
-      // bare `not.exist` on a menu item would pass no matter how open the gate
-      // is. Open the menu, prove it is open with an item a plain member DOES
-      // get, and only then assert the strategist entries are absent.
-      cy.getByCy('alliance-card-DenyAlliance').within(() => {
-        cy.getByCy('member-actions-DenyMember').click();
-      });
+      openMemberMenu('DenyAlliance', 'DenyMember');
+      // Leave is the one entry a plain member does get: it proves the menu
+      // actually opened, so the absences below mean something.
       cy.getByCy('leave-alliance-DenyMember').should('be.visible');
-      cy.getByCy('promote-strategist-DenyMember').should('not.exist');
-      cy.getByCy('demote-strategist-DenyMember').should('not.exist');
+      expectStrategistEntries('DenyMember', { promote: false, demote: false });
 
-      // On the owner's row a plain member gets no actions at all, so the
-      // trigger itself is never rendered. Asserting the trigger's absence is a
-      // real assertion; asserting its unopened contents would not be.
-      cy.getByCy('alliance-card-DenyAlliance').within(() => {
-        cy.getByCy('member-actions-DenyOwner').should('not.exist');
-      });
+      expectNoMemberMenu('DenyAlliance', 'DenyOwner');
     });
   });
 
@@ -130,23 +136,11 @@ describe('Alliance strategist rank', () => {
         cy.apiAddStrategist(ownerData.access_token, allianceId, memberAccId);
         cy.apiLogin(memberData.user_id, 'alliances');
 
-        cy.getByCy('alliance-card-NoPromAlliance').should('be.visible');
-
-        // Their own row does carry a Leave item, so the trigger exists and the
-        // menu can be opened — which is what makes the absence of the
-        // strategist entries inside it a real assertion rather than a reading
-        // of an unmounted dropdown.
-        cy.getByCy('alliance-card-NoPromAlliance').within(() => {
-          cy.getByCy('member-actions-NoPromStrat').click();
-        });
+        openMemberMenu('NoPromAlliance', 'NoPromStrat');
         cy.getByCy('leave-alliance-NoPromStrat').should('be.visible');
-        cy.getByCy('demote-strategist-NoPromStrat').should('not.exist');
-        cy.getByCy('promote-strategist-NoPromStrat').should('not.exist');
+        expectStrategistEntries('NoPromStrat', { promote: false, demote: false });
 
-        // On the owner's row a strategist gets no actions at all: no trigger.
-        cy.getByCy('alliance-card-NoPromAlliance').within(() => {
-          cy.getByCy('member-actions-NoPromOwner').should('not.exist');
-        });
+        expectNoMemberMenu('NoPromAlliance', 'NoPromOwner');
 
         // And the API refuses their token outright, so the UI gate is not the
         // only thing standing between a strategist and a promotion. This half

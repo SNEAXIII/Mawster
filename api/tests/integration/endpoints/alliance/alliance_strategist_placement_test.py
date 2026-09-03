@@ -165,6 +165,39 @@ class TestBgMemberPayload:
         assert row["is_officer"] is False
 
 
+WAR_NODE = 10
+HEADERS_OWNER = create_auth_headers(user_id=str(USER_ID))
+
+
+async def _war_with_strategist():
+    """A war whose battlegroup-1 member holds the strategist rank and nothing
+    else — no officer row, not the owner."""
+    data = await _setup_war()
+    await push_strategist(data["alliance"], data["member"])
+    return data
+
+
+def _war_bg_route(data, suffix: str) -> str:
+    """Route under battlegroup 1 of the war set up by `_setup_war`."""
+    return f"{ENDPOINT}/{data['alliance'].id}/wars/{data['war'].id}/bg/1{suffix}"
+
+
+async def _record_enemy_defender(data, headers):
+    """Record an enemy defender on the war map. Returned so a caller can assert
+    on it; callers using it only as setup ignore the response."""
+    return await execute_post_request(
+        _war_bg_route(data, "/place"),
+        payload={
+            "node_number": WAR_NODE,
+            "champion_id": str(data["champ"].id),
+            "stars": 7,
+            "rank": 3,
+            "ascension": 0,
+        },
+        headers=headers,
+    )
+
+
 class TestStrategistWarPlacement:
     """The war-map placement family: `place_war_defender` is the one call site
     using the structurally different `require_strategist_account` — a plain
@@ -175,21 +208,9 @@ class TestStrategistWarPlacement:
         """Would fail (403 instead of 201) if `place_war_defender` reverted
         to `assert_officer_or_owner_by_id` / dropped the strategist branch of
         `require_strategist_account`."""
-        data = await _setup_war()
-        await push_strategist(data["alliance"], data["member"])
-        headers = create_auth_headers(user_id=str(USER2_ID))
+        data = await _war_with_strategist()
 
-        response = await execute_post_request(
-            f"{ENDPOINT}/{data['alliance'].id}/wars/{data['war'].id}/bg/1/place",
-            payload={
-                "node_number": 10,
-                "champion_id": str(data["champ"].id),
-                "stars": 7,
-                "rank": 3,
-                "ascension": 0,
-            },
-            headers=headers,
-        )
+        response = await _record_enemy_defender(data, HEADERS_USER2)
 
         assert response.status_code == 201
 
@@ -197,26 +218,12 @@ class TestStrategistWarPlacement:
     async def test_bare_strategist_removes_a_war_defender(self):
         """Would fail (403 instead of 204) if `remove_war_defender` reverted
         to `require_officer`."""
-        data = await _setup_war()
-        await push_strategist(data["alliance"], data["member"])
-        owner_headers = create_auth_headers(user_id=str(USER_ID))
-        strategist_headers = create_auth_headers(user_id=str(USER2_ID))
-
-        await execute_post_request(
-            f"{ENDPOINT}/{data['alliance'].id}/wars/{data['war'].id}/bg/1/place",
-            payload={
-                "node_number": 10,
-                "champion_id": str(data["champ"].id),
-                "stars": 7,
-                "rank": 3,
-                "ascension": 0,
-            },
-            headers=owner_headers,
-        )
+        data = await _war_with_strategist()
+        await _record_enemy_defender(data, HEADERS_OWNER)
 
         response = await execute_delete_request(
-            f"{ENDPOINT}/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10",
-            headers=strategist_headers,
+            _war_bg_route(data, f"/node/{WAR_NODE}"),
+            headers=HEADERS_USER2,
         )
 
         assert response.status_code == 204
@@ -225,26 +232,12 @@ class TestStrategistWarPlacement:
     async def test_bare_strategist_clears_the_war_battlegroup(self):
         """Would fail (403 instead of 200) if `clear_war_bg` reverted to
         `require_officer`."""
-        data = await _setup_war()
-        await push_strategist(data["alliance"], data["member"])
-        owner_headers = create_auth_headers(user_id=str(USER_ID))
-        strategist_headers = create_auth_headers(user_id=str(USER2_ID))
-
-        await execute_post_request(
-            f"{ENDPOINT}/{data['alliance'].id}/wars/{data['war'].id}/bg/1/place",
-            payload={
-                "node_number": 10,
-                "champion_id": str(data["champ"].id),
-                "stars": 7,
-                "rank": 3,
-                "ascension": 0,
-            },
-            headers=owner_headers,
-        )
+        data = await _war_with_strategist()
+        await _record_enemy_defender(data, HEADERS_OWNER)
 
         response = await execute_delete_request(
-            f"{ENDPOINT}/{data['alliance'].id}/wars/{data['war'].id}/bg/1/clear",
-            headers=strategist_headers,
+            _war_bg_route(data, "/clear"),
+            headers=HEADERS_USER2,
         )
 
         assert response.status_code == 200
@@ -257,18 +250,7 @@ class TestStrategistWarPlacement:
         (201 instead of 403) if the guard regressed to `require_member` or
         was dropped."""
         data = await _setup_war()
-        headers = create_auth_headers(user_id=str(USER2_ID))
 
-        response = await execute_post_request(
-            f"{ENDPOINT}/{data['alliance'].id}/wars/{data['war'].id}/bg/1/place",
-            payload={
-                "node_number": 10,
-                "champion_id": str(data["champ"].id),
-                "stars": 7,
-                "rank": 3,
-                "ascension": 0,
-            },
-            headers=headers,
-        )
+        response = await _record_enemy_defender(data, HEADERS_USER2)
 
         assert response.status_code == 403
