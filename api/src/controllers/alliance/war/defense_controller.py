@@ -79,8 +79,8 @@ async def place_defender(
         session, current_user.id, alliance_id
     )
 
-    # Check if user is owner/officer (can place for others) or placing for themselves
-    is_manager = await AllianceService.is_officer(session, current_user.id, alliance_id)
+    # Check if user is owner/officer/strategist (can place for others) or placing for themselves
+    is_manager = await AllianceService.can_place(session, current_user.id, alliance_id)
 
     if not is_manager and body.game_account_id != my_account.id:
         raise HTTPException(
@@ -113,8 +113,8 @@ async def remove_defender(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Remove a defender from a node. Officers/owners only."""
-    await AllianceService.require_officer(session, alliance_id, current_user.id)
+    """Remove a defender from a node. Officers/owners/strategists only."""
+    await AllianceService.require_strategist(session, alliance_id, current_user.id)
 
     await DefensePlacementService.remove_defender(session, alliance_id, battlegroup, node_number)
 
@@ -129,8 +129,8 @@ async def clear_defense(
     session: SessionDep,
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
 ):
-    """Clear all defense placements for a battlegroup. Officers/owners only."""
-    await AllianceService.require_officer(session, alliance_id, current_user.id)
+    """Clear all defense placements for a battlegroup. Officers/owners/strategists only."""
+    await AllianceService.require_strategist(session, alliance_id, current_user.id)
 
     await DefensePlacementService.clear_defense(session, alliance_id, battlegroup)
 

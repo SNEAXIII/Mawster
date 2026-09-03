@@ -55,8 +55,8 @@ async def place_war_defender(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     war: WarDep,
 ):
-    """Place a champion on a war defense node. Officers/owner only."""
-    account = await AllianceService.assert_officer_or_owner_by_id(
+    """Place a champion on a war defense node. Officers/owner/strategist only."""
+    account = await AllianceService.require_strategist_account(
         session, alliance_id, current_user.id
     )
     return await WarService.place_defender(session, war_id, battlegroup, body, account.id)
@@ -75,8 +75,8 @@ async def remove_war_defender(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     war: WarDep,
 ):
-    """Remove a defender from a war node. Officers/owner only."""
-    await AllianceService.require_officer(session, alliance_id, current_user.id)
+    """Remove a defender from a war node. Officers/owner/strategist only."""
+    await AllianceService.require_strategist(session, alliance_id, current_user.id)
     await WarService.remove_defender(session, war_id, battlegroup, node_number)
 
 
@@ -92,7 +92,7 @@ async def clear_war_bg(
     current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
     war: WarDep,
 ):
-    """Clear all defenders in a war battlegroup. Officers/owner only."""
-    await AllianceService.require_officer(session, alliance_id, current_user.id)
+    """Clear all defenders in a war battlegroup. Officers/owner/strategist only."""
+    await AllianceService.require_strategist(session, alliance_id, current_user.id)
     count = await WarService.clear_bg(session, war_id, battlegroup)
     return {"deleted": count}
