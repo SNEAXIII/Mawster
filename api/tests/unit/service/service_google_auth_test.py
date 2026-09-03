@@ -37,6 +37,28 @@ def _make_user(google_id=GOOGLE_ID, login=USER_LOGIN):
     )
 
 
+def _patch_google_two_calls(mocker, tokeninfo_body, tokeninfo_status=200, userinfo_body=None):
+    """Patch httpx so the first .get() answers tokeninfo and the second userinfo."""
+    tokeninfo_response = MagicMock()
+    tokeninfo_response.status_code = tokeninfo_status
+    tokeninfo_response.json.return_value = tokeninfo_body
+
+    userinfo_response = MagicMock()
+    userinfo_response.status_code = 200
+    userinfo_response.json.return_value = userinfo_body or {
+        "sub": GOOGLE_ID,
+        "email": USER_EMAIL,
+        "email_verified": True,
+    }
+
+    mock_client = AsyncMock()
+    mock_client.get.side_effect = [tokeninfo_response, userinfo_response]
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mocker.patch("src.services.auth.GoogleAuthService.httpx.AsyncClient", return_value=mock_client)
+    return mock_client
+
+
 def _make_http_client_mock(mocker, status_code=200, json_body=None, raise_error=None):
     mock_response = MagicMock()
     mock_response.status_code = status_code
@@ -61,10 +83,7 @@ class TestVerifyToken:
     @pytest.mark.asyncio
     async def test_success_returns_profile(self, mocker):
         profile = {"sub": GOOGLE_ID, "email": USER_EMAIL, "name": USER_LOGIN, "picture": None}
-        mock_client = _make_http_client_mock(mocker, status_code=200, json_body=profile)
-        mocker.patch(
-            "src.services.auth.GoogleAuthService.httpx.AsyncClient", return_value=mock_client
-        )
+        _patch_google_two_calls(mocker, {"aud": SECRET.GOOGLE_CLIENT_ID}, userinfo_body=profile)
 
         result = await GoogleAuthService.verify_token("valid_token")
 
@@ -105,6 +124,30 @@ class TestVerifyToken:
         with pytest.raises(HTTPException) as exc:
             await GoogleAuthService.verify_token("token")
         assert exc.value.status_code == 502
+
+    @pytest.mark.asyncio
+    async def test_token_issued_to_mawster_is_accepted(self, mocker):
+        _patch_google_two_calls(mocker, {"aud": SECRET.GOOGLE_CLIENT_ID})
+
+        result = await GoogleAuthService.verify_token("good_token")
+
+        assert result["sub"] == GOOGLE_ID
+
+    @pytest.mark.asyncio
+    async def test_token_issued_to_another_application_raises_http_401(self, mocker):
+        _patch_google_two_calls(mocker, {"aud": "attacker.apps.googleusercontent.com"})
+
+        with pytest.raises(HTTPException) as exc:
+            await GoogleAuthService.verify_token("stolen_token")
+        assert exc.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_foreign_token_never_reaches_the_profile_endpoint(self, mocker):
+        client = _patch_google_two_calls(mocker, {"aud": "attacker.apps.googleusercontent.com"})
+
+        with pytest.raises(HTTPException):
+            await GoogleAuthService.verify_token("stolen_token")
+        assert client.get.call_count == 1
 
 
 # =========================================================================
