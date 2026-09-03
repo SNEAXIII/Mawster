@@ -1,5 +1,10 @@
 'use client'
 
+/* Radix's PopoverTrigger renders `aria-controls={open ? contentId : undefined}`, so the
+   combobox gets it exactly when the listbox is mounted — pointing at an absent element
+   while closed would be worse. The rule reads the JSX statically and cannot see that. */
+/* oxlint-disable jsx-a11y/role-has-required-aria-props */
+
 import { useState, useEffect } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
