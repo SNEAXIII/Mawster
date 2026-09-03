@@ -64,7 +64,7 @@ async def lifespan(_: FastAPI):
     await consumer.stop()
 
 
-app = FastAPI(title="Mawster", version="1.8.0", lifespan=lifespan)  # x-release-please-version
+app = FastAPI(title="Mawster", version="1.8.3", lifespan=lifespan)  # x-release-please-version
 Instrumentator().instrument(app)
 
 # Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
@@ -97,8 +97,7 @@ if IS_TESTING:
         DiscordAuthService,
     )
 
-    # NOSONAR S7503
-    async def _fake_verify(cls, access_token: str) -> dict:
+    async def _fake_verify(cls, access_token: str) -> dict:  # NOSONAR S7503
         if not access_token:
             raise DISCORD_TOKEN_INVALID_EXCEPTION
         token_hash = hashlib.sha256(access_token.encode()).hexdigest()[:16]

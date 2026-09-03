@@ -11,8 +11,8 @@
     "cypress:run": "cypress run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "eslint . --fix",
-    "lint:check": "eslint ."
+    "lint": "oxlint --type-aware --fix",
+    "lint:check": "oxlint --type-aware"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.23",
@@ -55,25 +55,17 @@
     "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@types/node": "^26.4.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
     "cross-env": "^10.1.0",
     "cypress": "^16.0.0",
     "cypress-multi-reporters": "^2.0.5",
-    "eslint": "^10.9.1",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-sonarjs": "^4.2.0",
     "mocha-junit-reporter": "^2.2.1",
+    "oxlint": "^1.81.0",
+    "oxlint-tsgolint": "^7.0.2001",
     "prettier": "^3.9.6",
-    "sass": "^1.103.1",
-    "typescript-eslint": "^8.69.0"
-  },
-  "overrides": {
-    "eslint-plugin-jsx-a11y": {
-      "eslint": "$eslint"
-    }
+    "sass": "^1.103.1"
   }
 }

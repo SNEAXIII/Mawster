@@ -123,3 +123,26 @@ class TestTransferOwnership:
             {"game_account_id": str(uuid.uuid4())},
         )
         assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_cannot_transfer_to_officer_of_another_alliance(self):
+        """The target must be an officer *of this* alliance — being one elsewhere
+        must not make them a valid heir."""
+        await _setup_2_users()
+        alliance_a, _ = await push_alliance_with_owner(user_id=USER_ID)
+        alliance_b, _ = await push_alliance_with_owner(
+            user_id=USER2_ID,
+            game_pseudo=GAME_PSEUDO_2,
+            alliance_name="OtherAlliance",
+            alliance_tag="OTHR",
+        )
+        officer_b = await push_member(alliance_b, user_id=USER2_ID, game_pseudo="OtherOfficer")
+        await push_officer(alliance_b, officer_b)
+
+        response = await execute_patch_request(
+            f"{ENDPOINT}/{alliance_a.id}/owner",
+            {"game_account_id": str(officer_b.id)},
+            headers=HEADERS_USER1,
+        )
+
+        assert response.status_code == 403

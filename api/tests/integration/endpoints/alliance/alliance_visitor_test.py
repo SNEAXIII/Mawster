@@ -100,7 +100,7 @@ class TestInviteVisitor:
         assert response.status_code == 409
 
     @pytest.mark.asyncio
-    async def test_random_user_cannot_invite_visitor(self):
+    async def test_random_user_gets_a_404_inviting_a_visitor(self):
         await _setup_users()
         alliance, _owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
@@ -113,7 +113,8 @@ class TestInviteVisitor:
             {"game_account_id": str(visitor_acc.id), "type": "visitor"},
             headers=HEADERS_USER3,
         )
-        assert response.status_code == 403
+        # An outsider is told the alliance does not exist, not that they lack a rank.
+        assert response.status_code == 404
 
 
 class TestAcceptVisitorInvitation:

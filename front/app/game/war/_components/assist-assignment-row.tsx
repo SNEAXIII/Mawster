@@ -6,6 +6,7 @@ import { cn } from '@/app/lib/utils'
 import { X, Swords, CheckCircle } from 'lucide-react'
 import { type WarPlacement } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
+import NodeSlot from './node-slot'
 
 interface AssistAssignmentRowProps {
   placement: WarPlacement
@@ -21,6 +22,8 @@ export default function AssistAssignmentRow({
   const { t } = useI18n()
   const { handleRemoveAssist, handleToggleCombatCompleted, isVisitor } = useWar()
 
+  const label = t.game.war.assist.for.replace('#{node}', String(placement.node_number))
+
   const isFull = mode === 'full'
   const portraitSize = isFull ? 55 : 40
   const btnSize = isFull ? 'w-7 h-7' : 'w-5 h-5'
@@ -30,11 +33,17 @@ export default function AssistAssignmentRow({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 rounded-md border bg-amber-950/30 border-amber-800/30',
+        'flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border bg-amber-950/30 border-amber-800/30',
         boxPaddingSize
       )}
       data-cy={`assist-assignment-node-${placement.node_number}`}
     >
+      <NodeSlot
+        nodeNumber={placement.node_number}
+        isFull={isFull}
+        title={label}
+      />
+
       <div className='flex items-center gap-1 shrink-0'>
         {placement.assistor_image_url ? (
           <ChampionPortrait
@@ -67,9 +76,7 @@ export default function AssistAssignmentRow({
       </div>
 
       <div className='flex-1 min-w-0'>
-        <div className='text-[10px] text-muted-foreground'>
-          {t.game.war.assist.for.replace('#{node}', String(placement.node_number))}
-        </div>
+        <div className='text-[10px] text-muted-foreground'>{t.game.war.assist.label}</div>
         <div className='text-[10px] font-medium truncate'>{placement.attacker_pseudo}</div>
       </div>
 

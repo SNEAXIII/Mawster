@@ -426,7 +426,7 @@ export default function ChampionsPanel() {
                   savingAlias={savingAlias}
                   onStartEdit={(c) => {
                     setEditingId(c.id)
-                    setEditingAlias(c.alias || '')
+                    setEditingAlias(c.alias ?? '')
                   }}
                   onCancelEdit={() => {
                     setEditingId(null)
@@ -455,7 +455,7 @@ export default function ChampionsPanel() {
           if (!open) setDeleteTarget(null)
         }}
         title={t.champions.deleteConfirmTitle}
-        description={t.champions.deleteConfirmDesc.replace('{name}', deleteTarget?.name || '')}
+        description={t.champions.deleteConfirmDesc.replace('{name}', deleteTarget?.name ?? '')}
         confirmText={t.common.delete}
         cancelText={t.common.cancel}
         onConfirm={confirmDelete}

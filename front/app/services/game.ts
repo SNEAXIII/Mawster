@@ -24,7 +24,6 @@ export interface DeletedGameAccount {
 
 export interface AllianceMember {
   id: string
-  user_id: string
   game_pseudo: string
   alliance_group: number | null
   is_owner: boolean
@@ -318,16 +317,8 @@ export async function getEligibleOwners(): Promise<GameAccount[]> {
   return response.json()
 }
 
-export async function getEligibleOfficers(allianceId: string): Promise<GameAccount[]> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/eligible-officers`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la récupération des officiers éligibles')
-  return response.json()
-}
-
-export async function getEligibleMembers(): Promise<GameAccount[]> {
-  const response = await debugFetch(`${PROXY}/alliances/eligible-members`, {
+export async function getEligibleMembers(allianceId: string): Promise<GameAccount[]> {
+  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/eligible-members`, {
     headers: jsonHeaders,
   })
   await throwOnError(response, 'Erreur lors de la récupération des membres éligibles')

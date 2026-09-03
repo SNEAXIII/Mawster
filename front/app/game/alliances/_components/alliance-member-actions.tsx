@@ -58,7 +58,11 @@ interface AllianceMemberActionsProps {
   onRefresh: () => void
 }
 
-export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceMemberActionsProps) {
+export function AllianceMemberActions({
+  member,
+  alliance,
+  onRefresh,
+}: Readonly<AllianceMemberActionsProps>) {
   const { t } = useI18n()
   const { isMine: isMineCheck, isOwner, canManage } = useAllianceRole()
 
@@ -134,8 +138,10 @@ export function AllianceMemberActions({ member, alliance, onRefresh }: AllianceM
     } catch (err: unknown) {
       console.error(err)
       const errorMsg = actionErrors[action]
-      const errMessage = err instanceof Error ? err.message : undefined
-      toast.error(errMessage || errorMsg)
+      // An Error carrying an empty message must fall through to errorMsg, hence the
+      // truthiness check here rather than a bare `??` on err.message.
+      const errMessage = err instanceof Error && err.message ? err.message : undefined
+      toast.error(errMessage ?? errorMsg)
     } finally {
       setIsLoading((prev) => ({ ...prev, [action]: false }))
     }

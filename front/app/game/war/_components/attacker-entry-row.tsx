@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { type WarPlacement } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
+import NodeSlot from './node-slot'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import NodeActionsPopover from './node-actions-popover'
 
@@ -63,7 +64,7 @@ export default function AttackerEntryRow({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 rounded-md',
+        'flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md',
         placement.is_combat_completed ? 'bg-green-950/40 border-green-800/40' : 'bg-card',
         boxPaddingSize,
         !isFull && 'border'
@@ -71,6 +72,11 @@ export default function AttackerEntryRow({
       data-cy={`attacker-entry-node-${placement.node_number}`}
       data-attacker={placement.attacker_champion_name ?? ''}
     >
+      <NodeSlot
+        nodeNumber={placement.node_number}
+        isFull={isFull}
+      />
+
       <div className='flex items-center gap-1 shrink-0'>
         {showAttackerActions && (
           <NodeActionsPopover
@@ -140,12 +146,13 @@ export default function AttackerEntryRow({
         ))}
       </div>
 
-      <div className='flex-1 min-w-0'>
-        {isFull && placement.attacker_pseudo && (
-          <div className='text-[10px] font-semibold truncate'>{placement.attacker_pseudo}</div>
-        )}
-        <div className='flex items-center gap-1'>
-          <span className='text-[10px] text-muted-foreground'>#{placement.node_number}</span>
+      {/* Only rendered when it carries something: an always-present spacer would
+          cost the row the gap it needs to keep the controls on the first line. */}
+      {((isFull && placement.attacker_pseudo) || placement.is_assisted) && (
+        <div className='flex-1 min-w-0 flex items-center gap-1'>
+          {isFull && placement.attacker_pseudo && (
+            <span className='text-[10px] font-semibold truncate'>{placement.attacker_pseudo}</span>
+          )}
           {placement.is_assisted && (
             <span
               className='text-[9px] font-semibold px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 shrink-0'
@@ -155,170 +162,174 @@ export default function AttackerEntryRow({
             </span>
           )}
         </div>
-      </div>
-
-      {placement.attacker_champion_user_id && (readonly || isVisitor) && (
-        <span className={cn('font-mono text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}>
-          {placement.ko_count} KO
-        </span>
       )}
-      {placement.attacker_champion_user_id && !readonly && !isVisitor && (
-        <>
-          {canToggleComplete && (
-            <button
-              type='button'
-              className={cn(
-                'rounded-full flex items-center justify-center shrink-0 transition-colors',
-                placement.is_combat_completed
-                  ? 'bg-red-700/80 hover:bg-red-700 text-white'
-                  : 'bg-green-700 text-muted-foreground hover:text-white',
-                btnSize
-              )}
-              onClick={() => handleToggleCombatCompleted(placement.node_number)}
-              title={
-                placement.is_combat_completed
-                  ? t.game.war.markCombatUndone
-                  : t.game.war.markCombatDone
-              }
-              data-cy={`combat-complete-node-${placement.node_number}`}
-            >
-              {placement.is_combat_completed ? (
-                <X className={cn(iconSize)} />
-              ) : (
-                <CheckCircle className={cn(iconSize)} />
-              )}
-            </button>
-          )}
 
-          {!placement.is_combat_completed && (
-            <div
-              className='flex items-center gap-1'
-              data-cy={`ko-counter-node-${placement.node_number}`}
-            >
-              <button
-                type='button'
-                className={cn(
-                  'rounded flex items-center justify-center text-xs',
-                  'bg-muted hover:bg-accent transition-colors',
-                  btnSize,
-                  placement.ko_count <= 0 && 'opacity-40 cursor-not-allowed'
-                )}
-                onClick={() =>
-                  placement.ko_count > 0 &&
-                  handleUpdateKo(placement.node_number, placement.ko_count - 1)
-                }
-                disabled={placement.ko_count <= 0}
-                data-cy={`ko-dec-node-${placement.node_number}`}
-              >
-                <Minus className={cn(iconSize)} />
-              </button>
-              <span
-                className={cn('font-mono text-center', isFull ? 'text-sm w-5' : 'text-xs w-4')}
-                data-cy={`ko-value-node-${placement.node_number}`}
-              >
-                {placement.ko_count}
-              </span>
-              <button
-                type='button'
-                className={cn(
-                  'rounded flex items-center justify-center text-xs bg-muted hover:bg-accent transition-colors',
-                  btnSize
-                )}
-                onClick={() => handleUpdateKo(placement.node_number, placement.ko_count + 1)}
-                data-cy={`ko-inc-node-${placement.node_number}`}
-              >
-                <Plus className={cn(iconSize)} />
-              </button>
-            </div>
-          )}
-
-          {placement.is_combat_completed && (
-            <span
-              className={cn(
-                'font-mono text-center text-green-400',
-                isFull ? 'text-sm w-5' : 'text-xs w-4'
-              )}
-              data-cy={`ko-value-node-${placement.node_number}`}
-            >
-              {placement.ko_count}
+      {placement.attacker_champion_user_id && (
+        <div className='flex items-center gap-2 ml-auto shrink-0'>
+          {(readonly || isVisitor) && (
+            <span className={cn('font-mono text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}>
+              {placement.ko_count} KO
             </span>
           )}
-
-          {canManageWar && !placement.is_combat_completed && (
-            <button
-              type='button'
-              className={cn(
-                'rounded-full flex items-center justify-center shrink-0 transition-colors',
-                placement.is_fight_not_done
-                  ? 'bg-amber-500 text-white hover:bg-amber-600'
-                  : 'bg-muted text-muted-foreground hover:text-amber-400',
-                btnSize,
-                placement.is_planning_error && 'opacity-40 cursor-not-allowed'
-              )}
-              onClick={() =>
-                !placement.is_planning_error && handleToggleFightNotDone(placement.node_number)
-              }
-              title={
-                placement.is_fight_not_done
-                  ? t.game.war.unmarkFightNotDone
-                  : t.game.war.markFightNotDone
-              }
-              data-cy={`fight-not-done-node-${placement.node_number}`}
-            >
-              <Ban className={cn(iconSize)} />
-            </button>
-          )}
-
-          {canManageWar && (
-            <button
-              type='button'
-              className={cn(
-                'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
-                placement.is_planning_error
-                  ? 'bg-amber-500 text-white hover:bg-amber-600'
-                  : 'bg-muted text-muted-foreground hover:text-amber-400',
-                btnSize,
-                placement.is_fight_not_done && 'opacity-40 cursor-not-allowed'
-              )}
-              onClick={() =>
-                !placement.is_fight_not_done && handleTogglePlanningError(placement.node_number)
-              }
-              title={
-                placement.is_planning_error
-                  ? t.game.war.unmarkPlanningError
-                  : t.game.war.markPlanningError
-              }
-              data-cy={`planning-error-node-${placement.node_number}`}
-            >
-              <AlertTriangle className={cn(iconSize)} />
-            </button>
-          )}
-
-          {!placement.is_combat_completed && (
+          {!readonly && !isVisitor && (
             <>
-              <button
-                type='button'
-                className={cn(
-                  'rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center shrink-0',
-                  btnSize
-                )}
-                onClick={() => setConfirmOpen(true)}
-                title={t.game.war.removeAttacker}
-                data-cy={`remove-attacker-node-${placement.node_number}`}
-              >
-                <X className={cn(iconSize)} />
-              </button>
-              <ConfirmationDialog
-                open={confirmOpen}
-                onOpenChange={setConfirmOpen}
-                title={t.game.war.removeAttackerConfirmTitle}
-                description={t.game.war.removeAttackerConfirmDesc}
-                onConfirm={() => handleRemoveAttacker(placement.node_number)}
-                variant='destructive'
-              />
+              {canToggleComplete && (
+                <button
+                  type='button'
+                  className={cn(
+                    'rounded-full flex items-center justify-center shrink-0 transition-colors',
+                    placement.is_combat_completed
+                      ? 'bg-red-700/80 hover:bg-red-700 text-white'
+                      : 'bg-green-700 text-muted-foreground hover:text-white',
+                    btnSize
+                  )}
+                  onClick={() => handleToggleCombatCompleted(placement.node_number)}
+                  title={
+                    placement.is_combat_completed
+                      ? t.game.war.markCombatUndone
+                      : t.game.war.markCombatDone
+                  }
+                  data-cy={`combat-complete-node-${placement.node_number}`}
+                >
+                  {placement.is_combat_completed ? (
+                    <X className={cn(iconSize)} />
+                  ) : (
+                    <CheckCircle className={cn(iconSize)} />
+                  )}
+                </button>
+              )}
+
+              {!placement.is_combat_completed && (
+                <div
+                  className='flex items-center gap-1'
+                  data-cy={`ko-counter-node-${placement.node_number}`}
+                >
+                  <button
+                    type='button'
+                    className={cn(
+                      'rounded flex items-center justify-center text-xs',
+                      'bg-muted hover:bg-accent transition-colors',
+                      btnSize,
+                      placement.ko_count <= 0 && 'opacity-40 cursor-not-allowed'
+                    )}
+                    onClick={() =>
+                      placement.ko_count > 0 &&
+                      handleUpdateKo(placement.node_number, placement.ko_count - 1)
+                    }
+                    disabled={placement.ko_count <= 0}
+                    data-cy={`ko-dec-node-${placement.node_number}`}
+                  >
+                    <Minus className={cn(iconSize)} />
+                  </button>
+                  <span
+                    className={cn('font-mono text-center', isFull ? 'text-sm w-5' : 'text-xs w-4')}
+                    data-cy={`ko-value-node-${placement.node_number}`}
+                  >
+                    {placement.ko_count}
+                  </span>
+                  <button
+                    type='button'
+                    className={cn(
+                      'rounded flex items-center justify-center text-xs bg-muted hover:bg-accent transition-colors',
+                      btnSize
+                    )}
+                    onClick={() => handleUpdateKo(placement.node_number, placement.ko_count + 1)}
+                    data-cy={`ko-inc-node-${placement.node_number}`}
+                  >
+                    <Plus className={cn(iconSize)} />
+                  </button>
+                </div>
+              )}
+
+              {placement.is_combat_completed && (
+                <span
+                  className={cn(
+                    'font-mono text-center text-green-400',
+                    isFull ? 'text-sm w-5' : 'text-xs w-4'
+                  )}
+                  data-cy={`ko-value-node-${placement.node_number}`}
+                >
+                  {placement.ko_count}
+                </span>
+              )}
+
+              {canManageWar && !placement.is_combat_completed && (
+                <button
+                  type='button'
+                  className={cn(
+                    'rounded-full flex items-center justify-center shrink-0 transition-colors',
+                    placement.is_fight_not_done
+                      ? 'bg-amber-500 text-white hover:bg-amber-600'
+                      : 'bg-muted text-muted-foreground hover:text-amber-400',
+                    btnSize,
+                    placement.is_planning_error && 'opacity-40 cursor-not-allowed'
+                  )}
+                  onClick={() =>
+                    !placement.is_planning_error && handleToggleFightNotDone(placement.node_number)
+                  }
+                  title={
+                    placement.is_fight_not_done
+                      ? t.game.war.unmarkFightNotDone
+                      : t.game.war.markFightNotDone
+                  }
+                  data-cy={`fight-not-done-node-${placement.node_number}`}
+                >
+                  <Ban className={cn(iconSize)} />
+                </button>
+              )}
+
+              {canManageWar && (
+                <button
+                  type='button'
+                  className={cn(
+                    'rounded-full flex items-center justify-center flex-shrink-0 transition-colors',
+                    placement.is_planning_error
+                      ? 'bg-amber-500 text-white hover:bg-amber-600'
+                      : 'bg-muted text-muted-foreground hover:text-amber-400',
+                    btnSize,
+                    placement.is_fight_not_done && 'opacity-40 cursor-not-allowed'
+                  )}
+                  onClick={() =>
+                    !placement.is_fight_not_done && handleTogglePlanningError(placement.node_number)
+                  }
+                  title={
+                    placement.is_planning_error
+                      ? t.game.war.unmarkPlanningError
+                      : t.game.war.markPlanningError
+                  }
+                  data-cy={`planning-error-node-${placement.node_number}`}
+                >
+                  <AlertTriangle className={cn(iconSize)} />
+                </button>
+              )}
+
+              {!placement.is_combat_completed && (
+                <>
+                  <button
+                    type='button'
+                    className={cn(
+                      'rounded-full bg-red-600/80 hover:bg-red-600 text-white flex items-center justify-center shrink-0',
+                      btnSize
+                    )}
+                    onClick={() => setConfirmOpen(true)}
+                    title={t.game.war.removeAttacker}
+                    data-cy={`remove-attacker-node-${placement.node_number}`}
+                  >
+                    <X className={cn(iconSize)} />
+                  </button>
+                  <ConfirmationDialog
+                    open={confirmOpen}
+                    onOpenChange={setConfirmOpen}
+                    title={t.game.war.removeAttackerConfirmTitle}
+                    description={t.game.war.removeAttackerConfirmDesc}
+                    onConfirm={() => handleRemoveAttacker(placement.node_number)}
+                    variant='destructive'
+                  />
+                </>
+              )}
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   )

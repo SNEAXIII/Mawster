@@ -10,7 +10,7 @@ interface LoadingProps {
   usersPerPage: number
 }
 
-export default function Loading({ usersPerPage }: LoadingProps) {
+export default function Loading({ usersPerPage }: Readonly<LoadingProps>) {
   return (
     <div className='container mx-auto py-6'>
       <Table>

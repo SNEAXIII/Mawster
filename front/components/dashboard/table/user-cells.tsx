@@ -5,11 +5,11 @@ import { formatDateShort, truncateString } from '@/app/lib/utils'
 import React from 'react'
 import { useI18n } from '@/app/i18n'
 
-export function RowUserLogin(props: { login: string }) {
+export function RowUserLogin(props: Readonly<{ login: string }>) {
   return <TableCell className={'lg:w-44'}>{truncateString(props.login, 15)}</TableCell>
 }
 
-export function RowUserRole(props: { role: string; login: string }) {
+export function RowUserRole(props: Readonly<{ role: string; login: string }>) {
   return (
     <TableCell>
       <span data-cy={`role-badge-${props.login}`}>{props.role}</span>
@@ -17,12 +17,12 @@ export function RowUserRole(props: { role: string; login: string }) {
   )
 }
 
-export function RowUserCreatedAt(props: { created_at: string }) {
+export function RowUserCreatedAt(props: Readonly<{ created_at: string }>) {
   const { locale } = useI18n()
   return <TableCell>{formatDateShort(props.created_at, locale)}</TableCell>
 }
 
-export function RowUserLastLoginDate(props: { lastLoginDate: string | null }) {
+export function RowUserLastLoginDate(props: Readonly<{ lastLoginDate: string | null }>) {
   const { locale, t } = useI18n()
   return (
     <TableCell>
@@ -31,7 +31,7 @@ export function RowUserLastLoginDate(props: { lastLoginDate: string | null }) {
   )
 }
 
-export function UserStatusBadge(props: { deleted_at: boolean; disabled_at: boolean }) {
+export function UserStatusBadge(props: Readonly<{ deleted_at: boolean; disabled_at: boolean }>) {
   const { t } = useI18n()
 
   const getStatusStyle = () => {

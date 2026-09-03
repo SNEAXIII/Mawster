@@ -47,6 +47,9 @@ export default function SelectorFilterBar({
     <div className='flex flex-wrap items-center gap-2'>
       {players && players.length > 0 && onPlayerChange && (
         <Select
+          // '' is this filter's "no player selected" value (see onValueChange below), so
+          // it has to map onto 'all'. `??` would pass '' straight to Radix, which rejects it.
+          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
           value={playerFilter || 'all'}
           onValueChange={(val) => onPlayerChange(val === 'all' ? '' : val)}
         >

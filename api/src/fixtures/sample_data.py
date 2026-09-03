@@ -249,9 +249,7 @@ def _pick_champions(user_index: int, all_names: list, count: int) -> list:
     return picks
 
 
-def _build_roster(
-    game_account_id, user_index: int, champions_db: dict, has_7r5: bool = False
-) -> list:
+def _build_roster(game_account_id, user_index: int, champions_db: dict) -> list:
     all_names = sorted(champions_db.keys())
     size = roster_size(user_index)
     names = _pick_champions(user_index, all_names, size)
@@ -317,7 +315,7 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
             session.flush()
             game_accounts.append(super_admin_game)
 
-            roster = _build_roster(super_admin_game.id, 0, champions_db, has_7r5=False)
+            roster = _build_roster(super_admin_game.id, 0, champions_db)
             for entry in roster:
                 session.add(entry)
             session.flush()
@@ -343,7 +341,7 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
             session.flush()
             game_accounts.append(simple_admin_game)
 
-            roster = _build_roster(simple_admin_game.id, 1, champions_db, has_7r5=False)
+            roster = _build_roster(simple_admin_game.id, 1, champions_db)
             for entry in roster:
                 session.add(entry)
             session.flush()
@@ -375,8 +373,7 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
                 session.flush()
                 game_accounts.append(ga)
 
-                has_7r5 = user_index % 4 == 2
-                roster = _build_roster(ga.id, user_index, champions_db, has_7r5=has_7r5)
+                roster = _build_roster(ga.id, user_index, champions_db)
                 for entry in roster:
                     session.add(entry)
                 session.flush()

@@ -1,11 +1,10 @@
 FROM alpine:3.19
 
-RUN apk add --no-cache mariadb-client rclone tzdata bash
+RUN apk add --no-cache bash mariadb-client rclone tzdata
 
 COPY --chown=root:root --chmod=555 backup.sh restore.sh run.sh /usr/local/bin/
-RUN sed -i 's/\r$//' /usr/local/bin/backup.sh /usr/local/bin/restore.sh /usr/local/bin/run.sh
-
-RUN addgroup -S backup && adduser -S backup -G backup
+RUN sed -i 's/\r$//' /usr/local/bin/backup.sh /usr/local/bin/restore.sh /usr/local/bin/run.sh;\
+    addgroup -S backup && adduser -S backup -G backup
 
 USER backup
 

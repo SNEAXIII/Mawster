@@ -39,7 +39,7 @@ export default function AllianceMemberRow({
   alliance,
   onRefresh,
   onViewRoster,
-}: AllianceMemberRowProps) {
+}: Readonly<AllianceMemberRowProps>) {
   const { t } = useI18n()
   const { isMine: isMineCheck, canManage } = useAllianceRole()
 

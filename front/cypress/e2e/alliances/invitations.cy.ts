@@ -15,7 +15,7 @@ describe('Alliances – Invitations', () => {
 
       cy.getByCy('alliance-card-InviteAlliance').should('be.visible');
 
-      cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
+      cy.intercept('GET', '**/alliances/*/eligible-members').as('eligibleMembers');
       cy.getByCy('invite-member-toggle').click();
       cy.wait('@eligibleMembers');
 
@@ -41,7 +41,7 @@ describe('Alliances – Invitations', () => {
 
         cy.apiLogin(ownerData.user_id, 'alliances');
 
-        cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
+        cy.intercept('GET', '**/alliances/*/eligible-members').as('eligibleMembers');
         cy.getByCy('invite-member-toggle').click();
         cy.wait('@eligibleMembers');
 
@@ -61,7 +61,7 @@ describe('Alliances – Invitations', () => {
 
         cy.apiLogin(ownerData.user_id, 'alliances');
 
-        cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
+        cy.intercept('GET', '**/alliances/*/eligible-members').as('eligibleMembers');
         cy.getByCy('invite-member-toggle').click();
         cy.wait('@eligibleMembers');
 
@@ -81,7 +81,7 @@ describe('Alliances – Invitations', () => {
 
         cy.apiLogin(ownerData.user_id, 'alliances');
 
-        cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
+        cy.intercept('GET', '**/alliances/*/eligible-members').as('eligibleMembers');
         cy.getByCy('invite-member-toggle').click();
         cy.wait('@eligibleMembers');
 
@@ -100,7 +100,7 @@ describe('Alliances – Invitations', () => {
 
         cy.apiLogin(ownerData.user_id, 'alliances');
 
-        cy.intercept('GET', '**/alliances/eligible-members').as('eligibleMembers');
+        cy.intercept('GET', '**/alliances/*/eligible-members').as('eligibleMembers');
         cy.getByCy('invite-member-toggle').click();
         cy.wait('@eligibleMembers');
 

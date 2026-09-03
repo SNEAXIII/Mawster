@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,18 +16,18 @@ export default function KnowledgeBasePanel() {
   const [refreshResult, setRefreshResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setError(null)
     try {
       setStats(await getSnapshotStats())
     } catch {
       setError(t.admin.knowledgeBase.loadError)
     }
-  }
+  }, [t])
 
   useEffect(() => {
     load()
-  }, [])
+  }, [load])
 
   const handleRefresh = async () => {
     setLoading(true)

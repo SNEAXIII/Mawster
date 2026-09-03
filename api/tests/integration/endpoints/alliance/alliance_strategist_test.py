@@ -292,3 +292,131 @@ class TestStrategistEndpoints:
         assert response.status_code == 200
         row = next(m for m in response.json()["members"] if m["id"] == str(member.id))
         assert row["is_strategist"] is False
+
+    @pytest.mark.asyncio
+    async def test_officer_demotes_a_strategist(self):
+        """The intermediate rank's positive path: an officer, not just the owner,
+        can revoke the strategist rank."""
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner()
+        officer_acc = await push_member(alliance, USER2_ID, GAME_PSEUDO_2)
+        await push_officer(alliance, officer_acc)
+        target = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_3)
+        target.alliance_id = alliance.id
+        await load_objects([target])
+        await push_strategist(alliance, target)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/strategists",
+            headers=HEADERS_USER2,
+            payload={"game_account_id": str(target.id)},
+        )
+
+        assert response.status_code == 200
+        row = next(m for m in response.json()["members"] if m["id"] == str(target.id))
+        assert row["is_strategist"] is False
+
+    @pytest.mark.asyncio
+    async def test_a_plain_member_cannot_promote(self):
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner()
+        await push_member(alliance, USER2_ID, GAME_PSEUDO_2)
+        target = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_3)
+        target.alliance_id = alliance.id
+        await load_objects([target])
+
+        response = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/strategists",
+            payload={"game_account_id": str(target.id)},
+            headers=HEADERS_USER2,
+        )
+
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_a_plain_member_cannot_demote(self):
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner()
+        member = await push_member(alliance, USER2_ID, GAME_PSEUDO_2)
+        strategist_acc = await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_3)
+        strategist_acc.alliance_id = alliance.id
+        await load_objects([strategist_acc])
+        await push_strategist(alliance, strategist_acc)
+        assert member.id != strategist_acc.id
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/strategists",
+            headers=HEADERS_USER2,
+            payload={"game_account_id": str(strategist_acc.id)},
+        )
+
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_cannot_promote_an_account_of_another_alliance(self):
+        """Cross-alliance IDOR: the target must be a member of *this* alliance."""
+        await _setup_2_users()
+        alliance_a, _owner = await push_alliance_with_owner()
+        _, owner_b = await push_alliance_with_owner(
+            user_id=USER2_ID,
+            game_pseudo=GAME_PSEUDO_2,
+            alliance_name="OtherAlliance",
+            alliance_tag="OTHR",
+        )
+
+        response = await execute_post_request(
+            f"{ENDPOINT}/{alliance_a.id}/strategists",
+            payload={"game_account_id": str(owner_b.id)},
+            headers=HEADERS_USER1,
+        )
+
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_cannot_demote_a_strategist_of_another_alliance(self):
+        """Cross-alliance IDOR: the strategist row is scoped to its alliance."""
+        await _setup_2_users()
+        alliance_a, _owner = await push_alliance_with_owner()
+        alliance_b, _owner_b = await push_alliance_with_owner(
+            user_id=USER2_ID,
+            game_pseudo=GAME_PSEUDO_2,
+            alliance_name="OtherAlliance",
+            alliance_tag="OTHR",
+        )
+        strategist_b = await push_member(alliance_b, USER2_ID, GAME_PSEUDO_3)
+        await push_strategist(alliance_b, strategist_b)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance_a.id}/strategists",
+            headers=HEADERS_USER1,
+            payload={"game_account_id": str(strategist_b.id)},
+        )
+
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_unauthenticated_promote_returns_401(self):
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner()
+        member = await push_member(alliance, USER2_ID, GAME_PSEUDO_2)
+
+        response = await execute_post_request(
+            f"{ENDPOINT}/{alliance.id}/strategists",
+            payload={"game_account_id": str(member.id)},
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_unauthenticated_demote_returns_401(self):
+        await _setup_2_users()
+        alliance, _owner = await push_alliance_with_owner()
+        member = await push_member(alliance, USER2_ID, GAME_PSEUDO_2)
+        await push_strategist(alliance, member)
+
+        response = await execute_delete_request(
+            f"{ENDPOINT}/{alliance.id}/strategists",
+            payload={"game_account_id": str(member.id)},
+        )
+
+        assert response.status_code == 401

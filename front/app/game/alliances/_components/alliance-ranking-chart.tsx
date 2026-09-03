@@ -22,7 +22,7 @@ function dotColor(win: RankingHistoryPoint['win'] | undefined) {
   return '#94a3b8'
 }
 
-function WinLossDot({ cx = 0, cy = 0, payload }: CustomDotProps) {
+function WinLossDot({ cx = 0, cy = 0, payload }: Readonly<CustomDotProps>) {
   const color = dotColor(payload?.win)
   return (
     <Dot
@@ -44,7 +44,7 @@ interface CustomTooltipProps {
   payload?: TooltipPayloadItem[]
 }
 
-function CustomTooltip({ active, payload }: CustomTooltipProps) {
+function CustomTooltip({ active, payload }: Readonly<CustomTooltipProps>) {
   const { t } = useI18n()
   if (!active || !payload?.length) return null
   const point = payload[0].payload

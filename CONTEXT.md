@@ -53,9 +53,22 @@ a loop. A pure predicate over the four id sets, called by all three, is the fix.
 A Player attached to an Alliance in read-only: sees everything a plain member sees,
 changes nothing. Permanent, with no expiry — a read-only member, not a guest pass.
 
+The rank only means something because an Alliance's interior — its Players, its
+Officers, its Defense Assignment — is closed to whoever holds no rank in it. Being
+outside is the default; a Visitor is how you let someone in without letting them act.
+
+**Alliance Listing**:
+What an Alliance shows to whoever holds no rank in it: its name, tag, Elo, Tier and how
+many Players it holds. Impersonal by construction — it names nobody, not even the Owner.
+Everything else is the interior, and the interior is read by its own Players and its
+Visitors, nobody else.
+_Avoid_: public alliance, alliance summary, alliance card.
+
 **Admin**:
 An Account with a platform-wide role (admin, super admin). Moderates Accounts and
-handles reported Fight Notes. Unrelated to any Alliance rank.
+handles reported Fight Notes. Unrelated to any Alliance rank — and with no way into an
+Alliance's interior at all: a reported Fight Note is the only bridge, and a Player opens
+it (see `docs/adr/0006-admins-cannot-read-alliance-interiors.md`).
 
 **Battlegroup**:
 One of the three squads of ten Players an Alliance splits into for war. Names both a

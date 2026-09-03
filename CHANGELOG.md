@@ -3,6 +3,30 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.8.3](https://github.com/SNEAXIII/Mawster/compare/v1.8.2...v1.8.3) (2026-09-03)
+
+
+### Corrigé
+
+* stop the reaper from replaying a cancelled import at every restart ([#493](https://github.com/SNEAXIII/Mawster/issues/493)) ([babb567](https://github.com/SNEAXIII/Mawster/commit/babb567f7de8c1cc631c89fc19e8b59c8fa14bec))
+
+## [1.8.2](https://github.com/SNEAXIII/Mawster/compare/v1.8.1...v1.8.2) (2026-09-03)
+
+
+### Corrigé
+
+* close an alliance's interior to whoever holds no rank in it ([#491](https://github.com/SNEAXIII/Mawster/issues/491)) ([ed69714](https://github.com/SNEAXIII/Mawster/commit/ed697148e5d953988a026a9a590f31ab54d7a8ff))
+* keep war attacker row readable when a node has prefights ([#490](https://github.com/SNEAXIII/Mawster/issues/490)) ([91e24dd](https://github.com/SNEAXIII/Mawster/commit/91e24ddeeb96ce79d43534d00807e7a7ffcecdca))
+
+## [1.8.1](https://github.com/SNEAXIII/Mawster/compare/v1.8.0...v1.8.1) (2026-09-03)
+
+
+### Corrigé
+
+* restrict the eligible-* listings to owners and officers ([820d82f](https://github.com/SNEAXIII/Mawster/commit/820d82f21897082c8e306d3dadd3300c123ac315))
+* restrict the eligible-* listings to owners and officers ([b9213e2](https://github.com/SNEAXIII/Mawster/commit/b9213e2d5424bdf55b55d49164d00597dcca3b91))
+* scope the invitation candidate listings to their alliance ([2fa5647](https://github.com/SNEAXIII/Mawster/commit/2fa564768739089b2ff808c7e6698450c0390156))
+
 ## [1.8.0](https://github.com/SNEAXIII/Mawster/compare/v1.7.1...v1.8.0) (2026-09-03)
 
 

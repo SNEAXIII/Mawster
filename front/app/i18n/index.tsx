@@ -23,7 +23,7 @@ const I18nContext = createContext<I18nContextType>({
   t: en,
 })
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
+export function I18nProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE)
 
   useEffect(() => {

@@ -32,7 +32,7 @@ export function ChampionDetailModal({
   data,
   metric,
   playerName,
-}: ChampionDetailModalProps) {
+}: Readonly<ChampionDetailModalProps>) {
   const { t } = useI18n()
   const stat = t.game.alliances.statistics
   const [sortField, setSortField] = useState<SortField>(metric === 'kos' ? 'kos' : 'fights')
