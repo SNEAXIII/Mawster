@@ -4,6 +4,10 @@ technique:
     auditer la chaîne jwt : aucune révocation, aucun logout serveur, refresh de 7 jours en prod
         access 60min mais un refresh volé = 7 jours d'accès sans moyen de couper. choix assumé, jamais audité
     résorber les 16 warnings sonarjs du front puis passer la ci en --deny-warnings
+    faire lire le détail du gate sonar par /merge-pr quand il est rouge (mcp sonarqube)
+        aujourd'hui le skill donne juste l'url du check ; get_project_quality_gate_status +
+        search_sonar_issues_in_projects diraient quelle condition casse (couverture new code,
+        duplication) sans ouvrir le navigateur
     repasser sur oxfmt quand il sort en 1.0 (équivalent à prettier, 3x plus rapide, mais 0.66 = churn possible)
         piège connu : il faut un .oxfmtrc.json dans cypress/ aussi, sinon 106 specs réécrites
     un écran de visualisation / comparatif des persos monté par groupe/par alliance avec filters
