@@ -34,6 +34,15 @@ The single Player an Alliance belongs to.
 A Player granted administration rights over an Alliance — placing defense, running
 wars, inviting.
 
+**Strategist**:
+A Player granted placement rights over an Alliance, and no authority over its people:
+they lay out the Defense Assignment for anyone and record the enemy defenders on the
+War map, across all three Battlegroups. They invite nobody, remove nobody, promote
+nobody. Ranks between a plain member and an Officer — the two are exclusive, and an
+Officer demoted falls back to plain member, never to Strategist.
+_Table_: `alliance_strategist`.
+_Avoid_: planner, planneur, deputy.
+
 **Visitor**:
 A Player attached to an Alliance in read-only: sees everything a plain member sees,
 changes nothing. Permanent, with no expiry — a read-only member, not a guest pass.
