@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.8.3](https://github.com/SNEAXIII/Mawster/compare/v1.8.2...v1.8.3) (2026-09-03)
+
+
+### Corrigé
+
+* stop the reaper from replaying a cancelled import at every restart ([#493](https://github.com/SNEAXIII/Mawster/issues/493)) ([babb567](https://github.com/SNEAXIII/Mawster/commit/babb567f7de8c1cc631c89fc19e8b59c8fa14bec))
+
 ## [1.8.2](https://github.com/SNEAXIII/Mawster/compare/v1.8.1...v1.8.2) (2026-09-03)
 
 
