@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { type WarPlacement } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
+import NodeSlot from './node-slot'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import NodeActionsPopover from './node-actions-popover'
 
@@ -71,6 +72,11 @@ export default function AttackerEntryRow({
       data-cy={`attacker-entry-node-${placement.node_number}`}
       data-attacker={placement.attacker_champion_name ?? ''}
     >
+      <NodeSlot
+        nodeNumber={placement.node_number}
+        isFull={isFull}
+      />
+
       <div className='flex items-center gap-1 shrink-0'>
         {showAttackerActions && (
           <NodeActionsPopover
@@ -140,12 +146,13 @@ export default function AttackerEntryRow({
         ))}
       </div>
 
-      <div className='flex-1 min-w-0'>
-        {isFull && placement.attacker_pseudo && (
-          <div className='text-[10px] font-semibold truncate'>{placement.attacker_pseudo}</div>
-        )}
-        <div className='flex items-center gap-1'>
-          <span className='text-[10px] text-muted-foreground'>#{placement.node_number}</span>
+      {/* Only rendered when it carries something: an always-present spacer would
+          cost the row the gap it needs to keep the controls on the first line. */}
+      {((isFull && placement.attacker_pseudo) || placement.is_assisted) && (
+        <div className='flex-1 min-w-0 flex items-center gap-1'>
+          {isFull && placement.attacker_pseudo && (
+            <span className='text-[10px] font-semibold truncate'>{placement.attacker_pseudo}</span>
+          )}
           {placement.is_assisted && (
             <span
               className='text-[9px] font-semibold px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 shrink-0'
@@ -155,7 +162,7 @@ export default function AttackerEntryRow({
             </span>
           )}
         </div>
-      </div>
+      )}
 
       {placement.attacker_champion_user_id && (
         <div className='flex items-center gap-2 ml-auto shrink-0'>

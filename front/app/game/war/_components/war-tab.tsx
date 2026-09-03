@@ -358,7 +358,7 @@ export default function WarTab({ onEditClick }: { onEditClick: () => void }) {
               className={cn(
                 exporting
                   ? 'w-full'
-                  : 'w-84 shrink-0 lg:self-start lg:sticky lg:top-0 lg:max-h-[calc(100vh-2rem)]',
+                  : 'w-full lg:w-92 lg:shrink-0 lg:self-start lg:sticky lg:top-0 lg:max-h-[calc(100vh-2rem)]',
                 'flex flex-col'
               )}
             >
