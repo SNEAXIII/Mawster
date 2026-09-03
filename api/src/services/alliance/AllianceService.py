@@ -26,12 +26,14 @@ from src.Messages.alliance_messages import (
     OWNER_GAME_ACCOUNT_NOT_FOUND,
     OWNER_OR_OFFICER_REQUIRED,
     OWNER_REQUIRED,
+    STRATEGIST_REQUIRED,
     alliance_max_members_reached,
     group_max_members_reached,
 )
 from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceInvitation import AllianceInvitation
 from src.models.alliance.AllianceOfficer import AllianceOfficer
+from src.models.alliance.AllianceStrategist import AllianceStrategist
 from src.models.alliance.AllianceVisitor import AllianceVisitor
 from src.models.Base import utcnow
 from src.models.user.GameAccount import GameAccount
@@ -148,6 +150,7 @@ class AllianceService:
                 selectinload(Alliance.owner),  # type: ignore[arg-type]
                 selectinload(Alliance.members),  # type: ignore[arg-type]
                 selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
+                selectinload(Alliance.strategists),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(sql)
@@ -186,6 +189,38 @@ class AllianceService:
             return True
         officer_ids = {off.game_account_id for off in alliance.officers}
         return bool(user_account_ids & officer_ids)
+
+    @classmethod
+    async def _get_strategist_ids(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+    ) -> set[uuid.UUID]:
+        """Game account ids holding a strategist row — the exact rank, with the
+        owner and the officers excluded."""
+        result = await session.exec(
+            select(AllianceStrategist).where(AllianceStrategist.alliance_id == alliance_id)
+        )
+        return {row.game_account_id for row in result.all()}
+
+    @classmethod
+    async def can_place(
+        cls,
+        session: SessionDep,
+        user_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+    ) -> bool:
+        """True if the user may write defense and war-map placements: owner,
+        officer OR strategist.
+
+        Deliberately wider than `is_officer` and never a substitute for it —
+        `can_manage` stays owner-or-officer so the strategist gains nothing else.
+        """
+        if await cls.is_officer(session, user_id, alliance_id):
+            return True
+        user_account_ids = await cls._get_user_account_ids(session, user_id)
+        strategist_ids = await cls._get_strategist_ids(session, alliance_id)
+        return bool(user_account_ids & strategist_ids)
 
     @classmethod
     async def is_owner(
@@ -283,6 +318,59 @@ class AllianceService:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=OWNER_OR_OFFICER_REQUIRED,
+            )
+        return account
+
+    @classmethod
+    async def require_strategist(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> None:
+        """Raise 403 if the user is neither owner, officer nor strategist."""
+        if not await cls.can_place(session, user_id, alliance_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=STRATEGIST_REQUIRED,
+            )
+
+    @classmethod
+    async def require_strategist_account(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> GameAccount:
+        """Raise 403 unless the user may place. Returns the GameAccount to record
+        as the author of the placement."""
+        alliance = await cls._load_alliance_with_relations(session, alliance_id)
+        if alliance is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=STRATEGIST_REQUIRED,
+            )
+        user_account_ids = await cls._get_user_account_ids(session, user_id)
+
+        if alliance.owner_id in user_account_ids:
+            privileged_id = alliance.owner_id
+        else:
+            officer_ids = {off.game_account_id for off in alliance.officers}
+            strategist_ids = {s.game_account_id for s in alliance.strategists}
+            matching = user_account_ids & (officer_ids | strategist_ids)
+            if not matching:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=STRATEGIST_REQUIRED,
+                )
+            privileged_id = next(iter(matching))
+
+        # alliance.members is already eagerly loaded — no extra query needed
+        account = next((m for m in alliance.members if m.id == privileged_id), None)
+        if account is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=STRATEGIST_REQUIRED,
             )
         return account
 
@@ -441,6 +529,7 @@ class AllianceService:
                 selectinload(Alliance.owner),  # type: ignore[arg-type]
                 selectinload(Alliance.members),  # type: ignore[arg-type]
                 selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
+                selectinload(Alliance.strategists),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(sql)
@@ -476,6 +565,7 @@ class AllianceService:
                 selectinload(Alliance.owner),  # type: ignore[arg-type]
                 selectinload(Alliance.members),  # type: ignore[arg-type]
                 selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
+                selectinload(Alliance.strategists),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(sql)
@@ -519,6 +609,7 @@ class AllianceService:
             .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
             .options(
                 selectinload(Alliance.officers),  # type: ignore[arg-type]
+                selectinload(Alliance.strategists),  # type: ignore[arg-type]
             )
         )
         result = await session.exec(sql)
