@@ -284,6 +284,13 @@ class TestAllianceResponseModelValidate:
             game_pseudo="Officer1",
             alliance_group=1,
         )
+        strategist_ga_id = uuid.uuid4()
+        strategist_member = _ns(
+            id=strategist_ga_id,
+            user_id=uuid.uuid4(),
+            game_pseudo="Strategist1",
+            alliance_group=1,
+        )
         alliance = _ns(
             id=uuid.uuid4(),
             name=TEST_ALLIANCE_NAME,
@@ -294,7 +301,8 @@ class TestAllianceResponseModelValidate:
             elo=0,
             tier=20,
             officers=[officer],
-            members=[owner_member, officer_member],
+            strategists=[_ns(game_account_id=strategist_ga_id)],
+            members=[owner_member, officer_member, strategist_member],
         )
 
         dto = AllianceResponse.model_validate(alliance)
@@ -302,7 +310,7 @@ class TestAllianceResponseModelValidate:
         assert dto.name == TEST_ALLIANCE_NAME
         assert dto.tag == "TST"
         assert dto.owner_pseudo == "TheOwner"
-        assert dto.member_count == 2
+        assert dto.member_count == 3
         assert len(dto.officers) == 1
         assert dto.officers[0].game_pseudo == "Officer1"
 
@@ -311,6 +319,12 @@ class TestAllianceResponseModelValidate:
         assert owner_dto.is_owner is True
         officer_dto = next(m for m in dto.members if m.id == officer_ga_id)
         assert officer_dto.is_officer is True
+        # `is_strategist` is the exact rank, not a capability: the officer
+        # outranks a strategist but must not be flagged as one.
+        assert officer_dto.is_strategist is False
+        strategist_dto = next(m for m in dto.members if m.id == strategist_ga_id)
+        assert strategist_dto.is_strategist is True
+        assert strategist_dto.is_officer is False
 
     def test_empty_alliance(self):
         now = utcnow()
@@ -324,6 +338,7 @@ class TestAllianceResponseModelValidate:
             elo=0,
             tier=20,
             officers=[],
+            strategists=[],
             members=[],
         )
         dto = AllianceResponse.model_validate(alliance)
