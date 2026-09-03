@@ -42,6 +42,12 @@ nobody. Ranks between a plain member and an Officer — the two are exclusive, a
 Officer demoted falls back to plain member, never to Strategist.
 _Table_: `alliance_strategist`.
 _Avoid_: planner, planneur, deputy.
+_Debt_: the rule granting the placement right is spelled three times —
+`AllianceService.can_place`, and again inline in each of the two maps
+`get_my_roles` returns. Changing who may place means changing all three, and
+only the first is covered by a guard test. They cannot simply call each other:
+`can_place` queries, while `get_my_roles` reads relationships already loaded in
+a loop. A pure predicate over the four id sets, called by all three, is the fix.
 
 **Visitor**:
 A Player attached to an Alliance in read-only: sees everything a plain member sees,

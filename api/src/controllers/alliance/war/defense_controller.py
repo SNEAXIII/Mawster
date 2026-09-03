@@ -9,6 +9,7 @@ from src.dto.alliance.war.dto_defense import (
     DefensePlacementResponse,
     DefenseSummaryResponse,
 )
+from src.Messages.alliance_messages import PLACE_FOR_OTHERS_REQUIRES_STRATEGIST
 from src.models import User
 from src.services.admin.SagaService import SagaService
 from src.services.alliance.AllianceService import AllianceService
@@ -85,7 +86,7 @@ async def place_defender(
     if not is_manager and body.game_account_id != my_account.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only officers/owners can place defenders for other players",
+            detail=PLACE_FOR_OTHERS_REQUIRES_STRATEGIST,
         )
 
     placement = await DefensePlacementService.place_defender(

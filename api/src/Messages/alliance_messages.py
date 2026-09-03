@@ -5,6 +5,9 @@ GAME_ACCOUNT_ALREADY_IN_ALLIANCE = "This game account is already in an alliance"
 GAME_ACCOUNT_NOT_MEMBER_OF_ALLIANCE = "Game account is not a member of this alliance"
 OWNER_OR_OFFICER_REQUIRED = "Only the alliance owner or an officer can perform this action"
 STRATEGIST_REQUIRED = "Only the alliance owner, an officer or a strategist can perform this action"
+PLACE_FOR_OTHERS_REQUIRES_STRATEGIST = (
+    "Only the alliance owner, an officer or a strategist can place defenders for other players"
+)
 OWNER_REQUIRED = "Only the alliance owner can perform this action"
 OFFICER_CANNOT_REMOVE_OFFICER = "An officer cannot remove another officer"
 OWNER_GAME_ACCOUNT_NOT_FOUND = "Owner game account not found"
