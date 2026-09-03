@@ -335,49 +335,6 @@ class AllianceService:
         return account
 
     @classmethod
-    async def is_officer_of_any_alliance(
-        cls,
-        session: SessionDep,
-        user_id: uuid.UUID,
-    ) -> bool:
-        """True if the user owns or officers at least one live alliance.
-
-        The alliance-less listings (`/eligible-members`) carry no alliance in
-        their path, so this is the narrowest guard they can express — and it
-        still keeps the whole player base out of a plain member's reach.
-        """
-        account_ids = await cls._get_user_account_ids(session, user_id)
-        if not account_ids:
-            return False
-        owned = await session.exec(
-            select(Alliance.id).where(
-                Alliance.owner_id.in_(account_ids),  # type: ignore[attr-defined]
-                Alliance.deleted_at.is_(None),  # type: ignore[union-attr]
-            )
-        )
-        if owned.first() is not None:
-            return True
-        officer = await session.exec(
-            select(AllianceOfficer.id).where(
-                AllianceOfficer.game_account_id.in_(account_ids)  # type: ignore[attr-defined]
-            )
-        )
-        return officer.first() is not None
-
-    @classmethod
-    async def require_officer_of_any_alliance(
-        cls,
-        session: SessionDep,
-        user_id: uuid.UUID,
-    ) -> None:
-        """Raise 403 unless the user owns or officers at least one alliance."""
-        if not await cls.is_officer_of_any_alliance(session, user_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=OWNER_OR_OFFICER_REQUIRED,
-            )
-
-    @classmethod
     async def require_officer_account(
         cls,
         session: SessionDep,
@@ -1271,22 +1228,6 @@ class AllianceService:
         return result.all()
 
     @classmethod
-    async def get_eligible_officers(
-        cls, session: SessionDep, alliance_id: uuid.UUID
-    ) -> list[GameAccount]:
-        """Get members of the alliance who are not the owner and not already officers."""
-        alliance = await cls._load_alliance_with_relations(session, alliance_id)
-        if alliance is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ALLIANCE_NOT_FOUND,
-            )
-        officer_ids = {off.game_account_id for off in alliance.officers}
-        return [
-            m for m in alliance.members if m.id != alliance.owner_id and m.id not in officer_ids
-        ]
-
-    @classmethod
     async def get_eligible_members(cls, session: SessionDep) -> list[GameAccount]:
         """Get all game accounts that are NOT in any alliance and do NOT have a pending invitation."""
         # Get IDs of game accounts with pending invitations
@@ -1299,6 +1240,7 @@ class AllianceService:
 
         sql = select(GameAccount).where(
             GameAccount.alliance_id.is_(None),
+            GameAccount.deleted_at.is_(None),
         )
         if pending_ids:
             sql = sql.where(GameAccount.id.notin_(pending_ids))  # type: ignore[union-attr]
@@ -1332,7 +1274,7 @@ class AllianceService:
         )
         excluded_ids |= set(pending_ids_result.all())
 
-        sql = select(GameAccount)
+        sql = select(GameAccount).where(GameAccount.deleted_at.is_(None))
         if excluded_ids:
             sql = sql.where(GameAccount.id.notin_(excluded_ids))  # type: ignore[union-attr]
         result = await session.exec(sql)
