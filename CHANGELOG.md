@@ -3,6 +3,14 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.8.2](https://github.com/SNEAXIII/Mawster/compare/v1.8.1...v1.8.2) (2026-09-03)
+
+
+### Corrigé
+
+* close an alliance's interior to whoever holds no rank in it ([#491](https://github.com/SNEAXIII/Mawster/issues/491)) ([ed69714](https://github.com/SNEAXIII/Mawster/commit/ed697148e5d953988a026a9a590f31ab54d7a8ff))
+* keep war attacker row readable when a node has prefights ([#490](https://github.com/SNEAXIII/Mawster/issues/490)) ([91e24dd](https://github.com/SNEAXIII/Mawster/commit/91e24ddeeb96ce79d43534d00807e7a7ffcecdca))
+
 ## [1.8.1](https://github.com/SNEAXIII/Mawster/compare/v1.8.0...v1.8.1) (2026-09-03)
 
 
