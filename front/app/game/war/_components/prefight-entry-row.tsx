@@ -6,6 +6,7 @@ import { cn } from '@/app/lib/utils'
 import { X, Flame } from 'lucide-react'
 import { type WarPrefight, type WarPlacement } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
+import NodeSlot from './node-slot'
 
 interface PrefightEntryRowProps {
   prefight: WarPrefight
@@ -23,6 +24,8 @@ export default function PrefightEntryRow({
   const { t } = useI18n()
   const { handleRemovePrefight } = useWar()
 
+  const label = t.game.war.prefight.for.replace('#{node}', String(prefight.target_node_number))
+
   const isFull = mode === 'full'
   const portraitSize = isFull ? 55 : 40
   const btnSize = isFull ? 'w-7 h-7' : 'w-5 h-5'
@@ -32,12 +35,18 @@ export default function PrefightEntryRow({
   return (
     <div
       className={cn(
-        'flex items-center gap-2 rounded-md bg-card',
+        'flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-card',
         boxPaddingSize,
         !isFull && 'border'
       )}
       data-cy={`prefight-entry-node-${prefight.target_node_number}`}
     >
+      <NodeSlot
+        nodeNumber={prefight.target_node_number}
+        isFull={isFull}
+        title={label}
+      />
+
       <div className='flex items-center gap-1 shrink-0'>
         {/* Prefight provider portrait with flame badge */}
         <div className='relative'>
@@ -77,9 +86,7 @@ export default function PrefightEntryRow({
       </div>
 
       <div className='flex-1 min-w-0'>
-        <div className='text-[10px] text-muted-foreground'>
-          {t.game.war.prefight.for.replace('#{node}', String(prefight.target_node_number))}
-        </div>
+        <div className='text-[10px] text-muted-foreground'>{t.game.war.prefight.label}</div>
         <div className='text-[10px] font-medium truncate'>{prefight.champion_name}</div>
       </div>
 
