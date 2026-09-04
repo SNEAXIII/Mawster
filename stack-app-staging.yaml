@@ -90,6 +90,10 @@ services:
         target: mawster_db_password
       - source: mawster_email_pepper_staging
         target: mawster_email_pepper
+      # Deja montes sur le front, et non suffixes _staging : les deux
+      # environnements pointent sur les memes applications OAuth.
+      - mawster_discord_client_id
+      - mawster_google_client_id
     volumes:
       - api_logs_staging:/app/api/logs
     command: ['sh', 'run.sh']
