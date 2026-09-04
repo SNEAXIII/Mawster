@@ -110,7 +110,7 @@ jobs:
           persist-credentials: false
       - name: Compute spec distribution
         id: plan
-        run: echo "matrix=$(python3 scripts/e2e_parallel.py --plan --runners ${{ env.E2E_RUNNERS }})" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(python3 scripts/spec_planner.py --runners ${{ env.E2E_RUNNERS }})" >> $GITHUB_OUTPUT
 
   e2e-build:
     name: E2E — Build frontend

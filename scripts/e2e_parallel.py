@@ -49,11 +49,17 @@ from config import (  # pylint: disable=import-error,wrong-import-position
     MARIADB_PORT,
     MARIADB_ROOT_PASSWORD,
     ROOT,
+    log,
 )
 from IOsModel import IOsModel  # pylint: disable=import-error,wrong-import-position
 from linux_model import (  # pylint: disable=import-error,wrong-import-position
     LinuxHeadlessModel,
     LinuxModel,
+)
+from spec_planner import (  # pylint: disable=import-error,wrong-import-position
+    distribute_specs,
+    get_spec_files,
+    resolve_spec_paths,
 )
 from windows_model import (
     WindowsModel,  # pylint: disable=import-error,wrong-import-position
@@ -94,9 +100,6 @@ OS = _get_os_model()
 NPM = OS.npm
 NPX = OS.npx
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mKHFABCDJG]")
-# Mirrors specPattern in front/cypress.config.ts.
-SPEC_GLOB = "*.cy.ts"
-E2E_DIR = FRONT_DIR / "cypress" / "e2e"
 RESULTS_DIR = FRONT_DIR / "cypress" / "results"
 # Next build output for E2E, separate from the dev .next. The same value
 # is spelled out in .github/workflows/api_front__test_lint_build.yaml and
@@ -114,10 +117,6 @@ def worker_log_dir(worker: int) -> Path:
 
 def localhost_url(port: int, path: str = "") -> str:
     return f"http://localhost:{port}{path}"
-
-
-def log(msg: str) -> None:
-    print(f"[e2e-parallel] {msg}", flush=True, file=sys.stderr)
 
 
 def _run_sql(sql: str) -> subprocess.CompletedProcess:
@@ -519,53 +518,6 @@ def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subproce
     return proc
 
 
-# Specs whose filename contains this marker exercise the vision import loop:
-# front -> API -> RabbitMQ -> worker -> API -> preview. They need RabbitMQ,
-# RustFS and a vision worker running, and only ONE worker may consume
-# `vision.jobs` at a time or message delivery stops being deterministic.
-#
-# Ordinary runners have none of that, so they are excluded by default and opted
-# into with --include-vision. They are meant to land on a single dedicated
-# runner with the full stack, never spread across the parallel matrix.
-VISION_SPEC_MARKER = "vision"
-
-
-def is_vision_spec(spec: Path) -> bool:
-    return VISION_SPEC_MARKER in spec.name
-
-
-def get_spec_files(include_vision: bool = False) -> list[Path]:
-    """Return Cypress spec files sorted by path.
-
-    Vision specs are excluded unless asked for: see VISION_SPEC_MARKER.
-    """
-    specs = sorted(E2E_DIR.rglob(SPEC_GLOB))
-    if include_vision:
-        return specs
-    return [s for s in specs if not is_vision_spec(s)]
-
-
-def count_tests(spec: Path) -> int:
-    """Estimate test weight by counting it( calls in the spec file."""
-    try:
-        return max(1, spec.read_text(encoding="utf-8").count("  it("))
-    except Exception:
-        return 1
-
-
-def distribute_specs(specs: list[Path], n: int) -> list[list[Path]]:
-    """Greedy bin-packing: assign heaviest specs first to the lightest bucket."""
-    weighted = sorted(((s, count_tests(s)) for s in specs), key=lambda x: x[1], reverse=True)
-    buckets: list[list[Path]] = [[] for _ in range(n)]
-    totals = [0] * n
-    for spec, w in weighted:
-        i = min(range(n), key=lambda i: totals[i])
-        buckets[i].append(spec)
-        totals[i] += w
-    log(f"Spec distribution (estimated tests per worker): {totals}")
-    return buckets
-
-
 def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     """Run a Cypress instance for this worker on the given spec files.
 
@@ -643,29 +595,6 @@ def kill_ports(ports: list[int]) -> None:
     run_parallel(kill_threads)
 
 
-def resolve_spec_paths(raw_specs: str) -> set[Path]:
-    resolved_specs: set[Path] = set()
-    for raw in [s.strip() for s in raw_specs.split(",") if s.strip()]:
-        spec_path = Path(raw)
-        if not spec_path.is_absolute():
-            candidate = E2E_DIR / raw
-            if not candidate.exists():
-                candidate = FRONT_DIR / raw
-            spec_path = candidate
-        if not spec_path.exists():
-            available = sorted(p.relative_to(E2E_DIR) for p in E2E_DIR.rglob(SPEC_GLOB))
-            log(f"ERROR: spec not found: {raw}")
-            log("Available specs:")
-            for s in available:
-                log(f"  {s}")
-            sys.exit(1)
-        if spec_path.is_dir():
-            resolved_specs.update(spec_path.rglob(SPEC_GLOB))
-        else:
-            resolved_specs.add(spec_path)
-    return resolved_specs
-
-
 def kill_probably_used_ports(worker_number: int) -> None:
     ports_to_free = [
         *[BASE_API_PORT + i for i in range(worker_number)],
@@ -673,30 +602,6 @@ def kill_probably_used_ports(worker_number: int) -> None:
     ]
     log(f"Freeing ports: {ports_to_free}")
     kill_ports(ports_to_free)
-
-
-def plan(runners: int, include_vision: bool = False) -> None:
-    """Print a GitHub Actions matrix JSON and exit.
-
-    Each entry is {"runner": "N", "specs": "path1,path2,..."}
-    with paths relative to FRONT_DIR (forward-slash, cross-platform).
-
-    Vision specs are left out of the matrix: they need a broker, object storage
-    and a single vision worker, which the parallel runners do not have. Spread
-    across the matrix they would also put two consumers on the same queue.
-    """
-    specs = get_spec_files(include_vision=include_vision)
-    buckets = distribute_specs(specs, runners)
-    matrix = [
-        {
-            "runner": str(i),
-            "specs": ",".join(str(s.relative_to(FRONT_DIR)).replace("\\", "/") for s in bucket),
-        }
-        for i, bucket in enumerate(buckets)
-        if bucket
-    ]
-    print(json.dumps(matrix))
-    sys.exit(0)
 
 
 def main() -> None:
@@ -723,18 +628,6 @@ def main() -> None:
         help="Hide backend and frontend logs (Cypress output still shown)",
     )
     parser.add_argument(
-        "--plan",
-        action="store_true",
-        help="Print a GitHub Actions matrix JSON for --runners runners and exit (no tests run).",
-    )
-    parser.add_argument(
-        "--runners",
-        type=int,
-        default=4,
-        metavar="N",
-        help="Number of CI runners to distribute specs across (used with --plan, default: 4).",
-    )
-    parser.add_argument(
         "--skip-build",
         action="store_true",
         help="Skip the Next.js build step; assume .next-e2e already exists.",
@@ -750,8 +643,6 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    if args.plan:
-        plan(args.runners, include_vision=args.include_vision)
     quiet = args.quiet
 
     resolved_specs: set[Path] = set()
