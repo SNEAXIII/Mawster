@@ -17,9 +17,5 @@ HEALTH_TIMEOUT = 20
 
 
 def log(msg: str) -> None:
-    """Progress line for the E2E tooling.
-
-    Goes to stderr so that spec_planner can pipe clean JSON on stdout into
-    $GITHUB_OUTPUT while the distribution recap stays readable in the log.
-    """
+    """Logs to stderr: stdout carries the matrix JSON CI pipes into $GITHUB_OUTPUT."""
     print(f"[e2e-parallel] {msg}", flush=True, file=sys.stderr)

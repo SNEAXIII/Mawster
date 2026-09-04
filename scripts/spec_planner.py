@@ -1,14 +1,8 @@
 #!/usr/bin/env python3
 """Spec discovery, weighting and distribution for the Cypress E2E suite.
 
-Owns the planning side of the E2E suite — which specs exist, what each one
-weighs, and how they spread across N buckets. The runner keeps none of it: CI
-calls this module directly for the matrix, and e2e_parallel.py imports the same
-functions to split specs across its local workers.
-
-Nothing here starts a server, a database or Cypress, and importing it has no
-side effects, so planning no longer drags in the whole runner (which probes the
-host OS at import time).
+CI calls this for the matrix; e2e_parallel.py imports the same functions to
+split specs across its local workers.
 
     python3 scripts/spec_planner.py --runners 8              # matrix JSON, as CI consumes it
     python3 scripts/spec_planner.py --runners 8 --weights    # readable weight report
@@ -57,12 +51,7 @@ def get_spec_files(include_vision: bool = False) -> list[Path]:
 
 
 def count_tests(spec: Path) -> int:
-    """Estimate test weight by counting it( calls in the spec file.
-
-    The needle keeps its two leading spaces so that `it(` inside a word (unit(,
-    await(, ...) never counts; a substring match still reaches every indent
-    level, so tests nested in an inner describe are weighed like the rest.
-    """
+    """Estimate test weight by counting it( calls in the spec file."""
     try:
         return max(1, spec.read_text(encoding="utf-8").count("  it("))
     except Exception:
@@ -110,10 +99,6 @@ def build_matrix(runners: int, include_vision: bool = False) -> list[dict]:
 
     Each entry is {"runner": "N", "specs": "path1,path2,..."} with paths
     relative to FRONT_DIR (forward-slash, cross-platform).
-
-    Vision specs are left out: they need a broker, object storage and a single
-    vision worker, which the parallel runners do not have. Spread across the
-    matrix they would also put two consumers on the same queue.
     """
     buckets = distribute_specs(get_spec_files(include_vision=include_vision), runners)
     return [
@@ -127,13 +112,11 @@ def build_matrix(runners: int, include_vision: bool = False) -> list[dict]:
 
 
 def plan(runners: int, include_vision: bool = False) -> None:
-    """Print the GitHub Actions matrix JSON and exit."""
     print(json.dumps(build_matrix(runners, include_vision=include_vision)))
     sys.exit(0)
 
 
 def report_weights(runners: int, include_vision: bool = False) -> None:
-    """Print what each spec weighs and how the buckets came out."""
     specs = get_spec_files(include_vision=include_vision)
     weights = sorted(((count_tests(s), s) for s in specs), reverse=True)
     total = sum(w for w, _ in weights)
