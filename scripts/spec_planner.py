@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Spec discovery, weighting and distribution for the Cypress E2E suite.
 
-Split out of e2e_parallel.py so the planning side — which specs exist, what
-each one weighs, and how they spread across N buckets — can be read, tested
-and run on its own. Nothing here starts a server, a database or Cypress, and
-importing this module has no side effects, so `--plan` in CI no longer has to
-pull in the whole runner (which probes the host OS at import time).
+Owns the planning side of the E2E suite — which specs exist, what each one
+weighs, and how they spread across N buckets. The runner keeps none of it: CI
+calls this module directly for the matrix, and e2e_parallel.py imports the same
+functions to split specs across its local workers.
 
-Standalone:
+Nothing here starts a server, a database or Cypress, and importing it has no
+side effects, so planning no longer drags in the whole runner (which probes the
+host OS at import time).
+
     python3 scripts/spec_planner.py --runners 8              # matrix JSON, as CI consumes it
     python3 scripts/spec_planner.py --runners 8 --weights    # readable weight report
 """

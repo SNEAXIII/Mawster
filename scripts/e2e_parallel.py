@@ -59,7 +59,6 @@ from linux_model import (  # pylint: disable=import-error,wrong-import-position
 from spec_planner import (  # pylint: disable=import-error,wrong-import-position
     distribute_specs,
     get_spec_files,
-    plan,
     resolve_spec_paths,
 )
 from windows_model import (
@@ -629,18 +628,6 @@ def main() -> None:
         help="Hide backend and frontend logs (Cypress output still shown)",
     )
     parser.add_argument(
-        "--plan",
-        action="store_true",
-        help="Print a GitHub Actions matrix JSON for --runners runners and exit (no tests run).",
-    )
-    parser.add_argument(
-        "--runners",
-        type=int,
-        default=4,
-        metavar="N",
-        help="Number of CI runners to distribute specs across (used with --plan, default: 4).",
-    )
-    parser.add_argument(
         "--skip-build",
         action="store_true",
         help="Skip the Next.js build step; assume .next-e2e already exists.",
@@ -656,8 +643,6 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    if args.plan:
-        plan(args.runners, include_vision=args.include_vision)
     quiet = args.quiet
 
     resolved_specs: set[Path] = set()
