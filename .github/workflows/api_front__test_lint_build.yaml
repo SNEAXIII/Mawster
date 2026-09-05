@@ -361,6 +361,10 @@ jobs:
           file: ./front/front.Dockerfile
           push: true
           # Host-agnostic image: NEXT_PUBLIC_API_CLIENT_HOST is applied at runtime by run.sh (stack env).
+          # The build id is not host-specific, so it can be baked: it only has to
+          # differ between deploys for an open tab to notice a new one.
+          build-args: |
+            NEXT_PUBLIC_BUILD_ID=${{ github.sha }}
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ needs.changes.outputs.moving_tag }}
             ${{ vars.DOCKERHUB_USERNAME }}/mawster-front:${{ needs.changes.outputs.tag_prefix }}${{ needs.changes.outputs.version }}
