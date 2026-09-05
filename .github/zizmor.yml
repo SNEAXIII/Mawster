@@ -7,7 +7,7 @@ rules:
     # setup-python/node/uv caches. Dropping them costs minutes per push, and none of
     # these jobs publish a release artifact. Revisit if they ever do.
     ignore:
-      - api_front__test_lint_build.yaml
+      - _test.yaml
       - sonar.yaml
 
   artipacked:
@@ -22,4 +22,4 @@ rules:
   unpinned-images:
     # Test database, pinned by tag. Never reaches a release artifact.
     ignore:
-      - api_front__test_lint_build.yaml
+      - _test.yaml

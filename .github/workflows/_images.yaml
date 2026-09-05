@@ -1,0 +1,91 @@
+name: Images
+
+# Called by ci.yaml. The five images used to be five near-identical jobs; only the
+# build context, the Dockerfile and the image name ever differed, so they are one
+# matrix now. The tag trio comes from the caller's metadata job, resolved once
+# there so a run straddling a minute cannot tag two images inconsistently.
+on:
+  workflow_call:
+    inputs:
+      moving_tag:
+        required: true
+        type: string
+      tag_prefix:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      also_staging:
+        required: true
+        type: string
+    secrets:
+      DOCKERHUB_TOKEN:
+        required: true
+
+jobs:
+  docker:
+    name: Docker Build & Push (${{ matrix.name }})
+    permissions:
+      contents: read
+    environment: Api
+    runs-on: ubuntu-latest
+    strategy:
+      # One broken image must not cancel the four that would otherwise be pushed:
+      # the deploy is gated on all of them anyway, and a full set of logs is worth
+      # more than a fast failure here.
+      fail-fast: false
+      matrix:
+        include:
+          - name: API
+            image: mawster-api
+            context: ./api
+            file: ./api/api.Dockerfile
+          - name: Front
+            image: mawster-front
+            context: ./front
+            file: ./front/front.Dockerfile
+            # Host-agnostic image: NEXT_PUBLIC_API_CLIENT_HOST is applied at runtime
+            # by run.sh (stack env). The build id is not host-specific, so it can be
+            # baked: it only has to differ between deploys for an open tab to notice
+            # a new one.
+            build_args: NEXT_PUBLIC_BUILD_ID=${{ github.sha }}
+          - name: Migrate
+            image: mawster-migrate
+            context: ./api
+            file: ./api/migrate.Dockerfile
+          - name: Backup
+            image: mawster-backup
+            context: ./backup
+            file: ./backup/Dockerfile
+          - name: Static
+            image: mawster-static
+            context: .
+            file: ./static-assets/static.Dockerfile
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Log in to Docker Hub
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Build and push Docker image for ${{ matrix.name }}
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          push: true
+          # Empty for every image but the front, which is what an absent matrix key
+          # yields — the action treats that as no build argument at all.
+          build-args: ${{ matrix.build_args }}
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ inputs.moving_tag }}
+            ${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ inputs.tag_prefix }}${{ inputs.version }}
+            ${{ inputs.also_staging == 'true' && format('{0}/{1}:staging', vars.DOCKERHUB_USERNAME, matrix.image) || '' }}
+          cache-from: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:buildcache
+          cache-to: type=registry,ref=${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:buildcache,mode=max
