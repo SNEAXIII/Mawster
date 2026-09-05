@@ -1,5 +1,4 @@
 const en = {
-  // Common
   common: {
     appName: 'Mawster',
     loading: 'Loading...',
@@ -253,7 +252,6 @@ const en = {
     },
   },
 
-  // Game
   game: {
     accounts: {
       title: 'Game Accounts',
@@ -810,7 +808,6 @@ const en = {
     },
   },
 
-  // Admin
   admin: {
     knowledgeBase: {
       tab: 'Knowledge Base',
@@ -893,7 +890,6 @@ const en = {
     },
   },
 
-  // Moderation
   moderation: {
     tab: 'Moderation',
     report: 'Report',
@@ -1049,7 +1045,6 @@ const en = {
     },
   },
 
-  // Roster
   roster: {
     title: 'My Roster',
     selectAccount: 'Select a game account',
