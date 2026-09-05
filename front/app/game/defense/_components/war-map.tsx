@@ -68,6 +68,10 @@ export function WarMapNode({
   // The line is reserved for every node so rows keep one height, and an empty
   // one on a placed defender means "no attacker assigned" rather than "hidden".
   const showPseudo = !hidePseudo
+  // "No attacker" is the default state of a freshly placed map, so it only earns
+  // the pseudo line's own glyph and tint — never a border or a filled bar, which
+  // would repaint most of the grid and drown the section colours.
+  const unassigned = Boolean(placement) && !placement?.game_pseudo
 
   return (
     <div
@@ -172,15 +176,14 @@ export function WarMapNode({
         <span
           className={cn(
             'block truncate px-0.5 text-center text-[9px] leading-[12px]',
-            placement?.game_pseudo ? 'text-white/80' : 'text-white/30'
+            unassigned && 'font-bold tracking-wider text-amber-400/70',
+            !unassigned && (placement ? 'text-white/80' : 'text-white/30')
           )}
           style={{ height: PSEUDO_HEIGHT }}
-          title={placement && !placement.game_pseudo ? t.game.war.noAttackerAssigned : undefined}
-          data-cy={
-            placement && !placement.game_pseudo ? `war-node-unassigned-${nodeNumber}` : undefined
-          }
+          title={unassigned ? t.game.war.noAttackerAssigned : undefined}
+          data-cy={unassigned ? `war-node-unassigned-${nodeNumber}` : undefined}
         >
-          {placement && !placement.game_pseudo ? '—' : placement?.game_pseudo}
+          {unassigned ? '???' : placement?.game_pseudo}
         </span>
       )}
     </div>
