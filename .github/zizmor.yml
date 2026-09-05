@@ -23,3 +23,12 @@ rules:
     # Test database, pinned by tag. Never reaches a release artifact.
     ignore:
       - _test.yaml
+
+  self-repository:
+    # zizmor prefers the `$/...` syntax GitHub added in July 2026 for same-repository
+    # references. Sonar's supply-chain rule does not know it yet, reads it as an
+    # external action and demands a pinned SHA — which is meaningless here: a called
+    # workflow lives in the same commit as its caller, and pinning one would test a
+    # pull request against an older copy of itself. The documented `./...` form stays.
+    ignore:
+      - ci.yaml
