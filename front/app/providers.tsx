@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes'
 import { I18nProvider } from '@/app/i18n'
 import { AllianceProvider } from '@/app/contexts/alliance-context'
 import { signOutAndRedirect } from '@/app/lib/sign-out'
+import VersionWatcher from '@/components/version-watcher'
 import { useEffect } from 'react'
 
 function SessionWatcher() {
@@ -32,6 +33,7 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
       >
         <SessionWatcher />
         <I18nProvider>
+          <VersionWatcher />
           <AllianceProvider>{children}</AllianceProvider>
         </I18nProvider>
       </SessionProvider>

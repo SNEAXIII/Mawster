@@ -53,6 +53,28 @@ def _patch_discord_http_client(mocker, status_code=200, json_body=None, raise_er
     return mock_client
 
 
+def _patch_discord_two_calls(mocker, oauth_body, oauth_status=200, user_body=None):
+    """Patch httpx so the first .get() answers /oauth2/@me and the second /users/@me."""
+    oauth_response = MagicMock()
+    oauth_response.status_code = oauth_status
+    oauth_response.json.return_value = oauth_body
+
+    user_response = MagicMock()
+    user_response.status_code = 200
+    user_response.json.return_value = user_body or {
+        "id": "123",
+        "username": "testuser",
+        "email": "test@discord.com",
+    }
+
+    mock_client = AsyncMock()
+    mock_client.get.side_effect = [oauth_response, user_response]
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    mocker.patch("src.services.auth.DiscordAuthService.httpx.AsyncClient", return_value=mock_client)
+    return mock_client
+
+
 # =========================================================================
 # verify_discord_token
 # =========================================================================
@@ -62,7 +84,11 @@ class TestVerifyDiscordToken:
     @pytest.mark.asyncio
     async def test_success_returns_profile(self, mocker):
         profile = {"id": "123", "username": "testuser", "email": "test@discord.com"}
-        _patch_discord_http_client(mocker, status_code=200, json_body=profile)
+        _patch_discord_two_calls(
+            mocker,
+            {"application": {"id": SECRET.DISCORD_CLIENT_ID}},
+            user_body=profile,
+        )
 
         result = await DiscordAuthService.verify_token("valid_token")
 
@@ -92,6 +118,30 @@ class TestVerifyDiscordToken:
         with pytest.raises(HTTPException) as exc:
             await DiscordAuthService.verify_token("token")
         assert exc.value.status_code == 502
+
+    @pytest.mark.asyncio
+    async def test_token_issued_to_mawster_is_accepted(self, mocker):
+        _patch_discord_two_calls(mocker, {"application": {"id": SECRET.DISCORD_CLIENT_ID}})
+
+        result = await DiscordAuthService.verify_token("good_token")
+
+        assert result["id"] == "123"
+
+    @pytest.mark.asyncio
+    async def test_token_issued_to_another_application_raises_http_401(self, mocker):
+        _patch_discord_two_calls(mocker, {"application": {"id": "someone_elses_app"}})
+
+        with pytest.raises(HTTPException) as exc:
+            await DiscordAuthService.verify_token("stolen_token")
+        assert exc.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_foreign_token_never_reaches_the_profile_endpoint(self, mocker):
+        client = _patch_discord_two_calls(mocker, {"application": {"id": "someone_elses_app"}})
+
+        with pytest.raises(HTTPException):
+            await DiscordAuthService.verify_token("stolen_token")
+        assert client.get.call_count == 1
 
 
 # =========================================================================

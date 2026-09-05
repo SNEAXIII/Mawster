@@ -34,8 +34,8 @@ export interface ApiErrorResponse {
   errors: ValidationErrors
 }
 
-// Tous les appels passent par le proxy Next.js /api/back
-// Le JWT backend est injecté côté serveur, jamais côté client.
+// Every call goes through the Next.js /api/back proxy.
+// The backend JWT is injected server-side, never client-side.
 
 async function throwOnError(response: Response, fallback: string) {
   if (response.ok) return

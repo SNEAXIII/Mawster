@@ -38,11 +38,9 @@ function writeCache(alliances: AllianceWithVisitorFlag[]) {
 }
 
 interface AllianceContextValue {
-  // Alliances
   alliances: AllianceWithVisitorFlag[]
   hasAlliance: boolean
   loading: boolean
-  // Roles
   roles: Record<string, AllianceRoleEntry>
   myAccountIds: Set<string>
   isMine: (gameAccountId: string) => boolean

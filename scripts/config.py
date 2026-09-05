@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
@@ -13,3 +14,8 @@ MARIADB_PORT = int(os.environ.get("MARIADB_PORT", "3307"))
 MARIADB_ROOT_PASSWORD = os.environ.get("MARIADB_ROOT_PASSWORD", "rootpassword")  # NOSONAR
 MARIADB_CONTAINER = os.environ.get("MARIADB_CONTAINER", "mariadb-test")
 HEALTH_TIMEOUT = 20
+
+
+def log(msg: str) -> None:
+    """Logs to stderr: stdout carries the matrix JSON CI pipes into $GITHUB_OUTPUT."""
+    print(f"[e2e-parallel] {msg}", flush=True, file=sys.stderr)

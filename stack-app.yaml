@@ -140,6 +140,10 @@ services:
       - mawster_secret_key
       - mawster_db_password
       - mawster_email_pepper
+      # Deja montes sur le front : l'API en a besoin pour verifier que le token
+      # recu a bien ete emis pour ces applications-la.
+      - mawster_discord_client_id
+      - mawster_google_client_id
       - mawster_rabbitmq_pass
       - mawster_rustfs_access_key
       - mawster_rustfs_secret_key

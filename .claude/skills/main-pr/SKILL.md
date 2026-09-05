@@ -1,12 +1,16 @@
 ---
-name: open-pr
-description: Use when ready to open a pull request — runs ruff lint/format, commits, pushes, and creates the PR via the gh CLI
+name: main-pr
+description: >
+  Ouvre la PR d'une branche de feature sur `main` : ruff lint/format, commit, push, `gh pr create`.
+  Jamais pour promouvoir `main` vers `release` ou `staging` — pour déployer, voir `release-pr`.
 user-invocable: true
 ---
 
-# Open PR
+# Main PR
 
 Workflow complet pour ouvrir une PR sur `main` depuis la branche courante.
+
+Pour promouvoir `main` vers `release` (prod) ou `staging` et déployer, c'est `/release-pr`.
 
 ## Steps
 
@@ -38,7 +42,7 @@ Workflow complet pour ouvrir une PR sur `main` depuis la branche courante.
 
 ## Args
 
-Si des args sont fournis (ex: `/open-pr fix login redirect`), les utiliser comme titre de PR.  
+Si des args sont fournis (ex: `/main-pr fix login redirect`), les utiliser comme titre de PR.  
 Sinon, dériver le titre depuis les commits de la branche (`git log main..HEAD --oneline`).
 
 ## Notes

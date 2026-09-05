@@ -1,7 +1,6 @@
 import { Translations } from './en'
 
 const fr: Translations = {
-  // Common
   common: {
     appName: 'Mawster',
     loading: 'Chargement...',
@@ -24,6 +23,11 @@ const fr: Translations = {
     no: 'Non',
     noResults: 'Aucun résultat trouvé.',
     clearSelection: 'Effacer la sélection',
+    newVersion: {
+      title: 'Nouvelle version disponible',
+      description: 'Rechargez la page pour obtenir les dernières mises à jour.',
+      action: 'Recharger',
+    },
   },
 
   // Navigation
@@ -257,7 +261,6 @@ const fr: Translations = {
     },
   },
 
-  // Game
   game: {
     accounts: {
       title: 'Comptes de jeu',
@@ -818,7 +821,6 @@ const fr: Translations = {
     },
   },
 
-  // Admin
   admin: {
     knowledgeBase: {
       tab: 'Base de connaissances',
@@ -901,7 +903,6 @@ const fr: Translations = {
     },
   },
 
-  // Moderation
   moderation: {
     tab: 'Modération',
     report: 'Signaler',
@@ -1061,7 +1062,6 @@ const fr: Translations = {
     },
   },
 
-  // Roster
   roster: {
     title: 'Mon Roster',
     selectAccount: 'Sélectionner un compte de jeu',

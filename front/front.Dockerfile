@@ -25,6 +25,11 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 # Host-agnostic build: bake a placeholder, rewritten at container start in run.sh.
 ENV NEXT_PUBLIC_API_CLIENT_HOST=__NEXT_PUBLIC_API_HOST__
+# The commit this image was built from, inlined into the bundle. It is how a
+# tab opened before a deploy tells its own build from the one /api/version
+# reports. Empty for a local build, which disables the check.
+ARG NEXT_PUBLIC_BUILD_ID=""
+ENV NEXT_PUBLIC_BUILD_ID=$NEXT_PUBLIC_BUILD_ID
 
 RUN \
   if [ -f package-lock.json ]; then npm run build; \
