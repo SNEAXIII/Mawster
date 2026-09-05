@@ -21,6 +21,11 @@ const en = {
     no: 'No',
     noResults: 'No results found.',
     clearSelection: 'Clear selection',
+    newVersion: {
+      title: 'New version available',
+      description: 'Reload the page to get the latest updates.',
+      action: 'Reload',
+    },
   },
 
   // Navigation

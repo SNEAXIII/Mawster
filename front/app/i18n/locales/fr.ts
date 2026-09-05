@@ -23,6 +23,11 @@ const fr: Translations = {
     no: 'Non',
     noResults: 'Aucun résultat trouvé.',
     clearSelection: 'Effacer la sélection',
+    newVersion: {
+      title: 'Nouvelle version disponible',
+      description: 'Rechargez la page pour obtenir les dernières mises à jour.',
+      action: 'Recharger',
+    },
   },
 
   // Navigation

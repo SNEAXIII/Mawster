@@ -6,6 +6,12 @@ const STATIC_PORT = process.env.STATIC_PORT ?? '8002'
 const NEXT_PUBLIC_API_CLIENT_HOST = process.env.NEXT_PUBLIC_API_CLIENT_HOST ?? 'localhost'
 const API_CLIENT_END_PART = process.env.NODE_ENV === 'production' ? '/api/back' : `:${API_PORT}`
 const port = process.env.PORT ?? '3000'
+
+// A deploy cannot push code into an already-open tab, so the front detects the
+// new build itself (components/version-watcher.tsx). Pinning the id to the
+// commit is what gives the running client and the server a value to compare.
+// Unset outside CI, where `undefined` leaves Next its own random id.
+const buildId = process.env.NEXT_PUBLIC_BUILD_ID?.trim()
 // Dev-only: origins allowed to hit the dev server assets (phone over SSH tunnel / LAN).
 // Extend with NEXT_ALLOWED_DEV_ORIGINS="192.168.1.42,mon-tunnel.example.com"
 const allowedDevOrigins = [
@@ -18,6 +24,7 @@ const allowedDevOrigins = [
 ]
 const nextConfig: NextConfig = {
   allowedDevOrigins,
+  generateBuildId: buildId ? () => buildId : undefined,
   output: process.env.NEXT_E2E_BUILD ? undefined : 'standalone',
   distDir: process.env.NEXT_DIST_DIR ?? (port !== '3000' ? `.next-${port}` : '.next'),
   async rewrites() {
