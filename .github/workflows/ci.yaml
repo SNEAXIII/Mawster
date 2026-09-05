@@ -19,7 +19,8 @@ jobs:
     name: Test
     permissions:
       contents: read
-    uses: $/.github/workflows/_test.yaml
+
+    uses: $/.github/workflows/_test.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
 
   changes:
     permissions:
@@ -86,7 +87,7 @@ jobs:
     permissions:
       contents: read
     needs: changes
-    uses: $/.github/workflows/_images.yaml
+    uses: $/.github/workflows/_images.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     with:
@@ -100,7 +101,7 @@ jobs:
     permissions:
       contents: read
     needs: [changes, images]
-    uses: $/.github/workflows/_deploy.yaml
+    uses: $/.github/workflows/_deploy.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USER }}
