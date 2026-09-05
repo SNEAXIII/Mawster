@@ -8,8 +8,8 @@ api_file = "api.env"
 
 IS_PROD = os.getenv("MODE") == "prod"
 IS_TESTING = os.getenv("MODE") == "testing"
-# Le staging tourne sans RustFS ni RabbitMQ : VISION_ENABLED=0 y rend les
-# réglages vision optionnels et coupe la feature, au lieu de refuser de booter.
+# Staging runs without RustFS or RabbitMQ: VISION_ENABLED=0 makes the vision
+# settings optional there and turns the feature off, rather than refusing to boot.
 VISION_ENABLED = os.getenv("VISION_ENABLED", "1").strip().lower() not in {"0", "false", "no"}
 _VISION_REQUIRED = IS_PROD and VISION_ENABLED
 
@@ -32,42 +32,40 @@ class Settings(BaseSettings):
     ALGORITHM: str = Field("HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(... if IS_PROD else 60, le=60)
     REFRESH_TOKEN_EXPIRE_DAYS: int = Field(... if IS_PROD else 7, le=30)
-    # Origines CORS séparées par des virgules (ex: "https://mawster.example.com")
-    # En dev, défaut permissif ; en prod, DOIT être défini dans api.env
+    # Comma-separated CORS origins (e.g. "https://mawster.example.com").
+    # Permissive default in dev; in prod it MUST be set in api.env.
     ALLOWED_ORIGINS: str = Field(... if IS_PROD else "http://localhost:3000")
     API_PORT: int = Field(... if IS_PROD else 8000)
     EMAIL_PEPPER: str = Field(... if IS_PROD else "dev-email-pepper")
     EMAIL_PEPPER_VERSION: int = Field(default=1)
     # --- OAuth audience ------------------------------------------------------
-    # L'application à laquelle un access token doit avoir été délivré. Sans ce
-    # contrôle, un token émis pour n'importe quelle autre application résout
-    # quand même vers un profil valide, et Mawster signerait un JWT pour cet
-    # utilisateur. Obligatoire en prod : un déploiement incapable de vérifier
-    # l'audience doit refuser de démarrer plutôt que d'accepter tous les tokens.
+    # The application an access token must have been issued to. Without this check,
+    # a token issued for any other application still resolves to a valid profile, and
+    # Mawster would sign a JWT for that user. Mandatory in prod: a deployment unable to
+    # verify the audience must refuse to start rather than accept every token.
     DISCORD_CLIENT_ID: str = Field(... if IS_PROD else "dev-discord-client-id")
     GOOGLE_CLIENT_ID: str = Field(... if IS_PROD else "dev-google-client-id")
     # --- Vision (roster import) ---------------------------------------------
     RABBITMQ_URL: str = Field(... if _VISION_REQUIRED else "amqp://mawster:mawster@localhost:5672/")
     RUSTFS_ENDPOINT: str = Field(... if _VISION_REQUIRED else "http://localhost:9000")
-    # Endpoint que le NAVIGATEUR appelle pour uploader en direct (URL présignée).
-    # Distinct de RUSTFS_ENDPOINT, qui reste l'adresse interne serveur→RustFS :
-    # SigV4 signe l'en-tête Host, donc une URL signée pour `http://rustfs:9000`
-    # est refusée (SignatureDoesNotMatch) dès qu'un navigateur l'envoie au nom
-    # public. Obligatoire en prod — sans ça la feature ne peut que produire des
-    # URLs mortes, et un boot qui échoue vaut mieux qu'un upload cassé.
-    # En dev les deux coïncident : RustFS publie 9000 sur l'hôte.
+    # The endpoint the BROWSER calls to upload directly (presigned URL). Distinct from
+    # RUSTFS_ENDPOINT, which stays the internal server-to-RustFS address: SigV4 signs the
+    # Host header, so a URL signed for `http://rustfs:9000` is rejected
+    # (SignatureDoesNotMatch) as soon as a browser sends it to the public name. Mandatory
+    # in prod - without it the feature can only produce dead URLs, and a failing boot
+    # beats a broken upload. In dev the two coincide: RustFS publishes 9000 on the host.
     RUSTFS_PUBLIC_ENDPOINT: str = Field(... if _VISION_REQUIRED else "http://localhost:9000")
     RUSTFS_ACCESS_KEY: str = Field(... if _VISION_REQUIRED else "mawster")
     RUSTFS_SECRET_KEY: str = Field(... if _VISION_REQUIRED else "mawsterpassword")
     RUSTFS_BUCKET_VISION: str = Field("vision")
     RUSTFS_BUCKET_DATASET: str = Field("dataset")
-    # Le consumer AMQP tourne en dev et en prod ; désactivé en MODE=testing pour
-    # que la CI et la suite de tests ne dépendent jamais d'un broker, et sur les
-    # déploiements sans vision, où il n'y a aucun broker à joindre.
+    # The AMQP consumer runs in dev and in prod; disabled under MODE=testing so CI and
+    # the test suite never depend on a broker, and on vision-less deployments, where
+    # there is no broker to reach.
     VISION_CONSUMER_ENABLED: bool = Field(default=not IS_TESTING and VISION_ENABLED)
-    # Fenêtre de rétention des objets d'import. DOIT rester alignée sur la règle
-    # de lifecycle posée sur le bucket vision par rustfs-init : au-delà, les
-    # images n'existent plus et un import ne peut plus être validé honnêtement.
+    # Retention window for import objects. MUST stay aligned with the lifecycle rule
+    # rustfs-init sets on the vision bucket: past it the images no longer exist and an
+    # import can no longer be validated honestly.
     VISION_RETENTION_DAYS: int = Field(default=7)
     model_config = SettingsConfigDict(env_file=api_file)
 
