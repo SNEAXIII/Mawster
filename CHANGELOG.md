@@ -3,6 +3,24 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.9.0](https://github.com/SNEAXIII/Mawster/compare/v1.8.3...v1.9.0) (2026-09-05)
+
+
+### Ajouté
+
+* tell open tabs when a new version is deployed ([#504](https://github.com/SNEAXIII/Mawster/issues/504)) ([f927a19](https://github.com/SNEAXIII/Mawster/commit/f927a19983da502176c8107ba1f9eb28a14e321d))
+* **war:** flag defenders with no attacker assigned ([e8b763d](https://github.com/SNEAXIII/Mawster/commit/e8b763dd74799055ebf82c6f2c82810208cd4e73))
+
+
+### Corrigé
+
+* reject OAuth tokens issued to another application ([#498](https://github.com/SNEAXIII/Mawster/issues/498)) ([c9b1f5d](https://github.com/SNEAXIII/Mawster/commit/c9b1f5d5fff9015e8899c4397a734eeef41dcd21))
+
+
+### Modifié
+
+* **e2e:** isolate spec weighting and distribution in spec_planner ([#501](https://github.com/SNEAXIII/Mawster/issues/501)) ([29e4d1f](https://github.com/SNEAXIII/Mawster/commit/29e4d1f062b14c87965e4264ea14b9d520581f45))
+
 ## [1.8.3](https://github.com/SNEAXIII/Mawster/compare/v1.8.2...v1.8.3) (2026-09-03)
 
 
