@@ -141,12 +141,12 @@ export const {
         }
       }
 
-      // Requêtes subséquentes : vérifier l'expiration du JWT backend
+      // Subsequent requests: check the backend JWT for expiry
       if (token.accessTokenExpires && Date.now() < (token.accessTokenExpires as number)) {
         return token
       }
 
-      // JWT backend expiré : tenter un refresh
+      // Backend JWT expired: attempt a refresh
       return await refreshBackendToken(token)
     },
     async session({ session, token }) {

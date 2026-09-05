@@ -56,7 +56,7 @@ class GoogleAuthService(OAuthService):
             except httpx.RequestError as exc:
                 raise GOOGLE_API_ERROR_EXCEPTION from exc
 
-            # tokeninfo répond 400 sur un token inconnu ou expiré, pas 401.
+            # tokeninfo answers 400 on an unknown or expired token, not 401.
             if token_info.status_code in (400, 401):
                 raise GOOGLE_TOKEN_INVALID_EXCEPTION
             if token_info.status_code != 200:

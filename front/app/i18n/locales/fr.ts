@@ -1,7 +1,6 @@
 import { Translations } from './en'
 
 const fr: Translations = {
-  // Common
   common: {
     appName: 'Mawster',
     loading: 'Chargement...',
@@ -257,7 +256,6 @@ const fr: Translations = {
     },
   },
 
-  // Game
   game: {
     accounts: {
       title: 'Comptes de jeu',
@@ -818,7 +816,6 @@ const fr: Translations = {
     },
   },
 
-  // Admin
   admin: {
     knowledgeBase: {
       tab: 'Base de connaissances',
@@ -901,7 +898,6 @@ const fr: Translations = {
     },
   },
 
-  // Moderation
   moderation: {
     tab: 'Modération',
     report: 'Signaler',
@@ -1061,7 +1057,6 @@ const fr: Translations = {
     },
   },
 
-  // Roster
   roster: {
     title: 'Mon Roster',
     selectAccount: 'Sélectionner un compte de jeu',

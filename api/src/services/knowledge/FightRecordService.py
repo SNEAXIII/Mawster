@@ -393,7 +393,6 @@ class FightRecordService:
 
         base = (union_all(*sub_queries) if len(sub_queries) > 1 else sub_queries[0]).subquery()
 
-        # COUNT
         total = (await session.exec(select(func.count()).select_from(base))).one()
 
         # SORT — all labeled columns are directly accessible on the subquery
