@@ -28,6 +28,27 @@ interface AttackerEntryRowProps {
   readonly?: boolean
 }
 
+/**
+ * The attacker's name, or the "???" standing for its absence — same slot, same
+ * size, so a node nobody is taking reads as a hole rather than as nothing.
+ */
+function AttackerPseudo({ placement }: Readonly<{ placement: WarPlacement }>) {
+  const { t } = useI18n()
+  const pseudo = placement.attacker_pseudo
+  return (
+    <span
+      className={cn(
+        'text-[10px] truncate',
+        pseudo ? 'font-semibold' : 'font-bold tracking-wider text-amber-400/70'
+      )}
+      title={pseudo ? undefined : t.game.war.noAttackerAssigned}
+      data-cy={pseudo ? undefined : `attacker-row-unassigned-${placement.node_number}`}
+    >
+      {pseudo ?? '???'}
+    </span>
+  )
+}
+
 export default function AttackerEntryRow({
   placement,
   mode = 'compact',
@@ -147,12 +168,13 @@ export default function AttackerEntryRow({
       </div>
 
       {/* Only rendered when it carries something: an always-present spacer would
-          cost the row the gap it needs to keep the controls on the first line. */}
-      {((isFull && placement.attacker_pseudo) || placement.is_assisted) && (
+          cost the row the gap it needs to keep the controls on the first line.
+          In full mode it always does — the pseudo, or the "?" standing for its
+          absence. Compact mode has no pseudo line at all: the attacker panel
+          groups its rows by pseudo, so the "?" is already the group's heading. */}
+      {(isFull || placement.is_assisted) && (
         <div className='flex-1 min-w-0 flex items-center gap-1'>
-          {isFull && placement.attacker_pseudo && (
-            <span className='text-[10px] font-semibold truncate'>{placement.attacker_pseudo}</span>
-          )}
+          {isFull && <AttackerPseudo placement={placement} />}
           {placement.is_assisted && (
             <span
               className='text-[9px] font-semibold px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 shrink-0'
