@@ -2,9 +2,17 @@ function setupSeasonFilter(prefix: string) {
   const adminToken = `${prefix}-adm`;
   const ownerToken = `${prefix}-own`;
 
+  // Users, alliance, champions and the finished war the records hang off, in one request.
   return cy
     .apiBatchSetup([
-      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: adminToken,
+        role: 'admin',
+        champions: [
+          { name: 'Iron Man', champion_class: 'Tech' },
+          { name: 'Captain America', champion_class: 'Cosmic' },
+        ],
+      },
       {
         discord_token: ownerToken,
         game_pseudo: `${prefix}Own`.slice(0, 16),
@@ -13,27 +21,16 @@ function setupSeasonFilter(prefix: string) {
           tag: prefix.slice(0, 3).toUpperCase(),
         },
         battlegroup: 1,
+        create_war: { opponent_name: 'Opp', end: true, win: true, elo_change: 10 },
       },
     ])
-    .then((users) => {
-      const adminAT = users[adminToken].access_token;
-      const ownerAT = users[ownerToken].access_token;
-      const ownerAccId = users[ownerToken].account_id!;
-      const allianceId = users[ownerToken].alliance_id!;
-      const userId = users[ownerToken].user_id;
-
-      return cy
-        .apiLoadChampions(adminAT, [
-          { name: 'Iron Man', cls: 'Tech' },
-          { name: 'Captain America', cls: 'Cosmic' },
-        ])
-        .then(() =>
-          cy.apiCreateWar(ownerAT, allianceId, 'Opp').then((war) => {
-            cy.apiEndWar(ownerAT, allianceId, war.id, true, 10);
-            return cy.wrap({ adminAT, ownerAccId, allianceId, warId: war.id, userId });
-          }),
-        );
-    });
+    .then((users) => ({
+      adminAT: users[adminToken].access_token,
+      ownerAccId: users[ownerToken].account_id!,
+      allianceId: users[ownerToken].alliance_id!,
+      warId: users[ownerToken].war_id!,
+      userId: users[ownerToken].user_id,
+    }));
 }
 
 function createSeason(adminAT: string, number: number) {

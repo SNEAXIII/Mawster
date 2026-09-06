@@ -192,6 +192,82 @@ class TestDevBatchSetup:
         )
         assert response.status_code == 401
 
+    @staticmethod
+    def _owner_spec(token: str, **extra):
+        """One spec that owns an alliance — the shape every batch test below builds on."""
+        return {
+            "discord_token": token,
+            "game_pseudo": GAME_PSEUDO,
+            "create_alliance": {"name": "BatchAlliance", "tag": "BAT"},
+            **extra,
+        }
+
+    @pytest.mark.asyncio
+    async def test_loads_champions_and_fills_the_roster(self, session):
+        response = await execute_post_request(
+            "/dev/batch-setup",
+            [
+                self._owner_spec(
+                    "fake_token_roster",
+                    champions=[{"name": "Spider-Man", "champion_class": "Science"}],
+                    roster=[{"champion": "Spider-Man", "rarity": "7r4", "signature": 200}],
+                )
+            ],
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert "Spider-Man" in body["champions"]
+        assert body["users"]["fake_token_roster"]["champion_user_ids"]["Spider-Man"] is not None
+
+    @pytest.mark.asyncio
+    async def test_roster_can_use_a_champion_loaded_by_another_spec(self, session):
+        response = await execute_post_request(
+            "/dev/batch-setup",
+            [
+                {
+                    "discord_token": "fake_token_loader",
+                    "role": "admin",
+                    "champions": [{"name": "Wolverine", "champion_class": "Mutant"}],
+                },
+                self._owner_spec("fake_token_user", roster=[{"champion": "Wolverine"}]),
+            ],
+        )
+        assert response.status_code == 200
+        result = response.json()["users"]["fake_token_user"]
+        assert "Wolverine" in result["champion_user_ids"]
+
+    @pytest.mark.asyncio
+    async def test_unknown_roster_champion_returns_422(self, session):
+        response = await execute_post_request(
+            "/dev/batch-setup",
+            [self._owner_spec("fake_token_bad_roster", roster=[{"champion": "Nobody"}])],
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_declares_a_war_for_the_alliance(self, session):
+        response = await execute_post_request(
+            "/dev/batch-setup",
+            [self._owner_spec("fake_token_war", create_war={"opponent_name": "Rival"})],
+        )
+        assert response.status_code == 200
+        assert response.json()["users"]["fake_token_war"]["war_id"] is not None
+
+    @pytest.mark.asyncio
+    async def test_ends_the_war_when_the_spec_asks_for_it(self, session):
+        response = await execute_post_request(
+            "/dev/batch-setup",
+            [
+                self._owner_spec(
+                    "fake_token_ended_war",
+                    create_war={"end": True, "win": True, "elo_change": 10},
+                )
+            ],
+        )
+        assert response.status_code == 200
+        war_id = response.json()["users"]["fake_token_ended_war"]["war_id"]
+        assert war_id is not None
+
 
 # =========================================================================
 # GET /dev/env-info

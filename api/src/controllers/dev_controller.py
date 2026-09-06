@@ -10,9 +10,10 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Form, HTTPException
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
-from sqlmodel import SQLModel, select
+from sqlmodel import SQLModel, col, select
 from starlette import status as http_status
 
+from src.dto.admin.dto_champion import ChampionLoadRequest
 from src.dto.auth.dto_token import LoginResponse, TokenBody
 from src.dto.auth.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
@@ -23,10 +24,13 @@ from src.models.user.Mastery import Mastery
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightRecord import WarFightRecord
 from src.security.secrets import SECRET
+from src.services.account.game.ChampionUserService import ChampionUserService
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.UserService import UserService
+from src.services.admin.ChampionService import ChampionService
 from src.services.admin.SagaService import SagaService
 from src.services.alliance.AllianceService import AllianceService
+from src.services.alliance.war.WarService import WarService
 from src.services.auth.DiscordAuthService import DiscordAuthService
 from src.services.auth.JWTService import JWTService
 from src.utils.db import SessionDep
@@ -80,6 +84,39 @@ class SetupAllianceSpec(BaseModel):
     tag: str
 
 
+class SetupChampionSpec(BaseModel):
+    """A champion to load before any roster entry references it."""
+
+    name: str
+    champion_class: str
+    is_ascendable: bool = False
+    has_prefight: bool = False
+    alias: str | None = None
+
+
+class SetupRosterSpec(BaseModel):
+    """A roster entry, pointing at a champion by name rather than by id.
+
+    The name resolves against the champions loaded earlier in the same request,
+    then against those already in the database.
+    """
+
+    champion: str
+    rarity: str = "7r3"
+    signature: int = 0
+    ascension: int = 0
+    is_preferred_attacker: bool = False
+
+
+class SetupWarSpec(BaseModel):
+    """A war declared for the spec's alliance, optionally ended right away."""
+
+    opponent_name: str = "Opp"
+    end: bool = False
+    win: bool = True
+    elo_change: int | None = None
+
+
 class SetupUserSpec(BaseModel):
     discord_token: str
     role: str = "user"
@@ -87,6 +124,9 @@ class SetupUserSpec(BaseModel):
     create_alliance: SetupAllianceSpec | None = None
     join_alliance_token: str | None = None
     battlegroup: int | None = None
+    champions: list[SetupChampionSpec] = []
+    roster: list[SetupRosterSpec] = []
+    create_war: SetupWarSpec | None = None
 
 
 class SetupUserResult(BaseModel):
@@ -97,10 +137,13 @@ class SetupUserResult(BaseModel):
     discord_id: str
     account_id: str | None = None
     alliance_id: str | None = None
+    champion_user_ids: dict[str, str] = {}
+    war_id: str | None = None
 
 
 class BatchSetupResponse(BaseModel):
     users: dict[str, SetupUserResult]
+    champions: dict[str, str] = {}
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -248,6 +291,69 @@ async def promote_user(body: PromoteRequest, session: SessionDep):
     return {"message": f"User promoted to {body.role}", "user_id": str(user.id)}
 
 
+async def _load_batch_champions(session: SessionDep, specs: list[SetupUserSpec]) -> dict[str, str]:
+    """Load every champion the specs declare, then map each name to its id.
+
+    Names are resolved once for the whole request so a roster entry can point at a
+    champion another spec loaded, and at one that was already in the database.
+    """
+    entries = [champion for spec in specs for champion in spec.champions]
+    if entries:
+        await ChampionService.load_champions(
+            session,
+            [ChampionLoadRequest(**entry.model_dump()) for entry in entries],
+        )
+    names = {entry.name for entry in entries}
+    names |= {roster.champion for spec in specs for roster in spec.roster}
+    if not names:
+        return {}
+    champions = (await session.exec(select(Champion).where(col(Champion.name).in_(names)))).all()
+    return {champion.name: str(champion.id) for champion in champions}
+
+
+async def _add_batch_roster(
+    session: SessionDep,
+    game_account_id: uuid.UUID,
+    entries: list[SetupRosterSpec],
+    champion_ids: dict[str, str],
+) -> dict[str, str]:
+    """Add the spec's roster entries, keyed by champion name for the caller."""
+    created: dict[str, str] = {}
+    for entry in entries:
+        champion_id = champion_ids.get(entry.champion)
+        if champion_id is None:
+            raise HTTPException(
+                status_code=http_status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=f"Roster references an unknown champion: {entry.champion}",
+            )
+        champion_user = await ChampionUserService.create_champion_user(
+            session=session,
+            game_account_id=game_account_id,
+            champion_id=uuid.UUID(champion_id),
+            rarity=entry.rarity,
+            signature=entry.signature,
+            is_preferred_attacker=entry.is_preferred_attacker,
+            ascension=entry.ascension,
+        )
+        created[entry.champion] = str(champion_user.id)
+    return created
+
+
+async def _create_batch_war(
+    session: SessionDep,
+    spec: SetupWarSpec,
+    alliance_id: str,
+    game_account_id: uuid.UUID,
+) -> str:
+    """Declare the spec's war, and end it right away when it asks for a finished one."""
+    war = await WarService.create_war(
+        session, uuid.UUID(alliance_id), spec.opponent_name, game_account_id, []
+    )
+    if spec.end:
+        await WarService.end_war(session, war.id, uuid.UUID(alliance_id), spec.win, spec.elo_change)
+    return str(war.id)
+
+
 @dev_controller.post("/batch-setup", response_model=BatchSetupResponse, status_code=200)
 async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
     """Create multiple users with game accounts, alliances, and roles in a single request.
@@ -256,6 +362,7 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
     join_alliance_token. Testing only.
     """
     results: dict[str, SetupUserResult] = {}
+    champion_ids = await _load_batch_champions(session, specs)
 
     for spec in specs:
         # 1. Register / get user via mock Discord auth
@@ -311,6 +418,16 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
                 session, uuid.UUID(alliance_id), acc.id, spec.battlegroup
             )
 
+        # 7. Roster entries — the champions themselves were loaded before the loop
+        champion_user_ids: dict[str, str] = {}
+        if spec.roster and account_id:
+            champion_user_ids = await _add_batch_roster(session, acc.id, spec.roster, champion_ids)
+
+        # 8. War, which needs both the alliance and the account that declares it
+        war_id: str | None = None
+        if spec.create_war and alliance_id and account_id:
+            war_id = await _create_batch_war(session, spec.create_war, alliance_id, acc.id)
+
         results[spec.discord_token] = SetupUserResult(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -319,9 +436,11 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
             discord_id=user.discord_id,
             account_id=account_id,
             alliance_id=alliance_id,
+            champion_user_ids=champion_user_ids,
+            war_id=war_id,
         )
 
-    return BatchSetupResponse(users=results)
+    return BatchSetupResponse(users=results, champions=champion_ids)
 
 
 class EnvInfo(BaseModel):

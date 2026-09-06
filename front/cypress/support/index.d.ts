@@ -1,5 +1,55 @@
 /// <reference types="cypress" />
 
+export interface BatchSetupChampionSpec {
+  name: string;
+  champion_class: string;
+  is_ascendable?: boolean;
+  has_prefight?: boolean;
+  alias?: string;
+}
+
+export interface BatchSetupRosterSpec {
+  /** Champion name — resolved against the champions this request loads, then the database. */
+  champion: string;
+  rarity?: string;
+  signature?: number;
+  ascension?: number;
+  is_preferred_attacker?: boolean;
+}
+
+export interface BatchSetupWarSpec {
+  opponent_name?: string;
+  end?: boolean;
+  win?: boolean;
+  elo_change?: number | null;
+}
+
+export interface BatchSetupSpec {
+  discord_token: string;
+  role?: string;
+  game_pseudo?: string;
+  create_alliance?: { name: string; tag: string };
+  join_alliance_token?: string;
+  battlegroup?: number;
+  champions?: BatchSetupChampionSpec[];
+  roster?: BatchSetupRosterSpec[];
+  create_war?: BatchSetupWarSpec;
+}
+
+export interface BatchSetupUserResult {
+  access_token: string;
+  refresh_token: string;
+  user_id: string;
+  login: string;
+  email: string;
+  discord_id: string;
+  account_id: string | null;
+  alliance_id: string | null;
+  /** Champion name → champion_user id, for the roster entries this spec created. */
+  champion_user_ids: Record<string, string>;
+  war_id: string | null;
+}
+
 declare global {
   namespace Cypress {
     interface Chainable {
@@ -9,33 +59,20 @@ declare global {
       truncateDb(): Chainable<void>;
 
       /**
-       * Create N users with optional game accounts, alliances, and battlegroup assignments
-       * in a single backend request. Returns a map of discord_token → user result.
+       * Create N users with optional game accounts, alliances, battlegroups, champions,
+       * rosters and wars in a single backend request. Returns a map of
+       * discord_token → user result; use apiBatchSetupFull when the champion ids are needed.
        */
-      apiBatchSetup(
-        specs: Array<{
-          discord_token: string;
-          role?: string;
-          game_pseudo?: string;
-          create_alliance?: { name: string; tag: string };
-          join_alliance_token?: string;
-          battlegroup?: number;
-        }>,
-      ): Chainable<
-        Record<
-          string,
-          {
-            access_token: string;
-            refresh_token: string;
-            user_id: string;
-            login: string;
-            email: string;
-            discord_id: string;
-            account_id: string | null;
-            alliance_id: string | null;
-          }
-        >
-      >;
+      apiBatchSetup(specs: BatchSetupSpec[]): Chainable<Record<string, BatchSetupUserResult>>;
+
+      /**
+       * Same request as apiBatchSetup, returning the whole payload — the users plus the
+       * champion name → id map for the champions the specs loaded.
+       */
+      apiBatchSetupFull(specs: BatchSetupSpec[]): Chainable<{
+        users: Record<string, BatchSetupUserResult>;
+        champions: Record<string, string>;
+      }>;
 
       /**
        * Register a user via Discord OAuth mock (direct backend call) and return tokens.
