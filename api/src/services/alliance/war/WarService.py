@@ -1,19 +1,22 @@
 import uuid
 
 from fastapi import HTTPException
+from sqlalchemy import Integer, case, cast, func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from sqlmodel import and_, select
+from sqlmodel import and_, col, select
 from starlette import status
 
 from src.dto.alliance.war.dto_war import (
     MAX_BANNED_CHAMPIONS,
     AvailableAttackerResponse,
     AvailablePrefightAttackerResponse,
+    WarBgProgressResponse,
     WarDefenseSummaryResponse,
     WarPlacementCreateRequest,
     WarPlacementResponse,
     WarPrefightResponse,
+    WarProgressResponse,
     WarResponse,
     WarSynergyResponse,
 )
@@ -72,6 +75,8 @@ from src.services.admin.SeasonService import SeasonService
 from src.services.alliance.war.WarFormatConfig import for_format
 from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.db import SessionDep
+
+BATTLEGROUPS = (1, 2, 3)
 
 
 class WarService:
@@ -270,6 +275,59 @@ class WarService:
             war_id=war_id,
             battlegroup=battlegroup,
             placements=await cls._placement_dtos(session, placements),
+            progress=await cls._war_progress(session, war_id),
+        )
+
+    @classmethod
+    async def _war_progress(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+    ) -> WarProgressResponse:
+        """Aggregate handled fights and KOs for every battlegroup of the war.
+
+        One grouped query, so the two battlegroups the caller is not looking at
+        cost no extra round-trip and no placement rows.
+        """
+        node_count = for_format(await SeasonService.get_current_format(session)).node_count
+        handled = cast(
+            case(
+                (
+                    or_(
+                        col(WarDefensePlacement.is_combat_completed),
+                        col(WarDefensePlacement.is_fight_not_done),
+                    ),
+                    1,
+                ),
+                else_=0,
+            ),
+            Integer,
+        )
+        stmt = (
+            select(
+                col(WarDefensePlacement.battlegroup),
+                func.coalesce(func.sum(handled), 0),
+                func.coalesce(func.sum(col(WarDefensePlacement.ko_count)), 0),
+            )
+            .where(col(WarDefensePlacement.war_id) == war_id)
+            .group_by(col(WarDefensePlacement.battlegroup))
+        )
+        rows = (await session.exec(stmt)).all()
+        totals = {int(bg): (int(completed), int(ko)) for bg, completed, ko in rows}
+        battlegroups = [
+            WarBgProgressResponse(
+                battlegroup=bg,
+                completed=totals.get(bg, (0, 0))[0],
+                total=node_count,
+                ko_count=totals.get(bg, (0, 0))[1],
+            )
+            for bg in BATTLEGROUPS
+        ]
+        return WarProgressResponse(
+            completed=sum(bg.completed for bg in battlegroups),
+            total=node_count * len(BATTLEGROUPS),
+            ko_count=sum(bg.ko_count for bg in battlegroups),
+            battlegroups=battlegroups,
         )
 
     @classmethod

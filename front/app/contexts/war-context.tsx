@@ -18,6 +18,7 @@ import {
   type War,
   type WarPlacement,
   type WarDefenseSummary,
+  type WarProgress,
   type AvailableAttacker,
   type WarSynergy,
   type WarPrefight,
@@ -72,6 +73,7 @@ interface WarContextValue {
   managementLoading: boolean
   warLoading: boolean
   placements: WarPlacement[]
+  progress: WarProgress | null
 
   // Mode
   warMode: WarMode
@@ -199,6 +201,30 @@ export function WarProvider({
   // ─── Derived values ────────────────────────────────────────────────────────
   const activeWarId = currentWar?.id ?? ''
   const placements = useMemo<WarPlacement[]>(() => warSummary?.placements ?? [], [warSummary])
+
+  // The battlegroup on screen is recounted from the placements we hold, so a KO
+  // or a completed fight moves the counter right away instead of at the next
+  // poll; the other two keep the server's numbers.
+  const progress = useMemo<WarProgress | null>(() => {
+    const served = warSummary?.progress
+    if (!served) return null
+    const live = placements.reduce(
+      (acc, p) => ({
+        completed: acc.completed + (p.is_combat_completed || p.is_fight_not_done ? 1 : 0),
+        ko_count: acc.ko_count + p.ko_count,
+      }),
+      { completed: 0, ko_count: 0 }
+    )
+    const battlegroups = served.battlegroups.map((bg) =>
+      bg.battlegroup === warSummary.battlegroup ? { ...bg, ...live } : bg
+    )
+    return {
+      total: served.total,
+      completed: battlegroups.reduce((n, bg) => n + bg.completed, 0),
+      ko_count: battlegroups.reduce((n, bg) => n + bg.ko_count, 0),
+      battlegroups,
+    }
+  }, [warSummary, placements])
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId)
   const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false
   const canPlaceWar = selectedAlliance ? canPlace(selectedAlliance) : false
@@ -788,6 +814,7 @@ export function WarProvider({
       managementLoading,
       warLoading,
       placements,
+      progress,
       warMode,
       setWarMode,
       selectorNode,
@@ -844,6 +871,7 @@ export function WarProvider({
       managementLoading,
       warLoading,
       placements,
+      progress,
       warMode,
       selectorNode,
       attackerSelectorNode,

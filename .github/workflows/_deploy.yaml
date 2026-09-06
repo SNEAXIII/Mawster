@@ -1,0 +1,196 @@
+name: Deploy
+
+# Called by ci.yaml. Both jobs stay together because they are the same step of the
+# pipeline pointed at two environments, and they share the `mawster-deploy`
+# concurrency group — only one of them ever runs for a given event.
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+      released:
+        required: true
+        type: string
+    secrets:
+      SSH_HOST:
+        required: true
+      SSH_USER:
+        required: true
+      SSH_PRIVATE_KEY:
+        required: true
+      # Optional on purpose: the announcement step skips itself when it is unset.
+      DISCORD_WEBHOOK:
+        required: false
+
+jobs:
+  deploy:
+    name: Deploy to production
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    environment: Api
+    concurrency:
+      group: mawster-deploy
+      cancel-in-progress: false
+    if: github.event_name == 'push' && github.ref_name == 'release'
+    steps:
+      # The release PR must be merged before promoting: otherwise the promoted content is not the
+      # one behind the latest tag, and the images would ship under the previous version number.
+      - name: Require released content
+        if: inputs.released != 'true'
+        # Through `env:` rather than `${{ }}` inside `run:`, like the metadata job above: the
+        # version comes from a git tag, and a tag is a name someone can choose.
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          echo "::error::the content promoted to release does not match the latest tag" \
+               "($VERSION). Merge the 'chore(main): release' pull request on main," \
+               "then promote again."
+          exit 1
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/mawster/Mawster
+            git config --global --add safe.directory /home/mawster/Mawster
+
+            git fetch origin release
+            # reset first: checkout --detach refuses to run on an unmerged index,
+            # which past cross-merging pulls may have left behind.
+            git reset --hard origin/release
+            git checkout --detach
+
+            make backup-now
+
+            docker pull sneaxiii/mawster-api:latest
+            docker pull sneaxiii/mawster-migrate:latest
+            docker pull sneaxiii/mawster-front:latest
+            docker pull sneaxiii/mawster-backup:latest
+            docker pull sneaxiii/mawster-static:latest
+            # Built by mcoc-vision's own CI, never by this workflow
+            docker pull sneaxiii/mawster-vision-worker:latest
+
+            docker service rm mawster-migrate 2>/dev/null || true
+
+            docker service create \
+              --name mawster-migrate \
+              --network internal \
+              --secret mawster_db_password \
+              --secret mawster_db_root_password \
+              -e MARIADB_USER=mawster \
+              -e MARIADB_PORT=3306 \
+              -e MARIADB_DATABASE=mawster \
+              --mode replicated-job \
+              sneaxiii/mawster-migrate:latest sh migrate.sh
+
+            docker service logs mawster-migrate
+            if docker service ps mawster-migrate --format "{{.CurrentState}}" | grep -q "^Failed"; then
+              docker service rm mawster-migrate; exit 1
+            fi
+            docker service rm mawster-migrate
+
+            docker stack deploy \
+              --with-registry-auth \
+              --resolve-image always \
+              -c stack-app.yaml \
+              mawster
+
+      # After the deploy, not on release creation: what players care about is the moment the
+      # version is actually live.
+      - name: Announce the deploy on Discord
+        env:
+          VERSION: ${{ inputs.version }}
+          RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ inputs.version }}
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          set -euo pipefail
+          # The secrets context is not readable from a step-level `if:`, hence the test here.
+          if [ -z "${WEBHOOK:-}" ]; then
+            echo "DISCORD_WEBHOOK is not configured - announcement skipped."
+            exit 0
+          fi
+          # jq builds the JSON: a release title containing a quote would break a hand-assembled
+          # payload.
+          payload=$(jq -n \
+            --arg version "$VERSION" \
+            --arg url "$RELEASE_URL" \
+            '{
+              embeds: [{
+                title: "Mawster \($version) est en ligne",
+                description: "Les nouveautés de cette version : [notes de release](\($url))",
+                url: $url,
+                color: 5793266
+              }]
+            }')
+          curl -sS -f -X POST -H "Content-Type: application/json" -d "$payload" "$WEBHOOK"
+
+  deploy-staging:
+    name: Deploy to staging
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    environment: Api
+    concurrency:
+      group: mawster-deploy
+      cancel-in-progress: false
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'staging'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Copy staging stack file
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: stack-app-staging.yaml
+          target: /home/mawster/staging/
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /home/mawster/staging
+
+            docker exec $(docker ps -q -f name=mawster-staging_backup) /usr/local/bin/backup.sh
+
+            docker pull sneaxiii/mawster-api:staging
+            docker pull sneaxiii/mawster-migrate:staging
+            docker pull sneaxiii/mawster-front:staging
+            docker pull sneaxiii/mawster-backup:staging
+            docker pull sneaxiii/mawster-static:staging
+
+            docker service rm mawster-staging-migrate 2>/dev/null || true
+
+            docker service create \
+              --name mawster-staging-migrate \
+              --network internal-staging \
+              --secret source=mawster_db_password_staging,target=mawster_db_password \
+              --secret source=mawster_db_root_password_staging,target=mawster_db_root_password \
+              -e MARIADB_USER=mawster \
+              -e MARIADB_PORT=3306 \
+              -e MARIADB_DATABASE=mawster \
+              --mode replicated-job \
+              sneaxiii/mawster-migrate:staging sh migrate.sh
+
+            docker service logs mawster-staging-migrate
+            if docker service ps mawster-staging-migrate --format "{{.CurrentState}}" | grep -q "^Failed"; then
+              docker service rm mawster-staging-migrate; exit 1
+            fi
+            docker service rm mawster-staging-migrate
+
+            docker stack deploy \
+              --with-registry-auth \
+              --resolve-image always \
+              -c stack-app-staging.yaml \
+              mawster-staging
