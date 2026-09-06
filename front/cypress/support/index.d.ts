@@ -17,7 +17,19 @@ export interface BatchSetupRosterSpec {
   is_preferred_attacker?: boolean;
 }
 
-export interface BatchSetupWarSpec {
+export interface BatchSetupSeasonSpec {
+  number: number;
+  status?: 'upcoming' | 'active' | 'ended';
+}
+
+export interface BatchSetupFightRecordsSpec {
+  count: number;
+  /** Season number, resolved against the seasons this request creates. */
+  season_number?: number;
+  tier?: number;
+}
+
+interface BatchSetupWarSpec {
   opponent_name?: string;
   end?: boolean;
   win?: boolean;
@@ -32,8 +44,10 @@ export interface BatchSetupSpec {
   join_alliance_token?: string;
   battlegroup?: number;
   champions?: BatchSetupChampionSpec[];
+  seasons?: BatchSetupSeasonSpec[];
   roster?: BatchSetupRosterSpec[];
   create_war?: BatchSetupWarSpec;
+  fight_records?: BatchSetupFightRecordsSpec[];
 }
 
 export interface BatchSetupUserResult {
@@ -72,6 +86,7 @@ declare global {
       apiBatchSetupFull(specs: BatchSetupSpec[]): Chainable<{
         users: Record<string, BatchSetupUserResult>;
         champions: Record<string, string>;
+        seasons: Record<string, string>;
       }>;
 
       /**

@@ -556,45 +556,33 @@ export function setupKnowledgeBaseFast(
   const adminToken = `${prefix}-admin`;
   const ownerToken = `${prefix}-owner`;
 
+  // Champions, season, alliance, finished war and its fight records: one request.
   return cy
     .apiBatchSetup([
-      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: adminToken,
+        role: 'admin',
+        champions: [
+          { name: 'Iron Man', champion_class: 'Tech' },
+          { name: 'Captain America', champion_class: 'Cosmic' },
+        ],
+        seasons: [{ number: 1 }],
+      },
       {
         discord_token: ownerToken,
         game_pseudo: `${prefix}Own`.slice(0, 16),
         create_alliance: { name: `${safePrefix(prefix)}Alliance`, tag: safePrefix(prefix).slice(0, 3).toUpperCase() },
         battlegroup: 1,
+        create_war: { opponent_name: 'OpponentFast', end: true, win: true, elo_change: 10 },
+        fight_records: [{ count, season_number: 1 }],
       },
     ])
-    .then((users) => {
-      const adminAT = users[adminToken].access_token;
-      const ownerData = toUserSetupData(users[ownerToken]);
-      const ownerAccId = users[ownerToken].account_id!;
-      const allianceId = users[ownerToken].alliance_id!;
-
-      return cy
-        .apiLoadChampions(adminAT, [
-          { name: 'Iron Man', cls: 'Tech' },
-          { name: 'Captain America', cls: 'Cosmic' },
-        ])
-        .then(() =>
-          cy
-            .request({
-              method: 'POST',
-              url: `${BACKEND}/admin/seasons`,
-              headers: { Authorization: `Bearer ${adminAT}` },
-              body: { number: 1 },
-            })
-            .then((res) => {
-              const seasonId = (res.body as { id: string }).id;
-              return cy.apiCreateWar(ownerData.access_token, allianceId, 'OpponentFast').then((war) => {
-                cy.apiEndWar(ownerData.access_token, allianceId, war.id, true, 10);
-                cy.apiDevBulkCreateFightRecords(war.id, allianceId, ownerAccId, count, seasonId);
-                return cy.wrap({ adminToken: adminAT, userData: ownerData, accountId: ownerAccId, allianceId });
-              });
-            }),
-        );
-    });
+    .then((users) => ({
+      adminToken: users[adminToken].access_token,
+      userData: toUserSetupData(users[ownerToken]),
+      accountId: users[ownerToken].account_id!,
+      allianceId: users[ownerToken].alliance_id!,
+    }));
 }
 
 type KnowledgeBaseChampMap = Record<string, { id: string }>;
@@ -1438,9 +1426,11 @@ export interface AttackerScenario {
   memberAccId: string;
   warId: string;
   championUserId: string;
+  /** Champion name → champion_user id for the member, including any extra roster entry. */
+  memberChampionUserIds: Record<string, string>;
 }
 
-export function setupAttackerScenario(prefix: string): Cypress.Chainable<AttackerScenario> {
+export function setupAttackerScenario(prefix: string, extras: SetupExtras = {}): Cypress.Chainable<AttackerScenario> {
   const adminToken = `${prefix}-admin`;
   const ownerToken = `${prefix}-owner`;
   const memberToken = `${prefix}-member`;
@@ -1455,6 +1445,7 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<Attacke
         champions: [
           { name: 'Iron Man', champion_class: 'Tech' },
           { name: 'Wolverine', champion_class: 'Mutant' },
+          ...(extras.champions ?? []),
         ],
       },
       {
@@ -1469,7 +1460,7 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<Attacke
         game_pseudo: `${prefix}Member`.slice(0, 16),
         join_alliance_token: ownerToken,
         battlegroup: 1,
-        roster: [{ champion: 'Wolverine', rarity: '7r3' }],
+        roster: [{ champion: 'Wolverine', rarity: '7r3' }, ...(extras.memberRoster ?? [])],
       },
     ])
     .then(({ users, champions }) => {
@@ -1489,6 +1480,7 @@ export function setupAttackerScenario(prefix: string): Cypress.Chainable<Attacke
           memberAccId: users[memberToken].account_id!,
           warId,
           championUserId: users[memberToken].champion_user_ids['Wolverine'],
+          memberChampionUserIds: users[memberToken].champion_user_ids,
         },
         { log: false },
       );
@@ -1563,45 +1555,18 @@ export function setupVisitorScenario(prefix: string): Cypress.Chainable<{
     });
 }
 
-export function setupPrefightScenario(prefix: string): Cypress.Chainable<{
-  adminToken: string;
-  ownerData: UserSetupData;
-  memberData: UserSetupData;
-  allianceId: string;
-  ownerAccId: string;
-  memberAccId: string;
-  warId: string;
-  championUserId: string;
-  prefightChampionUserId: string;
-}> {
-  return setupAttackerScenario(prefix).then((scenario) => {
-    return cy.apiLoadChampion(scenario.adminToken, 'Storm', 'Mutant').then((champs: { id: string }[]) => {
-      const stormId = champs[0].id;
-      cy.request({
-        method: 'PATCH',
-        url: `${BACKEND}/admin/champions/${stormId}/prefight`,
-        headers: { Authorization: `Bearer ${scenario.adminToken}` },
-      });
-      return cy
-        .request({
-          method: 'POST',
-          url: `${BACKEND}/champion-users`,
-          headers: { Authorization: `Bearer ${scenario.memberData.access_token}` },
-          body: {
-            champion_id: stormId,
-            game_account_id: scenario.memberAccId,
-            stars: 6,
-            rank: 3,
-            ascension: 0,
-            rarity: '7r3',
-          },
-        })
-        .then((resp: Cypress.Response<{ id: string }>) => ({
-          ...scenario,
-          prefightChampionUserId: resp.body.id,
-        }));
-    });
-  });
+// Storm rides along in the attacker scenario's own batch — loaded with its prefight
+// ability and put on the member's roster, which is all the three extra requests did.
+export function setupPrefightScenario(
+  prefix: string,
+): Cypress.Chainable<AttackerScenario & { prefightChampionUserId: string }> {
+  return setupAttackerScenario(prefix, {
+    champions: [{ name: 'Storm', champion_class: 'Mutant', has_prefight: true }],
+    memberRoster: [{ champion: 'Storm', rarity: '7r3' }],
+  }).then((scenario) => ({
+    ...scenario,
+    prefightChampionUserId: scenario.memberChampionUserIds['Storm'],
+  }));
 }
 
 // The trigger renders the active filter's own label ('To do' by default), so an

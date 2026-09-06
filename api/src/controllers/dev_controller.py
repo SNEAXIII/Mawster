@@ -29,6 +29,7 @@ from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.UserService import UserService
 from src.services.admin.ChampionService import ChampionService
 from src.services.admin.SagaService import SagaService
+from src.services.admin.SeasonService import SeasonService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.war.WarService import WarService
 from src.services.auth.DiscordAuthService import DiscordAuthService
@@ -108,6 +109,25 @@ class SetupRosterSpec(BaseModel):
     is_preferred_attacker: bool = False
 
 
+class SetupSeasonSpec(BaseModel):
+    """A season to create, and the status to leave it in.
+
+    Seasons are created in order, so ending one frees the single-current slot for
+    the next — the same dance a spec would otherwise do in three requests.
+    """
+
+    number: int
+    status: Literal["upcoming", "active", "ended"] = "upcoming"
+
+
+class SetupFightRecordsSpec(BaseModel):
+    """Fight records to insert for the war this spec declares."""
+
+    count: int = Field(ge=1)
+    season_number: int | None = None
+    tier: int = 1
+
+
 class SetupWarSpec(BaseModel):
     """A war declared for the spec's alliance, optionally ended right away."""
 
@@ -125,8 +145,10 @@ class SetupUserSpec(BaseModel):
     join_alliance_token: str | None = None
     battlegroup: int | None = None
     champions: list[SetupChampionSpec] = []
+    seasons: list[SetupSeasonSpec] = []
     roster: list[SetupRosterSpec] = []
     create_war: SetupWarSpec | None = None
+    fight_records: list[SetupFightRecordsSpec] = []
 
 
 class SetupUserResult(BaseModel):
@@ -144,6 +166,7 @@ class SetupUserResult(BaseModel):
 class BatchSetupResponse(BaseModel):
     users: dict[str, SetupUserResult]
     champions: dict[str, str] = {}
+    seasons: dict[str, str] = {}
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -339,6 +362,20 @@ async def _add_batch_roster(
     return created
 
 
+async def _create_batch_seasons(session: SessionDep, specs: list[SetupUserSpec]) -> dict[str, str]:
+    """Create every season the specs declare and leave each in its asked-for status."""
+    created: dict[str, str] = {}
+    for spec in specs:
+        for entry in spec.seasons:
+            season = await SeasonService.create_season(session, entry.number)
+            if entry.status == "active":
+                await SeasonService.open_season(session, season.id)
+            elif entry.status == "ended":
+                await SeasonService.close_season(session, season.id)
+            created[str(entry.number)] = str(season.id)
+    return created
+
+
 async def _create_batch_war(
     session: SessionDep,
     spec: SetupWarSpec,
@@ -363,6 +400,7 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
     """
     results: dict[str, SetupUserResult] = {}
     champion_ids = await _load_batch_champions(session, specs)
+    season_ids = await _create_batch_seasons(session, specs)
 
     for spec in specs:
         # 1. Register / get user via mock Discord auth
@@ -428,6 +466,20 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
         if spec.create_war and alliance_id and account_id:
             war_id = await _create_batch_war(session, spec.create_war, alliance_id, acc.id)
 
+        # 9. Fight records hang off that war, so they come last
+        if spec.fight_records and war_id and alliance_id:
+            for records in spec.fight_records:
+                season_id = season_ids.get(str(records.season_number))
+                await _insert_fight_records(
+                    session,
+                    war_id=uuid.UUID(war_id),
+                    alliance_id=uuid.UUID(alliance_id),
+                    game_account_id=acc.id,
+                    count=records.count,
+                    tier=records.tier,
+                    season_id=uuid.UUID(season_id) if season_id else None,
+                )
+
         results[spec.discord_token] = SetupUserResult(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -440,7 +492,7 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
             war_id=war_id,
         )
 
-    return BatchSetupResponse(users=results, champions=champion_ids)
+    return BatchSetupResponse(users=results, champions=champion_ids, seasons=season_ids)
 
 
 class EnvInfo(BaseModel):
@@ -560,9 +612,16 @@ class BulkCreateFightRecordsRequest(BaseModel):
     season_id: uuid.UUID | None = None
 
 
-@dev_controller.post("/bulk-create-fight-records", status_code=201)
-async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session: SessionDep):
-    """Insert N WarFightRecord rows directly, bypassing the war placement flow. Testing only."""
+async def _insert_fight_records(
+    session: SessionDep,
+    war_id: uuid.UUID,
+    alliance_id: uuid.UUID,
+    game_account_id: uuid.UUID,
+    count: int,
+    tier: int = 1,
+    season_id: uuid.UUID | None = None,
+) -> int:
+    """Insert N WarFightRecord rows directly, bypassing the war placement flow."""
     champions = (await session.exec(select(Champion).limit(2))).all()
     if len(champions) < 2:
         raise HTTPException(
@@ -572,9 +631,9 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
     attacker_champ = champions[0]
     defender_champ = champions[1]
 
-    saga = await SagaService.get_roles_for_season(session, body.season_id) if body.season_id else {}
+    saga = await SagaService.get_roles_for_season(session, season_id) if season_id else {}
 
-    row_count = min(body.count, MAX_BULK_ROWS)
+    row_count = min(count, MAX_BULK_ROWS)
     for node in range(1, row_count + 1):
         # Alternate attacker/defender so champion filters return subsets
         if node % 2 == 1:
@@ -582,13 +641,13 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
         else:
             atk, dfn = defender_champ, attacker_champ
         record = WarFightRecord(
-            war_id=body.war_id,
-            alliance_id=body.alliance_id,
-            season_id=body.season_id,
-            game_account_id=body.game_account_id,
+            war_id=war_id,
+            alliance_id=alliance_id,
+            season_id=season_id,
+            game_account_id=game_account_id,
             battlegroup=1,
             node_number=((node - 1) % 50) + 1,
-            tier=body.tier,
+            tier=tier,
             champion_id=atk.id,
             stars=7,
             rank=3,
@@ -604,7 +663,22 @@ async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session
         session.add(record)
 
     await session.commit()
-    return {"created": body.count}
+    return count
+
+
+@dev_controller.post("/bulk-create-fight-records", status_code=201)
+async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session: SessionDep):
+    """Insert N WarFightRecord rows for an existing war. Testing only."""
+    created = await _insert_fight_records(
+        session,
+        war_id=body.war_id,
+        alliance_id=body.alliance_id,
+        game_account_id=body.game_account_id,
+        count=body.count,
+        tier=body.tier,
+        season_id=body.season_id,
+    )
+    return {"created": created}
 
 
 # scripts/e2e_parallel.py slices backend.log on these markers, so a newline in a title

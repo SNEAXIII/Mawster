@@ -254,6 +254,38 @@ class TestDevBatchSetup:
         assert response.json()["users"]["fake_token_war"]["war_id"] is not None
 
     @pytest.mark.asyncio
+    async def test_creates_seasons_and_hangs_fight_records_off_the_war(self, session):
+        response = await execute_post_request(
+            "/dev/batch-setup",
+            [
+                {
+                    "discord_token": "fake_token_seasons",
+                    "role": "admin",
+                    "champions": [
+                        {"name": "Iron Man", "champion_class": "Tech"},
+                        {"name": "Wolverine", "champion_class": "Mutant"},
+                    ],
+                    "seasons": [
+                        {"number": 1, "status": "ended"},
+                        {"number": 2, "status": "active"},
+                    ],
+                },
+                self._owner_spec(
+                    "fake_token_records",
+                    create_war={"end": True, "win": True, "elo_change": 10},
+                    fight_records=[
+                        {"count": 2, "season_number": 2},
+                        {"count": 1},
+                    ],
+                ),
+            ],
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert sorted(body["seasons"]) == ["1", "2"]
+        assert body["users"]["fake_token_records"]["war_id"] is not None
+
+    @pytest.mark.asyncio
     async def test_ends_the_war_when_the_spec_asks_for_it(self, session):
         response = await execute_post_request(
             "/dev/batch-setup",
