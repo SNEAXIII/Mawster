@@ -672,6 +672,9 @@ const fr: Translations = {
       currentElo: 'ELO actuel',
       elo: 'ELO',
       tier: 'Tier',
+      progressFights: 'Combats',
+      progressKo: 'KO',
+      progressBg: 'G{bg}',
     },
     season: {
       current: 'Saison {number}',

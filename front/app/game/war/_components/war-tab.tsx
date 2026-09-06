@@ -13,6 +13,7 @@ import { WarMode } from './war-types'
 import { useWar } from '@/app/contexts/war-context'
 import { useCurrentSeason } from '@/hooks/use-current-season'
 import SeasonBanner from './season-banner'
+import WarProgressBadge from './war-progress-badge'
 import ExportHeader from '@/app/game/_components/export-header'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import { downloadElementAsPng } from '@/app/lib/export-image'
@@ -178,6 +179,9 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
               </span>
             </div>
           )}
+
+          {/* Live fight / KO counter for the whole war */}
+          {currentWar && <WarProgressBadge />}
 
           {/* Opponent name */}
           {currentWar && (

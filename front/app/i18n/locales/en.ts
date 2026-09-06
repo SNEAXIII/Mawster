@@ -665,6 +665,9 @@ const en = {
       currentElo: 'Current ELO',
       elo: 'ELO',
       tier: 'Tier',
+      progressFights: 'Fights',
+      progressKo: 'KO',
+      progressBg: 'G{bg}',
     },
     season: {
       current: 'Season {number}',
