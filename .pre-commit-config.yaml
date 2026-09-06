@@ -43,8 +43,10 @@ repos:
         # friends); it needs oxlint-tsgolint, which package.json carries.
         entry: "bash -c 'cd front && exec node_modules/.bin/oxlint --type-aware --fix \"${@#front/}\"' --"
         language: system
+        # cypress/ is in .oxlintrc.json's ignorePatterns, so handing those paths over makes
+        # oxlint exit 1 on "No files found to lint" — a commit touching only specs would fail.
         files: ^front/.*\.(ts|tsx|js|jsx|mjs|cjs)$
-        exclude: ^front/(node_modules|\.next)/
+        exclude: ^front/(node_modules|\.next|cypress)/
 
       - id: prettier
         name: prettier (front)
