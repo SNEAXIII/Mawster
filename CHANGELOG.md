@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.10.0](https://github.com/SNEAXIII/Mawster/compare/v1.9.0...v1.10.0) (2026-09-06)
+
+
+### Ajouté
+
+* show live fight and KO counters on the current war ([#508](https://github.com/SNEAXIII/Mawster/issues/508)) ([36b1023](https://github.com/SNEAXIII/Mawster/commit/36b10231fc3ae0c92597d4a3794c82e2404fca8f))
+
 ## [1.9.0](https://github.com/SNEAXIII/Mawster/compare/v1.8.3...v1.9.0) (2026-09-05)
 
 
