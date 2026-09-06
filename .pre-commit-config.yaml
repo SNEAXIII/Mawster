@@ -41,12 +41,12 @@ repos:
         name: oxlint (front)
         # --type-aware pulls in the rules that need a TS program (prefer-nullish-coalescing and
         # friends); it needs oxlint-tsgolint, which package.json carries.
-        entry: "bash -c 'cd front && exec node_modules/.bin/oxlint --type-aware --fix \"${@#front/}\"' --"
+        # --no-error-on-unmatched-pattern: a commit touching only cypress/ hands over paths that
+        # .oxlintrc.json ignores, and without it oxlint exits 1 on "No files found to lint".
+        entry: "bash -c 'cd front && exec node_modules/.bin/oxlint --type-aware --fix --no-error-on-unmatched-pattern \"${@#front/}\"' --"
         language: system
-        # cypress/ is in .oxlintrc.json's ignorePatterns, so handing those paths over makes
-        # oxlint exit 1 on "No files found to lint" — a commit touching only specs would fail.
         files: ^front/.*\.(ts|tsx|js|jsx|mjs|cjs)$
-        exclude: ^front/(node_modules|\.next|cypress)/
+        exclude: ^front/(node_modules|\.next)/
 
       - id: prettier
         name: prettier (front)
