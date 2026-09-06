@@ -41,7 +41,9 @@ repos:
         name: oxlint (front)
         # --type-aware pulls in the rules that need a TS program (prefer-nullish-coalescing and
         # friends); it needs oxlint-tsgolint, which package.json carries.
-        entry: "bash -c 'cd front && exec node_modules/.bin/oxlint --type-aware --fix \"${@#front/}\"' --"
+        # --no-error-on-unmatched-pattern: a commit touching only cypress/ hands over paths that
+        # .oxlintrc.json ignores, and without it oxlint exits 1 on "No files found to lint".
+        entry: "bash -c 'cd front && exec node_modules/.bin/oxlint --type-aware --fix --no-error-on-unmatched-pattern \"${@#front/}\"' --"
         language: system
         files: ^front/.*\.(ts|tsx|js|jsx|mjs|cjs)$
         exclude: ^front/(node_modules|\.next)/

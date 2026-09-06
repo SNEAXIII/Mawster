@@ -163,10 +163,31 @@ class WarPlacementResponse(WarCoords):
         }
 
 
+class WarBgProgressResponse(BaseModel):
+    battlegroup: int
+    completed: int
+    total: int
+    ko_count: int
+
+
+class WarProgressResponse(BaseModel):
+    """Live counters for the whole war, plus the per-battlegroup breakdown.
+
+    ``completed`` counts a node as handled once the fight is validated *or*
+    flagged as not fought, so it reaches ``total`` when nothing is left to do.
+    """
+
+    completed: int
+    total: int
+    ko_count: int
+    battlegroups: list[WarBgProgressResponse] = []
+
+
 class WarDefenseSummaryResponse(BaseModel):
     war_id: uuid.UUID
     battlegroup: int
     placements: list[WarPlacementResponse] = []
+    progress: WarProgressResponse | None = None
 
 
 class WarAttackerAssignRequest(BaseModel):

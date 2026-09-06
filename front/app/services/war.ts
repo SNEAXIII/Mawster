@@ -72,10 +72,25 @@ export interface WarPlacement {
   note_blocked?: boolean
 }
 
+export interface WarBgProgress {
+  battlegroup: number
+  completed: number
+  total: number
+  ko_count: number
+}
+
+export interface WarProgress {
+  completed: number
+  total: number
+  ko_count: number
+  battlegroups: WarBgProgress[]
+}
+
 export interface WarDefenseSummary {
   war_id: string
   battlegroup: number
   placements: WarPlacement[]
+  progress: WarProgress | null
 }
 
 export interface AvailableAttacker {
