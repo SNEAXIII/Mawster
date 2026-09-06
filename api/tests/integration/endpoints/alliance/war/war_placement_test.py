@@ -810,17 +810,40 @@ class TestWarFightFlags:
 class TestWarProgress:
     """GET /alliances/{id}/wars/{id}/bg/{bg} — the live fight / KO counters."""
 
-    @pytest.mark.asyncio
-    async def test_progress_reports_every_battlegroup_on_an_untouched_war(self):
-        data = await _setup_war()
-        headers = create_auth_headers(user_id=str(USER_ID))
-
+    @staticmethod
+    async def _progress(data, headers):
         response = await execute_get_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1",
             headers=headers,
         )
         assert response.status_code == 200
-        progress = response.json()["progress"]
+        return response.json()["progress"]
+
+    @staticmethod
+    async def _scenario_with_attacker():
+        """Attacker scenario with the member's champion already on BG1 node 10."""
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+        return data, headers
+
+    @staticmethod
+    async def _patch_node(data, headers, action, payload=None):
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/{action}",
+            payload=payload or {},
+            headers=headers,
+        )
+
+    @pytest.mark.asyncio
+    async def test_progress_reports_every_battlegroup_on_an_untouched_war(self):
+        data = await _setup_war()
+
+        progress = await self._progress(data, create_auth_headers(user_id=str(USER_ID)))
         assert progress["completed"] == 0
         assert progress["ko_count"] == 0
         assert progress["total"] == 150
@@ -830,84 +853,35 @@ class TestWarProgress:
 
     @pytest.mark.asyncio
     async def test_progress_counts_a_completed_fight_and_its_kos(self):
-        data = await _setup_attacker_scenario()
-        headers_member = create_auth_headers(user_id=str(USER2_ID))
+        data, headers = await self._scenario_with_attacker()
+        await self._patch_node(data, headers, "ko", {"ko_count": 3})
+        await self._patch_node(data, headers, "complete")
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
-            payload={"champion_user_id": str(data["champion_user"].id)},
-            headers=headers_member,
-        )
-        await execute_patch_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/ko",
-            payload={"ko_count": 3},
-            headers=headers_member,
-        )
-        await execute_patch_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/complete",
-            payload={},
-            headers=headers_member,
-        )
-
-        response = await execute_get_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1",
-            headers=headers_member,
-        )
-        assert response.status_code == 200
-        progress = response.json()["progress"]
+        progress = await self._progress(data, headers)
         assert progress["completed"] == 1
         assert progress["ko_count"] == 3
-        bg1 = progress["battlegroups"][0]
-        assert bg1["completed"] == 1
-        assert bg1["ko_count"] == 3
+        assert progress["battlegroups"][0] == {
+            "battlegroup": 1,
+            "completed": 1,
+            "total": 50,
+            "ko_count": 3,
+        }
 
     @pytest.mark.asyncio
     async def test_progress_counts_a_fight_flagged_not_done_as_handled(self):
-        data = await _setup_attacker_scenario()
-        headers_member = create_auth_headers(user_id=str(USER2_ID))
-        headers_officer = create_auth_headers(user_id=str(USER_ID))
+        data, _ = await self._scenario_with_attacker()
+        officer_headers = create_auth_headers(user_id=str(USER_ID))
+        await self._patch_node(data, officer_headers, "fight-not-done")
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
-            payload={"champion_user_id": str(data["champion_user"].id)},
-            headers=headers_member,
-        )
-        await execute_patch_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/fight-not-done",
-            payload={},
-            headers=headers_officer,
-        )
-
-        response = await execute_get_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1",
-            headers=headers_officer,
-        )
-        assert response.status_code == 200
-        progress = response.json()["progress"]
+        progress = await self._progress(data, officer_headers)
         assert progress["completed"] == 1
         assert progress["ko_count"] == 0
 
     @pytest.mark.asyncio
     async def test_progress_ignores_a_fight_that_is_only_assigned(self):
-        data = await _setup_attacker_scenario()
-        headers_member = create_auth_headers(user_id=str(USER2_ID))
+        data, headers = await self._scenario_with_attacker()
+        await self._patch_node(data, headers, "ko", {"ko_count": 2})
 
-        await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
-            payload={"champion_user_id": str(data["champion_user"].id)},
-            headers=headers_member,
-        )
-        await execute_patch_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/ko",
-            payload={"ko_count": 2},
-            headers=headers_member,
-        )
-
-        response = await execute_get_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1",
-            headers=headers_member,
-        )
-        assert response.status_code == 200
-        progress = response.json()["progress"]
+        progress = await self._progress(data, headers)
         assert progress["completed"] == 0
         assert progress["ko_count"] == 2

@@ -1,85 +1,79 @@
-import { setupAssignedAttacker, setupAttackerScenario } from '../../support/e2e';
+import { type AttackerScenario, setupAssignedAttacker, setupAttackerScenario } from '../../support/e2e';
+
+/** Open the attacker panel on a war that already has an attacker on BG1 node 10. */
+function openWarWithAttacker(prefix: string, prepare?: (scenario: AttackerScenario) => void) {
+  return setupAssignedAttacker(prefix).then((scenario) => {
+    prepare?.(scenario);
+    cy.goToWarMode(scenario.ownerData.user_id, 'attackers');
+  });
+}
+
+function expectCounter(fights: string, kos: string) {
+  cy.getByCy('war-progress-total').should('have.text', fights);
+  cy.getByCy('war-progress-ko').should('contain.text', kos);
+}
 
 describe('War – Progress counter', () => {
   beforeEach(() => {
     cy.truncateDb();
   });
 
-  // ── Empty war ────────────────────────────────────────────────────────────
-
   it('shows an empty counter on a war where nothing has been fought', () => {
     setupAttackerScenario('wp-empty').then(({ ownerData }) => {
       cy.goToWarMode(ownerData.user_id, 'attackers');
-
-      cy.getByCy('war-progress-total').should('have.text', '0/150');
-      cy.getByCy('war-progress-ko').should('contain.text', '0 KO');
-      cy.getByCy('war-progress-bg-1').should('contain.text', '0/50');
-      cy.getByCy('war-progress-bg-2').should('contain.text', '0/50');
-      cy.getByCy('war-progress-bg-3').should('contain.text', '0/50');
     });
-  });
 
-  // ── Completed fight ──────────────────────────────────────────────────────
+    expectCounter('0/150', '0 KO');
+    cy.getByCy('war-progress-bg-1').should('contain.text', '0/50');
+    cy.getByCy('war-progress-bg-2').should('contain.text', '0/50');
+    cy.getByCy('war-progress-bg-3').should('contain.text', '0/50');
+  });
 
   it('counts a completed fight and its KOs', () => {
-    setupAssignedAttacker('wp-done').then(({ memberData, ownerData, allianceId, warId }) => {
+    openWarWithAttacker('wp-done', ({ memberData, allianceId, warId }) => {
       cy.apiUpdateWarKo(memberData.access_token, allianceId, warId, 1, 10, 3);
       cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-
-      cy.getByCy('war-progress-total').should('have.text', '1/150');
-      cy.getByCy('war-progress-ko').should('contain.text', '3 KO');
-      cy.getByCy('war-progress-bg-1').should('contain.text', '1/50');
     });
-  });
 
-  // ── Fight flagged as not fought ──────────────────────────────────────────
+    expectCounter('1/150', '3 KO');
+    cy.getByCy('war-progress-bg-1').should('contain.text', '1/50');
+  });
 
   it('counts a fight flagged as not fought as handled', () => {
-    setupAssignedAttacker('wp-fnd').then(({ ownerData, allianceId, warId }) => {
+    openWarWithAttacker('wp-fnd', ({ ownerData, allianceId, warId }) => {
       cy.apiToggleFightNotDone(ownerData.access_token, allianceId, warId, 1, 10);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-
-      cy.getByCy('war-progress-total').should('have.text', '1/150');
-      cy.getByCy('war-progress-ko').should('contain.text', '0 KO');
     });
-  });
 
-  // ── An assigned fight is not a done fight ────────────────────────────────
+    expectCounter('1/150', '0 KO');
+  });
 
   it('leaves an assigned but unfinished fight out of the counter', () => {
-    setupAssignedAttacker('wp-assigned').then(({ memberData, ownerData, allianceId, warId }) => {
+    openWarWithAttacker('wp-assigned', ({ memberData, allianceId, warId }) => {
       cy.apiUpdateWarKo(memberData.access_token, allianceId, warId, 1, 10, 2);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-
-      cy.getByCy('war-progress-total').should('have.text', '0/150');
-      cy.getByCy('war-progress-ko').should('contain.text', '2 KO');
     });
+
+    expectCounter('0/150', '2 KO');
   });
 
-  // ── Live update, without waiting for the 10s poll ────────────────────────
+  // ── Live updates, without waiting for the 10s poll ───────────────────────
 
   it('moves the counter as soon as a KO is added from the panel', () => {
-    setupAssignedAttacker('wp-live').then(({ ownerData }) => {
-      cy.goToWarMode(ownerData.user_id, 'attackers');
+    openWarWithAttacker('wp-live');
 
-      cy.getByCy('war-progress-ko').should('contain.text', '0 KO');
-      cy.getByCy('ko-inc-node-10').click();
+    expectCounter('0/150', '0 KO');
+    cy.getByCy('ko-inc-node-10').click();
 
-      cy.getByCy('war-progress-ko').should('contain.text', '1 KO');
-      cy.getByCy('war-progress-bg-1').should('contain.text', '0/50 · 1');
-    });
+    expectCounter('0/150', '1 KO');
+    cy.getByCy('war-progress-bg-1').should('contain.text', '0/50 · 1');
   });
 
   it('moves the counter as soon as a fight is completed from the panel', () => {
-    setupAssignedAttacker('wp-live-done').then(({ ownerData }) => {
-      cy.goToWarMode(ownerData.user_id, 'attackers');
+    openWarWithAttacker('wp-live-done');
 
-      cy.getByCy('war-progress-total').should('have.text', '0/150');
-      cy.getByCy('combat-complete-node-10').click();
+    expectCounter('0/150', '0 KO');
+    cy.getByCy('combat-complete-node-10').click();
 
-      cy.getByCy('war-progress-total').should('have.text', '1/150');
-      cy.getByCy('war-progress-bg-1').should('contain.text', '1/50');
-    });
+    expectCounter('1/150', '0 KO');
+    cy.getByCy('war-progress-bg-1').should('contain.text', '1/50');
   });
 });
