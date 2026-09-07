@@ -5,6 +5,7 @@ import Credentials from 'next-auth/providers/credentials'
 import jwt from 'jsonwebtoken'
 import { getServerApiUrl } from '@/app/lib/serverApiUrl'
 import { refreshBackendToken } from '@/app/lib/auth-refresh'
+import { withBackendProfile } from '@/app/lib/backend-profile'
 
 import { isServerDev } from '@/app/lib/dev-mode'
 
@@ -111,10 +112,10 @@ export const {
         return '/login?error=GENERIC'
       }
     },
-    async jwt({ token, user, account, profile: _profile }) {
+    async jwt({ token, user, account, trigger, profile: _profile }) {
       // Dev login via CredentialsProvider (no Discord)
       if (account?.provider === 'dev-login' && user) {
-        return {
+        return await withBackendProfile({
           ...token,
           id: user.id,
           role: user.role,
@@ -123,12 +124,12 @@ export const {
           accessTokenExpires: Date.now() + 60 * 60 * 1000,
           expired: false,
           backendAuthenticated: true,
-        }
+        })
       }
 
       // Login initial via OAuth: the exchange already happened in signIn
       if (account?.provider === 'discord' || account?.provider === 'google') {
-        return {
+        return await withBackendProfile({
           ...token,
           id: account.backendUserId,
           role: account.backendRole,
@@ -138,7 +139,14 @@ export const {
           ...(account.provider === 'discord' ? { discordRefreshToken: account.refresh_token } : {}),
           expired: false,
           backendAuthenticated: true,
-        }
+        })
+      }
+
+      // Explicit `useSession().update()`: the caller just changed the profile
+      // and asks for it to be re-read. Now the only way to refresh it before
+      // the backend JWT expires, since `session` no longer calls the backend.
+      if (trigger === 'update') {
+        return await withBackendProfile(token)
       }
 
       // Subsequent requests: check the backend JWT for expiry
@@ -147,7 +155,7 @@ export const {
       }
 
       // Backend JWT expired: attempt a refresh
-      return await refreshBackendToken(token)
+      return await withBackendProfile(await refreshBackendToken(token))
     },
     async session({ session, token }) {
       if (token.expired || !token.backendAuthenticated) {
@@ -158,45 +166,23 @@ export const {
         }
       }
 
-      // Fetch full user profile from backend /auth/session
-      try {
-        if (token.accessToken) {
-          const res = await fetch(`${getServerApiUrl()}/auth/session`, {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${token.accessToken}`,
-            },
-          })
-
-          if (res.ok) {
-            const userProfile = await res.json()
-            return {
-              ...session,
-              accessToken: token.accessToken as string,
-              user: {
-                ...session.user,
-                id: userProfile.id ?? token.id,
-                name: userProfile.login ?? token.name,
-                email: userProfile.email ?? token.email,
-                role: userProfile.role ?? token.role,
-                discord_id: userProfile.discord_id ?? null,
-                google_id: userProfile.google_id ?? null,
-                created_at: userProfile.created_at ?? token.created_at,
-              },
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Erreur en synchronisant la session avec /auth/session :', e)
-      }
+      // Read-only: the profile was fetched by the jwt callback and cached on
+      // the token. Never fetch here — this callback runs on every `auth()`,
+      // and the API proxy calls `auth()` on every single request.
+      const profile = token.profile
 
       return {
         ...session,
         accessToken: token.accessToken as string,
         user: {
           ...session.user,
-          id: token.id,
-          role: token.role,
+          id: profile?.id ?? token.id ?? '',
+          name: profile?.login ?? token.name ?? '',
+          email: profile?.email ?? token.email ?? '',
+          role: profile?.role ?? token.role ?? '',
+          discord_id: profile?.discord_id ?? null,
+          google_id: profile?.google_id ?? null,
+          created_at: profile?.created_at ?? token.created_at ?? null,
         },
       }
     },
