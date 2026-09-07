@@ -99,6 +99,10 @@ jobs:
       - name: Typecheck
         working-directory: ./front
         run: npx --no-install tsc --noEmit
+      # Own TS project: the app tsconfig and oxlint both exclude cypress/.
+      - name: Typecheck Cypress specs
+        working-directory: ./front
+        run: npx --no-install tsc -p cypress/tsconfig.json --noEmit
 
   e2e-plan:
     name: E2E — Plan spec distribution
