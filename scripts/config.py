@@ -13,7 +13,10 @@ MARIADB_HOST = "127.0.0.1"
 MARIADB_PORT = int(os.environ.get("MARIADB_PORT", "3307"))
 MARIADB_ROOT_PASSWORD = os.environ.get("MARIADB_ROOT_PASSWORD", "rootpassword")  # NOSONAR
 MARIADB_CONTAINER = os.environ.get("MARIADB_CONTAINER", "mariadb-test")
-HEALTH_TIMEOUT = 20
+# Generous on purpose: a backend now waits for MariaDB itself (up to 25s in
+# app_testing.py) and runs the migrations before it starts listening, so this
+# budget has to cover a cold database, not just uvicorn's boot.
+HEALTH_TIMEOUT = 60
 
 
 def log(msg: str) -> None:

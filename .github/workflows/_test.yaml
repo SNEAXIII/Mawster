@@ -174,8 +174,9 @@ jobs:
     env:
       MARIADB_USER: user
       MARIADB_PASSWORD: password
+      # Load-bearing since the backend creates its own database: it connects as
+      # root to CREATE DATABASE mawster_test_N and grant it to MARIADB_USER.
       MARIADB_ROOT_PASSWORD: rootpassword
-      MARIADB_DATABASE: mawster-testing
     services:
       mariadb-test:
         image: mariadb
@@ -186,11 +187,10 @@ jobs:
           MARIADB_DATABASE: mawster-testing
         ports:
           - 3307:3306
-        options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=2s
-          --health-timeout=5s
-          --health-retries=25
+        # No --health-cmd on purpose: a health gate blocks every job of the matrix
+        # before its first step, and each backend already waits for MariaDB itself
+        # (api/app_testing.py). Without it, the server initialises while the job
+        # checks out, syncs uv, restores the npm cache and downloads the build.
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

@@ -19,7 +19,6 @@ import platform as _platform
 import re
 import shutil
 import signal
-import socket
 import subprocess
 import sys
 import threading
@@ -44,10 +43,7 @@ from config import (  # pylint: disable=import-error,wrong-import-position
     DB_PREFIX,
     FRONT_DIR,
     HEALTH_TIMEOUT,
-    MARIADB_CONTAINER,
-    MARIADB_HOST,
     MARIADB_PORT,
-    MARIADB_ROOT_PASSWORD,
     ROOT,
     log,
 )
@@ -119,79 +115,13 @@ def localhost_url(port: int, path: str = "") -> str:
     return f"http://localhost:{port}{path}"
 
 
-def _run_sql(sql: str) -> subprocess.CompletedProcess:
-    """Execute SQL against MariaDB.
-
-    Tries the TCP clients first on MARIADB_PORT: 'mariadb', then 'mysql' —
-    GitHub runners ship only the latter, and the service container has no
-    predictable name there, so 'docker exec' is the last resort (local dev).
-    """
-    root_args = ["-uroot", f"-p{MARIADB_ROOT_PASSWORD}", "-e", sql]
-    # check=False: callers inspect returncode/stderr themselves.
-    for client in ("mariadb", "mysql"):
-        try:
-            return subprocess.run(
-                [client, "-h", MARIADB_HOST, "-P", str(MARIADB_PORT), *root_args],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-        except FileNotFoundError:
-            continue
-    return subprocess.run(
-        ["docker", "exec", MARIADB_CONTAINER, "mariadb", *root_args],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-
-def check_mariadb_running() -> None:
-    """Verify MariaDB is reachable on MARIADB_HOST:MARIADB_PORT."""
-    log(f"Checking if MariaDB is reachable on {MARIADB_HOST}:{MARIADB_PORT}...")
-    try:
-        with socket.create_connection((MARIADB_HOST, MARIADB_PORT), timeout=5):
-            pass
-        log("MariaDB is reachable.")
-    except OSError:
-        log(f"ERROR: MariaDB is not reachable on {MARIADB_HOST}:{MARIADB_PORT}.")
-        log("Start it with: make e2e-db")
-        sys.exit(1)
-
-
 def get_db_name(worker: int) -> str:
     """Return the database name for this worker.
 
-    If MARIADB_DATABASE is already set in the environment (e.g. a CI service
-    container pre-created it) and this is worker 0, reuse it directly so no
-    mariadb-client is needed. For any other worker, always create a dedicated DB.
+    Nothing here creates it: app_testing.py does, from the backend process that
+    owns it — which is also what waits for MariaDB to accept connections.
     """
-    if worker == 0 and os.environ.get("MARIADB_DATABASE"):
-        return os.environ["MARIADB_DATABASE"]
     return f"{DB_PREFIX}{worker}"
-
-
-def create_db(worker: int) -> None:
-    """CREATE DATABASE IF NOT EXISTS mawster_test_N and GRANT privileges.
-
-    Skipped when the database is pre-configured via MARIADB_DATABASE (worker 0).
-    """
-    db = get_db_name(worker)
-    if worker == 0 and os.environ.get("MARIADB_DATABASE"):
-        log(f"Worker {worker}: using pre-configured database {db}, skipping creation.")
-        return
-    db_user = os.environ.get("MARIADB_USER", "user")
-    log(f"Worker {worker}: creating database {db}...")
-    sql = (
-        f"CREATE DATABASE IF NOT EXISTS `{db}`;"
-        f" GRANT ALL PRIVILEGES ON `{db}`.* TO '{db_user}'@'%';"
-        f" FLUSH PRIVILEGES;"
-    )
-    result = _run_sql(sql)
-    if result.returncode != 0:
-        msg = f"Failed to create DB {db}: {result.stderr}"
-        raise RuntimeError(msg)
-    log(f"Worker {worker}: database {db} created.")
 
 
 def wait_for_http(url: str, label: str, timeout: int = HEALTH_TIMEOUT) -> None:
@@ -659,8 +589,6 @@ def main() -> None:
 
     kill_probably_used_ports(worker_number)
 
-    check_mariadb_running()
-
     base_env = os.environ.copy()
     base_env.setdefault("NEXTAUTH_SECRET", "e2e-local-nextauth-secret")
     procs: list[subprocess.Popen] = []
@@ -717,7 +645,8 @@ def main() -> None:
 
     def setup_worker(worker: int) -> None:
         try:
-            create_db(worker)
+            # Spawns immediately: the backend waits for MariaDB and creates its own
+            # database on its side, so nothing blocks here while the server boots.
             backend = start_backend(worker, base_env, quiet)
             with lock:
                 procs.append(backend)
