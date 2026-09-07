@@ -149,9 +149,11 @@ export const {
         return await withBackendProfile(token)
       }
 
-      // Subsequent requests: check the backend JWT for expiry
+      // Subsequent requests: check the backend JWT for expiry. A still-valid
+      // token minted before `profile` existed carries none — backfill it once
+      // rather than serve a blank username until the token expires.
       if (token.accessTokenExpires && Date.now() < (token.accessTokenExpires as number)) {
-        return token
+        return token.profile ? token : await withBackendProfile(token)
       }
 
       // Backend JWT expired: attempt a refresh
