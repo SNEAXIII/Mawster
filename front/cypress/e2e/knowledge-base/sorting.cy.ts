@@ -6,7 +6,7 @@ import { setupKnowledgeBaseFast } from '../../support/e2e';
 function nodeNumbers($rows: JQuery<HTMLElement>): number[] {
   return [...$rows].map(($row) => {
     const cell = $row.querySelector('[data-cy="fight-record-node"]');
-    expect(cell, 'node cell').to.not.equal(null);
+    assert.isNotNull(cell, 'node cell');
     return Number(cell?.textContent?.trim());
   });
 }
