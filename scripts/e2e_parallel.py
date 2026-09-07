@@ -55,7 +55,7 @@ from linux_model import (  # pylint: disable=import-error,wrong-import-position
 from spec_planner import (  # pylint: disable=import-error,wrong-import-position
     distribute_specs,
     get_spec_files,
-    resolve_spec_paths,
+    resolve_spec_lanes,
 )
 from windows_model import (
     WindowsModel,  # pylint: disable=import-error,wrong-import-position
@@ -551,7 +551,10 @@ def main() -> None:
         type=str,
         default=None,
         metavar="PATTERN",
-        help="Run a single spec file (relative to front/cypress/e2e/ or absolute glob). Forces --workers 1.",
+        help=(
+            "Comma-separated specs or glob (relative to front/cypress/e2e/, or absolute). "
+            "Caps --workers at one worker per spec."
+        ),
     )
     parser.add_argument(
         "--quiet",
@@ -577,12 +580,20 @@ def main() -> None:
 
     quiet = args.quiet
 
+    # Lanes come pre-balanced from spec_planner, which plans one lane per worker
+    # across the whole matrix. Re-splitting them here would undo that, so a value
+    # carrying several lanes dictates the worker count.
+    planned_lanes: list[list[Path]] = []
     resolved_specs: set[Path] = set()
     worker_number = args.workers
     if args.spec:
-        resolved_specs = set(resolve_spec_paths(args.spec))
-        log(f"--spec provided: {len(resolved_specs)} spec(s), using {worker_number} worker(s)")
-    worker_number = min(worker_number, len(resolved_specs)) if resolved_specs else args.workers
+        planned_lanes = resolve_spec_lanes(args.spec)
+        resolved_specs = {spec for lane in planned_lanes for spec in lane}
+        log(f"--spec provided: {len(resolved_specs)} spec(s) in {len(planned_lanes)} lane(s)")
+    if len(planned_lanes) > 1:
+        worker_number = len(planned_lanes)
+    elif resolved_specs:
+        worker_number = min(worker_number, len(resolved_specs))
 
     start_time = time.time()
     log(f"Starting E2E parallel run with {worker_number} worker(s)...")
@@ -704,15 +715,20 @@ def main() -> None:
 
     # Phase 3: run Cypress workers in parallel
     log("All servers ready. Launching Cypress workers...")
-    if resolved_specs:
-        specs = resolved_specs
-        log(f"Running {len(specs)} spec(s): {[str(s.relative_to(FRONT_DIR)) for s in specs]}")
+    if len(planned_lanes) > 1:
+        spec_buckets = planned_lanes
+        for i, lane in enumerate(planned_lanes):
+            log(f"Worker {i} lane: {[str(s.relative_to(FRONT_DIR)) for s in lane]}")
     else:
-        specs = get_spec_files(include_vision=args.include_vision)
-        log(f"Found {len(specs)} spec file(s) to distribute across {worker_number} worker(s).")
-        if not args.include_vision:
-            log("Vision specs excluded — pass --include-vision to run them.")
-    spec_buckets = distribute_specs(specs, worker_number)
+        if resolved_specs:
+            specs = sorted(resolved_specs)
+            log(f"Running {len(specs)} spec(s): {[str(s.relative_to(FRONT_DIR)) for s in specs]}")
+        else:
+            specs = get_spec_files(include_vision=args.include_vision)
+            log(f"Found {len(specs)} spec file(s) to distribute across {worker_number} worker(s).")
+            if not args.include_vision:
+                log("Vision specs excluded — pass --include-vision to run them.")
+        spec_buckets = distribute_specs(specs, worker_number)
     results: list[int] = [0] * worker_number
     worker_stats: list[dict] = [{} for _ in range(worker_number)]
 
