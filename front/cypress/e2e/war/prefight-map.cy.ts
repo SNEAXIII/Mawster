@@ -35,7 +35,6 @@ describe('War – prefight highlight on map', () => {
         memberData,
         allianceId,
         ownerAccId,
-        memberAccId,
         warId,
         championUserId,
         prefightChampionUserId,

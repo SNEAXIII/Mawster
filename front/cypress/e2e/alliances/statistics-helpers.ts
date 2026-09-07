@@ -12,38 +12,6 @@ export function closeSeason(adminToken: string, seasonId: string) {
   return cy.apiCloseSeason(adminToken, seasonId);
 }
 
-export function setupEndedAssistWar(opts: {
-  adminToken: string;
-  ownerToken: string;
-  ownerAccId: string;
-  memberToken: string;
-  memberAccId: string;
-  allianceId: string;
-}) {
-  const { adminToken, ownerToken, ownerAccId, memberToken, memberAccId, allianceId } = opts;
-  createAndActivateSeason(adminToken);
-  return cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((ironManChamps: { id: string }[]) => {
-    return cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((wolvChamps: { id: string }[]) => {
-      return cy
-        .apiAddChampionToRoster(ownerToken, ownerAccId, ironManChamps[0].id, '7r3')
-        .then((cuOwner: { id: string }) => {
-          return cy
-            .apiAddChampionToRoster(memberToken, memberAccId, wolvChamps[0].id, '7r3')
-            .then((cuMember: { id: string }) => {
-              return cy.apiCreateWar(ownerToken, allianceId, 'AstEnemy').then((war: { id: string }) => {
-                cy.apiPlaceWarDefender(ownerToken, allianceId, war.id, 1, 10, ironManChamps[0].id, 7, 3, 0);
-                cy.apiAssignWarAttacker(ownerToken, allianceId, war.id, 1, 10, cuOwner.id);
-                cy.apiRequest(memberToken, 'POST', `/alliances/${allianceId}/wars/${war.id}/bg/1/node/10/assist`, {
-                  champion_user_id: cuMember.id,
-                });
-                cy.apiEndWar(ownerToken, allianceId, war.id, true, 10);
-              });
-            });
-        });
-    });
-  });
-}
-
 export function addStatsForPlayer(
   token: string,
   allianceId: string,
@@ -57,250 +25,6 @@ export function addStatsForPlayer(
   cy.apiPlaceWarDefender(token, allianceId, warId, bg, nodeNumber, champId, 7, 3, 0);
   cy.apiAssignWarAttacker(token, allianceId, warId, bg, nodeNumber, championUserId);
   if (koCount > 0) cy.apiUpdateWarKo(token, allianceId, warId, bg, nodeNumber, koCount);
-}
-
-export function withWarScenario(
-  adminToken: string,
-  ownerToken: string,
-  allianceId: string,
-  ownerAccId: string,
-  warName: string,
-  cb: (args: { champId: string; cuId: string; warId: string }) => void,
-) {
-  createAndActivateSeason(adminToken).then(() => {
-    cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs: { id: string }[]) => {
-      cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').then((cu: { id: string }) => {
-        cy.apiCreateWar(ownerToken, allianceId, warName).then((war: { id: string }) => {
-          cb({ champId: champs[0].id, cuId: cu.id, warId: war.id });
-        });
-      });
-    });
-  });
-}
-
-function loadChampAndAddToTwoRosters(
-  adminToken: string,
-  ownerToken: string,
-  ownerAccId: string,
-  memberToken: string,
-  memberAccId: string,
-  cb: (args: { champId: string; cuOwnerId: string; cuMemberId: string }) => void,
-) {
-  cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs: { id: string }[]) => {
-    cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs[0].id, '7r3').then((cuOwner: { id: string }) => {
-      cy.apiAddChampionToRoster(memberToken, memberAccId, champs[0].id, '7r3').then((cuMember: { id: string }) => {
-        cb({ champId: champs[0].id, cuOwnerId: cuOwner.id, cuMemberId: cuMember.id });
-      });
-    });
-  });
-}
-
-export function withWarScenarioTwoPlayers(
-  adminToken: string,
-  ownerToken: string,
-  ownerAccId: string,
-  memberToken: string,
-  memberAccId: string,
-  allianceId: string,
-  warName: string,
-  cb: (args: { champId: string; cuOwnerId: string; cuMemberId: string; warId: string }) => void,
-) {
-  createAndActivateSeason(adminToken).then(() => {
-    loadChampAndAddToTwoRosters(
-      adminToken,
-      ownerToken,
-      ownerAccId,
-      memberToken,
-      memberAccId,
-      ({ champId, cuOwnerId, cuMemberId }) => {
-        cy.apiCreateWar(ownerToken, allianceId, warName).then((war: { id: string }) => {
-          cb({ champId, cuOwnerId, cuMemberId, warId: war.id });
-        });
-      },
-    );
-  });
-}
-
-// Two ended wars in the same season, each fought by a different player:
-// the owner fights in war one only, the member in war two only. Lets a spec
-// assert that the war filter actually re-scopes the stats table, not just the chart.
-export function withTwoEndedWarsTwoPlayers(
-  adminToken: string,
-  ownerToken: string,
-  ownerAccId: string,
-  memberToken: string,
-  memberAccId: string,
-  allianceId: string,
-  cb: (args: { warOneId: string; warTwoId: string }) => void,
-) {
-  createAndActivateSeason(adminToken).then(() => {
-    loadChampAndAddToTwoRosters(
-      adminToken,
-      ownerToken,
-      ownerAccId,
-      memberToken,
-      memberAccId,
-      ({ champId, cuOwnerId, cuMemberId }) => {
-        cy.apiCreateWar(ownerToken, allianceId, 'WarOne').then((warOne: { id: string }) => {
-          addStatsForPlayer(ownerToken, allianceId, warOne.id, champId, cuOwnerId, 10, 0);
-          cy.apiEndWar(ownerToken, allianceId, warOne.id, true, 10);
-          cy.apiCreateWar(ownerToken, allianceId, 'WarTwo').then((warTwo: { id: string }) => {
-            addStatsForPlayer(ownerToken, allianceId, warTwo.id, champId, cuMemberId, 11, 2);
-            cy.apiEndWar(ownerToken, allianceId, warTwo.id, true, 10);
-            cb({ warOneId: warOne.id, warTwoId: warTwo.id });
-          });
-        });
-      },
-    );
-  });
-}
-
-// Two seasons, one ended war each, fought by a different player. Season 63 is
-// closed before 64 opens because a war is stamped with whichever season is
-// active when it is created, and only one season may be current at a time.
-export function withTwoSeasonsOneWarEach(
-  adminToken: string,
-  ownerToken: string,
-  ownerAccId: string,
-  memberToken: string,
-  memberAccId: string,
-  allianceId: string,
-  cb: (args: { pastSeasonId: string; currentSeasonId: string }) => void,
-) {
-  createOpenSeason(adminToken, 63).then((pastSeasonId) => {
-    loadChampAndAddToTwoRosters(
-      adminToken,
-      ownerToken,
-      ownerAccId,
-      memberToken,
-      memberAccId,
-      ({ champId, cuOwnerId, cuMemberId }) => {
-        cy.apiCreateWar(ownerToken, allianceId, 'OldWar').then((oldWar: { id: string }) => {
-          addStatsForPlayer(ownerToken, allianceId, oldWar.id, champId, cuOwnerId, 10, 3);
-          cy.apiEndWar(ownerToken, allianceId, oldWar.id, true, 10);
-          closeSeason(adminToken, pastSeasonId);
-          createOpenSeason(adminToken, 64).then((currentSeasonId) => {
-            cy.apiCreateWar(ownerToken, allianceId, 'NewWar').then((newWar: { id: string }) => {
-              addStatsForPlayer(ownerToken, allianceId, newWar.id, champId, cuMemberId, 11, 0);
-              cy.apiEndWar(ownerToken, allianceId, newWar.id, true, 10);
-              cb({ pastSeasonId, currentSeasonId });
-            });
-          });
-        });
-      },
-    );
-  });
-}
-
-function loadTwoChampsAddToRosters(
-  adminToken: string,
-  ownerToken: string,
-  ownerAccId: string,
-  memberToken: string,
-  memberAccId: string,
-  cb: (args: { champ1Id: string; champ2Id: string; cuOwnerId: string; cuMemberId: string }) => void,
-) {
-  cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs1: { id: string }[]) => {
-    cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((champs2: { id: string }[]) => {
-      cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs1[0].id, '7r3').then((cuOwner: { id: string }) => {
-        cy.apiAddChampionToRoster(memberToken, memberAccId, champs2[0].id, '7r3').then((cuMember: { id: string }) => {
-          cb({ champ1Id: champs1[0].id, champ2Id: champs2[0].id, cuOwnerId: cuOwner.id, cuMemberId: cuMember.id });
-        });
-      });
-    });
-  });
-}
-
-export function withWarScenarioDiffChampsPlayers(
-  adminToken: string,
-  ownerToken: string,
-  ownerAccId: string,
-  memberToken: string,
-  memberAccId: string,
-  allianceId: string,
-  warName: string,
-  cb: (args: { champ1Id: string; champ2Id: string; cuOwnerId: string; cuMemberId: string; warId: string }) => void,
-) {
-  createAndActivateSeason(adminToken).then(() => {
-    loadTwoChampsAddToRosters(
-      adminToken,
-      ownerToken,
-      ownerAccId,
-      memberToken,
-      memberAccId,
-      ({ champ1Id, champ2Id, cuOwnerId, cuMemberId }) => {
-        cy.apiCreateWar(ownerToken, allianceId, warName).then((war: { id: string }) => {
-          cb({ champ1Id, champ2Id, cuOwnerId, cuMemberId, warId: war.id });
-        });
-      },
-    );
-  });
-}
-
-function loadTwoChampsAddToOneRoster(
-  adminToken: string,
-  ownerToken: string,
-  ownerAccId: string,
-  cb: (args: { champ1Id: string; champ2Id: string; cu1Id: string; cu2Id: string }) => void,
-) {
-  cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs1: { id: string }[]) => {
-    cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((champs2: { id: string }[]) => {
-      cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs1[0].id, '7r3').then((cu1: { id: string }) => {
-        cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs2[0].id, '7r3').then((cu2: { id: string }) => {
-          cb({ champ1Id: champs1[0].id, champ2Id: champs2[0].id, cu1Id: cu1.id, cu2Id: cu2.id });
-        });
-      });
-    });
-  });
-}
-
-export function withWarScenarioTwoOwnerChamps(
-  adminToken: string,
-  ownerToken: string,
-  ownerAccId: string,
-  allianceId: string,
-  warName: string,
-  cb: (args: { champ1Id: string; champ2Id: string; cu1Id: string; cu2Id: string; warId: string }) => void,
-) {
-  createAndActivateSeason(adminToken).then(() => {
-    loadTwoChampsAddToOneRoster(adminToken, ownerToken, ownerAccId, ({ champ1Id, champ2Id, cu1Id, cu2Id }) => {
-      cy.apiCreateWar(ownerToken, allianceId, warName).then((war: { id: string }) => {
-        cb({ champ1Id, champ2Id, cu1Id, cu2Id, warId: war.id });
-      });
-    });
-  });
-}
-
-function loadTwoChampsAddOneToRoster(
-  adminToken: string,
-  ownerToken: string,
-  ownerAccId: string,
-  cb: (args: { champ1Id: string; champ2Id: string; cuId: string }) => void,
-) {
-  cy.apiLoadChampion(adminToken, 'Iron Man', 'Tech').then((champs1: { id: string }[]) => {
-    cy.apiLoadChampion(adminToken, 'Wolverine', 'Mutant').then((champs2: { id: string }[]) => {
-      cy.apiAddChampionToRoster(ownerToken, ownerAccId, champs1[0].id, '7r3').then((cu: { id: string }) => {
-        cb({ champ1Id: champs1[0].id, champ2Id: champs2[0].id, cuId: cu.id });
-      });
-    });
-  });
-}
-
-export function withWarScenarioDefender(
-  adminToken: string,
-  ownerToken: string,
-  ownerAccId: string,
-  allianceId: string,
-  warName: string,
-  cb: (args: { champ1Id: string; champ2Id: string; cuId: string; warId: string }) => void,
-) {
-  createAndActivateSeason(adminToken).then(() => {
-    loadTwoChampsAddOneToRoster(adminToken, ownerToken, ownerAccId, ({ champ1Id, champ2Id, cuId }) => {
-      cy.apiCreateWar(ownerToken, allianceId, warName).then((war: { id: string }) => {
-        cb({ champ1Id, champ2Id, cuId, warId: war.id });
-      });
-    });
-  });
 }
 
 // ── Alliance setup preamble ───────────────────────────────────────────────────
@@ -358,43 +82,299 @@ export function setupStatsOwner(prefix: string): Cypress.Chainable<StatsOwnerSet
     }));
 }
 
-export function setupStatsOwnerAndMember(
-  prefix: string,
-  memberBattlegroup = 1,
-): Cypress.Chainable<StatsOwnerMemberSetup> {
+// ── War scenarios ─────────────────────────────────────────────────────────────
+// One batch-setup call each. Only what makes a war progress stays explicit —
+// defender, attacker, KOs, end — the batch has no equivalent for it.
+
+const IRON_MAN = { name: 'Iron Man', champion_class: 'Tech' };
+const WOLVERINE = { name: 'Wolverine', champion_class: 'Mutant' };
+
+interface ScenarioSpec {
+  champions: { name: string; champion_class: string }[];
+  ownerRoster: string[];
+  memberRoster?: string[];
+  warName?: string;
+  memberBattlegroup?: number;
+  seasonNumber?: number;
+}
+
+export interface ScenarioContext extends StatsOwnerMemberSetup {
+  /** Champion name → champion id, for every champion the scenario loaded. */
+  champions: Record<string, string>;
+  /** Champion name → champion_user id, for the owner's roster. */
+  ownerCu: Record<string, string>;
+  /** Champion name → champion_user id, for the member's roster. */
+  memberCu: Record<string, string>;
+  /** Season number (as a string) → season id. */
+  seasonIds: Record<string, string>;
+  warId: string;
+}
+
+// Member fields come back empty when the spec declares no member.
+function scenarioBatch(prefix: string, spec: ScenarioSpec): Cypress.Chainable<ScenarioContext> {
   const base = statsBase(prefix);
   const adminTok = `${prefix}-admin`;
   const ownerTok = `${prefix}-owner`;
   const memberTok = `${prefix}-member`;
+  const roster = (names: string[]) => names.map((champion) => ({ champion }));
 
   return cy
-    .apiBatchSetup([
-      { discord_token: adminTok, role: 'admin' },
+    .apiBatchSetupFull([
+      {
+        discord_token: adminTok,
+        role: 'admin',
+        champions: spec.champions,
+        seasons: [{ number: spec.seasonNumber ?? 64, status: 'active' as const }],
+      },
       {
         discord_token: ownerTok,
         game_pseudo: `${base}Owner`,
         create_alliance: allianceSpec(base),
         battlegroup: 1,
+        roster: roster(spec.ownerRoster),
+        ...(spec.warName ? { create_war: { opponent_name: spec.warName } } : {}),
       },
-      {
-        discord_token: memberTok,
-        game_pseudo: `${base}Member`,
-        join_alliance_token: ownerTok,
-        battlegroup: memberBattlegroup,
-      },
+      ...(spec.memberRoster
+        ? [
+            {
+              discord_token: memberTok,
+              game_pseudo: `${base}Member`,
+              join_alliance_token: ownerTok,
+              battlegroup: spec.memberBattlegroup ?? 1,
+              roster: roster(spec.memberRoster),
+            },
+          ]
+        : []),
     ])
-    .then((users) => ({
-      adminToken: users[adminTok].access_token,
-      ownerToken: users[ownerTok].access_token,
-      ownerUserId: users[ownerTok].user_id,
-      ownerAccId: users[ownerTok].account_id!,
-      ownerPseudo: `${base}Owner`,
-      allianceId: users[ownerTok].alliance_id!,
-      memberToken: users[memberTok].access_token,
-      memberUserId: users[memberTok].user_id,
-      memberAccId: users[memberTok].account_id!,
-      memberPseudo: `${base}Member`,
-    }));
+    .then(({ users, champions, seasons }) => {
+      const owner = users[ownerTok];
+      const member = users[memberTok];
+      return {
+        adminToken: users[adminTok].access_token,
+        ownerToken: owner.access_token,
+        ownerUserId: owner.user_id,
+        ownerAccId: owner.account_id!,
+        ownerPseudo: `${base}Owner`,
+        allianceId: owner.alliance_id!,
+        memberToken: member?.access_token ?? '',
+        memberUserId: member?.user_id ?? '',
+        memberAccId: member?.account_id ?? '',
+        memberPseudo: `${base}Member`,
+        champions,
+        ownerCu: owner.champion_user_ids,
+        memberCu: member?.champion_user_ids ?? {},
+        seasonIds: seasons,
+        warId: owner.war_id ?? '',
+      };
+    });
+}
+
+export interface WarScenario extends ScenarioContext {
+  champId: string;
+  cuId: string;
+}
+
+export function withWarScenario(prefix: string, warName: string): Cypress.Chainable<WarScenario> {
+  return scenarioBatch(prefix, {
+    champions: [IRON_MAN],
+    ownerRoster: ['Iron Man'],
+    warName,
+  }).then((ctx) => ({
+    ...ctx,
+    champId: ctx.champions['Iron Man'],
+    cuId: ctx.ownerCu['Iron Man'],
+  }));
+}
+
+export interface TwoPlayerWarScenario extends ScenarioContext {
+  champId: string;
+  cuOwnerId: string;
+  cuMemberId: string;
+}
+
+export function withWarScenarioTwoPlayers(
+  prefix: string,
+  warName: string,
+  memberBattlegroup = 1,
+): Cypress.Chainable<TwoPlayerWarScenario> {
+  return scenarioBatch(prefix, {
+    champions: [IRON_MAN],
+    ownerRoster: ['Iron Man'],
+    memberRoster: ['Iron Man'],
+    warName,
+    memberBattlegroup,
+  }).then((ctx) => ({
+    ...ctx,
+    champId: ctx.champions['Iron Man'],
+    cuOwnerId: ctx.ownerCu['Iron Man'],
+    cuMemberId: ctx.memberCu['Iron Man'],
+  }));
+}
+
+export interface DiffChampsWarScenario extends ScenarioContext {
+  champ1Id: string;
+  champ2Id: string;
+  cuOwnerId: string;
+  cuMemberId: string;
+}
+
+// Different champion each, to tell a champion-keyed legend from a player-keyed one.
+export function withWarScenarioDiffChampsPlayers(
+  prefix: string,
+  warName: string,
+  memberBattlegroup = 1,
+): Cypress.Chainable<DiffChampsWarScenario> {
+  return scenarioBatch(prefix, {
+    champions: [IRON_MAN, WOLVERINE],
+    ownerRoster: ['Iron Man'],
+    memberRoster: ['Wolverine'],
+    warName,
+    memberBattlegroup,
+  }).then((ctx) => ({
+    ...ctx,
+    champ1Id: ctx.champions['Iron Man'],
+    champ2Id: ctx.champions['Wolverine'],
+    cuOwnerId: ctx.ownerCu['Iron Man'],
+    cuMemberId: ctx.memberCu['Wolverine'],
+  }));
+}
+
+export interface TwoChampsWarScenario extends ScenarioContext {
+  champ1Id: string;
+  champ2Id: string;
+  cu1Id: string;
+  cu2Id: string;
+}
+
+// Both champions belong to the owner: two roster entries, one player.
+export function withWarScenarioTwoOwnerChamps(
+  prefix: string,
+  warName: string,
+): Cypress.Chainable<TwoChampsWarScenario> {
+  return scenarioBatch(prefix, {
+    champions: [IRON_MAN, WOLVERINE],
+    ownerRoster: ['Iron Man', 'Wolverine'],
+    warName,
+  }).then((ctx) => ({
+    ...ctx,
+    champ1Id: ctx.champions['Iron Man'],
+    champ2Id: ctx.champions['Wolverine'],
+    cu1Id: ctx.ownerCu['Iron Man'],
+    cu2Id: ctx.ownerCu['Wolverine'],
+  }));
+}
+
+export interface DefenderWarScenario extends ScenarioContext {
+  champ1Id: string;
+  champ2Id: string;
+  cuId: string;
+}
+
+// The second champion is never rostered: a defender needs an id, not a roster entry.
+export function withWarScenarioDefender(prefix: string, warName: string): Cypress.Chainable<DefenderWarScenario> {
+  return scenarioBatch(prefix, {
+    champions: [IRON_MAN, WOLVERINE],
+    ownerRoster: ['Iron Man'],
+    warName,
+  }).then((ctx) => ({
+    ...ctx,
+    champ1Id: ctx.champions['Iron Man'],
+    champ2Id: ctx.champions['Wolverine'],
+    cuId: ctx.ownerCu['Iron Man'],
+  }));
+}
+
+export interface TwoWarsScenario extends ScenarioContext {
+  warOneId: string;
+  warTwoId: string;
+}
+
+// Two ended wars, one player each. The second war is not batched: a spec
+// declares at most one.
+export function withTwoEndedWarsTwoPlayers(prefix: string): Cypress.Chainable<TwoWarsScenario> {
+  return scenarioBatch(prefix, {
+    champions: [IRON_MAN],
+    ownerRoster: ['Iron Man'],
+    memberRoster: ['Iron Man'],
+    warName: 'WarOne',
+  }).then((ctx) => {
+    const { ownerToken, allianceId, warId: warOneId } = ctx;
+    const champId = ctx.champions['Iron Man'];
+
+    addStatsForPlayer(ownerToken, allianceId, warOneId, champId, ctx.ownerCu['Iron Man'], 10, 0);
+    cy.apiEndWar(ownerToken, allianceId, warOneId, true, 10);
+
+    return cy.apiCreateWar(ownerToken, allianceId, 'WarTwo').then((warTwo: { id: string }) => {
+      addStatsForPlayer(ownerToken, allianceId, warTwo.id, champId, ctx.memberCu['Iron Man'], 11, 2);
+      cy.apiEndWar(ownerToken, allianceId, warTwo.id, true, 10);
+      return cy.wrap({ ...ctx, warOneId, warTwoId: warTwo.id }, { log: false });
+    });
+  });
+}
+
+export interface TwoSeasonsScenario extends ScenarioContext {
+  pastSeasonId: string;
+  currentSeasonId: string;
+}
+
+// Not batchable: a war is stamped with the season active when it is created, so
+// the second one has to wait for the swap.
+export function withTwoSeasonsOneWarEach(prefix: string): Cypress.Chainable<TwoSeasonsScenario> {
+  return scenarioBatch(prefix, {
+    champions: [IRON_MAN],
+    ownerRoster: ['Iron Man'],
+    memberRoster: ['Iron Man'],
+    warName: 'OldWar',
+    seasonNumber: 63,
+  }).then((ctx) => {
+    const { adminToken, ownerToken, allianceId, warId: oldWarId } = ctx;
+    const champId = ctx.champions['Iron Man'];
+    const pastSeasonId = ctx.seasonIds['63'];
+
+    addStatsForPlayer(ownerToken, allianceId, oldWarId, champId, ctx.ownerCu['Iron Man'], 10, 3);
+    cy.apiEndWar(ownerToken, allianceId, oldWarId, true, 10);
+    closeSeason(adminToken, pastSeasonId);
+
+    return createOpenSeason(adminToken, 64).then((currentSeasonId) => {
+      cy.apiCreateWar(ownerToken, allianceId, 'NewWar').then((newWar: { id: string }) => {
+        addStatsForPlayer(ownerToken, allianceId, newWar.id, champId, ctx.memberCu['Iron Man'], 11, 0);
+        cy.apiEndWar(ownerToken, allianceId, newWar.id, true, 10);
+      });
+      return cy.wrap({ ...ctx, pastSeasonId, currentSeasonId }, { log: false });
+    });
+  });
+}
+
+export interface EndedAssistWarSetup extends ScenarioContext {
+  ironManId: string;
+  ownerCuId: string;
+  memberCuId: string;
+}
+
+// An ended war where the member assisted the owner on the same node, which is
+// what splits a fight 0.5/0.5 between them. The assist has no batch equivalent.
+export function setupEndedAssistWar(prefix: string): Cypress.Chainable<EndedAssistWarSetup> {
+  return scenarioBatch(prefix, {
+    champions: [IRON_MAN, WOLVERINE],
+    ownerRoster: ['Iron Man'],
+    memberRoster: ['Wolverine'],
+    warName: 'AstEnemy',
+  }).then((ctx) => {
+    const { ownerToken, memberToken, allianceId, warId } = ctx;
+    const ironManId = ctx.champions['Iron Man'];
+    const ownerCuId = ctx.ownerCu['Iron Man'];
+    const memberCuId = ctx.memberCu['Wolverine'];
+
+    cy.apiPlaceWarDefender(ownerToken, allianceId, warId, 1, 10, ironManId, 7, 3, 0);
+    cy.apiAssignWarAttacker(ownerToken, allianceId, warId, 1, 10, ownerCuId);
+    cy.apiRequest(memberToken, 'POST', `/alliances/${allianceId}/wars/${warId}/bg/1/node/10/assist`, {
+      champion_user_id: memberCuId,
+    });
+    cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
+
+    // cy.wrap, not a bare return: a `.then` cannot both enqueue and return a value.
+    return cy.wrap({ ...ctx, ironManId, ownerCuId, memberCuId }, { log: false });
+  });
 }
 
 // Remove a member from the alliance — used to turn them into a "former member".
@@ -430,13 +410,11 @@ export function withEndedWarStats(
 ) {
   const { koCount = 0, endWar = true, warName = 'Enemy' } = options;
 
-  return setupStatsOwner(prefix).then((setup) => {
-    const { adminToken, ownerToken, ownerUserId, ownerAccId, allianceId } = setup;
-    withWarScenario(adminToken, ownerToken, allianceId, ownerAccId, warName, ({ champId, cuId, warId }) => {
-      addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, koCount);
-      if (endWar) cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
-      openStatsAs(ownerUserId);
-      cb({ ...setup, champId, cuId, warId });
-    });
+  return withWarScenario(prefix, warName).then((ctx) => {
+    const { ownerToken, ownerUserId, allianceId, champId, cuId, warId } = ctx;
+    addStatsForPlayer(ownerToken, allianceId, warId, champId, cuId, 10, koCount);
+    if (endWar) cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
+    openStatsAs(ownerUserId);
+    cb(ctx);
   });
 }

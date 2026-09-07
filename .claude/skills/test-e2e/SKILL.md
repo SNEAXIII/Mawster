@@ -5,7 +5,7 @@ description: Use when running Cypress E2E tests — full suite or targeted specs
 
 # E2E Tests
 
-**Point d'entrée unique** : `scripts/e2e_parallel.py` — le même runner que la CI. Il build le
+**Point d'entrée unique** : `scripts/e2e/e2e_parallel.py` — le même runner que la CI. Il build le
 front (`.next-e2e`), démarre un backend + un front par worker (ports `8010+N` / `3010+N`,
 DB `mawster_test_N`), lance Cypress, puis nettoie.
 
@@ -24,7 +24,7 @@ docker compose -f compose-dev.yaml up -d mariadb-test
 un dossier est développé en toutes ses specs.
 
 ```bash
-python3 scripts/e2e_parallel.py --spec "war/basic.cy.ts,roster/roster.cy.ts" --quiet
+python3 scripts/e2e/e2e_parallel.py --spec "war/basic.cy.ts,roster/roster.cy.ts" --quiet
 ```
 
 Maximum 3 fichiers par batch. Au-delà, grouper et lancer batch par batch en attendant
@@ -33,7 +33,7 @@ les résultats entre chaque.
 ## Suite complète
 
 ```bash
-python3 scripts/e2e_parallel.py --workers 4 --quiet
+python3 scripts/e2e/e2e_parallel.py --workers 4 --quiet
 ```
 
 Long — préférer les specs ciblées en local et laisser la CI faire la passe complète.
@@ -53,7 +53,7 @@ Long — préférer les specs ciblées en local et laisser la CI faire la passe 
 2. Relancer uniquement ces specs :
 
 ```bash
-python3 scripts/e2e_parallel.py --spec "war/basic.cy.ts"
+python3 scripts/e2e/e2e_parallel.py --spec "war/basic.cy.ts"
 ```
 
 Artefacts dans `front/cypress/results/` (rapports XML, screenshots d'échec). Comparer leur

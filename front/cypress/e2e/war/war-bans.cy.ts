@@ -6,7 +6,7 @@ describe('War – Bans', () => {
   });
 
   it('declares a war with bans via UI — bans are displayed', () => {
-    setupWarOwner('war-bans-ui', 'BanOfficer', 'BanAlliance', 'BA').then(({ adminData, ownerData, allianceId }) => {
+    setupWarOwner('war-bans-ui', 'BanOfficer', 'BanAlliance', 'BA').then(({ adminData, ownerData }) => {
       cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
         const champ = champs[0];
         cy.apiLogin(ownerData.user_id, 'war');

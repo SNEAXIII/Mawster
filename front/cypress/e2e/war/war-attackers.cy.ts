@@ -1,4 +1,4 @@
-import { setupAttackerScenario, setupPrefightScenario, confirmAction, openWarNode } from '../../support/e2e';
+import { setupAttackerScenario, confirmAction, openWarNode } from '../../support/e2e';
 function goToAttackersMode(userId: string) {
   cy.apiLogin(userId, 'war');
   cy.getByCy('war-mode-attackers').click();

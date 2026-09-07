@@ -26,7 +26,7 @@ describe('Alliance Statistics – Ranking History', () => {
   });
 
   it('shows empty state when no wars this season', () => {
-    setupWarOwner('rh-empty', 'RhOwner', 'RhAlliance', 'RHA').then(({ adminData, ownerData, allianceId }) => {
+    setupWarOwner('rh-empty', 'RhOwner', 'RhAlliance', 'RHA').then(({ adminData, ownerData }) => {
       createAndActivateSeason(adminData.access_token).then(() => {
         cy.apiLogin(ownerData.user_id);
         goToStatsTab();
@@ -51,7 +51,7 @@ describe('Alliance Statistics – Ranking History', () => {
   });
 
   it('collapsible can be closed and reopened', () => {
-    setupWarOwner('rh-toggle', 'RhToggle', 'RhToggleAlliance', 'RHT').then(({ adminData, ownerData, allianceId }) => {
+    setupWarOwner('rh-toggle', 'RhToggle', 'RhToggleAlliance', 'RHT').then(({ adminData, ownerData }) => {
       createAndActivateSeason(adminData.access_token).then(() => {
         cy.apiLogin(ownerData.user_id);
         goToStatsTab();

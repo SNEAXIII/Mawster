@@ -233,27 +233,27 @@ describe('Defense – Overflow & Error Cases', () => {
   // =========================================================================
 
   it('champion card in selector shows owner count when multi-owner', () => {
-    setupDefenseOwnerAndMember('def-ov-cnt', 'CntOwn', 'CntMem', 'CntAll', 'CN').then(
-      ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
-        cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
-          return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r4');
-        });
-        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) =>
-          cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
-        );
+    setupDefenseOwnerAndMember('def-ov-cnt', 'CntOwn', 'CntMem', 'CntAll', 'CN', {
+      champions: [
+        { name: 'Spider-Man', champion_class: 'Cosmic' },
+        { name: 'Wolverine', champion_class: 'Mutant' },
+      ],
+      ownerRoster: [
+        { champion: 'Spider-Man', rarity: '7r3' },
+        { champion: 'Wolverine', rarity: '7r3' },
+      ],
+      memberRoster: [{ champion: 'Spider-Man', rarity: '7r4' }],
+    }).then(({ ownerData }) => {
+      cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.apiLogin(ownerData.user_id, 'defense');
+      openWarNode(1);
 
-        openWarNode(1);
+      // Spider-Man has 2 owners → shows "2 owners"
+      cy.getByCy('champion-card-Spider-Man').should('contain', '2 owners');
 
-        // Spider-Man has 2 owners → shows "2 owners"
-        cy.getByCy('champion-card-Spider-Man').should('contain', '2 owners');
-
-        // Wolverine has 1 owner → shows pseudo and count
-        cy.getByCy('champion-card-Wolverine').should('contain', 'CntOwn');
-        cy.getByCy('champion-card-Wolverine').should('contain', '0/5');
-      },
-    );
+      // Wolverine has 1 owner → shows pseudo and count
+      cy.getByCy('champion-card-Wolverine').should('contain', 'CntOwn');
+      cy.getByCy('champion-card-Wolverine').should('contain', '0/5');
+    });
   });
 });

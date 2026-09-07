@@ -40,7 +40,7 @@ describe('Mastery tab', () => {
   // =========================================================================
 
   it('owner can save masteries and values persist after reload', () => {
-    setupRosterUser('mastery-save', 'MasteryUser').then(({ adminData, userData, accountId }) => {
+    setupRosterUser('mastery-save', 'MasteryUser').then(({ adminData, userData }) => {
       cy.apiCreateMastery(adminData.access_token, 'ASSASSIN', 5, 3);
       cy.apiLogin(userData.user_id, '/game/account?tab=mastery');
 

@@ -48,6 +48,14 @@ repos:
         files: ^front/.*\.(ts|tsx|js|jsx|mjs|cjs)$
         exclude: ^front/(node_modules|\.next)/
 
+      # Own TS project: the app tsconfig and oxlint both exclude cypress/.
+      - id: tsc-cypress
+        name: typecheck (cypress)
+        entry: bash -c 'cd front && exec node node_modules/typescript/bin/tsc -p cypress/tsconfig.json --noEmit'
+        language: system
+        pass_filenames: false
+        files: ^front/cypress/.*\.ts$
+
       - id: prettier
         name: prettier (front)
         entry: node front/node_modules/prettier/bin/prettier.cjs --write --ignore-path front/.prettierignore

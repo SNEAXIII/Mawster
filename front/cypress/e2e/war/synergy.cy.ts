@@ -82,67 +82,63 @@ describe('War Synergy', () => {
   });
 
   it('adds a synergy champion via the popover and shows the badge', () => {
-    setupAttackerScenario('syn1').then(
-      ({ adminToken, ownerData, memberData, allianceId, memberAccId, warId, championUserId }) => {
-        // Assign node attacker first
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+    setupAttackerScenario('syn1').then(({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
+      // Assign node attacker first
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-        // Load a synergy champion
-        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
-          const synChamp = champs[0];
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then((synCu) => {
-            // Visit war page
-            cy.apiLogin(memberData.user_id, 'war');
-            cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      // Load a synergy champion
+      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
+        const synChamp = champs[0];
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then(() => {
+          // Visit war page
+          cy.apiLogin(memberData.user_id, 'war');
+          cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-            // Click the attacker portrait to open synergy popover
-            cy.getByCy('synergy-trigger-Wolverine').click();
+          // Click the attacker portrait to open synergy popover
+          cy.getByCy('synergy-trigger-Wolverine').click();
 
-            // Add synergy
-            cy.getByCy('synergy-add-Wolverine').click();
+          // Add synergy
+          cy.getByCy('synergy-add-Wolverine').click();
 
-            // Pick Deadpool in selector
-            cy.getByCy('synergy-selector').should('be.visible');
-            cy.getByCy('synergy-pick-Deadpool').click();
+          // Pick Deadpool in selector
+          cy.getByCy('synergy-selector').should('be.visible');
+          cy.getByCy('synergy-pick-Deadpool').click();
 
-            cy.getByCy('champion-portrait-Deadpool-synergy').scrollIntoView().should('be.visible');
+          cy.getByCy('champion-portrait-Deadpool-synergy').scrollIntoView().should('be.visible');
 
-            // Synergy provider should now appear in the popover trigger
-            cy.getByCy('synergy-trigger-Wolverine').click();
-            cy.getByCy('synergy-provider-Deadpool').should('be.visible');
-          });
+          // Synergy provider should now appear in the popover trigger
+          cy.getByCy('synergy-trigger-Wolverine').click();
+          cy.getByCy('synergy-provider-Deadpool').should('be.visible');
         });
-      },
-    );
+      });
+    });
   });
 
   it('revokes a synergy champion via the popover', () => {
-    setupAttackerScenario('syn2').then(
-      ({ adminToken, ownerData, memberData, allianceId, memberAccId, warId, championUserId }) => {
-        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+    setupAttackerScenario('syn2').then(({ adminToken, memberData, allianceId, memberAccId, warId, championUserId }) => {
+      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
-        cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
-          const synChamp = champs[0];
-          cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then((synCu) => {
-            cy.apiAddWarSynergy(memberData.access_token, allianceId, warId, 1, synCu.id, championUserId);
+      cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
+        const synChamp = champs[0];
+        cy.apiAddChampionToRoster(memberData.access_token, memberAccId, synChamp.id, '7r3').then((synCu) => {
+          cy.apiAddWarSynergy(memberData.access_token, allianceId, warId, 1, synCu.id, championUserId);
 
-            cy.apiLogin(memberData.user_id, 'war');
-            cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+          cy.apiLogin(memberData.user_id, 'war');
+          cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
 
-            // Open popover on the node attacker
-            cy.getByCy('synergy-trigger-Wolverine').click();
+          // Open popover on the node attacker
+          cy.getByCy('synergy-trigger-Wolverine').click();
 
-            // Revoke
-            cy.getByCy('synergy-revoke-Deadpool').click();
+          // Revoke
+          cy.getByCy('synergy-revoke-Deadpool').click();
 
-            // Badge should be gone
-            cy.getByCy('synergy-trigger-Wolverine').click();
-            cy.getByCy('synergy-provider-Deadpool').should('not.exist');
-            cy.getByCy('champion-portrait-Deadpool-synergy').should('not.exist');
-          });
+          // Badge should be gone
+          cy.getByCy('synergy-trigger-Wolverine').click();
+          cy.getByCy('synergy-provider-Deadpool').should('not.exist');
+          cy.getByCy('champion-portrait-Deadpool-synergy').should('not.exist');
         });
-      },
-    );
+      });
+    });
   });
 
   it('removing attacker from last node auto-removes their synergy (couteau suisse)', () => {

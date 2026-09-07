@@ -89,10 +89,10 @@ e2e-open: e2e-db
 	@echo 'Lancement de Cypress...'; Set-Location front; npx cypress open
 
 e2e-parallel: e2e-db
-	python scripts/e2e_parallel.py --workers $(if $(N),$(N),3) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
+	python scripts/e2e/e2e_parallel.py --workers $(if $(N),$(N),3) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
 
 e2e-parallel-quiet: e2e-db
-	python scripts/e2e_parallel.py --workers $(if $(N),$(N),3) $(if $(SPEC),--spec $(SPEC),) --quiet
+	python scripts/e2e/e2e_parallel.py --workers $(if $(N),$(N),3) $(if $(SPEC),--spec $(SPEC),) --quiet
 
 backup-list:
 	Get-ChildItem backups\mawster_*.sql.gz -ErrorAction SilentlyContinue | Select-Object Length,Name | Format-Table -AutoSize; if (-not (Test-Path 'backups\mawster_*.sql.gz')) { Write-Host '(no local backups)' }
@@ -198,10 +198,10 @@ e2e-open: e2e-db
 	(cd front && npx cypress open)
 
 e2e-parallel: e2e-db ## Run E2E tests in parallel (N=4 by default, max 8)
-	python3 scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
+	python3 scripts/e2e/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
 
 e2e-parallel-quiet: e2e-db ## Run E2E tests in parallel, hide server logs (N=4 by default, max 8)
-	python3 scripts/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) --quiet
+	python3 scripts/e2e/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) --quiet
 
 backup-list:
 	ls -lh backups/mawster_*.sql.gz 2>/dev/null || echo "(no local backups)"

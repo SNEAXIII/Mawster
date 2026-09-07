@@ -1,6 +1,3 @@
-from time import sleep
-
-import pymysql
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import text
@@ -28,17 +25,9 @@ def reset_attempt():
     print("✅ Migration with success !")
 
 
-def reset(number_of_attempts=7):
+def reset():
     print("🚀 Resetting database")
-    for attempt in range(number_of_attempts):
-        try:
-            reset_attempt()
-            return
-        except Exception as e:
-            print(f"❌ Attempt {attempt + 1} failed: {e}")
-            sleep(attempt + 1)
-    msg = f"Failed to reset database after {number_of_attempts} attempts"
-    raise pymysql.err.OperationalError(msg)
+    reset_attempt()
 
 
 if __name__ == "__main__":

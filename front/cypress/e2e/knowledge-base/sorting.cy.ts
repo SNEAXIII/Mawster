@@ -1,4 +1,4 @@
-import { setupKnowledgeBaseFast, setupKnowledgeBase } from '../../support/e2e';
+import { setupKnowledgeBaseFast } from '../../support/e2e';
 
 // Read the Node cell by selector, never by column index: a reorder would keep
 // reading a neighbouring cell, and Number('') === 0 would make the sort
@@ -6,7 +6,7 @@ import { setupKnowledgeBaseFast, setupKnowledgeBase } from '../../support/e2e';
 function nodeNumbers($rows: JQuery<HTMLElement>): number[] {
   return [...$rows].map(($row) => {
     const cell = $row.querySelector('[data-cy="fight-record-node"]');
-    expect(cell, 'node cell').to.exist;
+    assert.isNotNull(cell, 'node cell');
     return Number(cell?.textContent?.trim());
   });
 }

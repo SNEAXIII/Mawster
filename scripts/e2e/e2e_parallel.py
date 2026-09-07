@@ -3,7 +3,7 @@
 E2E parallel test runner for Mawster.
 
 Usage:
-    python scripts/e2e_parallel.py --workers 4
+    python scripts/e2e/e2e_parallel.py --workers 4
 
 Each worker N gets:
   - Backend on port 8010+N  (MariaDB DB: mawster_test_N)
@@ -19,7 +19,6 @@ import platform as _platform
 import re
 import shutil
 import signal
-import socket
 import subprocess
 import sys
 import threading
@@ -44,10 +43,7 @@ from config import (  # pylint: disable=import-error,wrong-import-position
     DB_PREFIX,
     FRONT_DIR,
     HEALTH_TIMEOUT,
-    MARIADB_CONTAINER,
-    MARIADB_HOST,
     MARIADB_PORT,
-    MARIADB_ROOT_PASSWORD,
     ROOT,
     log,
 )
@@ -59,7 +55,7 @@ from linux_model import (  # pylint: disable=import-error,wrong-import-position
 from spec_planner import (  # pylint: disable=import-error,wrong-import-position
     distribute_specs,
     get_spec_files,
-    resolve_spec_paths,
+    resolve_spec_lanes,
 )
 from windows_model import (
     WindowsModel,  # pylint: disable=import-error,wrong-import-position
@@ -88,7 +84,7 @@ class WorkerFailure:
     backend_logs: list[str]
 
 
-def _get_os_model() -> "IOsModel":
+def _get_os_model() -> IOsModel:
     if _platform.system() == "Windows":
         return WindowsModel()
     if os.environ.get("CI") == "true":
@@ -119,77 +115,13 @@ def localhost_url(port: int, path: str = "") -> str:
     return f"http://localhost:{port}{path}"
 
 
-def _run_sql(sql: str) -> subprocess.CompletedProcess:
-    """Execute SQL against MariaDB.
-
-    Tries 'mariadb' CLI first (works in CI via TCP on MARIADB_PORT).
-    Falls back to 'docker exec' if the binary is not found (local dev).
-    """
-    root_args = ["-uroot", f"-p{MARIADB_ROOT_PASSWORD}", "-e", sql]
-    # check=False: callers inspect returncode/stderr themselves.
-    try:
-        return subprocess.run(
-            ["mariadb", "-h", MARIADB_HOST, "-P", str(MARIADB_PORT), *root_args],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except FileNotFoundError:
-        container = MARIADB_CONTAINER
-        return subprocess.run(
-            ["docker", "exec", container, "mariadb", *root_args],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-
-
-def check_mariadb_running() -> None:
-    """Verify MariaDB is reachable on MARIADB_HOST:MARIADB_PORT."""
-    log(f"Checking if MariaDB is reachable on {MARIADB_HOST}:{MARIADB_PORT}...")
-    try:
-        with socket.create_connection((MARIADB_HOST, MARIADB_PORT), timeout=5):
-            pass
-        log("MariaDB is reachable.")
-    except OSError:
-        log(f"ERROR: MariaDB is not reachable on {MARIADB_HOST}:{MARIADB_PORT}.")
-        log("Start it with: make e2e-db")
-        sys.exit(1)
-
-
 def get_db_name(worker: int) -> str:
     """Return the database name for this worker.
 
-    If MARIADB_DATABASE is already set in the environment (e.g. a CI service
-    container pre-created it) and this is worker 0, reuse it directly so no
-    mariadb-client is needed. For any other worker, always create a dedicated DB.
+    Nothing here creates it: app_testing.py does, from the backend process that
+    owns it — which is also what waits for MariaDB to accept connections.
     """
-    if worker == 0 and os.environ.get("MARIADB_DATABASE"):
-        return os.environ["MARIADB_DATABASE"]
     return f"{DB_PREFIX}{worker}"
-
-
-def create_db(worker: int) -> None:
-    """CREATE DATABASE IF NOT EXISTS mawster_test_N and GRANT privileges.
-
-    Skipped when the database is pre-configured via MARIADB_DATABASE (worker 0).
-    """
-    db = get_db_name(worker)
-    if worker == 0 and os.environ.get("MARIADB_DATABASE"):
-        log(f"Worker {worker}: using pre-configured database {db}, skipping creation.")
-        return
-    db_user = os.environ.get("MARIADB_USER", "user")
-    log(f"Worker {worker}: creating database {db}...")
-    sql = (
-        f"CREATE DATABASE IF NOT EXISTS `{db}`;"
-        f" GRANT ALL PRIVILEGES ON `{db}`.* TO '{db_user}'@'%';"
-        f" FLUSH PRIVILEGES;"
-    )
-    result = _run_sql(sql)
-    if result.returncode != 0:
-        msg = f"Failed to create DB {db}: {result.stderr}"
-        raise RuntimeError(msg)
-    log(f"Worker {worker}: database {db} created.")
 
 
 def wait_for_http(url: str, label: str, timeout: int = HEALTH_TIMEOUT) -> None:
@@ -377,7 +309,7 @@ def pipe_output(
     stream,
     prefix: str,
     quiet: bool = False,
-    log_file: "Path | None" = None,
+    log_file: Path | None = None,
 ) -> None:
     """Read lines from a subprocess stream, print with prefix, and write to log file."""
     try:
@@ -619,7 +551,10 @@ def main() -> None:
         type=str,
         default=None,
         metavar="PATTERN",
-        help="Run a single spec file (relative to front/cypress/e2e/ or absolute glob). Forces --workers 1.",
+        help=(
+            "Comma-separated specs or glob (relative to front/cypress/e2e/, or absolute). "
+            "Caps --workers at one worker per spec."
+        ),
     )
     parser.add_argument(
         "--quiet",
@@ -645,19 +580,25 @@ def main() -> None:
 
     quiet = args.quiet
 
+    # Lanes come pre-balanced from spec_planner, which plans one lane per worker
+    # across the whole matrix. Re-splitting them here would undo that, so a value
+    # carrying several lanes dictates the worker count.
+    planned_lanes: list[list[Path]] = []
     resolved_specs: set[Path] = set()
     worker_number = args.workers
     if args.spec:
-        resolved_specs = set(resolve_spec_paths(args.spec))
-        log(f"--spec provided: {len(resolved_specs)} spec(s), using {worker_number} worker(s)")
-    worker_number = min(worker_number, len(resolved_specs)) if resolved_specs else args.workers
+        planned_lanes = resolve_spec_lanes(args.spec)
+        resolved_specs = {spec for lane in planned_lanes for spec in lane}
+        log(f"--spec provided: {len(resolved_specs)} spec(s) in {len(planned_lanes)} lane(s)")
+    if len(planned_lanes) > 1:
+        worker_number = len(planned_lanes)
+    elif resolved_specs:
+        worker_number = min(worker_number, len(resolved_specs))
 
     start_time = time.time()
     log(f"Starting E2E parallel run with {worker_number} worker(s)...")
 
     kill_probably_used_ports(worker_number)
-
-    check_mariadb_running()
 
     base_env = os.environ.copy()
     base_env.setdefault("NEXTAUTH_SECRET", "e2e-local-nextauth-secret")
@@ -715,7 +656,8 @@ def main() -> None:
 
     def setup_worker(worker: int) -> None:
         try:
-            create_db(worker)
+            # Spawns immediately: the backend waits for MariaDB and creates its own
+            # database on its side, so nothing blocks here while the server boots.
             backend = start_backend(worker, base_env, quiet)
             with lock:
                 procs.append(backend)
@@ -773,15 +715,20 @@ def main() -> None:
 
     # Phase 3: run Cypress workers in parallel
     log("All servers ready. Launching Cypress workers...")
-    if resolved_specs:
-        specs = resolved_specs
-        log(f"Running {len(specs)} spec(s): {[str(s.relative_to(FRONT_DIR)) for s in specs]}")
+    if len(planned_lanes) > 1:
+        spec_buckets = planned_lanes
+        for i, lane in enumerate(planned_lanes):
+            log(f"Worker {i} lane: {[str(s.relative_to(FRONT_DIR)) for s in lane]}")
     else:
-        specs = get_spec_files(include_vision=args.include_vision)
-        log(f"Found {len(specs)} spec file(s) to distribute across {worker_number} worker(s).")
-        if not args.include_vision:
-            log("Vision specs excluded — pass --include-vision to run them.")
-    spec_buckets = distribute_specs(specs, worker_number)
+        if resolved_specs:
+            specs = sorted(resolved_specs)
+            log(f"Running {len(specs)} spec(s): {[str(s.relative_to(FRONT_DIR)) for s in specs]}")
+        else:
+            specs = get_spec_files(include_vision=args.include_vision)
+            log(f"Found {len(specs)} spec file(s) to distribute across {worker_number} worker(s).")
+            if not args.include_vision:
+                log("Vision specs excluded — pass --include-vision to run them.")
+        spec_buckets = distribute_specs(specs, worker_number)
     results: list[int] = [0] * worker_number
     worker_stats: list[dict] = [{} for _ in range(worker_number)]
 

@@ -17,6 +17,9 @@ env:
   NODE_VERSION: '24'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   E2E_RUNNERS: '8'
+  # Read by the planner and by the runner command below: specs are balanced
+  # across E2E_RUNNERS * E2E_WORKERS lanes, so the two must stay in step.
+  E2E_WORKERS: '2'
 
 jobs:
   lint-test-python:
@@ -96,6 +99,10 @@ jobs:
       - name: Typecheck
         working-directory: ./front
         run: npx --no-install tsc --noEmit
+      # Own TS project: the app tsconfig and oxlint both exclude cypress/.
+      - name: Typecheck Cypress specs
+        working-directory: ./front
+        run: npx --no-install tsc -p cypress/tsconfig.json --noEmit
 
   e2e-plan:
     name: E2E — Plan spec distribution
@@ -111,7 +118,7 @@ jobs:
           persist-credentials: false
       - name: Compute spec distribution
         id: plan
-        run: echo "matrix=$(python3 scripts/spec_planner.py --runners ${{ env.E2E_RUNNERS }})" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(python3 scripts/e2e/spec_planner.py --runners ${{ env.E2E_RUNNERS }} --workers ${{ env.E2E_WORKERS }})" >> $GITHUB_OUTPUT
 
   e2e-build:
     name: E2E — Build frontend
@@ -174,24 +181,21 @@ jobs:
     env:
       MARIADB_USER: user
       MARIADB_PASSWORD: password
+      # Load-bearing since the backend creates its own database: it connects as
+      # root to CREATE DATABASE mawster_test_N and grant it to MARIADB_USER.
       MARIADB_ROOT_PASSWORD: rootpassword
-      MARIADB_DATABASE: mawster-testing
-    services:
-      mariadb-test:
-        image: mariadb
-        env:
-          MARIADB_USER: user
-          MARIADB_PASSWORD: password
-          MARIADB_ROOT_PASSWORD: rootpassword
-          MARIADB_DATABASE: mawster-testing
-        ports:
-          - 3307:3306
-        options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=2s
-          --health-timeout=5s
-          --health-retries=25
+      # Same tag as compose-dev, stack-app-dev, staging and prod: the CI was the
+      # only environment left running whatever `latest` happened to be that day.
+      MARIADB_IMAGE: mariadb:11.4
+    # MariaDB is started by hand rather than declared under `services:`, whose
+    # image pull is paid before the first step of every job in the matrix — a
+    # variable 2 to 12s, on the critical path. Pulled in the background here and
+    # started at the end, it costs nothing: each backend waits for the server
+    # itself (api/app_testing.py), so nothing races it.
     steps:
+      - name: Prefetch the MariaDB image
+        run: nohup docker pull "$MARIADB_IMAGE" >/dev/null 2>&1 &
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -231,8 +235,18 @@ jobs:
       - name: Extract frontend build
         run: tar -xzf /tmp/next-e2e-build.tar.gz -C front
 
+      # Docker de-duplicates a pull already in flight, so the worst case here is
+      # waiting for what the prefetch has not finished — never a second download.
+      - name: Start MariaDB
+        run: |
+          docker run -d --name mariadb-test -p 3307:3306 \
+            -e "MARIADB_USER=$MARIADB_USER" \
+            -e "MARIADB_PASSWORD=$MARIADB_PASSWORD" \
+            -e "MARIADB_ROOT_PASSWORD=$MARIADB_ROOT_PASSWORD" \
+            "$MARIADB_IMAGE"
+
       - name: Run Cypress E2E tests (runner ${{ matrix.runner }})
-        run: python3 scripts/e2e_parallel.py --workers 1 --spec "${{ matrix.specs }}" --skip-build --quiet
+        run: python3 scripts/e2e/e2e_parallel.py --workers ${{ env.E2E_WORKERS }} --spec "${{ matrix.specs }}" --skip-build --quiet
       - name: Upload Cypress results
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

@@ -1,4 +1,4 @@
-import { setupKnowledgeBaseFast, setupKnowledgeBase } from '../../support/e2e';
+import { setupKnowledgeBaseFast } from '../../support/e2e';
 
 // Dev endpoint alternates champions per node:
 //   odd  nodes: attacker=Iron Man,       defender=Captain America
