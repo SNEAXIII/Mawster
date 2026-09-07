@@ -88,7 +88,7 @@ class WorkerFailure:
     backend_logs: list[str]
 
 
-def _get_os_model() -> "IOsModel":
+def _get_os_model() -> IOsModel:
     if _platform.system() == "Windows":
         return WindowsModel()
     if os.environ.get("CI") == "true":
@@ -122,26 +122,28 @@ def localhost_url(port: int, path: str = "") -> str:
 def _run_sql(sql: str) -> subprocess.CompletedProcess:
     """Execute SQL against MariaDB.
 
-    Tries 'mariadb' CLI first (works in CI via TCP on MARIADB_PORT).
-    Falls back to 'docker exec' if the binary is not found (local dev).
+    Tries the TCP clients first on MARIADB_PORT: 'mariadb', then 'mysql' —
+    GitHub runners ship only the latter, and the service container has no
+    predictable name there, so 'docker exec' is the last resort (local dev).
     """
     root_args = ["-uroot", f"-p{MARIADB_ROOT_PASSWORD}", "-e", sql]
     # check=False: callers inspect returncode/stderr themselves.
-    try:
-        return subprocess.run(
-            ["mariadb", "-h", MARIADB_HOST, "-P", str(MARIADB_PORT), *root_args],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except FileNotFoundError:
-        container = MARIADB_CONTAINER
-        return subprocess.run(
-            ["docker", "exec", container, "mariadb", *root_args],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+    for client in ("mariadb", "mysql"):
+        try:
+            return subprocess.run(
+                [client, "-h", MARIADB_HOST, "-P", str(MARIADB_PORT), *root_args],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        except FileNotFoundError:
+            continue
+    return subprocess.run(
+        ["docker", "exec", MARIADB_CONTAINER, "mariadb", *root_args],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
 
 
 def check_mariadb_running() -> None:
@@ -377,7 +379,7 @@ def pipe_output(
     stream,
     prefix: str,
     quiet: bool = False,
-    log_file: "Path | None" = None,
+    log_file: Path | None = None,
 ) -> None:
     """Read lines from a subprocess stream, print with prefix, and write to log file."""
     try:
