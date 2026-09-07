@@ -2,7 +2,8 @@ import os
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).parent.parent
+# scripts/e2e/config.py -> scripts/e2e -> scripts -> repo root
+ROOT = Path(__file__).resolve().parents[2]
 API_DIR = ROOT / "api"
 FRONT_DIR = ROOT / "front"
 

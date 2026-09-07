@@ -16,7 +16,7 @@ ss -ltnp 2>/dev/null | grep -E ':(3000|3001|8000|8001|301[0-9]|801[0-9])\b' || e
 | Port | Rôle |
 |------|------|
 | `8000` / `3000` | API + front en mode dev (`/server-dev`) |
-| `8010+N` / `3010+N` | Workers E2E lancés par `scripts/e2e_parallel.py` (`/test-e2e`) |
+| `8010+N` / `3010+N` | Workers E2E lancés par `scripts/e2e/e2e_parallel.py` (`/test-e2e`) |
 
 ## Conteneurs
 

@@ -8,8 +8,8 @@ Specs are balanced across `runners * workers` lanes rather than across runners:
 a runner is done when its slowest worker is done, so the lane — one worker's
 share — is the unit worth balancing.
 
-    python3 scripts/spec_planner.py --runners 8 --workers 2            # matrix JSON, as CI consumes it
-    python3 scripts/spec_planner.py --runners 8 --workers 2 --weights  # readable weight report
+    python3 scripts/e2e/spec_planner.py --runners 8 --workers 2            # matrix JSON, as CI consumes it
+    python3 scripts/e2e/spec_planner.py --runners 8 --workers 2 --weights  # readable weight report
 """
 
 import argparse

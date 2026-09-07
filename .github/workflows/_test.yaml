@@ -114,7 +114,7 @@ jobs:
           persist-credentials: false
       - name: Compute spec distribution
         id: plan
-        run: echo "matrix=$(python3 scripts/spec_planner.py --runners ${{ env.E2E_RUNNERS }} --workers ${{ env.E2E_WORKERS }})" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(python3 scripts/e2e/spec_planner.py --runners ${{ env.E2E_RUNNERS }} --workers ${{ env.E2E_WORKERS }})" >> $GITHUB_OUTPUT
 
   e2e-build:
     name: E2E — Build frontend
@@ -242,7 +242,7 @@ jobs:
             "$MARIADB_IMAGE"
 
       - name: Run Cypress E2E tests (runner ${{ matrix.runner }})
-        run: python3 scripts/e2e_parallel.py --workers ${{ env.E2E_WORKERS }} --spec "${{ matrix.specs }}" --skip-build --quiet
+        run: python3 scripts/e2e/e2e_parallel.py --workers ${{ env.E2E_WORKERS }} --spec "${{ matrix.specs }}" --skip-build --quiet
       - name: Upload Cypress results
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

@@ -3,7 +3,7 @@
 E2E parallel test runner for Mawster.
 
 Usage:
-    python scripts/e2e_parallel.py --workers 4
+    python scripts/e2e/e2e_parallel.py --workers 4
 
 Each worker N gets:
   - Backend on port 8010+N  (MariaDB DB: mawster_test_N)

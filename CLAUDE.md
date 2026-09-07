@@ -19,7 +19,7 @@ Format: `uvx ruff format`
 
 **Frontend** (`front/`): `npm run dev` / `npm run build` (run build to catch TS errors)
 
-**E2E**: Always use the `/test-e2e` skill — **never** call `npx cypress run` directly. It wraps `scripts/e2e_parallel.py` (the CI runner); targeted runs via `--spec "roster/foo.cy.ts"`. Requires Docker (mariadb-test on port 3307).
+**E2E**: Always use the `/test-e2e` skill — **never** call `npx cypress run` directly. It wraps `scripts/e2e/e2e_parallel.py` (the CI runner); targeted runs via `--spec "roster/foo.cy.ts"`. Requires Docker (mariadb-test on port 3307).
 
 **Migrations**: use `/db-migrate` skill — never touch dev DB directly.
 
@@ -97,7 +97,7 @@ Project agents live in `.claude/agents/`. They are **not auto-dispatched** — c
 - Admin endpoints → always `adminData.access_token` / `adminToken`, never `ownerData.access_token`
 - Load champions: `cy.apiLoadChampion(adminToken, name, class)` → returns array, chain `.then(champs => ...)`
 - Assign attacker: `cy.apiAssignWarAttacker(token, allianceId, warId, battlegroup, nodeNumber, championUserId)`
-- After fixes: re-run only failing specs with `python3 scripts/e2e_parallel.py --spec "war/basic.cy.ts"`
+- After fixes: re-run only failing specs with `python3 scripts/e2e/e2e_parallel.py --spec "war/basic.cy.ts"`
 
 ---
 
@@ -167,7 +167,7 @@ The project declares **no** MCP server of its own — there is no `.mcp.json`:
   `.claude/settings.json`. Its tools are prefixed `mcp__plugin_context-mode_context-mode__`.
   Never re-declare it in a `.mcp.json`: it would load a second copy of every tool.
 
-GitHub operations (PRs, issues, reviews) go through the `gh` CLI. Backend tests, servers and E2E run as plain commands (`make`, `docker compose`, `scripts/e2e_parallel.py`) — see the Commands section above.
+GitHub operations (PRs, issues, reviews) go through the `gh` CLI. Backend tests, servers and E2E run as plain commands (`make`, `docker compose`, `scripts/e2e/e2e_parallel.py`) — see the Commands section above.
 
 ---
 
