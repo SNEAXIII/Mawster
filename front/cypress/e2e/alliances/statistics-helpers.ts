@@ -83,14 +83,8 @@ export function setupStatsOwner(prefix: string): Cypress.Chainable<StatsOwnerSet
 }
 
 // ── War scenarios ─────────────────────────────────────────────────────────────
-// One request, not seven. /dev/batch-setup loads the champions, opens the season,
-// fills the rosters and creates the war in a single call, and hands back the ids
-// each step used to be asked for one at a time — so a scenario no longer has to
-// thread its own results through a stack of callbacks.
-//
-// What has no batch equivalent is what makes a war *progress*: placing a
-// defender, assigning an attacker, recording KOs, ending the war. Those stay
-// explicit, and `addStatsForPlayer` groups the three that go together.
+// One batch-setup call each. Only what makes a war progress stays explicit —
+// defender, attacker, KOs, end — the batch has no equivalent for it.
 
 const IRON_MAN = { name: 'Iron Man', champion_class: 'Tech' };
 const WOLVERINE = { name: 'Wolverine', champion_class: 'Mutant' };
@@ -104,7 +98,7 @@ interface ScenarioSpec {
   seasonNumber?: number;
 }
 
-interface ScenarioContext extends StatsOwnerMemberSetup {
+export interface ScenarioContext extends StatsOwnerMemberSetup {
   /** Champion name → champion id, for every champion the scenario loaded. */
   champions: Record<string, string>;
   /** Champion name → champion_user id, for the owner's roster. */
@@ -116,9 +110,7 @@ interface ScenarioContext extends StatsOwnerMemberSetup {
   warId: string;
 }
 
-// Everything a scenario needs, in one round trip. Member fields come back empty
-// when the spec declares no member — the public helpers below only expose them
-// on the scenarios that actually create one.
+// Member fields come back empty when the spec declares no member.
 function scenarioBatch(prefix: string, spec: ScenarioSpec): Cypress.Chainable<ScenarioContext> {
   const base = statsBase(prefix);
   const adminTok = `${prefix}-admin`;
@@ -177,12 +169,9 @@ function scenarioBatch(prefix: string, spec: ScenarioSpec): Cypress.Chainable<Sc
     });
 }
 
-export interface WarScenario extends StatsOwnerSetup {
+export interface WarScenario extends ScenarioContext {
   champId: string;
   cuId: string;
-  warId: string;
-  /** Season number (as a string) → season id, for a spec that has to close it. */
-  seasonIds: Record<string, string>;
 }
 
 export function withWarScenario(prefix: string, warName: string): Cypress.Chainable<WarScenario> {
@@ -197,11 +186,10 @@ export function withWarScenario(prefix: string, warName: string): Cypress.Chaina
   }));
 }
 
-export interface TwoPlayerWarScenario extends StatsOwnerMemberSetup {
+export interface TwoPlayerWarScenario extends ScenarioContext {
   champId: string;
   cuOwnerId: string;
   cuMemberId: string;
-  warId: string;
 }
 
 export function withWarScenarioTwoPlayers(
@@ -223,16 +211,14 @@ export function withWarScenarioTwoPlayers(
   }));
 }
 
-export interface DiffChampsWarScenario extends StatsOwnerMemberSetup {
+export interface DiffChampsWarScenario extends ScenarioContext {
   champ1Id: string;
   champ2Id: string;
   cuOwnerId: string;
   cuMemberId: string;
-  warId: string;
 }
 
-// Owner and member field a different champion, so a chart legend keyed by
-// champion can be told apart from one keyed by player.
+// Different champion each, to tell a champion-keyed legend from a player-keyed one.
 export function withWarScenarioDiffChampsPlayers(
   prefix: string,
   warName: string,
@@ -253,12 +239,11 @@ export function withWarScenarioDiffChampsPlayers(
   }));
 }
 
-export interface TwoChampsWarScenario extends StatsOwnerSetup {
+export interface TwoChampsWarScenario extends ScenarioContext {
   champ1Id: string;
   champ2Id: string;
   cu1Id: string;
   cu2Id: string;
-  warId: string;
 }
 
 // Both champions belong to the owner: two roster entries, one player.
@@ -279,15 +264,13 @@ export function withWarScenarioTwoOwnerChamps(
   }));
 }
 
-export interface DefenderWarScenario extends StatsOwnerSetup {
+export interface DefenderWarScenario extends ScenarioContext {
   champ1Id: string;
   champ2Id: string;
   cuId: string;
-  warId: string;
 }
 
-// Two champions loaded, only the first on the roster: the second exists to be
-// placed as a defender, which needs a champion id and no roster entry.
+// The second champion is never rostered: a defender needs an id, not a roster entry.
 export function withWarScenarioDefender(prefix: string, warName: string): Cypress.Chainable<DefenderWarScenario> {
   return scenarioBatch(prefix, {
     champions: [IRON_MAN, WOLVERINE],
@@ -301,16 +284,13 @@ export function withWarScenarioDefender(prefix: string, warName: string): Cypres
   }));
 }
 
-export interface TwoWarsScenario extends StatsOwnerMemberSetup {
+export interface TwoWarsScenario extends ScenarioContext {
   warOneId: string;
   warTwoId: string;
 }
 
-// Two ended wars in the same season, each fought by a different player:
-// the owner fights in war one only, the member in war two only. Lets a spec
-// assert that the war filter actually re-scopes the stats table, not just the chart.
-// The batch creates the first war; the second cannot be batched, since a spec
-// declares at most one war.
+// Two ended wars, one player each. The second war is not batched: a spec
+// declares at most one.
 export function withTwoEndedWarsTwoPlayers(prefix: string): Cypress.Chainable<TwoWarsScenario> {
   return scenarioBatch(prefix, {
     champions: [IRON_MAN],
@@ -332,16 +312,13 @@ export function withTwoEndedWarsTwoPlayers(prefix: string): Cypress.Chainable<Tw
   });
 }
 
-export interface TwoSeasonsScenario extends StatsOwnerMemberSetup {
+export interface TwoSeasonsScenario extends ScenarioContext {
   pastSeasonId: string;
   currentSeasonId: string;
 }
 
-// Two seasons, one ended war each, fought by a different player. Season 63 is
-// closed before 64 opens because a war is stamped with whichever season is
-// active when it is created, and only one season may be current at a time —
-// which is also why this scenario cannot be a single batch: the second war has
-// to be created after the season swap.
+// Not batchable: a war is stamped with the season active when it is created, so
+// the second one has to wait for the swap.
 export function withTwoSeasonsOneWarEach(prefix: string): Cypress.Chainable<TwoSeasonsScenario> {
   return scenarioBatch(prefix, {
     champions: [IRON_MAN],
@@ -368,8 +345,7 @@ export function withTwoSeasonsOneWarEach(prefix: string): Cypress.Chainable<TwoS
   });
 }
 
-export interface EndedAssistWarSetup extends StatsOwnerMemberSetup {
-  warId: string;
+export interface EndedAssistWarSetup extends ScenarioContext {
   ironManId: string;
   ownerCuId: string;
   memberCuId: string;
@@ -396,8 +372,7 @@ export function setupEndedAssistWar(prefix: string): Cypress.Chainable<EndedAssi
     });
     cy.apiEndWar(ownerToken, allianceId, warId, true, 10);
 
-    // cy.wrap, not a bare return: commands were queued just above, and Cypress
-    // rejects a `.then` that both enqueues and returns a plain value.
+    // cy.wrap, not a bare return: a `.then` cannot both enqueue and return a value.
     return cy.wrap({ ...ctx, ironManId, ownerCuId, memberCuId }, { log: false });
   });
 }
