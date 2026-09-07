@@ -8,24 +8,22 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
   // ── 6. Regular member: no cancel button in another member's roster preview ─
 
   it("regular member cannot cancel upgrade requests in another member's roster preview", () => {
-    setupAllianceWithMember('ur-t6', 'Black Widow', 'Skill').then(
-      ({ ownerData, memberData: member2Data, allianceId, championUserId }) => {
-        cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
+    setupAllianceWithMember('ur-t6', 'Black Widow', 'Skill').then(({ ownerData, allianceId, championUserId }) => {
+      cy.apiCreateUpgradeRequest(ownerData.access_token, championUserId, '7r3');
 
-        setupUser('ur-t6-member1').then((m1) => {
-          cy.apiCreateGameAccount(m1.access_token, 'T6Member1', true).then((m1Acc) => {
-            cy.apiForceJoinAlliance(m1Acc.id, allianceId);
-            cy.apiLogin(m1.user_id, 'alliances');
+      setupUser('ur-t6-member1').then((m1) => {
+        cy.apiCreateGameAccount(m1.access_token, 'T6Member1', true).then((m1Acc) => {
+          cy.apiForceJoinAlliance(m1Acc.id, allianceId);
+          cy.apiLogin(m1.user_id, 'alliances');
 
-            // Regular member1 views member2's roster
-            cy.getByCy('view-roster-ur-t6Member').click();
+          // Regular member1 views member2's roster
+          cy.getByCy('view-roster-ur-t6Member').click();
 
-            // The upgrade requests section is NOT shown for regular members
-            cy.getByCy('upgrade-requests-section').should('not.exist');
-          });
+          // The upgrade requests section is NOT shown for regular members
+          cy.getByCy('upgrade-requests-section').should('not.exist');
         });
-      },
-    );
+      });
+    });
   });
 
   // ── 7. Regular member: no cancel button on own roster page ────────────────

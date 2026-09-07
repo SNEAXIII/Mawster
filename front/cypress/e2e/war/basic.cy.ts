@@ -27,17 +27,15 @@ describe('War – Basic page rendering', () => {
   });
 
   it('shows no declare war button for non-officer members', () => {
-    setupWarOwner('war-basic-member', 'MemberPlayer', 'MemberAlliance', 'MB').then(
-      ({ adminData, ownerData, allianceId }) => {
-        setupUser('war-basic-member-member').then((memberData) => {
-          cy.apiCreateGameAccount(memberData.access_token, 'RegularMember', true).then((acc) => {
-            cy.apiForceJoinAlliance(acc.id, allianceId);
-            cy.apiLogin(memberData.user_id, 'war');
-            cy.getByCy('declare-war-btn').should('not.exist');
-          });
+    setupWarOwner('war-basic-member', 'MemberPlayer', 'MemberAlliance', 'MB').then(({ allianceId }) => {
+      setupUser('war-basic-member-member').then((memberData) => {
+        cy.apiCreateGameAccount(memberData.access_token, 'RegularMember', true).then((acc) => {
+          cy.apiForceJoinAlliance(acc.id, allianceId);
+          cy.apiLogin(memberData.user_id, 'war');
+          cy.getByCy('declare-war-btn').should('not.exist');
         });
-      },
-    );
+      });
+    });
   });
 
   it('shows no-war message when no wars declared', () => {

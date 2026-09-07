@@ -14,7 +14,6 @@
     ".next/**",
     ".next-3001/**",
     "node_modules/**",
-    "cypress/**",
     "components/ui/**",
     "postcss.config.js",
     "**/*.d.ts"
