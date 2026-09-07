@@ -177,21 +177,18 @@ jobs:
       # Load-bearing since the backend creates its own database: it connects as
       # root to CREATE DATABASE mawster_test_N and grant it to MARIADB_USER.
       MARIADB_ROOT_PASSWORD: rootpassword
-    services:
-      mariadb-test:
-        image: mariadb
-        env:
-          MARIADB_USER: user
-          MARIADB_PASSWORD: password
-          MARIADB_ROOT_PASSWORD: rootpassword
-          MARIADB_DATABASE: mawster-testing
-        ports:
-          - 3307:3306
-        # No --health-cmd on purpose: a health gate blocks every job of the matrix
-        # before its first step, and each backend already waits for MariaDB itself
-        # (api/app_testing.py). Without it, the server initialises while the job
-        # checks out, syncs uv, restores the npm cache and downloads the build.
+      # Same tag as compose-dev, stack-app-dev, staging and prod: the CI was the
+      # only environment left running whatever `latest` happened to be that day.
+      MARIADB_IMAGE: mariadb:11.4
+    # MariaDB is started by hand rather than declared under `services:`, whose
+    # image pull is paid before the first step of every job in the matrix — a
+    # variable 2 to 12s, on the critical path. Pulled in the background here and
+    # started at the end, it costs nothing: each backend waits for the server
+    # itself (api/app_testing.py), so nothing races it.
     steps:
+      - name: Prefetch the MariaDB image
+        run: nohup docker pull "$MARIADB_IMAGE" >/dev/null 2>&1 &
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -230,6 +227,16 @@ jobs:
           path: /tmp
       - name: Extract frontend build
         run: tar -xzf /tmp/next-e2e-build.tar.gz -C front
+
+      # Docker de-duplicates a pull already in flight, so the worst case here is
+      # waiting for what the prefetch has not finished — never a second download.
+      - name: Start MariaDB
+        run: |
+          docker run -d --name mariadb-test -p 3307:3306 \
+            -e "MARIADB_USER=$MARIADB_USER" \
+            -e "MARIADB_PASSWORD=$MARIADB_PASSWORD" \
+            -e "MARIADB_ROOT_PASSWORD=$MARIADB_ROOT_PASSWORD" \
+            "$MARIADB_IMAGE"
 
       - name: Run Cypress E2E tests (runner ${{ matrix.runner }})
         run: python3 scripts/e2e_parallel.py --workers 2 --spec "${{ matrix.specs }}" --skip-build --quiet
