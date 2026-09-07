@@ -4,6 +4,7 @@ import { SessionProvider, useSession } from 'next-auth/react'
 import { ThemeProvider } from 'next-themes'
 import { I18nProvider } from '@/app/i18n'
 import { AllianceProvider } from '@/app/contexts/alliance-context'
+import { SeasonProvider } from '@/app/contexts/season-context'
 import { signOutAndRedirect } from '@/app/lib/sign-out'
 import VersionWatcher from '@/components/version-watcher'
 import { useEffect } from 'react'
@@ -34,7 +35,9 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
         <SessionWatcher />
         <I18nProvider>
           <VersionWatcher />
-          <AllianceProvider>{children}</AllianceProvider>
+          <AllianceProvider>
+            <SeasonProvider>{children}</SeasonProvider>
+          </AllianceProvider>
         </I18nProvider>
       </SessionProvider>
     </ThemeProvider>
