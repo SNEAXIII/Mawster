@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from starlette import status
@@ -8,9 +6,9 @@ from src.dto.auth.dto_utilisateurs import UpdateLoginRequest, UserProfile
 from src.Messages.user_messages import (
     TARGET_USER_DELETED_SUCCESSFULLY,
 )
-from src.models import User
 from src.services.account.UserService import UserService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 user_controller = APIRouter(
@@ -35,7 +33,7 @@ class DeleteAccountRequest(BaseModel):
 async def update_login(
     body: UpdateLoginRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ) -> UserProfile:
     user = await UserService.update_login(session, current_user, body.login)
     return UserProfile.model_validate(user.model_dump())
@@ -45,7 +43,7 @@ async def update_login(
 async def delete_user(
     body: DeleteAccountRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     if body.confirmation != CONFIRMATION_TEXT:
         raise HTTPException(

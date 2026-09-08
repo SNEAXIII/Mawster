@@ -1,16 +1,15 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from starlette import status
 
 from src.dto.admin.dto_saga import SagaRoleResponse, SagaRoleUpsertRequest
 from src.dto.admin.dto_season import SeasonCreateRequest, SeasonResponse
-from src.models import User
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordService import FightRecordService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 season_admin_controller = APIRouter(
@@ -50,7 +49,7 @@ async def list_seasons(session: SessionDep):
 async def open_season(
     season_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Open a season (upcoming or previously closed -> active). Admin only."""
     return await SeasonService.open_season(session, season_id)
@@ -60,7 +59,7 @@ async def open_season(
 async def revert_season(
     season_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Revert a closed season back to pre-season (ended -> upcoming). Admin only."""
     return await SeasonService.revert_to_preseason(session, season_id)
@@ -70,7 +69,7 @@ async def revert_season(
 async def close_season(
     season_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Close a season (active -> ended). Admin only."""
     return await SeasonService.close_season(session, season_id)
@@ -107,7 +106,7 @@ async def upsert_saga_role(
 @season_public_controller.get("", response_model=list[SeasonResponse])
 async def list_seasons_public(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """List all seasons ordered by number desc. Requires alliance membership or visitor status."""
     await FightRecordService.assert_user_in_alliance(session, current_user.id)

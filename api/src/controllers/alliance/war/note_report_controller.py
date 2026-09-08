@@ -1,17 +1,15 @@
 import uuid
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 from starlette import status
 
 from src.dto.admin.dto_moderation import NoteReportCreateRequest, NoteReportResponse
-from src.models import User
 from src.models.user.GameAccount import GameAccount
 from src.models.war.WarFightNote import WarFightNote
 from src.services.admin.ModerationService import ModerationService
 from src.services.alliance.AllianceService import AllianceService
-from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 note_report_controller = APIRouter(tags=["Moderation"])
@@ -26,7 +24,7 @@ async def report_note(
     note_id: uuid.UUID,
     body: NoteReportCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Report a war fight note. Any reader (member or visitor) of the alliance may report."""
     note = (await session.exec(select(WarFightNote).where(WarFightNote.id == note_id))).first()

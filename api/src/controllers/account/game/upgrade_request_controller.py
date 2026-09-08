@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import selectinload
@@ -9,7 +8,6 @@ from starlette import status
 from src.dto.account.game.dto_upgrade_request import UpgradeRequestCreate, UpgradeRequestResponse
 from src.Messages.champion_user_messages import CHAMPION_USER_NOT_FOUND
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
-from src.models import User
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.champion.RequestedUpgrade import RequestedUpgrade
 from src.models.user.GameAccount import GameAccount
@@ -18,6 +16,7 @@ from src.services.account.game.GameAccountService import GameAccountService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 upgrade_request_controller = APIRouter(
@@ -51,7 +50,7 @@ def _pick_requester_account(user_accounts, target_alliance_id):
 async def create_upgrade_request(
     body: UpgradeRequestCreate,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Request an upgrade for a champion. Officers/owners can request for alliance members."""
     champion_user = await ChampionUserService.get_champion_user(session, body.champion_user_id)
@@ -101,7 +100,7 @@ async def create_upgrade_request(
 async def get_upgrade_requests_by_account(
     game_account_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get all pending upgrade requests for a game account's roster."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
@@ -126,7 +125,7 @@ async def get_upgrade_requests_by_account(
 async def cancel_upgrade_request(
     request_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Cancel an upgrade request. Only an officer or owner of the alliance can cancel."""
     upgrade_request = await session.get(RequestedUpgrade, request_id)

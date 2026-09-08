@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from starlette import status as http_status
@@ -8,9 +7,9 @@ from src.dto.alliance.war.dto_fight_record_import import (
     FightRecordImportRequest,
     FightRecordImportResponse,
 )
-from src.models.user.User import User
 from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordImportService import FightRecordImportService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 fight_record_import_controller = APIRouter(
@@ -29,7 +28,7 @@ async def import_fight_records(
     alliance_id: uuid.UUID,
     body: FightRecordImportRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     imported, skipped = await FightRecordImportService.import_records(
         session, alliance_id, current_user.id, body.rows

@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
@@ -12,13 +11,13 @@ from src.dto.account.game.dto_champion_user import (
 )
 from src.Messages.champion_user_messages import CHAMPION_USER_NOT_FOUND, NOT_YOUR_CHAMPION
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
-from src.models import User
 from src.models.champion.ChampionUser import ChampionUser
 from src.services.account.game.ChampionUserService import ChampionUserService
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.admin.SagaService import SagaService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 champion_user_controller = APIRouter(
@@ -49,7 +48,7 @@ async def _get_own_champion_user(
 async def create_champion_user(
     body: ChampionUserCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Add a champion to a game account's roster. The game account must belong to the current user."""
     game_account = await GameAccountService.get_game_account(session, body.game_account_id)
@@ -78,7 +77,7 @@ async def create_champion_user(
 async def bulk_add_champions(
     body: ChampionUserBulkRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Add multiple champions to a game account's roster at once."""
     game_account = await GameAccountService.get_game_account(session, body.game_account_id)
@@ -116,7 +115,7 @@ async def bulk_add_champions(
 async def get_roster_by_game_account(
     game_account_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get all champions in a game account's roster. Must be own account or alliance member."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
@@ -144,7 +143,7 @@ async def get_roster_by_game_account(
 async def toggle_preferred_attacker(
     champion_user_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Toggle the preferred attacker flag. Only the owner of the game account can toggle."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
@@ -159,7 +158,7 @@ async def toggle_preferred_attacker(
 async def get_champion_user(
     champion_user_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get a specific champion user entry."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
@@ -171,7 +170,7 @@ async def update_champion_user(
     champion_user_id: uuid.UUID,
     body: ChampionUserCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Update a champion user entry (rarity, signature)."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
@@ -185,7 +184,7 @@ async def update_champion_user(
 async def delete_champion_user(
     champion_user_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Delete a champion from a roster."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
@@ -196,7 +195,7 @@ async def delete_champion_user(
 async def upgrade_champion_rank(
     champion_user_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Upgrade a champion to the next rank."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
@@ -208,7 +207,7 @@ async def upgrade_champion_rank(
 async def ascend_champion(
     champion_user_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Ascend a champion to the next ascension level."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)

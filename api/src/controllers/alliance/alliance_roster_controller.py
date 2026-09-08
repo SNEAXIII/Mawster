@@ -4,11 +4,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from src.dto.alliance.dto_alliance_roster import AllianceRosterEntryResponse
-from src.models import User
 from src.services.admin.SagaService import SagaService
 from src.services.alliance.AllianceRosterService import AllianceRosterService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 alliance_roster_controller = APIRouter(
@@ -24,7 +24,7 @@ alliance_roster_controller = APIRouter(
 async def get_alliance_roster(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     name: str | None = None,
     champion_class: str | None = None,
     ranks: Annotated[list[str] | None, Query()] = None,

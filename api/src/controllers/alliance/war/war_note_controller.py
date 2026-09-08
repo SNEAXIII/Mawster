@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
@@ -8,10 +7,10 @@ from src.dto.alliance.war.dto_war_note import (
     WarFightNoteResponse,
     WarFightNoteUpsertRequest,
 )
-from src.models import User
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.war.WarFightNoteService import WarFightNoteService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 
@@ -33,7 +32,7 @@ async def upsert_war_fight_note(
     node_number: int,
     body: WarFightNoteUpsertRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Create or update the note on a war combat node. Officers/owner only."""
@@ -70,7 +69,7 @@ async def delete_war_fight_note(
     battlegroup: BattlegroupPath,
     node_number: int,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Soft-delete the note on a war combat node, keeping its history. Officers/owner only."""

@@ -12,9 +12,9 @@ from src.Messages.user_messages import (
     TARGET_USER_ENABLED_SUCCESSFULLY,
     TARGET_USER_PROMOTED_SUCCESSFULLY,
 )
-from src.models import User
 from src.services.admin.UserAdminService import UserAdminService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 user_admin_controller = APIRouter(
@@ -45,7 +45,7 @@ async def get_users(
 async def patch_disable_user(
     session: SessionDep,
     user_uuid_to_disable: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     await UserAdminService.admin_patch_disable_user(session, user_uuid_to_disable)
     return {"message": TARGET_USER_DISABLED_SUCCESSFULLY}
@@ -55,7 +55,7 @@ async def patch_disable_user(
 async def patch_enable_user(
     session: SessionDep,
     user_uuid_to_enable: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     await UserAdminService.admin_patch_enable_user(session, user_uuid_to_enable)
     return {"message": TARGET_USER_ENABLED_SUCCESSFULLY}
@@ -65,7 +65,7 @@ async def patch_enable_user(
 async def delete_user(
     session: SessionDep,
     user_uuid_to_delete: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     await UserAdminService.admin_delete_user(session, user_uuid_to_delete)
     return {"message": TARGET_USER_DELETED_SUCCESSFULLY}
@@ -79,7 +79,7 @@ async def delete_user(
 async def patch_promote_user(
     session: SessionDep,
     user_uuid_to_promote: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     await UserAdminService.admin_patch_promote_user(session, user_uuid_to_promote)
     return {"message": TARGET_USER_PROMOTED_SUCCESSFULLY}
@@ -93,7 +93,7 @@ async def patch_promote_user(
 async def patch_demote_user(
     session: SessionDep,
     user_uuid_to_demote: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     await UserAdminService.admin_patch_demote_user(session, user_uuid_to_demote)
     return {"message": TARGET_USER_DEMOTED_SUCCESSFULLY}

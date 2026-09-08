@@ -1,7 +1,6 @@
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 
 from src.dto.auth.dto_token import LoginResponse, RefreshTokenRequest
 from src.dto.auth.dto_utilisateurs import (
@@ -9,14 +8,11 @@ from src.dto.auth.dto_utilisateurs import (
     GoogleLoginRequest,
     UserProfile,
 )
-from src.models import User
 from src.services.account.UserService import UserService
-from src.services.auth.AuthService import (
-    AuthService,
-)
 from src.services.auth.DiscordAuthService import DiscordAuthService
 from src.services.auth.GoogleAuthService import GoogleAuthService
 from src.services.auth.JWTService import JWTService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 from src.utils.logging_config import audit_log
 from src.utils.rate_limiter import limiter
@@ -31,7 +27,7 @@ auth_controller = APIRouter(
 
 @auth_controller.get("/session", response_model=UserProfile)
 async def read_users_me(
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     return current_user
 
