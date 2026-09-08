@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 import { FullPageSpinner } from '@/components/full-page-spinner'
 import { useRequiredSession } from '@/hooks/use-required-session'
 import { useI18n } from '@/app/i18n'
+import { useTabParam } from '@/hooks/use-tab-param'
 import TabBar, { type TabItem } from '@/components/tab-bar'
 import GameAccountsSection from '@/components/profile/game-accounts-section'
 import { ProfileHeader } from './profile-header'
@@ -13,31 +12,13 @@ import { SignOutButton } from './sign-out-button'
 import { ProfileStatsTab } from './statistics/profile-stats-tab'
 
 type ProfileTab = 'infos' | 'stats'
-const PROFILE_TABS = new Set<ProfileTab>(['infos', 'stats'])
+const PROFILE_TABS: readonly ProfileTab[] = ['infos', 'stats']
 
 export default function ProfileContent() {
   const { data: session, status } = useRequiredSession()
   const { t } = useI18n()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const router = useRouter()
 
-  const initialTab = searchParams.get('tab') as ProfileTab
-  const [activeTab, setActiveTab] = useState<ProfileTab>(
-    PROFILE_TABS.has(initialTab) ? initialTab : 'infos'
-  )
-
-  const isFirstRender = useRef(true)
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('tab', activeTab)
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab])
+  const [activeTab, setActiveTab] = useTabParam(PROFILE_TABS, 'infos')
 
   // First load only: an in-flight update() also reads as loading, and the
   // spinner would remount the cards and wipe what the user just typed.

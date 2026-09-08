@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { redirect, usePathname, useSearchParams, useRouter } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
+import { useTabParam } from '@/hooks/use-tab-param'
 import { getMyGameAccounts, GameAccount } from '@/app/services/game'
 import {
   getRoster,
@@ -36,30 +37,17 @@ export enum RosterTab {
   Accounts = 'manage',
 }
 
+const ROSTER_TABS = Object.values(RosterTab)
+
 export function useRosterViewModel() {
   const { status: authStatus } = useSession()
   const { t } = useI18n()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const router = useRouter()
 
   const [accounts, setAccounts] = useState<GameAccount[]>([])
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
   const [loadingAccounts, setLoadingAccounts] = useState(true)
 
-  const activeTab = useMemo(() => {
-    const tab = searchParams.get('tab') as RosterTab | null
-    return tab && Object.values(RosterTab).includes(tab) ? tab : RosterTab.Roster
-  }, [searchParams])
-
-  const setActiveTab = useCallback(
-    (tab: RosterTab) => {
-      const params = new URLSearchParams(searchParams.toString())
-      params.set('tab', tab)
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-    },
-    [searchParams, pathname, router]
-  )
+  const [activeTab, setActiveTab] = useTabParam(ROSTER_TABS, RosterTab.Roster)
 
   const [masteries, setMasteries] = useState<MasteryEntry[]>([])
   const [masteryForm, setMasteryForm] = useState<MasteryUpsertItem[]>([])
