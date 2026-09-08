@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 import { useI18n } from '@/app/i18n'
 import { toast } from 'sonner'
@@ -18,6 +18,7 @@ import {
   cancelInvitation,
 } from '@/app/services/game'
 import { useRequiredSession } from '@/hooks/use-required-session'
+import { useTabParam } from '@/hooks/use-tab-param'
 import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { getCurrentSeasonStatistics, type PlayerSeasonStats } from '@/app/services/statistics'
 
@@ -28,6 +29,8 @@ export enum AllianceTab {
   Statistics = 'statistics',
   ChampionSearch = 'champion-search',
 }
+
+const ALLIANCE_TABS = Object.values(AllianceTab)
 
 export function useAlliancesViewModel() {
   const { locale, t } = useI18n()
@@ -55,10 +58,11 @@ export function useAlliancesViewModel() {
   const [statsRefreshing, setStatsRefreshing] = useState(false)
   const [statsError, setStatsError] = useState('')
 
-  const initialTab = (searchParams.get('tab') as AllianceTab) || AllianceTab.Alliances
-  const [activeTab, setActiveTab] = useState<AllianceTab>(
-    Object.values(AllianceTab).includes(initialTab) ? initialTab : AllianceTab.Alliances
-  )
+  const [activeTab, setActiveTab] = useTabParam(ALLIANCE_TABS, AllianceTab.Alliances, {
+    // `alliance` and `bg` belong to the Defense tab alone — see
+    // handleDefenseStateChange, which is what puts them there.
+    clearParams: (tab) => (tab === AllianceTab.Defense ? [] : ['alliance', 'bg']),
+  })
 
   const handleDefenseStateChange = useCallback(
     (allianceId: string, bg: number) => {
@@ -70,22 +74,6 @@ export function useAlliancesViewModel() {
     },
     [pathname, searchParams, router]
   )
-
-  const isFirstRender = useRef(true)
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('tab', activeTab)
-    if (activeTab !== AllianceTab.Defense) {
-      params.delete('alliance')
-      params.delete('bg')
-    }
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab])
 
   const [name, setName] = useState('')
   const [tag, setTag] = useState('')
