@@ -22,6 +22,8 @@ interface TierRowProps {
   showNames: boolean
   showBadges: boolean
   canRemove: boolean
+  /** True while the board is being captured: controls come out of the picture. */
+  exporting: boolean
   isFirst: boolean
   isLast: boolean
   onOpenChampion: (championId: string) => void
@@ -39,6 +41,7 @@ export default function TierRow({
   showNames,
   showBadges,
   canRemove,
+  exporting,
   isFirst,
   isLast,
   onOpenChampion,
@@ -56,22 +59,32 @@ export default function TierRow({
         className='flex w-16 shrink-0 flex-col items-center justify-center gap-1 p-1 sm:w-24'
         style={{ backgroundColor: tier.color }}
       >
-        <input
-          value={tier.label}
-          onChange={(event) => actions.updateTier(tier.id, { label: event.target.value })}
-          aria-label={t.tierlist.tierLabel}
-          data-cy='tierlist-row-label'
-          className='w-full border-none bg-transparent text-center text-lg font-black outline-none sm:text-2xl'
-          style={{ color: readableTextColor(tier.color) }}
-        />
-        <input
-          type='color'
-          value={tier.color}
-          onChange={(event) => actions.updateTier(tier.id, { color: event.target.value })}
-          aria-label={t.tierlist.tierColor}
-          data-export-hide
-          className='h-4 w-8 cursor-pointer rounded'
-        />
+        {exporting ? (
+          <span
+            className='w-full text-center text-lg font-black sm:text-2xl'
+            style={{ color: readableTextColor(tier.color) }}
+          >
+            {tier.label}
+          </span>
+        ) : (
+          <>
+            <input
+              value={tier.label}
+              onChange={(event) => actions.updateTier(tier.id, { label: event.target.value })}
+              aria-label={t.tierlist.tierLabel}
+              data-cy='tierlist-row-label'
+              className='w-full border-none bg-transparent text-center text-lg font-black outline-none sm:text-2xl'
+              style={{ color: readableTextColor(tier.color) }}
+            />
+            <input
+              type='color'
+              value={tier.color}
+              onChange={(event) => actions.updateTier(tier.id, { color: event.target.value })}
+              aria-label={t.tierlist.tierColor}
+              className='h-4 w-8 cursor-pointer rounded'
+            />
+          </>
+        )}
       </div>
 
       <div
@@ -101,11 +114,8 @@ export default function TierRow({
             )
           })}
         </SortableContext>
-        {visibleIds.length === 0 && (
-          <span
-            data-export-hide
-            className='self-center px-2 text-xs text-muted-foreground'
-          >
+        {visibleIds.length === 0 && !exporting && (
+          <span className='self-center px-2 text-xs text-muted-foreground'>
             {tier.championIds.length === 0
               ? t.tierlist.emptyTier
               : t.tierlist.hiddenByFilters.replace('{count}', String(tier.championIds.length))}
@@ -113,52 +123,51 @@ export default function TierRow({
         )}
       </div>
 
-      <div
-        data-export-hide
-        className='flex w-8 shrink-0 flex-col items-center justify-center gap-1 border-l bg-muted'
-      >
-        <button
-          type='button'
-          onClick={() => actions.moveTier(tier.id, -1)}
-          disabled={isFirst}
-          title={t.tierlist.moveUp}
-          aria-label={t.tierlist.moveUp}
-          className={CONTROL}
-        >
-          <ChevronUp className='size-4' />
-        </button>
-        <button
-          type='button'
-          onClick={() => actions.clearTier(tier.id)}
-          disabled={tier.championIds.length === 0}
-          title={t.tierlist.clearTier}
-          aria-label={t.tierlist.clearTier}
-          className={CONTROL}
-        >
-          <X className='size-4' />
-        </button>
-        <button
-          type='button'
-          onClick={() => actions.removeTier(tier.id)}
-          disabled={!canRemove}
-          title={t.tierlist.removeTier}
-          aria-label={t.tierlist.removeTier}
-          data-cy='tierlist-row-remove'
-          className={cn(CONTROL, 'hover:text-destructive')}
-        >
-          <Trash2 className='size-4' />
-        </button>
-        <button
-          type='button'
-          onClick={() => actions.moveTier(tier.id, 1)}
-          disabled={isLast}
-          title={t.tierlist.moveDown}
-          aria-label={t.tierlist.moveDown}
-          className={CONTROL}
-        >
-          <ChevronDown className='size-4' />
-        </button>
-      </div>
+      {!exporting && (
+        <div className='flex w-8 shrink-0 flex-col items-center justify-center gap-1 border-l bg-muted'>
+          <button
+            type='button'
+            onClick={() => actions.moveTier(tier.id, -1)}
+            disabled={isFirst}
+            title={t.tierlist.moveUp}
+            aria-label={t.tierlist.moveUp}
+            className={CONTROL}
+          >
+            <ChevronUp className='size-4' />
+          </button>
+          <button
+            type='button'
+            onClick={() => actions.clearTier(tier.id)}
+            disabled={tier.championIds.length === 0}
+            title={t.tierlist.clearTier}
+            aria-label={t.tierlist.clearTier}
+            className={CONTROL}
+          >
+            <X className='size-4' />
+          </button>
+          <button
+            type='button'
+            onClick={() => actions.removeTier(tier.id)}
+            disabled={!canRemove}
+            title={t.tierlist.removeTier}
+            aria-label={t.tierlist.removeTier}
+            data-cy='tierlist-row-remove'
+            className={cn(CONTROL, 'hover:text-destructive')}
+          >
+            <Trash2 className='size-4' />
+          </button>
+          <button
+            type='button'
+            onClick={() => actions.moveTier(tier.id, 1)}
+            disabled={isLast}
+            title={t.tierlist.moveDown}
+            aria-label={t.tierlist.moveDown}
+            className={CONTROL}
+          >
+            <ChevronDown className='size-4' />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

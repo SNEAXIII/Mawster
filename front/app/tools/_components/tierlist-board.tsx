@@ -15,6 +15,7 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
+import { cn } from '@/app/lib/utils'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import ChampionPool from './champion-pool'
 import ChampionSheet from './champion-sheet'
@@ -127,7 +128,10 @@ export default function TierListBoard() {
           {/* Capture root for the PNG: the title and the rows, nothing else. */}
           <div
             ref={vm.boardRef}
-            className='flex flex-col gap-2 rounded-lg bg-background p-2'
+            className={cn(
+              'flex flex-col gap-2 rounded-lg p-2',
+              vm.exporting ? 'bg-black' : 'bg-background'
+            )}
           >
             {vm.board.title && <h2 className='px-1 text-xl font-black'>{vm.board.title}</h2>}
             {vm.board.tiers.map((tier, index) => (
@@ -142,6 +146,7 @@ export default function TierListBoard() {
                 showNames={vm.prefs.showNames}
                 showBadges={vm.prefs.showBadges}
                 canRemove={vm.board.tiers.length > 1}
+                exporting={vm.exporting}
                 isFirst={index === 0}
                 isLast={index === vm.board.tiers.length - 1}
                 onOpenChampion={setOpenChampionId}
