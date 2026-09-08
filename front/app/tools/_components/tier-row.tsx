@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
-import { ChevronDown, ChevronUp, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, Pencil, Trash2, X } from 'lucide-react'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
@@ -105,17 +105,25 @@ export default function TierRow({
               className='w-full border-none bg-transparent text-center text-lg font-black outline-none sm:text-2xl'
               style={{ color: readableTextColor(draftColor) }}
             />
-            <input
-              type='color'
-              value={draftColor}
-              onChange={(event) => setDraftColor(event.target.value)}
-              aria-label={t.tierlist.tierColor}
-              data-cy='tierlist-row-color'
-              // The browser paints a white box with its own padding around the
-              // swatch; at this size that is all one sees. Stripped so the chip
-              // is the colour itself.
-              className='h-4 w-8 cursor-pointer appearance-none rounded border-0 bg-transparent p-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0'
-            />
+            {/* A pencil, not the native swatch: the swatch paints the row's own
+                colour on the row's own colour, so there was nothing to see. The
+                input itself stays, transparent and over the icon, because that
+                is what opens the browser's colour picker. */}
+            <label
+              title={t.tierlist.tierColor}
+              className='relative inline-flex cursor-pointer items-center justify-center rounded p-0.5 opacity-70 transition-opacity hover:opacity-100'
+              style={{ color: readableTextColor(draftColor) }}
+            >
+              <Pencil className='size-3.5' />
+              <input
+                type='color'
+                value={draftColor}
+                onChange={(event) => setDraftColor(event.target.value)}
+                aria-label={t.tierlist.tierColor}
+                data-cy='tierlist-row-color'
+                className='absolute inset-0 size-full cursor-pointer opacity-0'
+              />
+            </label>
           </>
         )}
       </div>
