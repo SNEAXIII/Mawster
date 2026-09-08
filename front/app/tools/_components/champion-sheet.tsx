@@ -4,13 +4,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import ChampionPortrait from '@/components/champion-portrait'
 import { useI18n } from '@/app/i18n'
-import { cn } from '@/app/lib/utils'
+import TagChips from './tag-chips'
 import { POOL_ID } from '../_hooks/use-board'
 import { readableTextColor } from '../_lib/color'
-import { SIGNATURE_PRESETS, TAG_DISPLAY, TAG_ICON, frameRarity } from '../_lib/tags'
-import { TAG_KEYS } from '../_lib/types'
+import { SIGNATURE_PRESETS, frameRarity } from '../_lib/tags'
 import type { BoardActions } from '../_hooks/use-board'
-import type { BoardState, CatalogChampion, ChampionTags, TagKey } from '../_lib/types'
+import type { BoardState, CatalogChampion, ChampionTags } from '../_lib/types'
 
 interface ChampionSheetProps {
   champion: CatalogChampion | null
@@ -76,30 +75,11 @@ export default function ChampionSheet({
           <h3 className='text-xs font-bold tracking-wide text-muted-foreground uppercase'>
             {t.tierlist.tagsTitle}
           </h3>
-          <div className='flex flex-wrap gap-1.5'>
-            {TAG_KEYS.map((key: TagKey) => (
-              <button
-                key={key}
-                type='button'
-                onClick={() => actions.toggleTag(champion.id, key)}
-                title={t.tierlist.tags[key]}
-                data-cy={`tierlist-tag-${key}`}
-                className={cn(
-                  'inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold transition-colors',
-                  tags[key]
-                    ? `${TAG_DISPLAY[key].tone} border-transparent`
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <img
-                  src={TAG_ICON[key]}
-                  alt=''
-                  className='size-4'
-                />
-                {TAG_DISPLAY[key].code}
-              </button>
-            ))}
-          </div>
+          <TagChips
+            isActive={(key) => tags[key]}
+            onToggle={(key) => actions.toggleTag(champion.id, key)}
+            cyPrefix='tierlist-tag-'
+          />
 
           {/* Only once the champion is marked awakened — a signature on an
               unawakened champion is a number nothing reads. */}

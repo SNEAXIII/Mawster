@@ -3,11 +3,11 @@
 import ChampionPortrait from '@/components/champion-portrait'
 import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
+import TagChips from './tag-chips'
 import { readableTextColor } from '../_lib/color'
-import { SIGNATURE_PRESETS, TAG_DISPLAY, TAG_ICON, frameRarity } from '../_lib/tags'
-import { TAG_KEYS } from '../_lib/types'
+import { SIGNATURE_PRESETS, frameRarity } from '../_lib/tags'
 import type { BoardActions } from '../_hooks/use-board'
-import type { BoardTier, CatalogChampion, ChampionTags, TagKey } from '../_lib/types'
+import type { BoardTier, CatalogChampion, ChampionTags } from '../_lib/types'
 
 interface ReviewCardProps {
   champion: CatalogChampion
@@ -50,30 +50,12 @@ export default function ReviewCard({
         </p>
       </div>
 
-      <div className='flex flex-wrap justify-center gap-1.5'>
-        {TAG_KEYS.map((key: TagKey) => (
-          <button
-            key={key}
-            type='button'
-            onClick={() => actions.toggleTag(champion.id, key)}
-            title={t.tierlist.tags[key]}
-            data-cy={`review-tag-${key}`}
-            className={cn(
-              'inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold transition-colors',
-              tags[key]
-                ? `${TAG_DISPLAY[key].tone} border-transparent`
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <img
-              src={TAG_ICON[key]}
-              alt=''
-              className='size-4'
-            />
-            {TAG_DISPLAY[key].code}
-          </button>
-        ))}
-      </div>
+      <TagChips
+        isActive={(key) => tags[key]}
+        onToggle={(key) => actions.toggleTag(champion.id, key)}
+        cyPrefix='review-tag-'
+        className='justify-center'
+      />
 
       {tags.is_awakened && (
         <div className='flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground'>
