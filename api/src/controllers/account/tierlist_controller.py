@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
@@ -14,10 +13,10 @@ from src.Messages.tierlist_messages import (
     too_many_tier_lists,
     unknown_champions,
 )
-from src.models import User
 from src.models.tierlist.TierList import TierList
 from src.services.account.TierListService import MAX_TIER_LISTS_PER_USER, TierListService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 tierlist_controller = APIRouter(
@@ -25,8 +24,6 @@ tierlist_controller = APIRouter(
     tags=["Tier Lists"],
     dependencies=[Depends(AuthService.get_current_user_in_jwt)],
 )
-
-CurrentUser = Annotated[User, Depends(AuthService.get_current_user_in_jwt)]
 
 
 async def _get_own_tier_list(
