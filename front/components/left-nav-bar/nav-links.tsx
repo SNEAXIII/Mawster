@@ -1,5 +1,5 @@
 'use client'
-import { Home, User, Sword, Shield, Swords, UserStar, BookOpen } from 'lucide-react'
+import { Home, User, Sword, Shield, Swords, UserStar, BookOpen, ListOrdered } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useI18n } from '@/app/i18n'
@@ -30,6 +30,13 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
     { name: t.nav.home, href: '/', icon: Home, role: Role.all, cy: 'nav-home' },
     { name: t.nav.profile, href: '/profile', icon: User, role: Role.user, cy: 'nav-profile' },
     { name: t.nav.roster, href: '/game/account', icon: Sword, role: Role.user, cy: 'nav-roster' },
+    {
+      name: t.nav.tierlist,
+      href: '/tierlist',
+      icon: ListOrdered,
+      role: Role.all,
+      cy: 'nav-tierlist',
+    },
     {
       name: t.nav.alliances,
       href: '/game/alliances',
