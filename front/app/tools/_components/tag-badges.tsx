@@ -68,6 +68,7 @@ export default function TagBadges({ tags, size, className }: Readonly<TagBadgesP
       {chips.map((chip) => (
         <span
           key={chip.key}
+          data-cy={`tierlist-badge-${chip.key}`}
           className={cn(
             'inline-flex items-center rounded bg-slate-950/85 font-bold text-white',
             // Padding only where a number sits next to the glyph: around a bare

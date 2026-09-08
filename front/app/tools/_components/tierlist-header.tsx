@@ -110,6 +110,7 @@ export default function TierListHeader({
             value={filters.query}
             onChange={(query: string) => onFiltersChange({ ...filters, query })}
             placeholder={t.tierlist.search}
+            data-cy='tierlist-search'
           />
           <Select
             value={filters.rarity}

@@ -110,6 +110,7 @@ export default function TierRow({
               value={draftColor}
               onChange={(event) => setDraftColor(event.target.value)}
               aria-label={t.tierlist.tierColor}
+              data-cy='tierlist-row-color'
               // The browser paints a white box with its own padding around the
               // swatch; at this size that is all one sees. Stripped so the chip
               // is the colour itself.
@@ -169,6 +170,7 @@ export default function TierRow({
             disabled={isFirst}
             title={t.tierlist.moveUp}
             aria-label={t.tierlist.moveUp}
+            data-cy='tierlist-row-up'
             className={CONTROL}
           >
             <ChevronUp className='size-4' />
@@ -179,6 +181,7 @@ export default function TierRow({
             disabled={tier.championIds.length === 0}
             title={t.tierlist.clearTier}
             aria-label={t.tierlist.clearTier}
+            data-cy='tierlist-row-clear'
             className={CONTROL}
           >
             <X className='size-4' />
@@ -200,6 +203,7 @@ export default function TierRow({
             disabled={isLast}
             title={t.tierlist.moveDown}
             aria-label={t.tierlist.moveDown}
+            data-cy='tierlist-row-down'
             className={CONTROL}
           >
             <ChevronDown className='size-4' />

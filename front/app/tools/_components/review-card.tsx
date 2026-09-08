@@ -101,6 +101,9 @@ export default function ReviewCard({
             type='button'
             onClick={() => onAssign(tier.id)}
             data-cy={`review-send-to-${tier.label}`}
+            // The row this champion already sits in, spelled out rather than
+            // left to the ring alone.
+            aria-current={currentTierId === tier.id ? 'true' : undefined}
             style={{ backgroundColor: tier.color, color: readableTextColor(tier.color) }}
             className={cn(
               'flex min-w-18 items-center justify-center gap-1.5 rounded-md px-2.5 py-1.5',
