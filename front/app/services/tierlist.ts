@@ -24,7 +24,6 @@ export interface CatalogResponse {
 /** The marks a champion carries inside one tier list. */
 export interface TierListTag {
   champion_id: string
-  is_six_star_only: boolean
   is_attacker: boolean
   is_defender: boolean
   is_alliance_war: boolean

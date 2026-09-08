@@ -1,22 +1,21 @@
-/**
- * Black or white, whichever stays readable on a row colour the user picked.
- *
- * The rows take any CSS colour, so the label cannot be given a fixed colour:
- * on a pale yellow, white text disappears. Relative luminance decides.
- */
-export function readableTextColor(background: string): '#000000' | '#ffffff' {
-  const hex = background.replace('#', '')
+/** Parse `#rgb` / `#rrggbb` into 0-255 channels; falls back to mid grey. */
+function channels(hex: string): [number, number, number] {
+  const value = hex.replace('#', '')
   const full =
-    hex.length === 3
-      ? hex
+    value.length === 3
+      ? value
           .split('')
           .map((c) => c + c)
           .join('')
-      : hex
-  if (full.length !== 6) return '#000000'
-  const [r, g, b] = [0, 2, 4].map((i) => Number.parseInt(full.slice(i, i + 2), 16) / 255)
-  const channel = (value: number) =>
-    value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
-  const luminance = 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
-  return luminance > 0.45 ? '#000000' : '#ffffff'
+      : value
+  if (full.length !== 6) return [128, 128, 128]
+  const int = Number.parseInt(full, 16)
+  if (Number.isNaN(int)) return [128, 128, 128]
+  return [(int >> 16) & 255, (int >> 8) & 255, int & 255]
+}
+
+export function readableTextColor(background: string): string {
+  const [r, g, b] = channels(background)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return luminance > 0.55 ? '#000000' : '#f8fafc'
 }

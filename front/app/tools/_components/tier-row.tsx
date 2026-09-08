@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
 import { ChevronDown, ChevronUp, Trash2, X } from 'lucide-react'
@@ -9,6 +10,7 @@ import ChampionCard from './champion-card'
 import { tagsOf } from '../_lib/board'
 import { readableTextColor } from '../_lib/color'
 import type { BoardActions } from '../_hooks/use-board'
+import type { StarMode } from '../_hooks/use-prefs'
 import type { BoardState, BoardTier, CatalogChampion } from '../_lib/types'
 
 interface TierRowProps {
@@ -21,6 +23,7 @@ interface TierRowProps {
   cardSize: number
   showNames: boolean
   showBadges: boolean
+  starMode: StarMode
   canRemove: boolean
   /** True while the board is being captured: controls come out of the picture. */
   exporting: boolean
@@ -31,6 +34,11 @@ interface TierRowProps {
 
 const CONTROL = 'rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-25'
 
+/** Both star frames share this ratio (212x174), so a card is shorter than it is wide. */
+const FRAME_ASPECT = 212 / 174
+/** The `p-2` above and below, in px. */
+const ROW_PADDING = 16
+
 export default function TierRow({
   tier,
   visibleIds,
@@ -40,6 +48,7 @@ export default function TierRow({
   cardSize,
   showNames,
   showBadges,
+  starMode,
   canRemove,
   exporting,
   isFirst,
@@ -49,6 +58,26 @@ export default function TierRow({
   const { t } = useI18n()
   const { setNodeRef, isOver } = useDroppable({ id: tier.id })
 
+  /**
+   * The colour being dragged in the picker, kept out of the board.
+   *
+   * A colour input fires on every pointer move, and each one would rebuild the
+   * board, re-filter the whole catalog and re-render the pool — three frames a
+   * second while dragging. The row previews the draft; the board only hears
+   * about it when the picker closes.
+   */
+  const [draftColor, setDraftColor] = useState(tier.color)
+  useEffect(() => setDraftColor(tier.color), [tier.color])
+
+  // Committed shortly after the dragging stops rather than on blur alone: the
+  // native picker does not blur the input when it closes, so a colour picked and
+  // left alone would never reach the board.
+  useEffect(() => {
+    if (draftColor === tier.color) return
+    const timer = setTimeout(() => actions.updateTier(tier.id, { color: draftColor }), 200)
+    return () => clearTimeout(timer)
+  }, [draftColor, tier.color, tier.id, actions])
+
   return (
     <div
       className='flex items-stretch overflow-hidden rounded-lg border bg-card'
@@ -57,12 +86,12 @@ export default function TierRow({
       {/* Label block — the colour swatch doubles as the rename field. */}
       <div
         className='flex w-16 shrink-0 flex-col items-center justify-center gap-1 p-1 sm:w-24'
-        style={{ backgroundColor: tier.color }}
+        style={{ backgroundColor: draftColor }}
       >
         {exporting ? (
           <span
             className='w-full text-center text-lg font-black sm:text-2xl'
-            style={{ color: readableTextColor(tier.color) }}
+            style={{ color: readableTextColor(draftColor) }}
           >
             {tier.label}
           </span>
@@ -74,14 +103,17 @@ export default function TierRow({
               aria-label={t.tierlist.tierLabel}
               data-cy='tierlist-row-label'
               className='w-full border-none bg-transparent text-center text-lg font-black outline-none sm:text-2xl'
-              style={{ color: readableTextColor(tier.color) }}
+              style={{ color: readableTextColor(draftColor) }}
             />
             <input
               type='color'
-              value={tier.color}
-              onChange={(event) => actions.updateTier(tier.id, { color: event.target.value })}
+              value={draftColor}
+              onChange={(event) => setDraftColor(event.target.value)}
               aria-label={t.tierlist.tierColor}
-              className='h-4 w-8 cursor-pointer rounded'
+              // The browser paints a white box with its own padding around the
+              // swatch; at this size that is all one sees. Stripped so the chip
+              // is the colour itself.
+              className='h-4 w-8 cursor-pointer appearance-none rounded border-0 bg-transparent p-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0'
             />
           </>
         )}
@@ -90,9 +122,15 @@ export default function TierRow({
       <div
         ref={setNodeRef}
         className={cn(
-          'flex min-h-22 flex-1 flex-wrap content-start items-start gap-1 p-2 transition-colors',
-          isOver && 'bg-primary/10'
+          'flex flex-1 flex-wrap content-center items-center gap-2 p-2 transition-colors',
+          // Loud on purpose: over a dark board a 10% tint is invisible, and the
+          // one question a drag has to answer is "will it land here".
+          isOver && 'bg-primary/25 inset-ring-2 inset-ring-primary'
         )}
+        // A row is as tall as the cards it holds, not a fixed block: the star
+        // frame is wider than it is tall (212x174), so the height follows the
+        // card size rather than a rem value that stops matching as it changes.
+        style={{ minHeight: Math.round(cardSize / FRAME_ASPECT) + ROW_PADDING }}
       >
         <SortableContext
           items={visibleIds}
@@ -109,12 +147,13 @@ export default function TierRow({
                 size={cardSize}
                 showName={showNames}
                 showBadges={showBadges}
+                starMode={starMode}
                 onOpen={onOpenChampion}
               />
             )
           })}
         </SortableContext>
-        {visibleIds.length === 0 && !exporting && (
+        {visibleIds.length === 0 && !exporting && !isOver && (
           <span className='self-center px-2 text-xs text-muted-foreground'>
             {tier.championIds.length === 0
               ? t.tierlist.emptyTier

@@ -7,6 +7,7 @@ import { cn } from '@/app/lib/utils'
 import ChampionCard from './champion-card'
 import { POOL_ID } from '../_hooks/use-board'
 import { tagsOf } from '../_lib/board'
+import type { StarMode } from '../_hooks/use-prefs'
 import type { BoardState, CatalogChampion } from '../_lib/types'
 
 interface ChampionPoolProps {
@@ -15,6 +16,7 @@ interface ChampionPoolProps {
   cardSize: number
   showNames: boolean
   showBadges: boolean
+  starMode: StarMode
   onOpenChampion: (championId: string) => void
 }
 
@@ -29,6 +31,7 @@ export default function ChampionPool({
   cardSize,
   showNames,
   showBadges,
+  starMode,
   onOpenChampion,
 }: Readonly<ChampionPoolProps>) {
   const { t } = useI18n()
@@ -39,7 +42,7 @@ export default function ChampionPool({
       ref={setNodeRef}
       data-cy='tierlist-pool'
       className={cn(
-        'flex min-h-24 flex-wrap content-start gap-1 rounded-lg border bg-card p-2 transition-colors',
+        'flex min-h-24 flex-wrap content-start gap-2 rounded-lg border bg-card p-3 transition-colors',
         isOver && 'bg-primary/10'
       )}
     >
@@ -55,6 +58,7 @@ export default function ChampionPool({
             size={cardSize}
             showName={showNames}
             showBadges={showBadges}
+            starMode={starMode}
             onOpen={onOpenChampion}
           />
         ))}

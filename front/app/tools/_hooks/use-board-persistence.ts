@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 import { useSession } from 'next-auth/react'
 import { createTierList, fetchTierList, saveTierList } from '@/app/services/tierlist'
 import { fromDetail, forgetStoredBoard, loadStoredBoard, storeBoard } from '../_lib/board'
@@ -31,7 +32,7 @@ interface Persistence {
  */
 export function useBoardPersistence(
   board: BoardState,
-  setBoard: (board: BoardState) => void,
+  setBoard: Dispatch<SetStateAction<BoardState>>,
   knownIds: Set<string>,
   catalogReady: boolean,
   activeListId: string | null
@@ -100,7 +101,10 @@ export function useBoardPersistence(
           await saveTierList(board.id, payload)
         } else {
           const created = await createTierList(payload)
-          setBoard({ ...board, id: created.id })
+          // Through an updater, never `{ ...board }`: that board was captured a
+          // second ago, and anything dropped while the request was in flight
+          // would be thrown away — the card visibly springs back.
+          setBoard((current) => ({ ...current, id: created.id }))
         }
         lastWritten.current = serialized
       } catch (err) {

@@ -8,18 +8,21 @@ import {
   MouseSensor,
   TouchSensor,
   closestCenter,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
+import type { CollisionDetection, DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { Plus } from 'lucide-react'
+import { Play, Plus } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import ChampionPool from './champion-pool'
 import ChampionSheet from './champion-sheet'
 import ImportLocalBoardDialog from './import-local-board-dialog'
+import ReviewMode from './review-mode'
 import TierListHeader from './tierlist-header'
 import TierListPicker from './tierlist-picker'
 import TierListToolbar from './tierlist-toolbar'
@@ -28,6 +31,22 @@ import { ChampionCardVisual } from './champion-card'
 import { POOL_ID } from '../_hooks/use-board'
 import { tagsOf } from '../_lib/board'
 import { useTierListViewModel } from '../_viewmodels/use-tierlist-viewmodel'
+
+/**
+ * Which row the pointer is over, asked in the order that actually answers it.
+ *
+ * `closestCenter` alone compares centres, so a row barely taller than a card
+ * loses to whatever sits next to it and the drop lands one row off — the pool
+ * being ten times taller than a row makes it worse. The pointer is what the
+ * player is aiming with, so it is asked first; the rest only catches the moment
+ * it leaves every droppable.
+ */
+const collisionDetection: CollisionDetection = (args) => {
+  const byPointer = pointerWithin(args)
+  if (byPointer.length > 0) return byPointer
+  const byOverlap = rectIntersection(args)
+  return byOverlap.length > 0 ? byOverlap : closestCenter(args)
+}
 
 export default function TierListBoard() {
   const { t } = useI18n()
@@ -118,9 +137,31 @@ export default function TierListBoard() {
           persistence={vm.persistence}
         />
 
+        <div className='flex flex-wrap items-center gap-3'>
+          <button
+            type='button'
+            onClick={vm.startReview}
+            disabled={vm.reviewChampions.length === 0}
+            data-cy='tierlist-start-review'
+            className='inline-flex w-fit items-center gap-1.5 rounded-md border border-primary/50 px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-primary'
+          >
+            <Play className='size-4' />
+            {t.tierlist.review} ({vm.reviewChampions.length})
+          </button>
+          <label className='flex items-center gap-1.5 text-xs font-semibold text-muted-foreground'>
+            <input
+              type='checkbox'
+              checked={vm.reviewPlaced}
+              onChange={(event) => vm.setReviewPlaced(event.target.checked)}
+              data-cy='tierlist-review-include-placed'
+            />
+            {t.tierlist.reviewIncludePlaced}
+          </label>
+        </div>
+
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={collisionDetection}
           onDragStart={(event: DragStartEvent) => setDraggingId(String(event.active.id))}
           onDragEnd={onDragEnd}
           onDragCancel={() => setDraggingId(null)}
@@ -145,6 +186,7 @@ export default function TierListBoard() {
                 cardSize={vm.prefs.cardSize}
                 showNames={vm.prefs.showNames}
                 showBadges={vm.prefs.showBadges}
+                starMode={vm.prefs.starMode}
                 canRemove={vm.board.tiers.length > 1}
                 exporting={vm.exporting}
                 isFirst={index === 0}
@@ -170,6 +212,7 @@ export default function TierListBoard() {
             cardSize={vm.prefs.cardSize}
             showNames={vm.prefs.showNames}
             showBadges={vm.prefs.showBadges}
+            starMode={vm.prefs.starMode}
             onOpenChampion={setOpenChampionId}
           />
 
@@ -181,6 +224,7 @@ export default function TierListBoard() {
                 size={vm.prefs.cardSize}
                 showName={vm.prefs.showNames}
                 showBadges={vm.prefs.showBadges}
+                starMode={vm.prefs.starMode}
               />
             )}
           </DragOverlay>
@@ -188,10 +232,22 @@ export default function TierListBoard() {
 
         <ChampionSheet
           champion={openChampion}
+          board={vm.board}
           tags={openChampion ? tagsOf(vm.board, openChampion.id) : tagsOf(vm.board, '')}
           actions={vm.actions}
+          starMode={vm.prefs.starMode}
           onClose={() => setOpenChampionId(null)}
         />
+        {vm.reviewQueue && (
+          <ReviewMode
+            championIds={vm.reviewQueue}
+            byId={vm.catalog.byId}
+            board={vm.board}
+            actions={vm.actions}
+            starMode={vm.prefs.starMode}
+            onClose={vm.closeReview}
+          />
+        )}
         <ImportLocalBoardDialog
           storedBoard={vm.offerLocalBoard}
           onImport={vm.handleImportLocalBoard}

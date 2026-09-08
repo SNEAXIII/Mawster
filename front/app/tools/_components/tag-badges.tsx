@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/app/lib/utils'
+import { DUAL_ICON, TAG_ICON } from '../_lib/tags'
 import type { ChampionTags } from '../_lib/types'
 
 /**
@@ -20,47 +21,35 @@ interface TagBadgesProps {
   className?: string
 }
 
-/** Where each marker's artwork lives on the static host. */
-const ICON_URL = {
-  attacker: '/static/icons/atk-sword.png',
-  defender: '/static/icons/def-shield.png',
-  dual: '/static/icons/dual-sword-shield.png',
-  allianceWar: '/static/icons/aw-flame.png',
-  battlegrounds: '/static/icons/bg-helmet.png',
-  awakened: '/static/icons/awk-gem.png',
-} as const
-
 interface Chip {
   key: string
   src: string
   /** Printed next to the glyph — only the signature value does that. */
   label?: string
-  tone: string
 }
 
 function chipsFor(tags: ChampionTags): Chip[] {
   const chips: Chip[] = []
   if (tags.is_attacker && tags.is_defender) {
-    chips.push({ key: 'dual', src: ICON_URL.dual, tone: 'ring-violet-400/70' })
+    chips.push({ key: 'dual', src: DUAL_ICON })
   } else if (tags.is_attacker) {
-    chips.push({ key: 'attacker', src: ICON_URL.attacker, tone: 'ring-rose-400/70' })
+    chips.push({ key: 'attacker', src: TAG_ICON.is_attacker })
   } else if (tags.is_defender) {
-    chips.push({ key: 'defender', src: ICON_URL.defender, tone: 'ring-sky-400/70' })
+    chips.push({ key: 'defender', src: TAG_ICON.is_defender })
   }
   if (tags.is_alliance_war) {
-    chips.push({ key: 'aw', src: ICON_URL.allianceWar, tone: 'ring-amber-400/70' })
+    chips.push({ key: 'aw', src: TAG_ICON.is_alliance_war })
   }
   if (tags.is_battlegrounds) {
-    chips.push({ key: 'bg', src: ICON_URL.battlegrounds, tone: 'ring-emerald-400/70' })
+    chips.push({ key: 'bg', src: TAG_ICON.is_battlegrounds })
   }
   if (tags.is_awakened) {
     chips.push({
       key: 'awk',
-      src: ICON_URL.awakened,
+      src: TAG_ICON.is_awakened,
       // The signature value is the point of the awakened mark, so it is spelled
       // out rather than left to a tooltip nobody opens on a phone.
       label: tags.signature > 0 ? String(tags.signature) : undefined,
-      tone: 'ring-cyan-300/70',
     })
   }
   return chips
@@ -69,19 +58,21 @@ function chipsFor(tags: ChampionTags): Chip[] {
 export default function TagBadges({ tags, size, className }: Readonly<TagBadgesProps>) {
   const chips = chipsFor(tags)
   if (chips.length === 0) return null
-  const glyph = Math.max(8, size)
+  const glyph = Math.max(12, size)
 
   return (
     <div
       className={cn('flex flex-wrap items-center justify-center gap-0.5', className)}
-      style={{ fontSize: Math.max(7, size * 0.9) }}
+      style={{ fontSize: Math.max(9, size * 0.55) }}
     >
       {chips.map((chip) => (
         <span
           key={chip.key}
           className={cn(
-            'inline-flex items-center gap-0.5 rounded bg-slate-950/85 px-1 font-bold text-white ring-1',
-            chip.tone
+            'inline-flex items-center rounded bg-slate-950/85 font-bold text-white',
+            // Padding only where a number sits next to the glyph: around a bare
+            // icon it just shrinks the artwork inside its own chip.
+            chip.label ? 'gap-0.5 pr-1 pl-0.5' : 'p-0'
           )}
         >
           <img

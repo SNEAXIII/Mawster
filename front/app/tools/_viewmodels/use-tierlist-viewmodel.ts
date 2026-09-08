@@ -34,6 +34,10 @@ export function useTierListViewModel() {
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS)
   const { exporting, exportPng } = useImageExport()
   const [localBoardHandled, setLocalBoardHandled] = useState(false)
+  // Snapshot of the queue, taken when a run starts; null while idle.
+  const [reviewQueue, setReviewQueue] = useState<string[] | null>(null)
+  // Whether a run also walks champions already sitting in a row.
+  const [reviewPlaced, setReviewPlaced] = useState(false)
   const boardRef = useRef<HTMLDivElement>(null)
 
   // Open the account's first list once they are known, and follow along when
@@ -56,6 +60,18 @@ export function useTierListViewModel() {
         (champion) => !ranked.has(champion.id) && matchesFilters(champion, filters, board)
       ),
     [catalog.champions, ranked, filters, board]
+  )
+
+  /**
+   * What a run walks: the filtered pool, plus — when asked — the champions
+   * already in a row, so a past call never makes one un-reviewable.
+   */
+  const reviewChampions = useMemo(
+    () =>
+      reviewPlaced
+        ? catalog.champions.filter((champion) => matchesFilters(champion, filters, board))
+        : poolChampions,
+    [reviewPlaced, catalog.champions, poolChampions, filters, board]
   )
 
   const visibleByTier = useMemo(() => {
@@ -138,6 +154,12 @@ export function useTierListViewModel() {
     activeId,
     setActiveId,
     poolChampions,
+    reviewChampions,
+    reviewQueue,
+    reviewPlaced,
+    setReviewPlaced,
+    startReview: () => setReviewQueue(reviewChampions.map((champion) => champion.id)),
+    closeReview: () => setReviewQueue(null),
     visibleByTier,
     boardRef,
     exporting,
