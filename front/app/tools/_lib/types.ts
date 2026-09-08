@@ -12,7 +12,6 @@ export type ChampionClass = (typeof CHAMPION_CLASSES)[number]
 export type ChampionTags = Omit<TierListTag, 'champion_id'>
 
 export const NO_TAGS: ChampionTags = {
-  is_six_star_only: false,
   is_attacker: false,
   is_defender: false,
   is_alliance_war: false,
@@ -23,7 +22,6 @@ export const NO_TAGS: ChampionTags = {
 
 /** Every tag key that is a plain on/off mark — signature is set apart, it holds a value. */
 export const TAG_KEYS = [
-  'is_six_star_only',
   'is_attacker',
   'is_defender',
   'is_alliance_war',

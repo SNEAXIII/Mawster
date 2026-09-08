@@ -1,7 +1,7 @@
 'use client'
 
-import { Flame, Gem, Shield, Swords, Trophy } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
+import { DUAL_ICON, TAG_ICON } from '../_lib/tags'
 import type { ChampionTags } from '../_lib/types'
 
 /**
@@ -10,6 +10,9 @@ import type { ChampionTags } from '../_lib/types'
  * Attacker and defender collapse into a single "dual threat" chip when both are
  * set: three chips saying the same thing is noise, and the pairing is what the
  * player actually reads.
+ *
+ * The glyphs are the game's own artwork, served next to the portraits and the
+ * star frames — a generic sword icon next to in-game art reads as a placeholder.
  */
 interface TagBadgesProps {
   tags: ChampionTags
@@ -18,77 +21,67 @@ interface TagBadgesProps {
   className?: string
 }
 
-const CHIP = 'inline-flex items-center gap-0.5 rounded px-1 font-bold leading-none'
+interface Chip {
+  key: string
+  src: string
+  /** Printed next to the glyph — only the signature value does that. */
+  label?: string
+}
 
-export default function TagBadges({ tags, size, className }: Readonly<TagBadgesProps>) {
-  const dual = tags.is_attacker && tags.is_defender
-  const iconSize = Math.max(8, size)
-
-  const chips: { key: string; label: string; icon: React.ReactNode; tone: string }[] = []
-
-  if (dual) {
-    chips.push({
-      key: 'dual',
-      label: '',
-      icon: <Swords style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-violet-500/90 text-white',
-    })
+function chipsFor(tags: ChampionTags): Chip[] {
+  const chips: Chip[] = []
+  if (tags.is_attacker && tags.is_defender) {
+    chips.push({ key: 'dual', src: DUAL_ICON })
   } else if (tags.is_attacker) {
-    chips.push({
-      key: 'attacker',
-      label: '',
-      icon: <Swords style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-rose-500/90 text-white',
-    })
+    chips.push({ key: 'attacker', src: TAG_ICON.is_attacker })
   } else if (tags.is_defender) {
-    chips.push({
-      key: 'defender',
-      label: '',
-      icon: <Shield style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-sky-500/90 text-white',
-    })
+    chips.push({ key: 'defender', src: TAG_ICON.is_defender })
   }
-
   if (tags.is_alliance_war) {
-    chips.push({
-      key: 'aw',
-      label: '',
-      icon: <Flame style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-amber-500/90 text-black',
-    })
+    chips.push({ key: 'aw', src: TAG_ICON.is_alliance_war })
   }
   if (tags.is_battlegrounds) {
-    chips.push({
-      key: 'bg',
-      label: '',
-      icon: <Trophy style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-green-500/90 text-black',
-    })
+    chips.push({ key: 'bg', src: TAG_ICON.is_battlegrounds })
   }
   if (tags.is_awakened) {
     chips.push({
       key: 'awk',
+      src: TAG_ICON.is_awakened,
       // The signature value is the point of the awakened mark, so it is spelled
       // out rather than left to a tooltip nobody opens on a phone.
-      label: tags.signature > 0 ? `${tags.signature}` : '',
-      icon: <Gem style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-cyan-400 text-black',
+      label: tags.signature > 0 ? String(tags.signature) : undefined,
     })
   }
+  return chips
+}
 
+export default function TagBadges({ tags, size, className }: Readonly<TagBadgesProps>) {
+  const chips = chipsFor(tags)
   if (chips.length === 0) return null
+  const glyph = Math.max(12, size)
 
   return (
     <div
       className={cn('flex flex-wrap items-center justify-center gap-0.5', className)}
-      style={{ fontSize: Math.max(7, size * 0.9) }}
+      style={{ fontSize: Math.max(9, size * 0.55) }}
     >
       {chips.map((chip) => (
         <span
           key={chip.key}
-          className={cn(CHIP, chip.tone)}
+          data-cy={`tierlist-badge-${chip.key}`}
+          className={cn(
+            'inline-flex items-center rounded bg-slate-950/85 font-bold text-white',
+            // Padding only where a number sits next to the glyph: around a bare
+            // icon it just shrinks the artwork inside its own chip.
+            chip.label ? 'gap-0.5 pr-1 pl-0.5' : 'p-0'
+          )}
         >
-          {chip.icon}
+          <img
+            src={chip.src}
+            alt=''
+            style={{ width: glyph, height: glyph }}
+            className='object-contain'
+          />
           {chip.label}
         </span>
       ))}

@@ -20,8 +20,8 @@ interface TabParamOptions<T extends string> {
  * reload or a back button.
  *
  * `replace`, never `push`: switching tabs is not a navigation anyone wants to
- * walk back through one by one. The first render is skipped so landing on a
- * bare URL does not immediately rewrite it.
+ * walk back through one by one. A bare URL is rewritten on arrival, so the
+ * address bar always says which tab is open and can be copied as it stands.
  */
 export function useTabParam<T extends string>(
   values: readonly T[],
@@ -42,12 +42,9 @@ export function useTabParam<T extends string>(
   const clearParamsRef = useRef(options.clearParams)
   clearParamsRef.current = options.clearParams
 
-  const isFirstRender = useRef(true)
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
+    // Already what the URL says — writing it again would be a replace for nothing.
+    if (searchParams.get('tab') === activeTab) return
     const params = new URLSearchParams(searchParams.toString())
     params.set('tab', activeTab)
     for (const key of clearParamsRef.current?.(activeTab) ?? []) {

@@ -31,13 +31,6 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
     { name: t.nav.profile, href: '/profile', icon: User, role: Role.user, cy: 'nav-profile' },
     { name: t.nav.roster, href: '/game/account', icon: Sword, role: Role.user, cy: 'nav-roster' },
     {
-      name: t.nav.tools,
-      href: '/tools',
-      icon: Wrench,
-      role: Role.all,
-      cy: 'nav-tools',
-    },
-    {
       name: t.nav.alliances,
       href: '/game/alliances',
       icon: Shield,
@@ -59,6 +52,13 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
       role: Role.user,
       cy: 'nav-knowledge-base',
       requiresAlliance: true,
+    },
+    {
+      name: t.nav.tools,
+      href: '/tools',
+      icon: Wrench,
+      role: Role.all,
+      cy: 'nav-tools',
     },
     {
       name: t.nav.administration,

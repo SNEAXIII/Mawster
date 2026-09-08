@@ -3,7 +3,10 @@ import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 import { isServerDev } from '@/app/lib/dev-mode'
 
-const PUBLIC_PATHS = ['/', '/api/auth', '/login', '/register']
+// `/tools` is open on purpose: the tier list reads the champion catalog, which
+// answers without a session, and a signed-out visitor keeps a board in their
+// browser. Signing in is what turns it into a saved list, not what unlocks it.
+const PUBLIC_PATHS = ['/', '/api/auth', '/login', '/register', '/tools']
 const ADMIN_PATHS = ['/admin']
 
 function isPathMatching(path: string, paths: string[]): boolean {

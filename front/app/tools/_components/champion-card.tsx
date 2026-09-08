@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities'
 import ChampionPortrait from '@/components/champion-portrait'
 import { cn } from '@/app/lib/utils'
 import TagBadges from './tag-badges'
+import { frameRarity } from '../_lib/tags'
 import type { CatalogChampion, ChampionTags } from '../_lib/types'
 
 export interface ChampionCardProps {
@@ -15,15 +16,6 @@ export interface ChampionCardProps {
   showName: boolean
   showBadges: boolean
   onOpen?: (championId: string) => void
-}
-
-/**
- * Which star frame a champion is drawn in. Rarity is a property of the champion,
- * not a display toggle: one with no 7-star version always shows the 6-star frame.
- * The tag is the editable source, `is_7_star` the catalog's answer.
- */
-function frameRarity(champion: CatalogChampion, tags: ChampionTags): string {
-  return tags.is_six_star_only || !champion.is_7_star ? '6r1' : '7r1'
 }
 
 /** Portrait, chips and (optionally) the name — the visual only, no drag wiring. */
@@ -42,9 +34,13 @@ export function ChampionCardVisual({
       <ChampionPortrait
         imageUrl={champion.image_url}
         name={champion.name}
-        rarity={frameRarity(champion, tags)}
+        rarity={frameRarity(champion)}
         size={size}
         box='frame'
+        // The badge means "can be ascended" here, not "is ascended at rank 1":
+        // a tier list ranks the catalog, where nobody owns anything, so there is
+        // no level to show — only whether the champion has an ascension at all.
+        ascension={champion.is_ascendable ? 1 : 0}
         is_saga_attacker={champion.is_saga_attacker}
         is_saga_defender={champion.is_saga_defender}
         sagaMode='all'
@@ -54,7 +50,7 @@ export function ChampionCardVisual({
       {showBadges && (
         <TagBadges
           tags={tags}
-          size={Math.max(9, size * 0.17)}
+          size={Math.max(14, size * 0.28)}
           className='mt-0.5'
         />
       )}

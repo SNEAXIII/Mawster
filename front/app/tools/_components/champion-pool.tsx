@@ -39,7 +39,7 @@ export default function ChampionPool({
       ref={setNodeRef}
       data-cy='tierlist-pool'
       className={cn(
-        'flex min-h-24 flex-wrap content-start gap-1 rounded-lg border bg-card p-2 transition-colors',
+        'flex min-h-24 flex-wrap content-start gap-2 rounded-lg border bg-card p-3 transition-colors',
         isOver && 'bg-primary/10'
       )}
     >

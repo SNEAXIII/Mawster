@@ -1668,3 +1668,110 @@ export function seedDefender(opts: {
     cy.apiPlaceDefender(ownerToken, allianceId, opts.battlegroup ?? 1, opts.node ?? 1, championUser.id, gameAccountId);
   });
 }
+
+// ── Tier list ───────────────────────────────────────────────────────────────
+
+/** One champion to put in the catalog before a tier list spec runs. */
+export interface TierListChampion {
+  name: string;
+  championClass: string;
+  options?: { is_ascendable?: boolean; alias?: string };
+  /** Given, the champion is flagged for the season currently running. */
+  saga?: { is_saga_attacker?: boolean; is_saga_defender?: boolean };
+}
+
+export interface TierListSetup {
+  adminData: UserSetupData;
+  userData: UserSetupData;
+  accountId: string;
+  /** Champion id by name — an export file and a seeded list carry ids, not names. */
+  championIds: Record<string, string>;
+}
+
+/**
+ * Admin + user + the champions the pool needs. The tier list is public, so most
+ * specs only use the admin to load the catalog and then drop the session.
+ */
+export function setupTierList(
+  tokenPrefix: string,
+  champions: readonly TierListChampion[],
+): Cypress.Chainable<TierListSetup> {
+  return setupRosterUser(tokenPrefix, 'TierListPlayer').then((users) => {
+    const championIds: Record<string, string> = {};
+    for (const champion of champions) {
+      const token = users.adminData.access_token;
+      const loaded = champion.saga
+        ? cy.apiLoadChampionWithSaga(token, champion.name, champion.championClass, champion.saga)
+        : cy.apiLoadChampion(token, champion.name, champion.championClass, champion.options);
+      loaded.then((rows) => {
+        championIds[champion.name] = rows[0].id;
+      });
+    }
+    // Same object the loads above filled in — they run before this wrap does.
+    return cy.wrap({ ...users, championIds }, { log: false });
+  });
+}
+
+/** Open the tier list with no session at all, and wait for the catalog. */
+export function visitTierListSignedOut(): void {
+  cy.clearAllCookies();
+  cy.clearAllSessionStorage();
+  cy.clearAllLocalStorage();
+  cy.visit('/tools');
+  cy.getByCy('tierlist-pool').should('exist');
+}
+
+/** Open the tier list signed in as a user, and wait for the catalog. */
+export function visitTierListAs(userId: string): void {
+  cy.apiLogin(userId, '/tools');
+  cy.getByCy('tierlist-pool').should('exist');
+}
+
+/**
+ * Send a champion to a row through its sheet. This is how the specs move a
+ * champion: dnd-kit wants pointer events with a distance constraint, which
+ * Cypress cannot fake, and the sheet takes the same path in the board.
+ */
+export function rankChampion(name: string, rowLabel: string): void {
+  cy.getByCy(`tierlist-champion-${name}`).first().click();
+  cy.getByCy(`tierlist-send-to-${rowLabel}`).click();
+  closeChampionSheet();
+}
+
+/** Escape rather than the button: the label is translated, the key is not. */
+export function closeChampionSheet(): void {
+  cy.get('body').type('{esc}');
+  cy.getByCy('tierlist-champion-sheet').should('not.exist');
+}
+
+/** The board this browser holds, as it was written — null when it holds none. */
+export function storedBoard(): Cypress.Chainable<string | null> {
+  return cy.window().its('localStorage').invoke('getItem', 'mawster-tierlist:board');
+}
+
+/** One tier list created straight through the API, so a spec can start with several. */
+export function seedTierList(
+  token: string,
+  title: string,
+  firstRowChampionIds: string[] = [],
+): Cypress.Chainable<string> {
+  return cy
+    .request({
+      method: 'POST',
+      url: `${BACKEND}/tierlists`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: {
+        title,
+        tiers: ['S', 'A', 'B', 'C', 'D'].map((label, index) => ({
+          label,
+          color: '#ff7f7f',
+          champion_ids: index === 0 ? firstRowChampionIds : [],
+        })),
+        tags: [],
+      },
+    })
+    .then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body.id as string;
+    });
+}
