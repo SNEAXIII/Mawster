@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useI18n } from '@/app/i18n'
+import { useVisiblePoll } from '@/hooks/use-visible-poll'
 import { toast } from 'sonner'
 import {
   type DefenseSummary,
@@ -58,27 +59,19 @@ export function useDefenseActions(selectedAllianceId: string, selectedBg: number
     fetchDefenseRef.current = fetchDefense
   }, [fetchDefense])
 
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const resetPollTimer = useCallback(() => {
-    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
-    pollIntervalRef.current = setInterval(() => fetchDefenseRef.current(true), 10_000)
-  }, [])
+  const resetPollTimer = useVisiblePoll(
+    () => fetchDefenseRef.current(true),
+    10_000,
+    Boolean(selectedAllianceId)
+  )
 
   useEffect(() => {
     if (selectedAllianceId) {
       fetchDefense()
+      resetPollTimer()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAllianceId, selectedBg])
-
-  useEffect(() => {
-    if (!selectedAllianceId) return
-    resetPollTimer()
-    return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
-    }
-  }, [selectedAllianceId, selectedBg, resetPollTimer])
 
   // ─── Actions ───────────────────────────────────────────
   const handlePlaceDefender = async (

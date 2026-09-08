@@ -46,7 +46,10 @@ if TYPE_CHECKING:
     from src.dto.account.game.dto_vision_predictions import VisionPredictionResponse
     from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 
-MAX_SCREENS_PER_IMPORT = 40
+# A full roster fits in about 20 screenshots, so this leaves headroom without
+# letting one batch monopolise the CPU: every screenshot is an inference, and
+# inference is the only thing the vision pipeline is short of.
+MAX_SCREENS_PER_IMPORT = 25
 MAX_SCREEN_BYTES = 8 * 1024 * 1024
 ALLOWED_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
 
@@ -594,21 +597,33 @@ class VisionImportService:
         return (await session.exec(statement)).first()
 
     @classmethod
-    async def count_recent_imports(
+    async def count_recent_screens(
         cls, session: SessionDep, user_id: uuid.UUID, hours: int = 1
     ) -> int:
-        """Imports this user created in the last `hours`, across all their game
+        """Screenshots this user queued in the last `hours`, across all their game
         accounts and whatever their status.
+
+        Screenshots, not imports: one screenshot is one job is one inference, and
+        CPU is the only thing this pipeline is short of. Ten one-screen imports
+        cost a fraction of one full batch, so counting imports charged the wrong
+        thing.
 
         Counted in the DB on purpose: an in-process limiter (slowapi) is per
         worker, so two uvicorn workers would double the real limit and a restart
         would reset it. Cancelled imports count too — the quota measures work
-        asked of the server, not work kept.
+        asked of the server, not work kept — and their jobs survive the cancel,
+        which is what keeps that true.
+
+        Jobs are created up front, at init, so a batch counts from the moment it
+        is reserved rather than once its bytes land. An import abandoned
+        mid-upload still cost the reservation, and charging it is what stops
+        `init -> abandon -> init` from looping for free.
         """
 
         cutoff = datetime.now(UTC) - timedelta(hours=hours)
         statement = (
-            select(func.count(VisionImport.id))
+            select(func.count(VisionJob.id))
+            .join(VisionImport, VisionImport.id == VisionJob.import_id)
             .join(GameAccount, GameAccount.id == VisionImport.game_account_id)
             .where(GameAccount.user_id == user_id, VisionImport.created_at > cutoff)
         )
@@ -726,9 +741,10 @@ class VisionImportService:
     ) -> None:
         """Cancel an import: purge its RustFS objects, keep the row.
 
-        The row is kept on purpose. The hourly quota counts rows, so deleting on
-        cancel would let create -> cancel -> create slip under the limit forever.
-        A row costs nothing; the objects are what cost, and those are purged.
+        The row and its jobs are kept on purpose. The hourly quota counts the
+        jobs of these rows, so deleting on cancel would let create -> cancel ->
+        create slip under the limit forever. Both cost nothing; the objects are
+        what cost, and those are purged.
         The predictions are kept too — they are the record of what the server was
         asked to do, and they are what makes the quota honest.
         """

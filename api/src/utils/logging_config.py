@@ -61,10 +61,11 @@ def setup_logging(level: int = logging.INFO) -> None:
 
     Call this once from main.py before the app starts.
     """
-    # Detect whether we're running inside a container environment. In container
-    # mode we prefer logging to stdout/stderr only and let Docker handle
-    # rotation/retention (avoids duplicate file logs).
-    CONTAINER_MODE = os.getenv("CONTAINER") == "1" or os.getenv("MODE") == "testing"
+    # Only local development writes log files. Everywhere else — prod and staging, where
+    # Docker owns rotation and retention, and the test suite, where every xdist worker
+    # would open the same RotatingFileHandler and race the others' rotations — the app
+    # logs to stdout and nothing else.
+    is_dev = os.getenv("MODE", "dev") == "dev"
 
     # Root logger
     root = logging.getLogger()
@@ -82,8 +83,7 @@ def setup_logging(level: int = logging.INFO) -> None:
     console.setFormatter(formatter)
     root.addHandler(console)
 
-    if not CONTAINER_MODE:
-        # In non-container mode create logs directory and add rotating file handler
+    if is_dev:
         LOG_DIR.mkdir(parents=True, exist_ok=True)
 
         # Rotating file handler — general app logs
@@ -106,8 +106,8 @@ def setup_logging(level: int = logging.INFO) -> None:
 
     audit_formatter = logging.Formatter(AUDIT_FORMAT, datefmt=DATE_FORMAT)
 
-    if CONTAINER_MODE:
-        # In container mode, send audit events to the same console
+    if not is_dev:
+        # Same rule as the app log: stdout only, and let the platform collect it.
         audit_handler = logging.StreamHandler()
         audit_handler.setLevel(logging.INFO)
         audit_handler.setFormatter(audit_formatter)
@@ -124,12 +124,12 @@ def setup_logging(level: int = logging.INFO) -> None:
         audit_handler.setFormatter(audit_formatter)
         audit_logger.addHandler(audit_handler)
 
-        # Also echo audit events to the console in non-prod
-        if os.getenv("MODE") != "prod":
-            audit_console = logging.StreamHandler()
-            audit_console.setLevel(logging.INFO)
-            audit_console.setFormatter(audit_formatter)
-            audit_logger.addHandler(audit_console)
+        # `audit` does not propagate, so without this the events would only ever reach
+        # the file and never the terminal the developer is watching.
+        audit_console = logging.StreamHandler()
+        audit_console.setLevel(logging.INFO)
+        audit_console.setFormatter(audit_formatter)
+        audit_logger.addHandler(audit_console)
 
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
