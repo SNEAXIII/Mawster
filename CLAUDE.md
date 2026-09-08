@@ -129,6 +129,19 @@ Project agents live in `.claude/agents/`. They are **not auto-dispatched** — c
 - **Styling**: Tailwind semantic tokens (`bg-card`, `text-muted-foreground`), dark mode first
 - **Explain changes**: After every Edit/Write, briefly explain what changed, why, and the expected effect
 
+### Comments — keep them rare
+
+Volume buries the one comment that matters, and most comments restate what the code
+already says. Hard limits, not judgment calls:
+
+- **2 lines maximum.** Longer reasoning goes in the commit body, where it belongs.
+- **No block above a config line, an env var, a workflow step or a list entry.** If the
+  value needs justifying: one trailing line, or nothing.
+- One rationale lives in **one** place — never the same explanation in two files.
+- Never narrate the incident that motivated the code. That is commit-message material.
+- Still worth a comment: why something is *absent*, why a workaround exists, why an order
+  is load-bearing.
+
 ### Commit types
 
 release-please reads these to decide the version bump and to write `CHANGELOG.md`, so the type is
