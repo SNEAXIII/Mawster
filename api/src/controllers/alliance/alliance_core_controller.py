@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
@@ -15,10 +14,10 @@ from src.dto.alliance.dto_alliance import (
     AllianceUpdateTierRequest,
 )
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
-from src.models import User
 from src.models.alliance.Alliance import Alliance
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 alliance_core_controller = APIRouter(
@@ -35,7 +34,7 @@ def _to_response(alliance: Alliance) -> AllianceResponse:
 @alliance_core_controller.get("/eligible-owners", response_model=list[GameAccountResponse])
 async def get_eligible_owners(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get the current user's game accounts that are NOT in any alliance (eligible to create one)."""
     return await AllianceService.get_eligible_owners(session, current_user.id)
@@ -47,7 +46,7 @@ async def get_eligible_owners(
 async def get_eligible_members(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get all game accounts NOT in any alliance (can be invited to this one).
 
@@ -65,7 +64,7 @@ async def get_eligible_members(
 async def get_eligible_visitors(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get all game accounts that can be invited as visitors.
 
@@ -81,7 +80,7 @@ async def get_eligible_visitors(
 async def create_alliance(
     body: AllianceCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Create a new alliance. The owner game account must belong to the current user."""
     alliance = await AllianceService.create_alliance(
@@ -108,7 +107,7 @@ async def get_all_alliances(session: SessionDep):
 @alliance_core_controller.get("/mine", response_model=list[AllianceResponse])
 async def get_my_alliances(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get only alliances where the current user has a game account as a member."""
     alliances = await AllianceService.get_my_alliances(session, current_user.id)
@@ -118,7 +117,7 @@ async def get_my_alliances(
 @alliance_core_controller.get("/my-visited", response_model=list[AllianceResponse])
 async def get_my_visited_alliances(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get alliances where the current user's game account is currently a visitor."""
     alliances = await AllianceService.get_my_visited_alliances(session, current_user.id)
@@ -128,7 +127,7 @@ async def get_my_visited_alliances(
 @alliance_core_controller.get("/my-roles", response_model=AllianceMyRolesResponse)
 async def get_my_alliance_roles(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get the current user's role in each of their alliances."""
     return await AllianceService.get_my_roles(session, current_user.id)
@@ -137,7 +136,7 @@ async def get_my_alliance_roles(
 @alliance_core_controller.get("/accessible", response_model=list[AllianceResponse])
 async def get_accessible_alliances(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get alliances the current user can access (member + visitor)."""
     alliances = await AllianceService.get_accessible_alliances(session, current_user.id)
@@ -150,7 +149,7 @@ async def get_accessible_alliances(
 async def get_alliance(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get a specific alliance by ID.
 
@@ -170,7 +169,7 @@ async def update_alliance(
     alliance_id: uuid.UUID,
     body: AllianceCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Update an alliance. Only the owner can update."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
@@ -188,7 +187,7 @@ async def update_alliance_elo(
     alliance_id: uuid.UUID,
     body: AllianceUpdateEloRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Update alliance ELO. Officers/owner only."""
     alliance = await session.get(Alliance, alliance_id)
@@ -204,7 +203,7 @@ async def update_alliance_tier(
     alliance_id: uuid.UUID,
     body: AllianceUpdateTierRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Update alliance Tier. Officers/owner only."""
     alliance = await session.get(Alliance, alliance_id)
@@ -220,7 +219,7 @@ async def delete_alliance(
     alliance_id: uuid.UUID,
     body: AllianceDeleteRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Soft-delete an alliance. Owner only, and only while they are its last member.
 

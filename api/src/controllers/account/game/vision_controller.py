@@ -28,7 +28,6 @@ from src.Messages.vision_messages import (
 )
 from src.messaging import get_publisher
 from src.messaging.publisher import VisionPublisher
-from src.models import User
 from src.models.user.GameAccount import GameAccount
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
@@ -40,6 +39,7 @@ from src.services.account.game.VisionResultService import VisionResultService
 from src.services.auth.AuthService import AuthService
 from src.storage import get_storage
 from src.storage.base import Storage, sprite_key
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 VISION_DISABLED_EXCEPTION = HTTPException(
@@ -133,7 +133,7 @@ async def _enforce_screen_quota(
 )
 async def create_vision_import(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
     publisher: Annotated[VisionPublisher, Depends(get_publisher)],
     game_account_id: Annotated[uuid.UUID, Form()],
@@ -178,7 +178,7 @@ async def create_vision_import(
 async def init_vision_import(
     session: SessionDep,
     body: VisionInitRequest,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
 ):
     """Reserve an import and return one presigned upload URL per screenshot.
@@ -215,7 +215,7 @@ async def commit_vision_screen(
     session: SessionDep,
     import_id: uuid.UUID,
     job_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
     publisher: Annotated[VisionPublisher, Depends(get_publisher)],
 ):
@@ -235,7 +235,7 @@ async def commit_vision_screen(
 async def commit_vision_import(
     session: SessionDep,
     import_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
     publisher: Annotated[VisionPublisher, Depends(get_publisher)],
 ):
@@ -257,7 +257,7 @@ async def commit_vision_import(
 async def get_current_vision_import(
     session: SessionDep,
     game_account_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     response: Response,
 ):
     """The one import awaiting attention on this game account, or 204.
@@ -288,7 +288,7 @@ async def get_current_vision_import(
 async def get_vision_import(
     session: SessionDep,
     import_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Progress of an import. The front polls this while the batch runs."""
     return await _get_own_import(session, import_id, current_user.id)
@@ -298,7 +298,7 @@ async def get_vision_import(
 async def get_vision_predictions(
     session: SessionDep,
     import_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """All predictions of an import, feeding the review screen's preview rows."""
     await _get_own_import(session, import_id, current_user.id)
@@ -311,7 +311,7 @@ async def confirm_vision_import(
     session: SessionDep,
     import_id: uuid.UUID,
     body: VisionConfirmRequest,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
 ):
     """Archive the dataset (if opted in) and mark the import confirmed. The roster
@@ -348,7 +348,7 @@ async def get_crop_sprite(
     session: SessionDep,
     import_id: uuid.UUID,
     job_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
 ):
     """Every thumbnail of one screenshot, as a single sheet the front slices.
@@ -382,7 +382,7 @@ async def get_crop_sprite(
 async def delete_vision_import(
     session: SessionDep,
     import_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
 ):
     """Cancel an import without deleting it. Its row and predictions are kept —
@@ -398,7 +398,7 @@ async def delete_vision_import(
 async def retry_vision_job(
     session: SessionDep,
     job_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     publisher: Annotated[VisionPublisher, Depends(get_publisher)],
 ):
     """Relaunch a screenshot the pipeline could not read.

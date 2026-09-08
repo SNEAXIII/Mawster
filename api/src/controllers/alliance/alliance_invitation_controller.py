@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
@@ -9,11 +8,11 @@ from src.dto.alliance.dto_invitation import (
     AllianceInvitationResponse,
 )
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
-from src.models import User
 from src.models.alliance.AllianceInvitation import AllianceInvitation
 from src.services.alliance.AllianceInvitationService import AllianceInvitationService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 alliance_invitation_controller = APIRouter(
@@ -32,7 +31,7 @@ def _invitation_to_response(inv: AllianceInvitation) -> AllianceInvitationRespon
 )
 async def get_my_invitations(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get all pending invitations for the current user's game accounts."""
     invitations = await AllianceInvitationService.get_invitations_for_user(session, current_user.id)
@@ -45,7 +44,7 @@ async def get_my_invitations(
 async def accept_invitation(
     invitation_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Accept a pending invitation — the game account joins the alliance."""
     invitation = await AllianceInvitationService.accept_invitation(
@@ -62,7 +61,7 @@ async def accept_invitation(
 async def decline_invitation(
     invitation_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Decline a pending invitation."""
     invitation = await AllianceInvitationService.decline_invitation(
@@ -82,7 +81,7 @@ async def invite_member(
     alliance_id: uuid.UUID,
     body: AllianceInvitationCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Invite a game account to join the alliance. Only the owner or an officer can invite."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
@@ -108,7 +107,7 @@ async def invite_member(
 async def get_alliance_invitations(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get all pending invitations for an alliance. Only the owner or an officer can view."""
     await AllianceService.require_officer(session, alliance_id, current_user.id)
@@ -123,7 +122,7 @@ async def cancel_invitation(
     alliance_id: uuid.UUID,
     invitation_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Cancel a pending invitation. Only the owner or an officer can cancel."""
     alliance = await AllianceService.get_alliance(session, alliance_id)

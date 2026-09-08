@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from starlette import status
@@ -10,10 +9,10 @@ from src.dto.alliance.war.dto_war import (
     WarPlacementCreateRequest,
     WarPlacementResponse,
 )
-from src.models import User
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.war.WarService import WarService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 
@@ -33,7 +32,7 @@ async def get_war_defense(
     war_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Get defense placements for a war battlegroup. All members can view."""
@@ -52,7 +51,7 @@ async def place_war_defender(
     battlegroup: BattlegroupPath,
     body: WarPlacementCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Place a champion on a war defense node. Officers/owner/strategist only."""
@@ -72,7 +71,7 @@ async def remove_war_defender(
     battlegroup: BattlegroupPath,
     node_number: int,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Remove a defender from a war node. Officers/owner/strategist only."""
@@ -89,7 +88,7 @@ async def clear_war_bg(
     war_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Clear all defenders in a war battlegroup. Officers/owner/strategist only."""

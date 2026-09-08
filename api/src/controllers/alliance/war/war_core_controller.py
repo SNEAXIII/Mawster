@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from starlette import status
@@ -10,10 +9,10 @@ from src.dto.alliance.war.dto_war import (
     WarResponse,
     WarUpdateRequest,
 )
-from src.models import User
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.war.WarService import WarService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 war_core_controller = APIRouter(
@@ -32,7 +31,7 @@ async def create_war(
     alliance_id: uuid.UUID,
     body: WarCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Declare a new war against an opponent. Officers/owner only."""
     account = await AllianceService.assert_officer_or_owner_by_id(
@@ -50,7 +49,7 @@ async def create_war(
 async def list_wars(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """List all wars for an alliance. All members can view."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
@@ -64,7 +63,7 @@ async def list_wars(
 async def get_current_war(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get the currently active war for an alliance. All members can view."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
@@ -80,7 +79,7 @@ async def update_war(
     war_id: uuid.UUID,
     body: WarUpdateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Update opponent name and bans for an active war. Officers/owner only."""
     await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
@@ -98,7 +97,7 @@ async def end_war(
     war_id: uuid.UUID,
     body: WarEndRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Mark a war as ended with result. Officers/owner only."""
     await AllianceService.require_officer(session, alliance_id, current_user.id)
