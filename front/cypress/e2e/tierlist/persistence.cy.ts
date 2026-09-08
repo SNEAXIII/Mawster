@@ -65,9 +65,14 @@ describe('Tier list – saving', () => {
     cy.getByCy('selector-toggle-ascendable').click();
     cy.getByCy('tierlist-pool').scrollIntoView();
 
-    // Longer than the save delay: if a write were coming, it would be here.
-    cy.wait(1500);
-    cy.get('@save.all').should('have.length', 0);
+    // An absence cannot be waited for, so it is pinned to something that can:
+    // one real change, and the PUT it triggers. That PUT has to be the first
+    // one — it carries the sixth row — which is only true if none of the
+    // gestures above sent anything.
+    cy.getByCy('tierlist-add-row').click();
+
+    cy.wait('@save').its('request.body.tiers').should('have.length', 6);
+    cy.get('@save.all').should('have.length', 1);
   });
 
   it('goes through Saving… on the way to Saved', () => {
@@ -109,8 +114,10 @@ describe('Tier list – saving', () => {
 
     rankChampion('SaveHero', 'S');
 
+    // The browser write and the request are the same branch of the same timer:
+    // once the board is in local storage, the save has run, and whatever it was
+    // going to send it has sent.
     storedBoard().should('not.be.null');
-    cy.wait(1500);
     cy.get('@create.all').should('have.length', 0);
     cy.get('@save.all').should('have.length', 0);
   });
