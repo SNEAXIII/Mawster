@@ -1,5 +1,5 @@
 'use client'
-import { Home, User, Sword, Shield, Swords, UserStar, BookOpen } from 'lucide-react'
+import { Home, User, Sword, Shield, Swords, UserStar, BookOpen, Wrench } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useI18n } from '@/app/i18n'
@@ -30,6 +30,13 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
     { name: t.nav.home, href: '/', icon: Home, role: Role.all, cy: 'nav-home' },
     { name: t.nav.profile, href: '/profile', icon: User, role: Role.user, cy: 'nav-profile' },
     { name: t.nav.roster, href: '/game/account', icon: Sword, role: Role.user, cy: 'nav-roster' },
+    {
+      name: t.nav.tools,
+      href: '/tools',
+      icon: Wrench,
+      role: Role.all,
+      cy: 'nav-tools',
+    },
     {
       name: t.nav.alliances,
       href: '/game/alliances',
@@ -80,11 +87,11 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
             href={link.href}
             data-cy={link.cy}
             className={cn(
-              'flex h-12 grow items-center justify-center gap-2 rounded-md bg-muted/50 p-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground md:flex-none md:justify-start md:p-2 md:px-3',
+              'flex h-10 grow items-center justify-center gap-2 rounded-md bg-muted/50 p-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground md:h-12 md:flex-none md:justify-start md:p-2 md:px-3',
               isActive && 'bg-accent text-accent-foreground font-semibold'
             )}
           >
-            <LinkIcon className='h-5 w-5 shrink-0' />
+            <LinkIcon className='size-4 shrink-0 md:size-5' />
             <p className='hidden md:block'>{link.name}</p>
           </Link>
         )
