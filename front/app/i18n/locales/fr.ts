@@ -1270,6 +1270,9 @@ const fr: Translations = {
     },
   },
   tierlist: {
+    clearTierConfirm: 'Renvoyer les {count} champions de la ligne {label} au pool ?',
+    removeTierConfirm: 'Supprimer la ligne {label} ? Ses champions retournent au pool.',
+    deleteListConfirm: 'Supprimer « {title} » ? Ses lignes et ses tags seront perdus.',
     rarityAll: 'Toutes raretés',
     raritySeven: '7★ seulement',
     raritySix: '6★ seulement',

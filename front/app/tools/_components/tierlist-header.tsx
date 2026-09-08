@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/app/i18n'
+import { cn } from '@/app/lib/utils'
 import { SearchInput } from '@/components/search-input'
 import {
   Select,
@@ -12,6 +13,8 @@ import {
 import SelectorFilterBar, { type ToggleConfig } from '@/app/game/_components/selector-filter-bar'
 import { CHAMPION_CLASSES } from '../_lib/types'
 import { EMPTY_FILTERS, hasActiveFilters } from '../_lib/filters'
+import { TAG_DISPLAY, TAG_ICON } from '../_lib/tags'
+import { TAG_KEYS } from '../_lib/types'
 import type { DisplayPrefs } from '../_hooks/use-prefs'
 import type { BoardActions } from '../_hooks/use-board'
 import type { FilterState, RarityFilter } from '../_lib/filters'
@@ -129,6 +132,43 @@ export default function TierListHeader({
           <span className='text-xs text-muted-foreground'>
             {t.tierlist.shown.replace('{shown}', String(shown)).replace('{total}', String(total))}
           </span>
+        </div>
+
+        {/* Tag filters, in the same glyphs the cards wear: a champion has to
+            carry every tag picked here to stay in the pool. */}
+        <div className='flex flex-wrap gap-1.5'>
+          {TAG_KEYS.map((key) => {
+            const active = filters.tags.includes(key)
+            return (
+              <button
+                key={key}
+                type='button'
+                title={t.tierlist.tags[key]}
+                data-cy={`tierlist-filter-tag-${key}`}
+                onClick={() =>
+                  onFiltersChange({
+                    ...filters,
+                    tags: active
+                      ? filters.tags.filter((entry) => entry !== key)
+                      : [...filters.tags, key],
+                  })
+                }
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-bold transition-colors',
+                  active
+                    ? `${TAG_DISPLAY[key].tone} border-transparent`
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <img
+                  src={TAG_ICON[key]}
+                  alt=''
+                  className='size-4'
+                />
+                {TAG_DISPLAY[key].code}
+              </button>
+            )
+          })}
         </div>
 
         <SelectorFilterBar

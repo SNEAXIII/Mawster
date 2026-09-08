@@ -154,6 +154,7 @@ export function useTierListViewModel() {
     activeId,
     setActiveId,
     poolChampions,
+    rankedCount: ranked.size,
     reviewChampions,
     reviewQueue,
     reviewPlaced,

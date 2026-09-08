@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 import { Plus, Trash2 } from 'lucide-react'
 import {
   Select,
@@ -9,12 +11,21 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { useI18n } from '@/app/i18n'
 import type { TierListSummary } from '@/app/services/tierlist'
 
 interface TierListPickerProps {
   lists: TierListSummary[]
   activeId: string | null
+  /**
+   * How many champions the open board holds right now. The count the API sent
+   * is a snapshot from load time, so the row being edited would keep showing a
+   * stale number until the next reload.
+   */
+  activeRankedCount: number
+  /** Named in the confirmation, so nobody deletes the wrong list. */
+  activeTitle: string
   onSelect: (id: string) => void
   onCreate: () => void
   onDelete: () => void
@@ -27,11 +38,14 @@ interface TierListPickerProps {
 export default function TierListPicker({
   lists,
   activeId,
+  activeRankedCount,
+  activeTitle,
   onSelect,
   onCreate,
   onDelete,
 }: Readonly<TierListPickerProps>) {
   const { t } = useI18n()
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   return (
     <div className='flex items-center gap-2'>
@@ -52,7 +66,8 @@ export default function TierListPicker({
                 key={list.id}
                 value={list.id}
               >
-                {list.title || t.tierlist.boardTitle} ({list.ranked_champion_count})
+                {list.title || t.tierlist.boardTitle} (
+                {list.id === activeId ? activeRankedCount : list.ranked_champion_count})
               </SelectItem>
             ))}
           </SelectContent>
@@ -73,7 +88,7 @@ export default function TierListPicker({
         <Button
           variant='ghost'
           size='sm'
-          onClick={onDelete}
+          onClick={() => setConfirmingDelete(true)}
           data-cy='tierlist-delete'
           title={t.tierlist.deleteList}
           className='text-muted-foreground hover:text-destructive'
@@ -81,6 +96,20 @@ export default function TierListPicker({
           <Trash2 className='size-4' />
         </Button>
       )}
+
+      <ConfirmationDialog
+        open={confirmingDelete}
+        onOpenChange={setConfirmingDelete}
+        title={t.tierlist.deleteList}
+        description={t.tierlist.deleteListConfirm.replace(
+          '{title}',
+          activeTitle || t.tierlist.boardTitle
+        )}
+        onConfirm={() => {
+          onDelete()
+          setConfirmingDelete(false)
+        }}
+      />
     </div>
   )
 }

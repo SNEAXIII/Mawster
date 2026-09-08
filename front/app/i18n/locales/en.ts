@@ -1257,6 +1257,9 @@ const en = {
     },
   },
   tierlist: {
+    clearTierConfirm: 'Send the {count} champions in row {label} back to the pool?',
+    removeTierConfirm: 'Delete row {label}? Its champions go back to the pool.',
+    deleteListConfirm: 'Delete "{title}"? Its rows and tags are lost for good.',
     rarityAll: 'Every rarity',
     raritySeven: '7★ only',
     raritySix: '6★ only',

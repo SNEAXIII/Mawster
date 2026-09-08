@@ -109,6 +109,8 @@ export default function TierListBoard() {
             <TierListPicker
               lists={vm.tierLists.lists}
               activeId={vm.activeId}
+              activeRankedCount={vm.rankedCount}
+              activeTitle={vm.board.title}
               onSelect={vm.setActiveId}
               onCreate={vm.handleCreateList}
               onDelete={vm.handleDeleteList}

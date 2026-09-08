@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
 import { ChevronDown, ChevronUp, Trash2, X } from 'lucide-react'
+import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import ChampionCard from './champion-card'
@@ -54,6 +55,8 @@ export default function TierRow({
 }: Readonly<TierRowProps>) {
   const { t } = useI18n()
   const { setNodeRef, isOver } = useDroppable({ id: tier.id })
+  // One slot rather than a flag each: only ever one dialog is open.
+  const [confirming, setConfirming] = useState<'clear' | 'remove' | null>(null)
 
   /**
    * The colour being dragged in the picker, kept out of the board.
@@ -172,7 +175,7 @@ export default function TierRow({
           </button>
           <button
             type='button'
-            onClick={() => actions.clearTier(tier.id)}
+            onClick={() => setConfirming('clear')}
             disabled={tier.championIds.length === 0}
             title={t.tierlist.clearTier}
             aria-label={t.tierlist.clearTier}
@@ -182,7 +185,7 @@ export default function TierRow({
           </button>
           <button
             type='button'
-            onClick={() => actions.removeTier(tier.id)}
+            onClick={() => setConfirming('remove')}
             disabled={!canRemove}
             title={t.tierlist.removeTier}
             aria-label={t.tierlist.removeTier}
@@ -203,6 +206,24 @@ export default function TierRow({
           </button>
         </div>
       )}
+
+      <ConfirmationDialog
+        open={confirming !== null}
+        onOpenChange={(open) => !open && setConfirming(null)}
+        title={confirming === 'remove' ? t.tierlist.removeTier : t.tierlist.clearTier}
+        description={
+          confirming === 'remove'
+            ? t.tierlist.removeTierConfirm.replace('{label}', tier.label)
+            : t.tierlist.clearTierConfirm
+                .replace('{label}', tier.label)
+                .replace('{count}', String(tier.championIds.length))
+        }
+        onConfirm={() => {
+          if (confirming === 'remove') actions.removeTier(tier.id)
+          else actions.clearTier(tier.id)
+          setConfirming(null)
+        }}
+      />
     </div>
   )
 }
