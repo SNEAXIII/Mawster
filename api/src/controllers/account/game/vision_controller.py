@@ -18,9 +18,9 @@ from src.enums.VisionJobStatus import VisionJobStatus
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.Messages.vision_messages import (
     IMPORT_ALREADY_PENDING,
-    IMPORT_QUOTA_EXCEEDED,
     JOB_NOT_RETRYABLE,
     NOT_YOUR_VISION_IMPORT,
+    SCREEN_QUOTA_EXCEEDED,
     VISION_CROP_NOT_FOUND,
     VISION_DISABLED,
     VISION_IMPORT_NOT_FOUND,
@@ -60,7 +60,10 @@ vision_controller = APIRouter(
     dependencies=[Depends(AuthService.get_current_user_in_jwt), Depends(_require_vision_enabled)],
 )
 
-MAX_IMPORTS_PER_HOUR = 10
+# Two full batches an hour. The unit is the screenshot, not the import, because
+# that is what the server actually pays: one screenshot is one job is one
+# inference.
+MAX_SCREENS_PER_HOUR = 50
 
 
 class VisionConfirmRequest(BaseModel):
@@ -103,6 +106,28 @@ async def _get_own_game_account(
     return game_account
 
 
+async def _enforce_screen_quota(
+    session: SessionDep, current_user_id: uuid.UUID, requested: int
+) -> None:
+    """Reject the whole batch if it would push the user past the hourly screen quota.
+
+    All or nothing: truncating the batch to what fits would import half a roster
+    while reporting success, which is worse than asking for a smaller batch. The
+    message carries what is left so the retry is informed rather than blind.
+
+    Checked before anything is created, so a refused batch leaves no rows behind
+    to count against the next attempt.
+    """
+    recent = await VisionImportService.count_recent_screens(session, current_user_id)
+    if recent + requested > MAX_SCREENS_PER_HOUR:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            SCREEN_QUOTA_EXCEEDED.format(
+                requested=requested, remaining=max(0, MAX_SCREENS_PER_HOUR - recent)
+            ),
+        )
+
+
 @vision_controller.post(
     "/imports", response_model=VisionImportResponse, status_code=status.HTTP_201_CREATED
 )
@@ -128,9 +153,7 @@ async def create_vision_import(
     # Quota first: a user blocked by the 409 below must still learn they are
     # also over quota, rather than being stuck behind a wall that never
     # mentions it.
-    recent = await VisionImportService.count_recent_imports(session, current_user.id)
-    if recent >= MAX_IMPORTS_PER_HOUR:
-        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, IMPORT_QUOTA_EXCEEDED)
+    await _enforce_screen_quota(session, current_user.id, len(files))
 
     blocking = await VisionImportService.get_current(session, game_account_id)
     if blocking is not None:
@@ -170,9 +193,7 @@ async def init_vision_import(
     """
     await _get_own_game_account(session, body.game_account_id, current_user.id)
 
-    recent = await VisionImportService.count_recent_imports(session, current_user.id)
-    if recent >= MAX_IMPORTS_PER_HOUR:
-        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, IMPORT_QUOTA_EXCEEDED)
+    await _enforce_screen_quota(session, current_user.id, len(body.screens))
 
     blocking = await VisionImportService.get_current(session, body.game_account_id)
     if blocking is not None:
