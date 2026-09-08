@@ -325,25 +325,9 @@ migrate-staging:
 	@docker service ps mawster-migrate-staging --format "{{.CurrentState}}" | grep -q "^Failed" && \
 		(docker service rm mawster-migrate-staging; exit 1) || docker service rm mawster-migrate-staging
 
-# Champion + mastery catalogue. Runs inside the already-running api container
-# rather than a standalone Swarm job: SECRET (api/src/security/secrets.py) is
-# a pydantic Settings built at import time. With MODE=prod, fourteen fields
-# become required (SECRET_KEY, ALLOWED_ORIGINS, EMAIL_PEPPER, RABBITMQ_URL,
-# RUSTFS_*, API_PORT, the token expiries...) so a bare `Settings()` raises
-# before any query runs. A `docker exec` shell doesn't help by itself either:
-# it's a fresh process that does NOT inherit the exports run.sh makes at
-# runtime in PID 1, so seed.sh (api/seed.sh, shipped in the api image
-# alongside run.sh/migrate.sh) re-exports the same six secret-backed vars
-# itself before running the loaders. Idempotent - load_champions adds new
-# champions, refreshes alias/image_url, and leaves everything else alone - so
-# this is safe to run on every deploy. Requires an api image built with
-# seed.sh present (api/api.Dockerfile COPYs it alongside run.sh).
-# docker stack deploy is asynchronous, so poll for a running container
-# instead of assuming one already exists. stack-app.yaml uses
-# order: start-first, so the outgoing container is still status=running
-# while the new one starts up - the ancestor filter pins the match to a
-# container from the image just pulled, so the poll can't exec into the
-# previous release's container and silently seed one deploy behind.
+# Exec into the api container: seed.sh re-exports the secret-backed vars a
+# standalone job lacks. start-first keeps the old container running, hence
+# the ancestor filter and the poll.
 .PHONY: seed-champions seed-champions-staging
 seed-champions:
 	@CID=""; \
@@ -381,7 +365,7 @@ deploy:
 # 	docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yaml mawster-obs
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster
 # 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app-staging.yaml mawster-staging
-	$(MAKE) seed-champions
+# 	$(MAKE) seed-champions
 
 panic:
 	docker stack rm mawster
