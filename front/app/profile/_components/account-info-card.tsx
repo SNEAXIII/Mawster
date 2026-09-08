@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { User, Calendar } from 'lucide-react'
 import { FiEdit2, FiCheck, FiX } from 'react-icons/fi'
@@ -24,6 +25,7 @@ export function AccountInfoCard({
 }>) {
   const { locale, t } = useI18n()
   const router = useRouter()
+  const { update } = useSession()
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(name ?? '')
   const [displayName, setDisplayName] = useState(name ?? '')
@@ -52,6 +54,9 @@ export function AccountInfoCard({
       await updateLogin(value)
       setDisplayName(value)
       setEditing(false)
+      // Re-reads the profile cached on the token. The argument is mandatory:
+      // bare, next-auth sends a GET and the jwt callback gets no `update` trigger.
+      await update({})
       router.refresh()
     } catch (err) {
       const e = err as Error & { status?: number }
