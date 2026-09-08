@@ -1,5 +1,5 @@
 import type { TierListDetail } from '@/app/services/tierlist'
-import { readStored, writeStored } from './storage'
+import { readStored, removeStored, writeStored } from './storage'
 import { NO_TAGS, hasAnyTag } from './types'
 import type { BoardState, BoardTier, ChampionTags } from './types'
 
@@ -119,6 +119,11 @@ export function loadStoredBoard(knownIds: Set<string>): BoardState | null {
 
 export function storeBoard(board: BoardState): void {
   writeStored(STORAGE_NAME, JSON.stringify(board))
+}
+
+/** Drop the browser's board once it has been brought into an account. */
+export function forgetStoredBoard(): void {
+  removeStored(STORAGE_NAME)
 }
 
 /** Champion ids sitting in a row, i.e. everything the pool must not show. */
