@@ -27,13 +27,13 @@ export default function ModalSettings({ isAuthenticated }: Readonly<ModalSetting
           data-cy='modal-settings-trigger'
           variant='ghost'
           className={cn(
-            'flex h-12 min-w-12 shrink-0 items-center justify-center rounded-md p-3',
+            'flex h-10 min-w-10 shrink-0 items-center justify-center rounded-md p-2 md:h-12 md:min-w-12 md:p-3',
             // Signed in, the gear is alone on its row and can span the sidenav.
             isAuthenticated && 'md:w-full'
           )}
           aria-label={t.nav.settings}
         >
-          <Settings className='h-5 w-5' />
+          <Settings className='size-4 md:size-5' />
         </Button>
       </DialogTrigger>
       <DialogContent data-cy='modal-settings-content'>

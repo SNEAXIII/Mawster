@@ -49,11 +49,11 @@ export default function SideNavBar() {
               href='/login'
               data-cy='nav-sign-in'
               className='
-              flex grow items-center justify-center gap-2 rounded-md p-3 text-sm font-medium md:justify-start h-12 min-w-12
-              bg-primary text-primary-foreground transition hover:bg-primary/90 md:px-3'
+              flex grow items-center justify-center gap-2 rounded-md p-2 text-sm font-medium md:justify-start h-10 min-w-10 md:h-12 md:min-w-12
+              bg-primary text-primary-foreground transition hover:bg-primary/90 md:p-3 md:px-3'
               aria-label={t.nav.signIn}
             >
-              <LogIn className='h-5 w-5' />
+              <LogIn className='size-4 md:size-5' />
               <span className='hidden md:block'>{t.nav.signIn}</span>
             </Link>
           )}
