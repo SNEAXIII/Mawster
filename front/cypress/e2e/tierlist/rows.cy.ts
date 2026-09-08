@@ -59,6 +59,26 @@ describe('Tier list – rows', () => {
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-row-color"]').should('have.value', '#123456');
   });
 
+  it('puts the colour input under the pencil, where the click lands', () => {
+    // The palette itself is a dialog of the operating system — nothing in the
+    // page, so nothing to drive. What can go wrong here is the pair coming
+    // apart: a pencil one sees over an input the pointer never reaches, or an
+    // input sitting somewhere else entirely. So the click target is what this
+    // checks, by asking the document what is actually at the pencil's centre.
+    cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-row-color"]').parent().find('svg').should('exist');
+
+    cy.getByCy('tierlist-row-S')
+      .find('[data-cy="tierlist-row-color"]')
+      .then(($input) => {
+        const input = $input[0];
+        const { x, y, width, height } = input.getBoundingClientRect();
+        expect(width, 'the input has a width to click').to.be.greaterThan(0);
+        cy.document().then((doc) => {
+          expect(doc.elementFromPoint(x + width / 2, y + height / 2)).to.eq(input);
+        });
+      });
+  });
+
   it('moves a row up and down, and stops at both ends', () => {
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-row-up"]').should('be.disabled');
     cy.getByCy('tierlist-row-D').find('[data-cy="tierlist-row-down"]').should('be.disabled');
