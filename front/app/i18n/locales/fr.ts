@@ -40,7 +40,7 @@ const fr: Translations = {
     defense: 'Défense',
     war: 'Guerre',
     knowledgeBase: 'Base de connaissances',
-    tierlist: 'Tier list',
+    tools: 'Outils',
     seasons: 'Saisons',
     administration: 'Administration',
     champions: 'Champions',

@@ -15,20 +15,20 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
-import ChampionPool from './_components/champion-pool'
-import ChampionSheet from './_components/champion-sheet'
-import TierRow from './_components/tier-row'
-import { ChampionCardVisual } from './_components/champion-card'
-import TierListHeader from './_components/tierlist-header'
-import { POOL_ID, useBoard } from './_hooks/use-board'
-import { useBoardPersistence } from './_hooks/use-board-persistence'
-import { useCatalog } from './_hooks/use-catalog'
-import { usePrefs } from './_hooks/use-prefs'
-import { rankedIds, tagsOf } from './_lib/board'
-import { EMPTY_FILTERS, matchesFilters } from './_lib/filters'
-import type { FilterState } from './_lib/filters'
+import ChampionPool from './champion-pool'
+import ChampionSheet from './champion-sheet'
+import TierRow from './tier-row'
+import { ChampionCardVisual } from './champion-card'
+import TierListHeader from './tierlist-header'
+import { POOL_ID, useBoard } from '../_hooks/use-board'
+import { useBoardPersistence } from '../_hooks/use-board-persistence'
+import { useCatalog } from '../_hooks/use-catalog'
+import { usePrefs } from '../_hooks/use-prefs'
+import { rankedIds, tagsOf } from '../_lib/board'
+import { EMPTY_FILTERS, matchesFilters } from '../_lib/filters'
+import type { FilterState } from '../_lib/filters'
 
-export default function TierListPage() {
+export default function TierListBoard() {
   const { t } = useI18n()
   const catalog = useCatalog()
   const { board, setBoard, actions } = useBoard()
@@ -113,7 +113,7 @@ export default function TierListPage() {
   if (catalog.loading || !persistence.loaded) return null
 
   return (
-    <div className='mx-auto flex max-w-7xl flex-col gap-4 px-3 py-4 sm:px-5'>
+    <div className='flex flex-col gap-4'>
       <TierListHeader
         board={board}
         actions={actions}

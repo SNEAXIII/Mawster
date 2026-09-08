@@ -38,7 +38,7 @@ const en = {
     defense: 'Defense',
     war: 'War',
     knowledgeBase: 'Knowledge Base',
-    tierlist: 'Tier list',
+    tools: 'Tools',
     seasons: 'Seasons',
     administration: 'Administration',
     champions: 'Champions',
