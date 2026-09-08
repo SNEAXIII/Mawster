@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { useAllianceSelector } from '@/hooks/use-alliance-selector'
 import { useI18n } from '@/app/i18n'
+import { useVisiblePoll } from '@/hooks/use-visible-poll'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
 import { toast } from 'sonner'
 import {
@@ -192,7 +193,6 @@ export function WarProvider({
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [pendingRemoveNode, setPendingRemoveNode] = useState<number | null>(null)
 
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const tRef = useRef(t)
   useEffect(() => {
     tRef.current = t
@@ -318,16 +318,8 @@ export function WarProvider({
     if (activeWarId) fetchWarDefense()
   }, [activeWarId, selectedBg, fetchWarDefense])
 
-  // Polling every 10s
-  useEffect(() => {
-    if (pollRef.current) clearInterval(pollRef.current)
-    if (activeWarId) {
-      pollRef.current = setInterval(() => fetchWarDefense(true), 10_000)
-    }
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current)
-    }
-  }, [fetchWarDefense, activeWarId])
+  // Polling every 10s, on-screen tabs only
+  useVisiblePoll(() => void fetchWarDefense(true), 10_000, Boolean(activeWarId))
 
   // ─── Actions ───────────────────────────────────────────────────────────────
 
