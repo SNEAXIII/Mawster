@@ -19,17 +19,23 @@ on:
       also_staging:
         required: true
         type: string
+      push:
+        required: false
+        default: true
+        type: boolean
     secrets:
       DOCKERHUB_TOKEN:
         required: true
 
 jobs:
   docker:
-    name: Docker Build & Push (${{ matrix.name }})
+    name: Docker Build ${{ inputs.push && '& Push ' || '' }}(${{ matrix.name }})
     permissions:
       contents: read
     environment: Api
     runs-on: ubuntu-latest
+    # A cache-only run is best effort: it must not paint the pipeline red.
+    continue-on-error: ${{ !inputs.push }}
     strategy:
       # One broken image must not cancel the four that would otherwise be pushed:
       # the deploy is gated on all of them anyway, and a full set of logs is worth
@@ -79,7 +85,7 @@ jobs:
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
-          push: true
+          push: ${{ inputs.push }}
           # Empty for every image but the front, which is what an absent matrix key
           # yields — the action treats that as no build argument at all.
           build-args: ${{ matrix.build_args }}

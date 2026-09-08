@@ -28,7 +28,6 @@ jobs:
     if: github.ref_name == 'release' || github.ref_name == 'staging' || github.event_name == 'workflow_dispatch'
     name: Compute deploy metadata
     runs-on: ubuntu-latest
-    needs: test
     outputs:
       moving_tag: ${{ steps.meta.outputs.moving_tag }}
       tag_prefix: ${{ steps.meta.outputs.tag_prefix }}
@@ -82,11 +81,31 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Resolved version: $VERSION (released content: $RELEASED)"
 
+  # Builds the same five images with push disabled, alongside `test` rather than after it,
+  # so the gated `images` job below only has layers to push. Nothing depends on it: a warm
+  # miss must cost time, never the deploy.
+  images-warm:
+    name: Images (warm cache)
+    permissions:
+      contents: read
+    needs: changes
+    uses: $/.github/workflows/_images.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
+    secrets:
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    with:
+      moving_tag: ${{ needs.changes.outputs.moving_tag }}
+      tag_prefix: ${{ needs.changes.outputs.tag_prefix }}
+      version: ${{ needs.changes.outputs.version }}
+      also_staging: ${{ needs.changes.outputs.also_staging }}
+      push: false
+
   images:
     name: Images
     permissions:
       contents: read
-    needs: changes
+    # `test` is named here now that `changes` no longer carries it: it is the gate that keeps
+    # an untested image off Docker Hub.
+    needs: [changes, test]
     uses: $/.github/workflows/_images.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
