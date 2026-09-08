@@ -54,8 +54,10 @@ export function AccountInfoCard({
       await updateLogin(value)
       setDisplayName(value)
       setEditing(false)
-      // Re-reads the profile cached on the token. The argument is mandatory:
-      // bare, next-auth sends a GET and the jwt callback gets no `update` trigger.
+      // The session caches the backend profile on the token, so a router refresh
+      // alone would keep showing the old name everywhere else (the sidebar). The
+      // argument is mandatory: bare, next-auth sends a GET and the jwt callback
+      // gets no `update` trigger.
       await update({})
       router.refresh()
     } catch (err) {

@@ -152,6 +152,20 @@ exists to break.
 Prefer squash merge on pull requests. A merge commit carries the PR title into its body, which
 release-please then counts a second time alongside the real commits, duplicating every entry.
 
+### Git safety
+
+- Never use `git commit --amend`, `git push --force`, `git reset --hard`, `git stash` on
+  partially-staged work, or revert already-pushed commits without asking first.
+- Before switching branches, check `git status` and warn about uncommitted changes rather than
+  stashing them silently.
+
+### Verification before claiming
+
+- Never state a fact about an external tool, API or CI behaviour from memory. Read the actual
+  file/workflow or web-search first, then cite the source.
+- Never "correct" existing code or config without having read it and being able to point at the
+  exact reason it is wrong.
+
 ---
 
 ## Context-Mode
