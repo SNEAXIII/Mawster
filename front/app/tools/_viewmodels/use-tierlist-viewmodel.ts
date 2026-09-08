@@ -33,14 +33,15 @@ export function useTierListViewModel() {
     },
     [refreshLists]
   )
-  const persistence = useBoardPersistence(
+  const persistence = useBoardPersistence({
     board,
     setBoard,
-    catalog.knownIds,
-    !catalog.loading,
-    activeId,
-    handleListCreatedBySave
-  )
+    knownIds: catalog.knownIds,
+    catalogReady: !catalog.loading,
+    listsReady: !tierLists.loading,
+    activeListId: activeId,
+    onListCreated: handleListCreatedBySave,
+  })
   const [prefs, setPrefs] = usePrefs()
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS)
   const { exporting, exportPng } = useImageExport()

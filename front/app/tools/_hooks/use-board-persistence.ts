@@ -30,15 +30,34 @@ interface Persistence {
  * out, it lives in this browser, alone. Nothing is sent when nothing changed:
  * the last payload written is kept and compared, so idling costs no requests.
  */
-export function useBoardPersistence(
-  board: BoardState,
-  setBoard: Dispatch<SetStateAction<BoardState>>,
-  knownIds: Set<string>,
-  catalogReady: boolean,
-  activeListId: string | null,
+interface BoardPersistenceOptions {
+  board: BoardState
+  setBoard: Dispatch<SetStateAction<BoardState>>
+  knownIds: Set<string>
+  catalogReady: boolean
+  /**
+   * False while the account's tier lists are still being listed.
+   *
+   * The saver must not be armed before then: signed in with the lists unknown,
+   * the board is still the empty default and `activeListId` still null, so a
+   * save fired in that window would create a second, empty list instead of
+   * writing to the one the account already has.
+   */
+  listsReady: boolean
+  activeListId: string | null
   /** Called with the id when this board's first save had to create the list. */
   onListCreated?: (id: string) => void
-): Persistence {
+}
+
+export function useBoardPersistence({
+  board,
+  setBoard,
+  knownIds,
+  catalogReady,
+  listsReady,
+  activeListId,
+  onListCreated,
+}: BoardPersistenceOptions): Persistence {
   const { status } = useSession()
   const [loaded, setLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -63,11 +82,14 @@ export function useBoardPersistence(
 
   useEffect(() => {
     if (!catalogReady || status === 'loading') return
+    // Signed in, wait until the lists are known: which board to read is not
+    // answerable before that, and `loaded` is what arms the saver.
+    if (signedIn && !listsReady) return
     let cancelled = false
 
     const run = async () => {
       try {
-        if (signedIn && activeListId === boardIdRef.current) {
+        if (signedIn && activeListId && activeListId === boardIdRef.current) {
           // This board *is* that list: it was created from here a moment ago,
           // so the server holds exactly what was sent. Fetching it again would
           // throw away whatever has been moved since.
@@ -96,7 +118,7 @@ export function useBoardPersistence(
     // knownIds and setBoard are stable for a given catalog; re-running on them
     // would refetch the list on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [catalogReady, status, signedIn, activeListId])
+  }, [catalogReady, status, signedIn, listsReady, activeListId])
 
   useEffect(() => {
     if (!loaded) return
