@@ -26,6 +26,8 @@ FK_GAME_ACCOUNT = "game_account.id"
 FK_MASTERY = "mastery.id"
 FK_MATCHUP_RATING = "matchup_rating.id"
 FK_SEASON = "season.id"
+FK_TIERLIST = "tierlist.id"
+FK_TIERLIST_TIER = "tierlist_tier.id"
 FK_USER = "user.id"
 FK_VISION_IMPORT = "vision_import.id"
 FK_VISION_JOB = "vision_job.id"
@@ -181,6 +183,18 @@ class SeasonFk(SQLModel):
     """
 
     season_id: uuid.UUID | None = Field(default=None, foreign_key=FK_SEASON)
+
+
+class TierListFk(SQLModel):
+    """Adds the FK to the owning ``tierlist`` row.
+
+    Carried by every table under a tier list, the rankings included: a ranking already
+    reaches its list through its tier, but the column is repeated so the database can
+    hold "this champion appears once in this list" as a unique constraint. Two tiers are
+    two different parents, so the constraint has nowhere else to live.
+    """
+
+    tierlist_id: uuid.UUID = Field(foreign_key=FK_TIERLIST, ondelete="CASCADE")
 
 
 class TimestampMixin(SQLModel):
