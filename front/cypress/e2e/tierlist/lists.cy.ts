@@ -57,7 +57,10 @@ describe('Tier list – the account lists', () => {
     seedTierList(setup.userData.access_token, 'Beta');
     visitTierListAs(setup.userData.user_id);
 
-    // Oldest first: Alpha is the one the page opens on.
+    // Which one the page opens on is not something to lean on: `created_at` has
+    // no fractional seconds, so two lists seeded in the same second tie and the
+    // order is arbitrary. Every test here picks the list it means to work on.
+    cy.selectOption('tierlist-picker', 'Alpha');
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-champion-ListHero"]').should('exist');
 
     cy.selectOption('tierlist-picker', 'Beta');
@@ -100,6 +103,7 @@ describe('Tier list – the account lists', () => {
     seedTierList(setup.userData.access_token, 'Beta');
     visitTierListAs(setup.userData.user_id);
 
+    cy.selectOption('tierlist-picker', 'Alpha');
     cy.getByCy('tierlist-delete').click();
 
     cy.contains('Delete "Alpha"?').should('be.visible');
@@ -110,6 +114,7 @@ describe('Tier list – the account lists', () => {
     seedTierList(setup.userData.access_token, 'Beta');
     visitTierListAs(setup.userData.user_id);
 
+    cy.selectOption('tierlist-picker', 'Alpha');
     cy.getByCy('tierlist-title').should('have.value', 'Alpha');
     cy.getByCy('tierlist-delete').click();
     cy.getByCy('confirmation-dialog-confirm').click();
@@ -123,6 +128,7 @@ describe('Tier list – the account lists', () => {
     seedTierList(setup.userData.access_token, 'Beta');
     visitTierListAs(setup.userData.user_id);
 
+    cy.selectOption('tierlist-picker', 'Alpha');
     cy.getByCy('tierlist-delete').click();
     cy.getByCy('confirmation-dialog-confirm').click();
 
