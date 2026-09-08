@@ -6,13 +6,13 @@ import {
   type Alliance,
   type AllianceRoleEntry,
   type AllianceInvitation,
+  type AllianceWithVisitorFlag,
   getMyAlliances,
   getMyVisitedAlliances,
   getMyAllianceRoles,
   getMyInvitations,
   getAllianceInvitations,
 } from '@/app/services/game'
-import { type AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 
 const CACHE_KEY = 'alliance_cache'
 
