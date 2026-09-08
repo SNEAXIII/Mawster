@@ -105,7 +105,7 @@ _Avoid_: board, tierlist (in prose), tier (that is one row).
 
 It belongs to an Account and not to a Player — the single place in the game domain where
 that is true, and the reason it can never be shown inside an Alliance (see
-`docs/adr/0007-tier-lists-belong-to-the-account.md`).
+`docs/adr/0014-tier-lists-belong-to-the-account.md`).
 
 **Tier**:
 One row of a Tier List: a label, a colour, a position. Holds Rankings and nothing else.
@@ -122,9 +122,9 @@ _Avoid_: placement (taken by Defense Placement), slot, entry.
 
 **Tag**:
 A mark the owner puts on a Champion inside one Tier List: attacker, defender, worth taking
-into Alliance War, worth taking into Battlegrounds, awakened (carrying a signature value),
-six-star only. A Champion carrying both attacker and defender shows as a dual threat — a
-derived badge, never a tag anyone sets.
+into Alliance War, worth taking into Battlegrounds, and awakened, which carries a signature
+value. A Champion carrying both attacker and defender shows as a dual threat — a derived
+badge, never a tag anyone sets.
 
 An opinion, never a fact. The defender tag means "I rate it on defense" and is unrelated to
 a Saga's `is_saga_defender`, which is a Season bonus the game grants. Likewise the
