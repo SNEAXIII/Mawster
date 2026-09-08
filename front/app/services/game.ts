@@ -45,6 +45,14 @@ export interface Alliance {
   tier: number
 }
 
+/** An alliance plus how the current user reaches it: as a member, or as a visitor.
+ *  Lives here rather than beside the hook that used to build it, so the context that
+ *  now owns the merge and the hook that reads it can both name the type without
+ *  importing each other. */
+export interface AllianceWithVisitorFlag extends Alliance {
+  isVisitor: boolean
+}
+
 export interface AllianceOfficer {
   id: string
   game_account_id: string
