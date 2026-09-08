@@ -10,10 +10,17 @@ import { getServerApiUrl } from '@/app/lib/serverApiUrl'
  * Token refresh is handled transparently by the NextAuth jwt
  * callback — no manual refresh or cookie encoding needed here.
  */
+/**
+ * Backend paths that answer without a session. Everything else is refused here
+ * rather than reaching FastAPI unauthenticated: the proxy is what decides a
+ * request may travel without a token, so the list lives in one place.
+ */
+const PUBLIC_PATHS = new Set(['stats/public', 'catalog/champions'])
+
 async function proxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params
   const backendPath = path.join('/')
-  const isPublicPath = backendPath === 'stats/public'
+  const isPublicPath = PUBLIC_PATHS.has(backendPath)
 
   const session = isPublicPath ? null : await auth()
 
