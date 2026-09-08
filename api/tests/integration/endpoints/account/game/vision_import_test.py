@@ -6,8 +6,10 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from botocore.exceptions import ClientError
+from sqlmodel import select
 
 from main import app
+from src.controllers.account.game.vision_controller import MAX_SCREENS_PER_HOUR
 from src.dto.account.game.dto_vision_result import (
     VisionPredictionMessage,
     VisionResultMessage,
@@ -17,7 +19,10 @@ from src.messaging import get_publisher
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.security.secrets import SECRET
-from src.services.account.game.VisionImportService import UPLOAD_URL_TTL_SECONDS
+from src.services.account.game.VisionImportService import (
+    MAX_SCREENS_PER_IMPORT,
+    UPLOAD_URL_TTL_SECONDS,
+)
 from src.services.account.game.VisionResultService import VisionResultService
 from src.storage import get_storage
 from src.storage.base import ObjectStat, screen_key, sprite_key
@@ -297,8 +302,8 @@ async def test_delete_import_cancels_it_without_deleting_the_row(fake_infra):
 
 @pytest.mark.asyncio
 async def test_cancel_keeps_the_row_so_the_quota_still_counts_it(fake_infra):
-    """The hourly quota counts rows. If cancelling deleted them, create -> cancel
-    -> create would slip under the limit forever."""
+    """The hourly quota counts the jobs of these rows. If cancelling deleted
+    them, create -> cancel -> create would slip under the limit forever."""
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     headers = create_auth_headers(str(USER_ID))
@@ -1165,17 +1170,66 @@ async def test_current_still_returns_an_import_whose_uploads_are_in_flight(fake_
     assert response.json()["id"] == import_id
 
 
+async def _burn_quota(headers, game_account_id, screens: int) -> None:
+    """Queue `screens` screenshots and cancel each import, so the 409 rule never
+    fires and only the quota can refuse the next call."""
+    remaining = screens
+    while remaining > 0:
+        batch = min(remaining, MAX_SCREENS_PER_IMPORT)
+        created = await _post_import(
+            headers, game_account_id, [_png(f"s{i}-{remaining}.png") for i in range(batch)]
+        )
+        assert created.status_code == 201, created.text
+        async with get_test_client() as client:
+            await client.delete(f"/vision/imports/{created.json()['id']}", headers=headers)
+        remaining -= batch
+
+
 @pytest.mark.asyncio
-async def test_eleventh_import_in_an_hour_is_429(fake_infra):
+async def test_a_batch_filling_the_hourly_screen_quota_exactly_is_accepted(fake_infra):
+    """The quota counts screenshots, not imports — one screenshot is one
+    inference, which is what the server actually pays."""
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     headers = create_auth_headers(str(USER_ID))
-    # Cancel each one so the 409 rule never fires — only the quota should.
-    for _ in range(10):
-        created = await _post_import(headers, account.id, [_png("a.png")])
-        async with get_test_client() as client:
-            await client.delete(f"/vision/imports/{created.json()['id']}", headers=headers)
 
-    eleventh = await _post_import(headers, account.id, [_png("a.png")])
+    await _burn_quota(headers, account.id, MAX_SCREENS_PER_HOUR)
 
-    assert eleventh.status_code == 429
+    over = await _post_import(headers, account.id, [_png("one-too-many.png")])
+    assert over.status_code == 429
+    assert "0 left" in over.text
+
+
+@pytest.mark.asyncio
+async def test_a_batch_too_big_for_what_is_left_is_refused_whole(fake_infra):
+    """Refused, not truncated: importing half a roster while reporting success
+    is worse than asking for a smaller batch."""
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    used = MAX_SCREENS_PER_HOUR - 10
+    await _burn_quota(headers, account.id, used)
+
+    response = await _post_import(
+        headers, account.id, [_png(f"big{i}.png") for i in range(MAX_SCREENS_PER_IMPORT)]
+    )
+
+    assert response.status_code == 429
+    # The retry must be informed rather than blind.
+    assert "10 left" in response.text
+    async for session in get_test_session():
+        rows = (await session.exec(select(VisionJob))).all()
+        assert len(rows) == used, "a refused batch must leave no jobs behind"
+        break
+
+
+@pytest.mark.asyncio
+async def test_the_presigned_route_enforces_the_same_screen_quota(fake_infra):
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    await _burn_quota(headers, account.id, MAX_SCREENS_PER_HOUR)
+
+    response = await _post_init(headers, account.id, ["a.png"])
+
+    assert response.status_code == 429
