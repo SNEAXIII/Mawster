@@ -1257,9 +1257,9 @@ const en = {
     },
   },
   tierlist: {
-    starModeAll: 'Own rarity',
-    starModeSeven: '7★ frames',
-    starModeSix: '6★ frames',
+    rarityAll: 'Every rarity',
+    raritySeven: '7★ only',
+    raritySix: '6★ only',
     review: 'Review',
     reviewIncludePlaced: 'Include champions already placed',
     reviewHint: 'Keys 1-9 pick a row, S skips, ← goes back, Esc quits.',

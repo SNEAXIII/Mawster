@@ -7,7 +7,6 @@ import { readableTextColor } from '../_lib/color'
 import { SIGNATURE_PRESETS, TAG_DISPLAY, TAG_ICON, frameRarity } from '../_lib/tags'
 import { TAG_KEYS } from '../_lib/types'
 import type { BoardActions } from '../_hooks/use-board'
-import type { StarMode } from '../_hooks/use-prefs'
 import type { BoardTier, CatalogChampion, ChampionTags, TagKey } from '../_lib/types'
 
 interface ReviewCardProps {
@@ -16,7 +15,6 @@ interface ReviewCardProps {
   tiers: BoardTier[]
   /** Where this champion sits right now, so a wrong call is visible on the spot. */
   currentTierId: string | undefined
-  starMode: StarMode
   actions: BoardActions
   onAssign: (tierId: string) => void
 }
@@ -27,7 +25,6 @@ export default function ReviewCard({
   tags,
   tiers,
   currentTierId,
-  starMode,
   actions,
   onAssign,
 }: Readonly<ReviewCardProps>) {
@@ -38,7 +35,7 @@ export default function ReviewCard({
       <ChampionPortrait
         imageUrl={champion.image_url}
         name={champion.name}
-        rarity={frameRarity(champion, starMode)}
+        rarity={frameRarity(champion)}
         size={168}
         box='frame'
         is_saga_attacker={champion.is_saga_attacker}

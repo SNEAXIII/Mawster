@@ -1270,9 +1270,9 @@ const fr: Translations = {
     },
   },
   tierlist: {
-    starModeAll: 'Rareté réelle',
-    starModeSeven: 'Cadres 7★',
-    starModeSix: 'Cadres 6★',
+    rarityAll: 'Toutes raretés',
+    raritySeven: '7★ seulement',
+    raritySix: '6★ seulement',
     review: 'Passer en revue',
     reviewIncludePlaced: 'Inclure les champions déjà classés',
     reviewHint: 'Touches 1-9 pour choisir une ligne, S passe, ← revient, Échap quitte.',

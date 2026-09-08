@@ -186,7 +186,6 @@ export default function TierListBoard() {
                 cardSize={vm.prefs.cardSize}
                 showNames={vm.prefs.showNames}
                 showBadges={vm.prefs.showBadges}
-                starMode={vm.prefs.starMode}
                 canRemove={vm.board.tiers.length > 1}
                 exporting={vm.exporting}
                 isFirst={index === 0}
@@ -212,7 +211,6 @@ export default function TierListBoard() {
             cardSize={vm.prefs.cardSize}
             showNames={vm.prefs.showNames}
             showBadges={vm.prefs.showBadges}
-            starMode={vm.prefs.starMode}
             onOpenChampion={setOpenChampionId}
           />
 
@@ -224,7 +222,6 @@ export default function TierListBoard() {
                 size={vm.prefs.cardSize}
                 showName={vm.prefs.showNames}
                 showBadges={vm.prefs.showBadges}
-                starMode={vm.prefs.starMode}
               />
             )}
           </DragOverlay>
@@ -235,7 +232,6 @@ export default function TierListBoard() {
           board={vm.board}
           tags={openChampion ? tagsOf(vm.board, openChampion.id) : tagsOf(vm.board, '')}
           actions={vm.actions}
-          starMode={vm.prefs.starMode}
           onClose={() => setOpenChampionId(null)}
         />
         {vm.reviewQueue && (
@@ -244,7 +240,6 @@ export default function TierListBoard() {
             byId={vm.catalog.byId}
             board={vm.board}
             actions={vm.actions}
-            starMode={vm.prefs.starMode}
             onClose={vm.closeReview}
           />
         )}

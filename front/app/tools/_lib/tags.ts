@@ -1,4 +1,3 @@
-import type { StarMode } from '../_hooks/use-prefs'
 import type { CatalogChampion, TagKey } from './types'
 
 /**
@@ -51,13 +50,9 @@ export const DUAL_ICON = `${ICON_DIR}/dual-sword-shield.png`
 export const SIGNATURE_PRESETS = [20, 60, 100, 200]
 
 /**
- * Which star frame a champion is drawn in.
- *
- * Left to the catalog by default — a champion with no 7-star version shows the
- * 6★ frame — until the reader asks for one frame throughout.
+ * Which star frame a champion is drawn in. Rarity is a property of the champion,
+ * not a display toggle: one with no 7-star version always shows the 6★ frame.
  */
-export function frameRarity(champion: CatalogChampion, starMode: StarMode = 'all'): string {
-  if (starMode === '7') return '7r1'
-  if (starMode === '6') return '6r1'
+export function frameRarity(champion: CatalogChampion): string {
   return champion.is_7_star ? '7r1' : '6r1'
 }

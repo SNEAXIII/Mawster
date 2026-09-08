@@ -7,7 +7,6 @@ import ChampionPortrait from '@/components/champion-portrait'
 import { cn } from '@/app/lib/utils'
 import TagBadges from './tag-badges'
 import { frameRarity } from '../_lib/tags'
-import type { StarMode } from '../_hooks/use-prefs'
 import type { CatalogChampion, ChampionTags } from '../_lib/types'
 
 export interface ChampionCardProps {
@@ -16,7 +15,6 @@ export interface ChampionCardProps {
   size: number
   showName: boolean
   showBadges: boolean
-  starMode: StarMode
   onOpen?: (championId: string) => void
 }
 
@@ -27,7 +25,6 @@ export function ChampionCardVisual({
   size,
   showName,
   showBadges,
-  starMode,
 }: Readonly<Omit<ChampionCardProps, 'onOpen'>>) {
   return (
     <div
@@ -37,7 +34,7 @@ export function ChampionCardVisual({
       <ChampionPortrait
         imageUrl={champion.image_url}
         name={champion.name}
-        rarity={frameRarity(champion, starMode)}
+        rarity={frameRarity(champion)}
         size={size}
         box='frame'
         // The badge means "can be ascended" here, not "is ascended at rank 1":

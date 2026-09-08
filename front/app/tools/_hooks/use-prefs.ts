@@ -5,26 +5,13 @@ import { readStored, writeStored } from '../_lib/storage'
 
 const STORAGE_NAME = 'prefs'
 
-/**
- * Which star frame the cards are drawn in: the champion's own rarity, or one
- * forced on every card — a board meant to read as "my 7-star roster" shows the
- * 7★ frame throughout, whatever the catalog says.
- */
-export type StarMode = 'all' | '7' | '6'
-
 export interface DisplayPrefs {
   cardSize: number
   showNames: boolean
   showBadges: boolean
-  starMode: StarMode
 }
 
-const DEFAULTS: DisplayPrefs = {
-  cardSize: 64,
-  showNames: false,
-  showBadges: true,
-  starMode: 'all',
-}
+const DEFAULTS: DisplayPrefs = { cardSize: 64, showNames: false, showBadges: true }
 
 /**
  * View-only preferences. Kept out of the board on purpose: they describe this

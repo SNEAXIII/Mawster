@@ -10,7 +10,6 @@ import ChampionCard from './champion-card'
 import { tagsOf } from '../_lib/board'
 import { readableTextColor } from '../_lib/color'
 import type { BoardActions } from '../_hooks/use-board'
-import type { StarMode } from '../_hooks/use-prefs'
 import type { BoardState, BoardTier, CatalogChampion } from '../_lib/types'
 
 interface TierRowProps {
@@ -23,7 +22,6 @@ interface TierRowProps {
   cardSize: number
   showNames: boolean
   showBadges: boolean
-  starMode: StarMode
   canRemove: boolean
   /** True while the board is being captured: controls come out of the picture. */
   exporting: boolean
@@ -48,7 +46,6 @@ export default function TierRow({
   cardSize,
   showNames,
   showBadges,
-  starMode,
   canRemove,
   exporting,
   isFirst,
@@ -147,7 +144,6 @@ export default function TierRow({
                 size={cardSize}
                 showName={showNames}
                 showBadges={showBadges}
-                starMode={starMode}
                 onOpen={onOpenChampion}
               />
             )

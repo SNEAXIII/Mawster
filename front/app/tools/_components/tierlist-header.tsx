@@ -12,9 +12,9 @@ import {
 import SelectorFilterBar, { type ToggleConfig } from '@/app/game/_components/selector-filter-bar'
 import { CHAMPION_CLASSES } from '../_lib/types'
 import { EMPTY_FILTERS, hasActiveFilters } from '../_lib/filters'
-import type { DisplayPrefs, StarMode } from '../_hooks/use-prefs'
+import type { DisplayPrefs } from '../_hooks/use-prefs'
 import type { BoardActions } from '../_hooks/use-board'
-import type { FilterState } from '../_lib/filters'
+import type { FilterState, RarityFilter } from '../_lib/filters'
 import type { BoardState, ChampionClass } from '../_lib/types'
 
 interface TierListHeaderProps {
@@ -109,19 +109,21 @@ export default function TierListHeader({
             placeholder={t.tierlist.search}
           />
           <Select
-            value={prefs.starMode}
-            onValueChange={(starMode) => setPrefs({ starMode: starMode as StarMode })}
+            value={filters.rarity}
+            onValueChange={(rarity) =>
+              onFiltersChange({ ...filters, rarity: rarity as RarityFilter })
+            }
           >
             <SelectTrigger
               className='w-36'
-              data-cy='tierlist-star-mode'
+              data-cy='tierlist-rarity-filter'
             >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value='all'>{t.tierlist.starModeAll}</SelectItem>
-              <SelectItem value='7'>{t.tierlist.starModeSeven}</SelectItem>
-              <SelectItem value='6'>{t.tierlist.starModeSix}</SelectItem>
+              <SelectItem value='all'>{t.tierlist.rarityAll}</SelectItem>
+              <SelectItem value='7'>{t.tierlist.raritySeven}</SelectItem>
+              <SelectItem value='6'>{t.tierlist.raritySix}</SelectItem>
             </SelectContent>
           </Select>
           <span className='text-xs text-muted-foreground'>

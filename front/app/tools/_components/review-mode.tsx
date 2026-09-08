@@ -7,7 +7,6 @@ import { useI18n } from '@/app/i18n'
 import ReviewCard from './review-card'
 import { tagsOf } from '../_lib/board'
 import type { BoardActions } from '../_hooks/use-board'
-import type { StarMode } from '../_hooks/use-prefs'
 import type { BoardState, CatalogChampion } from '../_lib/types'
 
 /** Digit shortcuts only reach this many rows; beyond that, click. */
@@ -19,7 +18,6 @@ interface ReviewModeProps {
   byId: Map<string, CatalogChampion>
   board: BoardState
   actions: BoardActions
-  starMode: StarMode
   onClose: () => void
 }
 
@@ -36,7 +34,6 @@ export default function ReviewMode({
   byId,
   board,
   actions,
-  starMode,
   onClose,
 }: Readonly<ReviewModeProps>) {
   const { t } = useI18n()
@@ -128,7 +125,6 @@ export default function ReviewMode({
             tiers={board.tiers}
             currentTierId={currentTierId}
             actions={actions}
-            starMode={starMode}
             onAssign={assign}
           />
         </div>
