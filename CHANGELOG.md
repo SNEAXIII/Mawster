@@ -3,6 +3,21 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.12.0](https://github.com/SNEAXIII/Mawster/compare/v1.11.0...v1.12.0) (2026-09-08)
+
+
+### Ajouté
+
+* keep several tier lists, and export or import one ([c707a43](https://github.com/SNEAXIII/Mawster/commit/c707a438f9d8648a69a1c95d83d75fd6e03d685c))
+* rank champions in a tier list ([5de63b5](https://github.com/SNEAXIII/Mawster/commit/5de63b5e0008651e9b018c95e734d3c9654aa6dd))
+
+
+### Modifié
+
+* cut the backend calls the front makes on every navigation ([18cf0bd](https://github.com/SNEAXIII/Mawster/commit/18cf0bd0ab651b420d7ecb6e1ec86a4d4c1032d5))
+* read the active tab from one shared hook ([06bf9d5](https://github.com/SNEAXIII/Mawster/commit/06bf9d57dc56e885262dfb8e6189f4102d09683c))
+* spell the current-user dependency once ([#524](https://github.com/SNEAXIII/Mawster/issues/524)) ([15c9957](https://github.com/SNEAXIII/Mawster/commit/15c9957069bf379854678cbd40594b6d4d5d0ef3))
+
 ## [1.11.0](https://github.com/SNEAXIII/Mawster/compare/v1.10.0...v1.11.0) (2026-09-08)
 
 
