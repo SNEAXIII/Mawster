@@ -43,24 +43,26 @@ describe('Tier list – saving', () => {
   it('folds gestures made in a row into a single PUT', () => {
     signInOnList();
 
-    // Three changes back to back — cheap clicks, well inside the save delay.
-    cy.getByCy('tierlist-add-row').click();
-    cy.getByCy('tierlist-add-row').click();
-    cy.getByCy('tierlist-add-row').click();
+    // Keystrokes rather than clicks: the suite types with no delay, so six
+    // board changes land within milliseconds and cannot straddle the save
+    // delay — three clicks on a loaded runner can, and then it is two PUTs.
+    cy.getByCy('tierlist-title').clear().type('Folded');
 
     cy.wait('@save');
     cy.get('@save.all').should('have.length', 1);
-    // The one payload carries what the three clicks did, not just the last.
-    cy.get('@save.all').its('0.request.body.tiers').should('have.length', 8);
+    // The one payload carries the whole word, not the letter it started with.
+    cy.get('@save.all').its('0.request.body.title').should('eq', 'Folded');
   });
 
   it('sends nothing when nothing moved', () => {
     signInOnList();
 
-    cy.getByCy('tierlist-search').type('save');
-    cy.getByCy('selector-toggle-ascendable').click();
+    // The sheet first: the ascendable filter below empties the pool, and
+    // SaveHero would no longer be there to open.
     cy.getByCy('tierlist-champion-SaveHero').click();
     cy.get('body').type('{esc}');
+    cy.getByCy('tierlist-search').type('save');
+    cy.getByCy('selector-toggle-ascendable').click();
     cy.getByCy('tierlist-pool').scrollIntoView();
 
     // Longer than the save delay: if a write were coming, it would be here.
