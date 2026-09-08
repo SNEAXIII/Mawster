@@ -1,4 +1,4 @@
-import type { CatalogChampion, TierListSavePayload, TierListTag } from '@/app/services/tierlist'
+import type { TierListSavePayload, TierListTag } from '@/app/services/tierlist'
 
 /** The six champion classes, in the order the class filter shows them. */
 export const CHAMPION_CLASSES = ['Cosmic', 'Tech', 'Mutant', 'Skill', 'Science', 'Mystic'] as const
@@ -68,4 +68,4 @@ export function hasAnyTag(tags: ChampionTags): boolean {
   return TAG_KEYS.some((key) => tags[key]) || tags.signature > 0
 }
 
-export type { CatalogChampion }
+export type { CatalogChampion } from '@/app/services/tierlist'
