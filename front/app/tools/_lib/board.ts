@@ -21,9 +21,15 @@ export const TIER_PALETTE = [
 
 const DEFAULT_LABELS = ['S', 'A', 'B', 'C', 'D']
 
-/** Rows created in the browser need an id before they have one from the API. */
+/**
+ * Rows created in the browser need an id before the API gives them one.
+ *
+ * `crypto.randomUUID` rather than `Math.random`: the id is only a React key
+ * until the first save, but a predictable generator in an identifier is a
+ * finding nobody should have to re-litigate at each review.
+ */
 export function newTierId(): string {
-  return `tier-${Math.random().toString(36).slice(2, 9)}`
+  return `tier-${crypto.randomUUID()}`
 }
 
 export function defaultTiers(): BoardTier[] {

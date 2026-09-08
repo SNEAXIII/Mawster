@@ -1,5 +1,4 @@
 import { tagsOf } from './board'
-import { TAG_KEYS } from './types'
 import type { BoardState, CatalogChampion, ChampionClass, TagKey } from './types'
 
 export interface FilterState {
@@ -67,4 +66,4 @@ export function matchesFilters(
   return fold(`${champion.name} ${champion.alias ?? ''}`).includes(query)
 }
 
-export { TAG_KEYS }
+export { TAG_KEYS } from './types'
