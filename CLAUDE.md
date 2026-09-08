@@ -9,6 +9,25 @@ Mawster — MCOC (Marvel Contest of Champions) alliance management tool.
 
 ---
 
+## Scope Discipline
+
+- Do exactly what was asked. No adjacent improvements (perf tweaks, lazy-loading, extra refactors,
+  unrequested test runs) unless explicitly requested — propose them in one line at the end instead.
+- Announce what you're about to change before editing several files, then report what changed after.
+- Before proposing an architecture, a framework choice, or an HTTP/data layer, first explore the
+  actual codebase (`package.json`, existing modules, device/runtime constraints) and state the
+  findings. Never give a recommendation resting on assumptions that exploring the code would
+  have invalidated.
+
+---
+
+## Database Migrations
+
+- **NEVER hand-write a migration.** Always generate it with the `/db-migrate` skill (Alembic
+  autogenerate via the make targets). Only edit the generated file for review-level corrections.
+
+---
+
 ## Commands
 
 **Backend** (`api/`) — always via `/make` skill first, never raw `pytest`/`alembic`/`uvicorn`. Before any backend command, invoke `/make` to check available targets.
