@@ -3,6 +3,7 @@ from src.controllers.account.game.game_account_controller import game_account_co
 from src.controllers.account.game.upgrade_request_controller import upgrade_request_controller
 from src.controllers.account.game.vision_controller import vision_controller
 from src.controllers.account.me_moderation_controller import me_moderation_controller
+from src.controllers.account.tierlist_controller import tierlist_controller
 from src.controllers.account.user_controller import user_controller
 from src.controllers.admin.champion_controller import champion_controller, champion_read_controller
 from src.controllers.admin.fight_record_controller import fight_record_controller
@@ -34,6 +35,7 @@ from src.controllers.alliance.war.war_placement_controller import war_placement_
 from src.controllers.alliance.war.war_prefight_controller import war_prefight_controller
 from src.controllers.alliance.war.war_synergy_controller import war_synergy_controller
 from src.controllers.auth.auth_controller import auth_controller
+from src.controllers.catalog_controller import catalog_controller
 from src.controllers.stats_controller import stats_controller
 
 routers = [
@@ -71,4 +73,6 @@ routers = [
     ranking_history_controller,
     stats_controller,
     vision_stats_controller,
+    catalog_controller,
+    tierlist_controller,
 ]

@@ -93,6 +93,52 @@ _Debt_: the table is named `champion_user` and keyed by `game_account_id` — a
 historical misnomer. Should become `roster_entry`; the rename is a real migration
 across API, front and E2E, so it is deferred, not accepted.
 
+### Tier lists
+
+**Tier List**:
+A ranked opinion an Account holds about Champions: rows it labels and colours, Champions
+dropped into them. Spans the whole Champion catalog, never a roster — you rank Champions
+you will never own. An Account keeps as many as it likes; a signed-out visitor keeps one,
+in their browser.
+_Table_: `tierlist`.
+_Avoid_: board, tierlist (in prose), tier (that is one row).
+
+It belongs to an Account and not to a Player — the single place in the game domain where
+that is true, and the reason it can never be shown inside an Alliance (see
+`docs/adr/0007-tier-lists-belong-to-the-account.md`).
+
+**Tier**:
+One row of a Tier List: a label, a colour, a position. Holds Rankings and nothing else.
+_Table_: `tierlist_tier`.
+_Avoid_: never the bare word in prose next to an Alliance — an Alliance's Tier is its
+competitive bracket (`Tier = 1..20`), an unrelated concept. Say "Tier List row" when both
+are in play.
+
+**Ranking**:
+One Champion sitting in one Tier, at a position. Scoped to its Tier List — the same
+Champion is S in one and C in another, and two Tier Lists share nothing.
+_Table_: `tierlist_ranking`.
+_Avoid_: placement (taken by Defense Placement), slot, entry.
+
+**Tag**:
+A mark the owner puts on a Champion inside one Tier List: attacker, defender, worth taking
+into Alliance War, worth taking into Battlegrounds, awakened (carrying a signature value),
+six-star only. A Champion carrying both attacker and defender shows as a dual threat — a
+derived badge, never a tag anyone sets.
+
+An opinion, never a fact. The defender tag means "I rate it on defense" and is unrelated to
+a Saga's `is_saga_defender`, which is a Season bonus the game grants. Likewise the
+Battlegrounds tag names the game's PvP mode, never Mawster's Battlegroup. Tags double as
+the pool filters.
+_Table_: `tierlist_champion_tag`, one row per tagged Champion.
+_Debt_: non-playable catalog entries (event bosses, minions — `doombot`, `symbioid`,
+`sentinelbot`, `anti-venomoid`) are hidden by a hard-coded list in the front. The fact
+belongs to the catalog: `Champion` should carry `is_playable`, so roster search and the
+vision pipeline read the same truth.
+_Debt_: saving a Tier List rewrites it whole — the front PUTs every Tier, Ranking and Tag
+a second after the last gesture. Fine at a few Ko; a diff endpoint is the fix if a list
+ever grows past that.
+
 ### War
 
 **War**:

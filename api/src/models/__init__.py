@@ -12,6 +12,10 @@ from src.models.champion.ChampionUser import ChampionUser  # noqa: F401
 from src.models.champion.RequestedUpgrade import RequestedUpgrade  # noqa: F401
 from src.models.matchup.MatchupRating import MatchupRating  # noqa: F401
 from src.models.matchup.MatchupSynergy import MatchupSynergy  # noqa: F401
+from src.models.tierlist.TierList import TierList  # noqa: F401
+from src.models.tierlist.TierListChampionTag import TierListChampionTag  # noqa: F401
+from src.models.tierlist.TierListRanking import TierListRanking  # noqa: F401
+from src.models.tierlist.TierListTier import TierListTier  # noqa: F401
 from src.models.user.GameAccount import GameAccount  # noqa: F401
 from src.models.user.GameAccountMastery import GameAccountMastery  # noqa: F401
 from src.models.user.LoginLog import LoginLog  # noqa: F401
