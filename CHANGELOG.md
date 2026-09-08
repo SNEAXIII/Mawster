@@ -3,6 +3,20 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.11.0](https://github.com/SNEAXIII/Mawster/compare/v1.10.0...v1.11.0) (2026-09-08)
+
+
+### Ajouté
+
+* quota the AI import in screenshots rather than in imports ([225763b](https://github.com/SNEAXIII/Mawster/commit/225763b690164b686e6817a63fc10121742ab96c))
+
+
+### Modifié
+
+* read the alliance list from the context in the selector ([#517](https://github.com/SNEAXIII/Mawster/issues/517)) ([5ccf1dc](https://github.com/SNEAXIII/Mawster/commit/5ccf1dca294bb607782f0fc5bb6cfa57c7355ef5))
+* stop paying two backend requests per front-end API call ([#512](https://github.com/SNEAXIII/Mawster/issues/512)) ([5c3ff9f](https://github.com/SNEAXIII/Mawster/commit/5c3ff9f0f7eba45d93c4d52bb303226dbe157b69))
+* stop polling war and defense in hidden tabs ([#518](https://github.com/SNEAXIII/Mawster/issues/518)) ([f736d94](https://github.com/SNEAXIII/Mawster/commit/f736d94ddad148c8f0348bf2da51f89f37db74e5))
+
 ## [1.10.0](https://github.com/SNEAXIII/Mawster/compare/v1.9.0...v1.10.0) (2026-09-06)
 
 

@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
@@ -14,13 +13,13 @@ from src.dto.account.game.dto_mastery import (
     GameAccountMasteryUpsertItem,
 )
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
-from src.models import User
 from src.models.Base import as_utc
 from src.models.user.GameAccount import GameAccount
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.MasteryService import MasteryService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 game_account_controller = APIRouter(
@@ -58,7 +57,7 @@ def _to_deleted_response(account: GameAccount) -> DeletedGameAccountResponse:
 async def create_game_account(
     body: GameAccountCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Create a new game account for the current user.
     Only a game pseudo is required. The ID is auto-generated."""
@@ -76,7 +75,7 @@ async def create_game_account(
 )
 async def get_my_game_accounts(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get all game accounts for the current user, sorted by primary first, with alliance info."""
     accounts = await GameAccountService.get_game_accounts_by_user(
@@ -93,7 +92,7 @@ async def get_my_game_accounts(
 )
 async def get_my_deleted_game_accounts(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """List the current user's deleted game accounts that can still be restored.
 
@@ -113,7 +112,7 @@ async def get_my_deleted_game_accounts(
 async def get_game_account(
     game_account_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get a specific game account by ID. Must belong to the current user."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
@@ -132,7 +131,7 @@ async def update_game_account(
     game_account_id: uuid.UUID,
     body: GameAccountCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Update a game account. Must belong to the current user."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
@@ -155,7 +154,7 @@ async def update_game_account(
 async def delete_game_account(
     game_account_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Logically delete a game account. Must belong to the current user and must not
     belong to an alliance. The account can be restored for a few days, and keeps
@@ -175,7 +174,7 @@ async def delete_game_account(
 async def restore_game_account(
     game_account_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Restore a deleted game account. Must belong to the current user and still
     be inside the restore window."""
@@ -197,7 +196,7 @@ async def restore_game_account(
 async def get_game_account_masteries(
     game_account_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get mastery values for a game account. Visible to owner or alliance members."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)
@@ -218,7 +217,7 @@ async def upsert_game_account_masteries(
     game_account_id: uuid.UUID,
     body: list[GameAccountMasteryUpsertItem],
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Bulk upsert mastery values. Only the account owner can call this."""
     game_account = await GameAccountService.get_game_account(session, game_account_id)

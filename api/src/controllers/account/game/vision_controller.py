@@ -18,9 +18,9 @@ from src.enums.VisionJobStatus import VisionJobStatus
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND, NOT_YOUR_GAME_ACCOUNT
 from src.Messages.vision_messages import (
     IMPORT_ALREADY_PENDING,
-    IMPORT_QUOTA_EXCEEDED,
     JOB_NOT_RETRYABLE,
     NOT_YOUR_VISION_IMPORT,
+    SCREEN_QUOTA_EXCEEDED,
     VISION_CROP_NOT_FOUND,
     VISION_DISABLED,
     VISION_IMPORT_NOT_FOUND,
@@ -28,7 +28,6 @@ from src.Messages.vision_messages import (
 )
 from src.messaging import get_publisher
 from src.messaging.publisher import VisionPublisher
-from src.models import User
 from src.models.user.GameAccount import GameAccount
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
@@ -40,6 +39,7 @@ from src.services.account.game.VisionResultService import VisionResultService
 from src.services.auth.AuthService import AuthService
 from src.storage import get_storage
 from src.storage.base import Storage, sprite_key
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 VISION_DISABLED_EXCEPTION = HTTPException(
@@ -60,7 +60,10 @@ vision_controller = APIRouter(
     dependencies=[Depends(AuthService.get_current_user_in_jwt), Depends(_require_vision_enabled)],
 )
 
-MAX_IMPORTS_PER_HOUR = 10
+# Two full batches an hour. The unit is the screenshot, not the import, because
+# that is what the server actually pays: one screenshot is one job is one
+# inference.
+MAX_SCREENS_PER_HOUR = 50
 
 
 class VisionConfirmRequest(BaseModel):
@@ -103,12 +106,34 @@ async def _get_own_game_account(
     return game_account
 
 
+async def _enforce_screen_quota(
+    session: SessionDep, current_user_id: uuid.UUID, requested: int
+) -> None:
+    """Reject the whole batch if it would push the user past the hourly screen quota.
+
+    All or nothing: truncating the batch to what fits would import half a roster
+    while reporting success, which is worse than asking for a smaller batch. The
+    message carries what is left so the retry is informed rather than blind.
+
+    Checked before anything is created, so a refused batch leaves no rows behind
+    to count against the next attempt.
+    """
+    recent = await VisionImportService.count_recent_screens(session, current_user_id)
+    if recent + requested > MAX_SCREENS_PER_HOUR:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            SCREEN_QUOTA_EXCEEDED.format(
+                requested=requested, remaining=max(0, MAX_SCREENS_PER_HOUR - recent)
+            ),
+        )
+
+
 @vision_controller.post(
     "/imports", response_model=VisionImportResponse, status_code=status.HTTP_201_CREATED
 )
 async def create_vision_import(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
     publisher: Annotated[VisionPublisher, Depends(get_publisher)],
     game_account_id: Annotated[uuid.UUID, Form()],
@@ -128,9 +153,7 @@ async def create_vision_import(
     # Quota first: a user blocked by the 409 below must still learn they are
     # also over quota, rather than being stuck behind a wall that never
     # mentions it.
-    recent = await VisionImportService.count_recent_imports(session, current_user.id)
-    if recent >= MAX_IMPORTS_PER_HOUR:
-        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, IMPORT_QUOTA_EXCEEDED)
+    await _enforce_screen_quota(session, current_user.id, len(files))
 
     blocking = await VisionImportService.get_current(session, game_account_id)
     if blocking is not None:
@@ -155,7 +178,7 @@ async def create_vision_import(
 async def init_vision_import(
     session: SessionDep,
     body: VisionInitRequest,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
 ):
     """Reserve an import and return one presigned upload URL per screenshot.
@@ -170,9 +193,7 @@ async def init_vision_import(
     """
     await _get_own_game_account(session, body.game_account_id, current_user.id)
 
-    recent = await VisionImportService.count_recent_imports(session, current_user.id)
-    if recent >= MAX_IMPORTS_PER_HOUR:
-        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, IMPORT_QUOTA_EXCEEDED)
+    await _enforce_screen_quota(session, current_user.id, len(body.screens))
 
     blocking = await VisionImportService.get_current(session, body.game_account_id)
     if blocking is not None:
@@ -194,7 +215,7 @@ async def commit_vision_screen(
     session: SessionDep,
     import_id: uuid.UUID,
     job_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
     publisher: Annotated[VisionPublisher, Depends(get_publisher)],
 ):
@@ -214,7 +235,7 @@ async def commit_vision_screen(
 async def commit_vision_import(
     session: SessionDep,
     import_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
     publisher: Annotated[VisionPublisher, Depends(get_publisher)],
 ):
@@ -236,7 +257,7 @@ async def commit_vision_import(
 async def get_current_vision_import(
     session: SessionDep,
     game_account_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     response: Response,
 ):
     """The one import awaiting attention on this game account, or 204.
@@ -267,7 +288,7 @@ async def get_current_vision_import(
 async def get_vision_import(
     session: SessionDep,
     import_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Progress of an import. The front polls this while the batch runs."""
     return await _get_own_import(session, import_id, current_user.id)
@@ -277,7 +298,7 @@ async def get_vision_import(
 async def get_vision_predictions(
     session: SessionDep,
     import_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """All predictions of an import, feeding the review screen's preview rows."""
     await _get_own_import(session, import_id, current_user.id)
@@ -290,7 +311,7 @@ async def confirm_vision_import(
     session: SessionDep,
     import_id: uuid.UUID,
     body: VisionConfirmRequest,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
 ):
     """Archive the dataset (if opted in) and mark the import confirmed. The roster
@@ -327,7 +348,7 @@ async def get_crop_sprite(
     session: SessionDep,
     import_id: uuid.UUID,
     job_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
 ):
     """Every thumbnail of one screenshot, as a single sheet the front slices.
@@ -361,7 +382,7 @@ async def get_crop_sprite(
 async def delete_vision_import(
     session: SessionDep,
     import_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     storage: Annotated[Storage, Depends(get_storage)],
 ):
     """Cancel an import without deleting it. Its row and predictions are kept —
@@ -377,7 +398,7 @@ async def delete_vision_import(
 async def retry_vision_job(
     session: SessionDep,
     job_id: uuid.UUID,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     publisher: Annotated[VisionPublisher, Depends(get_publisher)],
 ):
     """Relaunch a screenshot the pipeline could not read.

@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
@@ -11,10 +10,10 @@ from src.dto.alliance.war.dto_war import (
     WarKoUpdateRequest,
     WarPlacementResponse,
 )
-from src.models import User
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.war.WarService import WarService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 
@@ -34,7 +33,7 @@ async def get_available_attackers(
     war_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
     attacker_id: uuid.UUID | None = None,
     node_number: int | None = None,
@@ -55,7 +54,7 @@ async def get_available_prefight_attackers(
     war_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """List available pre-fight champions (has_prefight=True) for the BG."""
@@ -74,7 +73,7 @@ async def assign_war_attacker(
     node_number: int,
     body: WarAttackerAssignRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Assign an attacker to a war node. All members can assign."""
@@ -94,7 +93,7 @@ async def remove_war_attacker(
     battlegroup: BattlegroupPath,
     node_number: int,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Remove the attacker from a war node. All members can remove."""
@@ -113,7 +112,7 @@ async def update_war_ko(
     node_number: int,
     body: WarKoUpdateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Update the KO count for a war node. All members can update."""
@@ -131,7 +130,7 @@ async def toggle_combat_completed(
     battlegroup: BattlegroupPath,
     node_number: int,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Toggle combat completion for a war node. All members can toggle."""
@@ -149,7 +148,7 @@ async def toggle_fight_not_done(
     battlegroup: BattlegroupPath,
     node_number: int,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Mark a node's fight as not done. Officers/owner only."""
@@ -167,7 +166,7 @@ async def toggle_planning_error(
     battlegroup: BattlegroupPath,
     node_number: int,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Mark a node as a planning error. Officers/owner only."""
@@ -186,7 +185,7 @@ async def assign_war_assist(
     node_number: int,
     body: WarAttackerAssignRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Assign an assistor to a war node. All members can assign."""
@@ -206,7 +205,7 @@ async def remove_war_assist(
     battlegroup: BattlegroupPath,
     node_number: int,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Remove the assistor from a war node. All members can remove."""

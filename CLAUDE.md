@@ -9,6 +9,25 @@ Mawster — MCOC (Marvel Contest of Champions) alliance management tool.
 
 ---
 
+## Scope Discipline
+
+- Do exactly what was asked. No adjacent improvements (perf tweaks, lazy-loading, extra refactors,
+  unrequested test runs) unless explicitly requested — propose them in one line at the end instead.
+- Announce what you're about to change before editing several files, then report what changed after.
+- Before proposing an architecture, a framework choice, or an HTTP/data layer, first explore the
+  actual codebase (`package.json`, existing modules, device/runtime constraints) and state the
+  findings. Never give a recommendation resting on assumptions that exploring the code would
+  have invalidated.
+
+---
+
+## Database Migrations
+
+- **NEVER hand-write a migration.** Always generate it with the `/db-migrate` skill (Alembic
+  autogenerate via the make targets). Only edit the generated file for review-level corrections.
+
+---
+
 ## Commands
 
 **Backend** (`api/`) — always via `/make` skill first, never raw `pytest`/`alembic`/`uvicorn`. Before any backend command, invoke `/make` to check available targets.
@@ -132,6 +151,20 @@ exists to break.
 
 Prefer squash merge on pull requests. A merge commit carries the PR title into its body, which
 release-please then counts a second time alongside the real commits, duplicating every entry.
+
+### Git safety
+
+- Never use `git commit --amend`, `git push --force`, `git reset --hard`, `git stash` on
+  partially-staged work, or revert already-pushed commits without asking first.
+- Before switching branches, check `git status` and warn about uncommitted changes rather than
+  stashing them silently.
+
+### Verification before claiming
+
+- Never state a fact about an external tool, API or CI behaviour from memory. Read the actual
+  file/workflow or web-search first, then cite the source.
+- Never "correct" existing code or config without having read it and being able to point at the
+  exact reason it is wrong.
 
 ---
 

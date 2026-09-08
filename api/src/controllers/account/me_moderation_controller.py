@@ -1,12 +1,10 @@
 from datetime import datetime
-from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from pydantic import BaseModel
 
-from src.models import User
 from src.services.admin.ModerationService import ModerationService
-from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 me_moderation_controller = APIRouter(tags=["Moderation"])
@@ -30,7 +28,7 @@ class MyModerationResponse(BaseModel):
 @me_moderation_controller.get("/me/moderation", response_model=MyModerationResponse)
 async def my_moderation(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Return the caller's own active mute (reason visible to them) and their warnings."""
     mute = await ModerationService.get_active_mute(session, current_user.id)

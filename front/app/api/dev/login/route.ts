@@ -3,6 +3,7 @@ import { encode } from '@auth/core/jwt'
 import jwt from 'jsonwebtoken'
 import { isServerDev } from '@/app/lib/dev-mode'
 import { getServerApiUrl } from '@/app/lib/serverApiUrl'
+import { withBackendProfile } from '@/app/lib/backend-profile'
 
 interface BackendJwtPayload {
   user_id: string
@@ -46,19 +47,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'NEXTAUTH_SECRET is not set' }, { status: 500 })
     }
 
-    const sessionToken = await encode({
-      token: {
-        id: decoded.user_id,
-        role: decoded.role,
-        accessToken: data.access_token,
-        backendRefreshToken: data.refresh_token,
-        accessTokenExpires: Date.now() + 60 * 60 * 1000,
-        expired: false,
-        backendAuthenticated: true,
-      },
-      secret,
-      salt: COOKIE_NAME,
+    // Mints the same token the jwt callback would at sign-in, profile included:
+    // the session callback reads it without touching the network, so a cookie
+    // forged here without one would render a blank username.
+    const token = await withBackendProfile({
+      id: decoded.user_id,
+      role: decoded.role,
+      accessToken: data.access_token,
+      backendRefreshToken: data.refresh_token,
+      accessTokenExpires: Date.now() + 60 * 60 * 1000,
+      expired: false,
+      backendAuthenticated: true,
     })
+
+    const sessionToken = await encode({ token, secret, salt: COOKIE_NAME })
 
     return NextResponse.json({ sessionToken })
   } catch (error) {

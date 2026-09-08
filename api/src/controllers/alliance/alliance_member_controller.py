@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
@@ -14,10 +13,10 @@ from src.dto.alliance.dto_alliance import (
     AllianceTransferOwnerRequest,
 )
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
-from src.models import User
 from src.models.alliance.Alliance import Alliance
 from src.services.alliance.AllianceService import AllianceService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 alliance_member_controller = APIRouter(
@@ -38,7 +37,7 @@ async def remove_member(
     alliance_id: uuid.UUID,
     game_account_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Remove a member from the alliance. Owner can remove anyone; officers cannot remove other officers."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
@@ -62,7 +61,7 @@ async def add_officer(
     alliance_id: uuid.UUID,
     body: AllianceAddOfficerRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Add an officer to an alliance. Only the owner can add officers."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
@@ -80,7 +79,7 @@ async def remove_officer(
     alliance_id: uuid.UUID,
     body: AllianceRemoveOfficerRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Remove an officer from an alliance. Only the owner can remove officers."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
@@ -102,7 +101,7 @@ async def add_strategist(
     alliance_id: uuid.UUID,
     body: AllianceAddStrategistRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Grant the strategist rank. The owner or any officer can do this."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
@@ -127,7 +126,7 @@ async def remove_strategist(
     alliance_id: uuid.UUID,
     body: AllianceRemoveStrategistRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Revoke the strategist rank. The owner or any officer can do this."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
@@ -149,7 +148,7 @@ async def transfer_ownership(
     alliance_id: uuid.UUID,
     body: AllianceTransferOwnerRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Transfer alliance ownership to an existing officer. Only the current owner can do this."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
@@ -172,7 +171,7 @@ async def set_member_group(
     game_account_id: uuid.UUID,
     body: AllianceSetGroupRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Set the group (1, 2, 3 or null) for a member. Only the owner or an officer can manage groups."""
     alliance = await AllianceService.get_alliance(session, alliance_id)

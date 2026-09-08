@@ -1,12 +1,11 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
 from src.dto.alliance.war.dto_ranking_history import RankingHistoryResponse
-from src.models.user.User import User
 from src.services.alliance.RankingHistoryService import RankingHistoryService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 ranking_history_controller = APIRouter(
@@ -22,7 +21,7 @@ ranking_history_controller = APIRouter(
 )
 async def get_ranking_history(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     alliance_id: uuid.UUID,
 ):
     return await RankingHistoryService.get_ranking_history(session, current_user, alliance_id)

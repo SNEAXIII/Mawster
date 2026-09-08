@@ -7,9 +7,9 @@ from starlette import status as http_status
 from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
 from src.enums.FightRecordSource import FightRecordSource
 from src.enums.SeasonSelectorType import SeasonSelectorType
-from src.models import User
 from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordService import FightRecordService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 fight_record_controller = APIRouter(
@@ -36,7 +36,7 @@ sort_literal = Literal[
 @fight_record_controller.get("", response_model=PaginatedFightRecordsResponse)
 async def list_fight_records(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     champion_id: Annotated[uuid.UUID | None, Query()] = None,
     defender_champion_id: Annotated[uuid.UUID | None, Query()] = None,
     node_number: Annotated[int | None, Query(ge=1, le=50)] = None,

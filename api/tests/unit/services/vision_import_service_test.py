@@ -350,8 +350,8 @@ def _build_import_with_jobs_and_predictions() -> VisionImport:
 @pytest.mark.asyncio
 async def test_cancel_import_marks_it_cancelled_without_deleting_anything():
     """The row (and its jobs/predictions) must survive cancellation: the hourly
-    quota counts rows, so deleting them here would let create -> cancel ->
-    create slip under the limit forever."""
+    quota counts the jobs of these rows, so deleting them here would let
+    create -> cancel -> create slip under the limit forever."""
     calls: list[str] = []
     session = FakeSession(calls)
     storage = FakeStorage()

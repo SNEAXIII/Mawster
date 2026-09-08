@@ -1,6 +1,7 @@
 declare module '*.css'
 
 import 'next-auth'
+import type { BackendProfile } from '@/app/lib/backend-profile'
 
 declare module 'next-auth' {
   interface Session {
@@ -40,5 +41,7 @@ declare module 'next-auth/jwt' {
     role?: string
     discord_id?: string
     created_at?: string | null
+    /** Cached backend profile — written by the jwt callback, read by session. */
+    profile?: BackendProfile
   }
 }

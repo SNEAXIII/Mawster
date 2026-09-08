@@ -6,13 +6,13 @@ import {
   type Alliance,
   type AllianceRoleEntry,
   type AllianceInvitation,
+  type AllianceWithVisitorFlag,
   getMyAlliances,
   getMyVisitedAlliances,
   getMyAllianceRoles,
   getMyInvitations,
   getAllianceInvitations,
 } from '@/app/services/game'
-import { type AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 
 const CACHE_KEY = 'alliance_cache'
 
@@ -42,6 +42,7 @@ interface AllianceContextValue {
   hasAlliance: boolean
   loading: boolean
   roles: Record<string, AllianceRoleEntry>
+  rolesByAccount: Record<string, AllianceRoleEntry>
   myAccountIds: Set<string>
   isMine: (gameAccountId: string) => boolean
   isOwner: (alliance: Alliance) => boolean
@@ -64,6 +65,7 @@ const AllianceContext = createContext<AllianceContextValue>({
   hasAlliance: false,
   loading: true,
   roles: {},
+  rolesByAccount: {},
   myAccountIds: new Set(),
   isMine: () => false,
   isOwner: () => false,
@@ -85,6 +87,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
   const [alliances, setAlliances] = useState<AllianceWithVisitorFlag[]>(() => readCache())
   const [loading, setLoading] = useState(status === 'loading')
   const [roles, setRoles] = useState<Record<string, AllianceRoleEntry>>({})
+  const [rolesByAccount, setRolesByAccount] = useState<Record<string, AllianceRoleEntry>>({})
   const [myAccountIds, setMyAccountIds] = useState<string[]>([])
   const [rolesLoading, setRolesLoading] = useState(true)
   const [myInvitations, setMyInvitations] = useState<AllianceInvitation[]>([])
@@ -99,6 +102,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
     try {
       const data = await getMyAllianceRoles()
       setRoles(data.roles)
+      setRolesByAccount(data.roles_by_account)
       setMyAccountIds(data.my_account_ids)
     } catch {
       // silent
@@ -114,6 +118,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
       writeCache([])
       setLoading(false)
       setRoles({})
+      setRolesByAccount({})
       setMyAccountIds([])
       setRolesLoading(false)
       setMyInvitations([])
@@ -146,6 +151,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
       writeCache(merged)
 
       setRoles(rolesResult.roles)
+      setRolesByAccount(rolesResult.roles_by_account)
       setMyAccountIds(rolesResult.my_account_ids)
       setMyInvitations(invitationsResult)
 
@@ -185,6 +191,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
       hasAlliance: alliances.length > 0,
       loading,
       roles,
+      rolesByAccount,
       myAccountIds: accountIdSet,
       isMine: (gameAccountId: string) => accountIdSet.has(gameAccountId),
       isOwner: (alliance: Alliance) => roles[alliance.id]?.is_owner ?? false,
@@ -202,6 +209,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
       alliances,
       loading,
       roles,
+      rolesByAccount,
       accountIdSet,
       rolesLoading,
       myInvitations,

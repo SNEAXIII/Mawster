@@ -5,10 +5,10 @@ from fastapi import APIRouter, Depends, Query
 
 from src.dto.alliance.war.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
 from src.dto.player.dto_player_stats import PlayerSeasonOption, PlayerStatsResponse
-from src.models import User
 from src.services.alliance.war.StatisticService import StatisticService
 from src.services.auth.AuthService import AuthService
 from src.services.PlayerStatsService import PlayerStatsService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 statistics_controller = APIRouter(
@@ -26,7 +26,7 @@ statistics_controller = APIRouter(
 )
 async def get_current_season_statistics(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     alliance_id: uuid.UUID,
     season_id: Annotated[uuid.UUID | None, Query()] = None,
     war_id: Annotated[uuid.UUID | None, Query()] = None,
@@ -43,7 +43,7 @@ async def get_current_season_statistics(
 )
 async def get_champion_usage(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     alliance_id: uuid.UUID,
     game_account_id: Annotated[uuid.UUID | None, Query()] = None,
     war_id: Annotated[uuid.UUID | None, Query()] = None,
@@ -69,7 +69,7 @@ async def get_champion_usage(
 @statistics_controller.get("/player/{game_account_id}", response_model=PlayerStatsResponse)
 async def get_player_stats(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     game_account_id: uuid.UUID,
     season_id: Annotated[uuid.UUID | None, Query()] = None,
 ):
@@ -85,7 +85,7 @@ async def get_player_stats(
 )
 async def get_player_champion_usage(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     game_account_id: uuid.UUID,
     season_id: Annotated[uuid.UUID | None, Query()] = None,
     deathless: Annotated[bool | None, Query()] = None,
@@ -103,7 +103,7 @@ async def get_player_champion_usage(
 )
 async def get_player_seasons(
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     game_account_id: uuid.UUID,
 ):
     """Seasons the game account participated in (owner only)."""

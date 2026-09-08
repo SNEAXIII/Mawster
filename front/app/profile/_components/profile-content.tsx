@@ -39,7 +39,9 @@ export default function ProfileContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 
-  if (status === 'loading') {
+  // First load only: an in-flight update() also reads as loading, and the
+  // spinner would remount the cards and wipe what the user just typed.
+  if (status === 'loading' && !session) {
     return <FullPageSpinner />
   }
 

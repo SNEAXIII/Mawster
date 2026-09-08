@@ -14,9 +14,9 @@ from src.dto.admin.dto_moderation import (
     WarnResponse,
 )
 from src.enums.NoteReportStatus import NoteReportStatus
-from src.models import User
 from src.services.admin.ModerationService import ModerationService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 moderation_controller = APIRouter(
@@ -44,7 +44,7 @@ async def resolve_note_report(
     report_id: uuid.UUID,
     body: ReportResolveRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     await ModerationService.resolve_report(
         session, report_id=report_id, admin_user_id=current_user.id, body=body
@@ -62,7 +62,7 @@ async def mute_user(
     user_id: uuid.UUID,
     body: MuteCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     return await ModerationService.mute_user(
         session, user_id=user_id, admin_user_id=current_user.id, body=body
@@ -73,7 +73,7 @@ async def mute_user(
 async def lift_user_mute(
     user_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     await ModerationService.lift_mute(session, user_id=user_id, admin_user_id=current_user.id)
     return {"ok": True}
@@ -84,7 +84,7 @@ async def warn_user(
     user_id: uuid.UUID,
     body: WarnCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     return await ModerationService.warn_user(
         session, user_id=user_id, admin_user_id=current_user.id, body=body

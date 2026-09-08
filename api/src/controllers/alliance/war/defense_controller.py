@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
@@ -10,11 +9,11 @@ from src.dto.alliance.war.dto_defense import (
     DefenseSummaryResponse,
 )
 from src.Messages.alliance_messages import PLACE_FOR_OTHERS_REQUIRES_STRATEGIST
-from src.models import User
 from src.services.admin.SagaService import SagaService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.war.DefensePlacementService import DefensePlacementService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 
@@ -42,7 +41,7 @@ async def get_defense(
     alliance_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get the full defense layout for a battlegroup."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
@@ -73,7 +72,7 @@ async def place_defender(
     battlegroup: BattlegroupPath,
     body: DefensePlacementCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Place a defender on a node. Owner/officer can place for any BG member."""
     my_account = await AllianceService.get_user_account_in_alliance(
@@ -112,7 +111,7 @@ async def remove_defender(
     battlegroup: BattlegroupPath,
     node_number: int,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Remove a defender from a node. Officers/owners/strategists only."""
     await AllianceService.require_strategist(session, alliance_id, current_user.id)
@@ -128,7 +127,7 @@ async def clear_defense(
     alliance_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Clear all defense placements for a battlegroup. Officers/owners/strategists only."""
     await AllianceService.require_strategist(session, alliance_id, current_user.id)
@@ -143,7 +142,7 @@ async def get_available_champions(
     alliance_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get all champions available for placement (not already placed, from BG members)."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
@@ -158,7 +157,7 @@ async def get_bg_members(
     alliance_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get all members in a battlegroup with their defender counts."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)

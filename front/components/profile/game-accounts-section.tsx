@@ -8,13 +8,13 @@ import {
   type AllianceRoleEntry,
   type DeletedGameAccount,
   getMyGameAccounts,
-  getMyAllianceRoles,
   getDeletedGameAccounts,
   createGameAccount,
   updateGameAccount,
   deleteGameAccount,
   restoreGameAccount,
 } from '@/app/services/game'
+import { useAllianceContext } from '@/app/contexts/alliance-context'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -73,10 +73,12 @@ export default function GameAccountsSection({
   onAccountsChange,
 }: Readonly<GameAccountsSectionProps>) {
   const { t } = useI18n()
+  // The provider already holds my-roles: refetching it here made the profile
+  // page ask the backend for the same payload twice.
+  const { rolesByAccount, refreshRoles } = useAllianceContext()
 
   const [accounts, setAccounts] = useState<GameAccount[]>([])
   const [deletedAccounts, setDeletedAccounts] = useState<DeletedGameAccount[]>([])
-  const [rolesByAccount, setRolesByAccount] = useState<Record<string, AllianceRoleEntry>>({})
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -92,19 +94,22 @@ export default function GameAccountsSection({
 
   const fetchAccounts = async () => {
     try {
-      const [data, rolesData, deletedData] = await Promise.all([
+      const [data, deletedData] = await Promise.all([
         getMyGameAccounts(),
-        getMyAllianceRoles().catch(() => ({ roles: {}, roles_by_account: {}, my_account_ids: [] })),
         getDeletedGameAccounts().catch(() => [] as DeletedGameAccount[]),
       ])
       setAccounts(data)
-      setRolesByAccount(rolesData.roles_by_account)
       setDeletedAccounts(deletedData)
     } catch (err) {
       console.error(err)
     } finally {
       setLoading(false)
     }
+  }
+
+  // Creating, deleting or restoring an account can change its alliance role.
+  const reload = async () => {
+    await Promise.all([fetchAccounts(), refreshRoles()])
   }
 
   useEffect(() => {
@@ -126,7 +131,7 @@ export default function GameAccountsSection({
       await createGameAccount(pseudo.trim(), accounts.length === 0)
       toast.success(t.game.accounts.createSuccess)
       setPseudo('')
-      await fetchAccounts()
+      await reload()
       onAccountsChange?.()
     } catch (err) {
       console.error(err)
@@ -143,7 +148,7 @@ export default function GameAccountsSection({
       await deleteGameAccount(deleteTarget.id)
       toast.success(t.game.accounts.deleteSuccess)
       setDeleteTarget(null)
-      await fetchAccounts()
+      await reload()
       onAccountsChange?.()
     } catch (err) {
       console.error(err)
@@ -160,14 +165,14 @@ export default function GameAccountsSection({
     try {
       await restoreGameAccount(account.id)
       toast.success(t.game.accounts.restoreSuccess)
-      await fetchAccounts()
+      await reload()
       onAccountsChange?.()
     } catch (err) {
       console.error(err)
       const status = (err as Error & { status?: number }).status
       // 410 means the restore window closed while the page was open.
       toast.error(status === 410 ? t.game.accounts.restoreExpired : t.game.accounts.restoreError)
-      await fetchAccounts()
+      await reload()
     } finally {
       setRestoringId(null)
     }
@@ -194,7 +199,7 @@ export default function GameAccountsSection({
       toast.success(t.game.accounts.editSuccess)
       setEditingId(null)
       setEditPseudo('')
-      await fetchAccounts()
+      await reload()
       onAccountsChange?.()
     } catch (err) {
       console.error(err)
@@ -207,7 +212,7 @@ export default function GameAccountsSection({
     try {
       await updateGameAccount(account.id, account.game_pseudo, true)
       toast.success(t.game.accounts.primarySet ?? 'Primary account updated')
-      await fetchAccounts()
+      await reload()
       onAccountsChange?.()
     } catch (err) {
       console.error(err)

@@ -1,15 +1,14 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from starlette import status
 
 from src.controllers.alliance.war.war_deps import WarDep
 from src.dto.alliance.war.dto_war import WarSynergyCreateRequest, WarSynergyResponse
-from src.models import User
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.war.WarService import WarService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 from src.utils.path_params import BattlegroupPath
 
@@ -29,7 +28,7 @@ async def get_war_synergy(
     war_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """List synergy champions for a battlegroup. All members can view."""
@@ -48,7 +47,7 @@ async def add_war_synergy(
     battlegroup: BattlegroupPath,
     body: WarSynergyCreateRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Add a synergy champion for a battlegroup. All members can add."""
@@ -74,7 +73,7 @@ async def remove_war_synergy(
     battlegroup: BattlegroupPath,
     champion_user_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     war: WarDep,
 ):
     """Remove a synergy champion from a battlegroup. All members can remove."""

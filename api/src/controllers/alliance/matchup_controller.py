@@ -11,11 +11,11 @@ from src.dto.alliance.dto_matchup import (
     MatchupSynergyResponse,
     MatchupUpsertRequest,
 )
-from src.models import User
 from src.models.matchup.MatchupRating import MatchupRating
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.MatchupService import MatchupService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 matchup_controller = APIRouter(
@@ -29,7 +29,7 @@ matchup_controller = APIRouter(
 async def list_matchups(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     champion_id: uuid.UUID | None = None,
     defender_champion_id: uuid.UUID | None = None,
     node_number: Annotated[int | None, Query(ge=1, le=50)] = None,
@@ -48,7 +48,7 @@ async def list_matchups(
 async def evaluate_matchups(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     defender_champion_id: uuid.UUID | None = None,
     node_number: Annotated[int | None, Query(ge=1, le=50)] = None,
     champion_id: uuid.UUID | None = None,
@@ -66,7 +66,7 @@ async def evaluate_matchup_grid(
     alliance_id: uuid.UUID,
     champion_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     game_account_id: uuid.UUID | None = None,
 ):
     """Attacker-centric grid: every rated defender x every rated node for one champion."""
@@ -81,7 +81,7 @@ async def evaluate_matchup_defender_grid(
     alliance_id: uuid.UUID,
     defender_champion_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
     game_account_id: uuid.UUID | None = None,
 ):
     """Defender-centric grid: every rated attacker x each attacker's rated nodes for one defender."""
@@ -100,7 +100,7 @@ async def upsert_matchups(
     alliance_id: uuid.UUID,
     request: MatchupUpsertRequest,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Rate a champion against a defender, a node, or both at once. Officers and owner only."""
     author = await AllianceService.assert_officer_or_owner_by_id(
@@ -122,7 +122,7 @@ async def delete_matchup(
     alliance_id: uuid.UUID,
     rating_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Delete a rating and its synergies. Officers and owner only."""
     await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)

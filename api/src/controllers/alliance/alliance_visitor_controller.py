@@ -1,15 +1,14 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
 from src.dto.alliance.dto_visitor import AllianceVisitorResponse
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
-from src.models import User
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
 from src.services.auth.AuthService import AuthService
+from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 alliance_visitor_controller = APIRouter(
@@ -25,7 +24,7 @@ alliance_visitor_controller = APIRouter(
 async def get_alliance_visitors(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Get all current visitors of an alliance."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
@@ -39,7 +38,7 @@ async def get_alliance_visitors(
 async def leave_as_visitor(
     alliance_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Leave a visited alliance. The current user must be a visitor of it."""
     visitor_account = await AllianceService.get_user_visitor_account(
@@ -55,7 +54,7 @@ async def kick_visitor(
     alliance_id: uuid.UUID,
     game_account_id: uuid.UUID,
     session: SessionDep,
-    current_user: Annotated[User, Depends(AuthService.get_current_user_in_jwt)],
+    current_user: CurrentUser,
 ):
     """Remove a visitor from the alliance. Only the owner or an officer can kick."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
