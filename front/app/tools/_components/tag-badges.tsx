@@ -1,6 +1,5 @@
 'use client'
 
-import { Flame, Gem, Shield, Swords, Trophy } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import type { ChampionTags } from '../_lib/types'
 
@@ -10,6 +9,9 @@ import type { ChampionTags } from '../_lib/types'
  * Attacker and defender collapse into a single "dual threat" chip when both are
  * set: three chips saying the same thing is noise, and the pairing is what the
  * player actually reads.
+ *
+ * The glyphs are the game's own artwork, served next to the portraits and the
+ * star frames — a generic sword icon next to in-game art reads as a placeholder.
  */
 interface TagBadgesProps {
   tags: ChampionTags
@@ -18,65 +20,56 @@ interface TagBadgesProps {
   className?: string
 }
 
-const CHIP = 'inline-flex items-center gap-0.5 rounded px-1 font-bold leading-none'
+/** Where each marker's artwork lives on the static host. */
+const ICON_URL = {
+  attacker: '/static/icons/atk-sword.png',
+  defender: '/static/icons/def-shield.png',
+  dual: '/static/icons/dual-sword-shield.png',
+  allianceWar: '/static/icons/aw-flame.png',
+  battlegrounds: '/static/icons/bg-helmet.png',
+  awakened: '/static/icons/awk-gem.png',
+} as const
 
-export default function TagBadges({ tags, size, className }: Readonly<TagBadgesProps>) {
-  const dual = tags.is_attacker && tags.is_defender
-  const iconSize = Math.max(8, size)
+interface Chip {
+  key: string
+  src: string
+  /** Printed next to the glyph — only the signature value does that. */
+  label?: string
+  tone: string
+}
 
-  const chips: { key: string; label: string; icon: React.ReactNode; tone: string }[] = []
-
-  if (dual) {
-    chips.push({
-      key: 'dual',
-      label: '',
-      icon: <Swords style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-violet-500/90 text-white',
-    })
+function chipsFor(tags: ChampionTags): Chip[] {
+  const chips: Chip[] = []
+  if (tags.is_attacker && tags.is_defender) {
+    chips.push({ key: 'dual', src: ICON_URL.dual, tone: 'ring-violet-400/70' })
   } else if (tags.is_attacker) {
-    chips.push({
-      key: 'attacker',
-      label: '',
-      icon: <Swords style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-rose-500/90 text-white',
-    })
+    chips.push({ key: 'attacker', src: ICON_URL.attacker, tone: 'ring-rose-400/70' })
   } else if (tags.is_defender) {
-    chips.push({
-      key: 'defender',
-      label: '',
-      icon: <Shield style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-sky-500/90 text-white',
-    })
+    chips.push({ key: 'defender', src: ICON_URL.defender, tone: 'ring-sky-400/70' })
   }
-
   if (tags.is_alliance_war) {
-    chips.push({
-      key: 'aw',
-      label: '',
-      icon: <Flame style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-amber-500/90 text-black',
-    })
+    chips.push({ key: 'aw', src: ICON_URL.allianceWar, tone: 'ring-amber-400/70' })
   }
   if (tags.is_battlegrounds) {
-    chips.push({
-      key: 'bg',
-      label: '',
-      icon: <Trophy style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-green-500/90 text-black',
-    })
+    chips.push({ key: 'bg', src: ICON_URL.battlegrounds, tone: 'ring-emerald-400/70' })
   }
   if (tags.is_awakened) {
     chips.push({
       key: 'awk',
+      src: ICON_URL.awakened,
       // The signature value is the point of the awakened mark, so it is spelled
       // out rather than left to a tooltip nobody opens on a phone.
-      label: tags.signature > 0 ? `${tags.signature}` : '',
-      icon: <Gem style={{ width: iconSize, height: iconSize }} />,
-      tone: 'bg-cyan-400 text-black',
+      label: tags.signature > 0 ? String(tags.signature) : undefined,
+      tone: 'ring-cyan-300/70',
     })
   }
+  return chips
+}
 
+export default function TagBadges({ tags, size, className }: Readonly<TagBadgesProps>) {
+  const chips = chipsFor(tags)
   if (chips.length === 0) return null
+  const glyph = Math.max(8, size)
 
   return (
     <div
@@ -86,9 +79,17 @@ export default function TagBadges({ tags, size, className }: Readonly<TagBadgesP
       {chips.map((chip) => (
         <span
           key={chip.key}
-          className={cn(CHIP, chip.tone)}
+          className={cn(
+            'inline-flex items-center gap-0.5 rounded bg-slate-950/85 px-1 font-bold text-white ring-1',
+            chip.tone
+          )}
         >
-          {chip.icon}
+          <img
+            src={chip.src}
+            alt=''
+            style={{ width: glyph, height: glyph }}
+            className='object-contain'
+          />
           {chip.label}
         </span>
       ))}
