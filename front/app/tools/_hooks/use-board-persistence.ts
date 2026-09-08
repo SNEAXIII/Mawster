@@ -35,7 +35,9 @@ export function useBoardPersistence(
   setBoard: Dispatch<SetStateAction<BoardState>>,
   knownIds: Set<string>,
   catalogReady: boolean,
-  activeListId: string | null
+  activeListId: string | null,
+  /** Called with the id when this board's first save had to create the list. */
+  onListCreated?: (id: string) => void
 ): Persistence {
   const { status } = useSession()
   const [loaded, setLoaded] = useState(false)
@@ -43,6 +45,12 @@ export function useBoardPersistence(
   const [error, setError] = useState<string | null>(null)
   const [storedBoard, setStoredBoard] = useState<BoardState | null>(null)
   const lastWritten = useRef<string | null>(null)
+  // Through refs: neither belongs in the effect deps below — the callback is an
+  // inline arrow at the call site, and the board id changes on every save.
+  const onListCreatedRef = useRef(onListCreated)
+  onListCreatedRef.current = onListCreated
+  const boardIdRef = useRef(board.id)
+  boardIdRef.current = board.id
 
   const signedIn = status === 'authenticated'
 
@@ -59,6 +67,12 @@ export function useBoardPersistence(
 
     const run = async () => {
       try {
+        if (signedIn && activeListId === boardIdRef.current) {
+          // This board *is* that list: it was created from here a moment ago,
+          // so the server holds exactly what was sent. Fetching it again would
+          // throw away whatever has been moved since.
+          return
+        }
         if (signedIn && activeListId) {
           const next = fromDetail(await fetchTierList(activeListId))
           if (cancelled) return
@@ -105,6 +119,9 @@ export function useBoardPersistence(
           // second ago, and anything dropped while the request was in flight
           // would be thrown away — the card visibly springs back.
           setBoard((current) => ({ ...current, id: created.id }))
+          // The list did not exist when the page loaded, so the selector knows
+          // nothing about it: it has to be told, or it stays hidden until a reload.
+          onListCreatedRef.current?.(created.id)
         }
         lastWritten.current = serialized
       } catch (err) {

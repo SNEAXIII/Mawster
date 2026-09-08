@@ -23,12 +23,23 @@ export function useTierListViewModel() {
   const { board, setBoard, actions } = useBoard()
   const tierLists = useTierLists()
   const [activeId, setActiveId] = useState<string | null>(null)
+  // A first change on an account with no list creates one through the save, not
+  // through the create button — so the selector has to hear about it from there.
+  const refreshLists = tierLists.refresh
+  const handleListCreatedBySave = useCallback(
+    (id: string) => {
+      setActiveId(id)
+      void refreshLists()
+    },
+    [refreshLists]
+  )
   const persistence = useBoardPersistence(
     board,
     setBoard,
     catalog.knownIds,
     !catalog.loading,
-    activeId
+    activeId,
+    handleListCreatedBySave
   )
   const [prefs, setPrefs] = usePrefs()
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS)
