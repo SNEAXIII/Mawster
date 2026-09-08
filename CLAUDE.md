@@ -134,13 +134,16 @@ Project agents live in `.claude/agents/`. They are **not auto-dispatched** — c
 Volume buries the one comment that matters, and most comments restate what the code
 already says. Hard limits, not judgment calls:
 
-- **2 lines maximum.** Longer reasoning goes in the commit body, where it belongs.
+- **2 lines maximum.**
 - **No block above a config line, an env var, a workflow step or a list entry.** If the
   value needs justifying: one trailing line, or nothing.
 - One rationale lives in **one** place — never the same explanation in two files.
-- Never narrate the incident that motivated the code. That is commit-message material.
+- Never narrate the incident that motivated the code.
 - Still worth a comment: why something is *absent*, why a workaround exists, why an order
   is load-bearing.
+- A decision that genuinely matters — one a future reader would otherwise undo — gets an
+  ADR in `docs/adr/`. Not a long comment, not a long commit body. Reserve it for the real
+  ones; everything smaller needs no home at all.
 
 ### Commit types
 
