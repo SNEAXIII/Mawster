@@ -125,6 +125,17 @@ export default function TierListBoard() {
           />
         </div>
 
+        {/* A refused create — the twenty-list cap, most often — would otherwise
+            do nothing visible at all: the button clicks and no list appears. */}
+        {vm.tierLists.error && (
+          <p
+            className='text-xs text-destructive'
+            data-cy='tierlist-list-error'
+          >
+            {vm.tierLists.error}
+          </p>
+        )}
+
         {!vm.signedIn && <p className='text-xs text-muted-foreground'>{t.tierlist.signedOut}</p>}
 
         <TierListHeader
