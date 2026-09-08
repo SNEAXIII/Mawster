@@ -1,4 +1,4 @@
-import { setupRosterUser } from '../../support/e2e';
+import { closeChampionSheet, setupTierList, storedBoard, visitTierListSignedOut } from '../../support/e2e';
 
 /**
  * The champion sheet: the touch-friendly counterpart of dragging. It sets the
@@ -6,59 +6,46 @@ import { setupRosterUser } from '../../support/e2e';
  * dnd-kit's pointer constraints are not reproducible from Cypress.
  */
 describe('Tier list – champion sheet', () => {
+  const CATALOG = [
+    {
+      name: 'SheetHero',
+      championClass: 'Mutant',
+      options: { is_ascendable: true, alias: 'Sheety' },
+    },
+    { name: 'PlainHero', championClass: 'Skill' },
+  ];
+
   beforeEach(() => {
     cy.truncateDb();
+    setupTierList('tl-sheet', CATALOG);
+    visitTierListSignedOut();
   });
-
-  /** Two champions: one ascendable and aliased, one plain. */
-  const visitWithCatalog = (prefix: string) => {
-    setupRosterUser(prefix, `${prefix}-player`).then(({ adminData }) => {
-      cy.apiLoadChampion(adminData.access_token, 'SheetHero', 'Mutant', {
-        is_ascendable: true,
-        alias: 'Sheety',
-      });
-      cy.apiLoadChampion(adminData.access_token, 'PlainHero', 'Skill');
-      cy.clearAllCookies();
-      cy.clearAllSessionStorage();
-      cy.clearAllLocalStorage();
-      cy.visit('/tools');
-    });
-  };
 
   const openSheet = (name: string) => {
     cy.getByCy(`tierlist-champion-${name}`).first().click();
     cy.getByCy('tierlist-champion-sheet').should('be.visible');
   };
 
-  const closeSheet = () => {
-    cy.get('body').type('{esc}');
-    cy.getByCy('tierlist-champion-sheet').should('not.exist');
-  };
-
   it('opens on a champion with its name, class and alias', () => {
-    visitWithCatalog('tl-sheet-open');
-
     openSheet('SheetHero');
+
     cy.getByCy('tierlist-champion-sheet').should('contain', 'SheetHero');
     cy.getByCy('tierlist-champion-sheet').should('contain', 'Mutant');
     cy.getByCy('tierlist-champion-sheet').should('contain', 'Sheety');
   });
 
   it('mentions ascension only for an ascendable champion', () => {
-    visitWithCatalog('tl-sheet-asc');
-
     openSheet('SheetHero');
     cy.getByCy('tierlist-champion-sheet').should('contain', 'Ascendable');
-    closeSheet();
+    closeChampionSheet();
 
     openSheet('PlainHero');
     cy.getByCy('tierlist-champion-sheet').should('not.contain', 'Ascendable');
   });
 
   it('toggles every tag, and the card wears the badge', () => {
-    visitWithCatalog('tl-sheet-tags');
-
     openSheet('PlainHero');
+
     const badges: Array<[string, string]> = [
       ['is_attacker', 'attacker'],
       ['is_defender', 'defender'],
@@ -68,16 +55,15 @@ describe('Tier list – champion sheet', () => {
     ];
     for (const [key, badge] of badges) {
       cy.getByCy(`tierlist-tag-${key}`).click();
-      cy.getByCy(`tierlist-champion-PlainHero`).find(`[data-cy="tierlist-badge-${badge}"]`).should('exist');
+      cy.getByCy('tierlist-champion-PlainHero').find(`[data-cy="tierlist-badge-${badge}"]`).should('exist');
       cy.getByCy(`tierlist-tag-${key}`).click();
-      cy.getByCy(`tierlist-champion-PlainHero`).find(`[data-cy="tierlist-badge-${badge}"]`).should('not.exist');
+      cy.getByCy('tierlist-champion-PlainHero').find(`[data-cy="tierlist-badge-${badge}"]`).should('not.exist');
     }
   });
 
   it('shows the signature field only once the champion is awakened', () => {
-    visitWithCatalog('tl-sheet-sig-gate');
-
     openSheet('PlainHero');
+
     cy.getByCy('tierlist-signature').should('not.exist');
     cy.getByCy('tierlist-tag-is_awakened').click();
     cy.getByCy('tierlist-signature').should('be.visible');
@@ -86,10 +72,9 @@ describe('Tier list – champion sheet', () => {
   });
 
   it('sets the signature from the presets', () => {
-    visitWithCatalog('tl-sheet-presets');
-
     openSheet('PlainHero');
     cy.getByCy('tierlist-tag-is_awakened').click();
+
     for (const preset of [20, 60, 100, 200]) {
       cy.getByCy('tierlist-champion-sheet').contains('button', `x${preset}`).click();
       cy.getByCy('tierlist-signature').should('have.value', String(preset));
@@ -97,10 +82,9 @@ describe('Tier list – champion sheet', () => {
   });
 
   it('keeps the signature within 0 and 200', () => {
-    visitWithCatalog('tl-sheet-sig-bounds');
-
     openSheet('PlainHero');
     cy.getByCy('tierlist-tag-is_awakened').click();
+
     cy.getByCy('tierlist-signature').should('have.attr', 'min', '0');
     cy.getByCy('tierlist-signature').should('have.attr', 'max', '200');
 
@@ -109,24 +93,21 @@ describe('Tier list – champion sheet', () => {
   });
 
   it('clears the tags back to nothing', () => {
-    visitWithCatalog('tl-sheet-clear');
-
     openSheet('PlainHero');
     cy.getByCy('tierlist-tag-is_attacker').click();
     cy.getByCy('tierlist-tag-is_awakened').click();
     cy.getByCy('tierlist-champion-sheet').contains('button', 'x100').click();
 
     cy.getByCy('tierlist-clear-tags').click();
+
     cy.getByCy('tierlist-signature').should('not.exist');
     cy.getByCy('tierlist-champion-PlainHero').find('[data-cy^="tierlist-badge-"]').should('not.exist');
   });
 
   it('sends a champion to a row and out of the pool', () => {
-    visitWithCatalog('tl-sheet-send');
-
     openSheet('PlainHero');
     cy.getByCy('tierlist-send-to-S').click();
-    closeSheet();
+    closeChampionSheet();
 
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-champion-PlainHero"]').should('exist');
     cy.getByCy('tierlist-pool').find('[data-cy="tierlist-champion-PlainHero"]').should('not.exist');
@@ -134,9 +115,8 @@ describe('Tier list – champion sheet', () => {
   });
 
   it('disables the row the champion already sits in', () => {
-    visitWithCatalog('tl-sheet-current-row');
-
     openSheet('PlainHero');
+
     cy.getByCy('tierlist-send-to-S').should('not.be.disabled');
     cy.getByCy('tierlist-send-to-S').click();
     cy.getByCy('tierlist-send-to-S').should('be.disabled');
@@ -144,33 +124,29 @@ describe('Tier list – champion sheet', () => {
   });
 
   it('sends a ranked champion back to the pool, and only then', () => {
-    visitWithCatalog('tl-sheet-back');
-
     openSheet('PlainHero');
+
     cy.getByCy('tierlist-back-to-pool').should('be.disabled');
     cy.getByCy('tierlist-send-to-B').click();
     cy.getByCy('tierlist-back-to-pool').should('not.be.disabled').click();
-    closeSheet();
+    closeChampionSheet();
 
     cy.getByCy('tierlist-pool').find('[data-cy="tierlist-champion-PlainHero"]').should('exist');
     cy.getByCy('tierlist-row-B').should('contain', 'Drop champions here');
   });
 
   it('keeps the tags across a reload', () => {
-    visitWithCatalog('tl-sheet-persist');
-
     openSheet('PlainHero');
     cy.getByCy('tierlist-tag-is_alliance_war').click();
     cy.getByCy('tierlist-tag-is_awakened').click();
     cy.getByCy('tierlist-champion-sheet').contains('button', 'x60').click();
-    closeSheet();
+    closeChampionSheet();
 
-    cy.window().its('localStorage').invoke('getItem', 'mawster-tierlist:board').should('contain', '"signature":60');
+    storedBoard().should('contain', '"signature":60');
 
     cy.reload();
 
     openSheet('PlainHero');
     cy.getByCy('tierlist-signature').should('have.value', '60');
-    cy.getByCy('tierlist-champion-sheet').should('be.visible');
   });
 });

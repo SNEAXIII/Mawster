@@ -1,62 +1,43 @@
-import { setupRosterUser } from '../../support/e2e';
+import { rankChampion, setupTierList, visitTierListSignedOut } from '../../support/e2e';
 
 /**
  * The filters. They narrow the rows as well as the pool, so a filtered board
  * shows what it is hiding rather than looking empty.
- *
- * `is_7_star` is false for every champion the loader creates, so "7★ only" is
- * expected to show nothing and "6★ only" the whole catalog — that is the data,
- * not a bug in the filter.
  */
 describe('Tier list – filters', () => {
+  const CATALOG = [
+    { name: 'AlphaHero', championClass: 'Cosmic', options: { alias: 'Ægon Twin' } },
+    { name: 'BetaHero', championClass: 'Mystic', options: { is_ascendable: true } },
+    { name: 'GammaHero', championClass: 'Tech', saga: { is_saga_attacker: true } },
+    { name: 'DeltaHero', championClass: 'Skill', saga: { is_saga_defender: true } },
+  ];
+
   beforeEach(() => {
     cy.truncateDb();
+    setupTierList('tl-filters', CATALOG);
+    visitTierListSignedOut();
+    cy.contains('4 of 4').should('be.visible');
   });
-
-  const visitWithCatalog = (prefix: string) => {
-    setupRosterUser(prefix, `${prefix}-player`).then(({ adminData }) => {
-      const token = adminData.access_token;
-      cy.apiLoadChampion(token, 'AlphaHero', 'Cosmic', { alias: 'Ægon Twin' });
-      cy.apiLoadChampion(token, 'BetaHero', 'Mystic', { is_ascendable: true });
-      cy.apiLoadChampionWithSaga(token, 'GammaHero', 'Tech', { is_saga_attacker: true });
-      cy.apiLoadChampionWithSaga(token, 'DeltaHero', 'Skill', { is_saga_defender: true });
-      cy.clearAllCookies();
-      cy.clearAllSessionStorage();
-      cy.clearAllLocalStorage();
-      cy.visit('/tools');
-      cy.contains('4 of 4').should('be.visible');
-    });
-  };
 
   const onlyInPool = (name: string) => {
     cy.getByCy('tierlist-pool').find(`[data-cy="tierlist-champion-${name}"]`).should('exist');
     cy.getByCy('tierlist-pool').find('[data-cy^="tierlist-champion-"]').should('have.length', 1);
   };
 
-  const rank = (name: string, label: string) => {
-    cy.getByCy(`tierlist-champion-${name}`).first().click();
-    cy.getByCy(`tierlist-send-to-${label}`).click();
-    cy.get('body').type('{esc}');
-  };
-
   it('searches by name', () => {
-    visitWithCatalog('tl-filters-name');
-
     cy.getByCy('tierlist-search').type('alpha');
+
     onlyInPool('AlphaHero');
     cy.contains('1 of 4').should('be.visible');
   });
 
   it('searches by alias, accents folded', () => {
-    visitWithCatalog('tl-filters-alias');
-
     cy.getByCy('tierlist-search').type('aegon');
+
     onlyInPool('AlphaHero');
   });
 
   it('filters by class, one class at a time', () => {
-    visitWithCatalog('tl-filters-class');
-
     cy.selectOption('selector-class-filter', 'Cosmic');
     onlyInPool('AlphaHero');
 
@@ -64,44 +45,46 @@ describe('Tier list – filters', () => {
     onlyInPool('BetaHero');
   });
 
-  it('filters by rarity — nothing is a 7★ yet, so 6★ is everything', () => {
-    visitWithCatalog('tl-filters-rarity');
-
+  /**
+   * SKIPPED until the `is_7_stars_available` lot lands.
+   *
+   * `load_champions` forces `is_7_star` to false and no admin toggle sets it, so
+   * today "7★ only" shows nothing and "6★ only" shows the whole catalog — the
+   * filter would pass on data that says nothing. Once a champion can be flagged
+   * 7★: flag one in the catalog above, then expect "7★ only" to show that one
+   * and "6★ only" to show the other three.
+   */
+  it.skip('filters by rarity', () => {
     cy.selectOption('tierlist-rarity-filter', '7★ only');
-    cy.getByCy('tierlist-pool').should('contain', 'No champion matches these filters.');
-    cy.contains('0 of 4').should('be.visible');
+    cy.contains('1 of 4').should('be.visible');
+    onlyInPool('AlphaHero');
 
     cy.selectOption('tierlist-rarity-filter', '6★ only');
-    cy.contains('4 of 4').should('be.visible');
+    cy.contains('3 of 4').should('be.visible');
 
     cy.selectOption('tierlist-rarity-filter', 'Every rarity');
     cy.contains('4 of 4').should('be.visible');
   });
 
   it('filters the ascendable champions', () => {
-    visitWithCatalog('tl-filters-ascendable');
-
     cy.getByCy('selector-toggle-ascendable').click();
+
     onlyInPool('BetaHero');
   });
 
   it('filters the saga attackers', () => {
-    visitWithCatalog('tl-filters-saga-atk');
-
     cy.getByCy('selector-toggle-saga-attacker').click();
+
     onlyInPool('GammaHero');
   });
 
   it('filters the saga defenders', () => {
-    visitWithCatalog('tl-filters-saga-def');
-
     cy.getByCy('selector-toggle-saga-defender').click();
+
     onlyInPool('DeltaHero');
   });
 
   it('takes several tags as an AND, not an OR', () => {
-    visitWithCatalog('tl-filters-tags');
-
     cy.getByCy('tierlist-champion-AlphaHero').click();
     cy.getByCy('tierlist-tag-is_attacker').click();
     cy.getByCy('tierlist-tag-is_defender').click();
@@ -120,21 +103,20 @@ describe('Tier list – filters', () => {
   });
 
   it('narrows the rows too, and says how many it hides', () => {
-    visitWithCatalog('tl-filters-rows');
-
-    rank('AlphaHero', 'S');
+    rankChampion('AlphaHero', 'S');
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-champion-AlphaHero"]').should('exist');
 
     cy.selectOption('selector-class-filter', 'Mystic');
+
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-champion-AlphaHero"]').should('not.exist');
     cy.getByCy('tierlist-row-S').should('contain', '1 hidden by the filters');
   });
 
   it('resets every filter, rarity included', () => {
-    visitWithCatalog('tl-filters-reset');
-
     cy.getByCy('tierlist-search').type('alpha');
-    cy.selectOption('tierlist-rarity-filter', '7★ only');
+    // A rarity other than the default, to prove the reset takes it back too.
+    cy.selectOption('tierlist-rarity-filter', '6★ only');
+    // AlphaHero is not ascendable, so the two together leave nothing.
     cy.getByCy('selector-toggle-ascendable').click();
     cy.contains('0 of 4').should('be.visible');
 

@@ -1,4 +1,4 @@
-import { setupRosterUser } from '../../support/e2e';
+import { rankChampion, setupTierList, storedBoard, visitTierListSignedOut } from '../../support/e2e';
 
 /**
  * The rows of the board: added, renamed, recoloured, reordered, emptied and
@@ -6,28 +6,16 @@ import { setupRosterUser } from '../../support/e2e';
  * same object whether it lives in an account or in the browser.
  */
 describe('Tier list – rows', () => {
+  const CATALOG = [
+    { name: 'RowHero', championClass: 'Cosmic' },
+    { name: 'RowMate', championClass: 'Mystic' },
+  ];
+
   beforeEach(() => {
     cy.truncateDb();
+    setupTierList('tl-rows', CATALOG);
+    visitTierListSignedOut();
   });
-
-  const visitWithCatalog = (prefix: string) => {
-    setupRosterUser(prefix, `${prefix}-player`).then(({ adminData }) => {
-      cy.apiLoadChampion(adminData.access_token, 'RowHero', 'Cosmic');
-      cy.apiLoadChampion(adminData.access_token, 'RowMate', 'Mystic');
-      cy.clearAllCookies();
-      cy.clearAllSessionStorage();
-      cy.clearAllLocalStorage();
-      cy.visit('/tools');
-      cy.getByCy('tierlist-pool').should('exist');
-    });
-  };
-
-  /** Send a pool champion to a row through its sheet — the drag is not scriptable. */
-  const rank = (name: string, label: string) => {
-    cy.getByCy(`tierlist-champion-${name}`).first().click();
-    cy.getByCy(`tierlist-send-to-${label}`).click();
-    cy.get('body').type('{esc}');
-  };
 
   /**
    * A colour input, set the way React hears it: jQuery's `val()` alone leaves
@@ -43,8 +31,6 @@ describe('Tier list – rows', () => {
   };
 
   it('adds a row with the next label and the next colour', () => {
-    visitWithCatalog('tl-rows-add');
-
     cy.getByCy('tierlist-row-F').should('not.exist');
     cy.getByCy('tierlist-add-row').click();
 
@@ -53,33 +39,27 @@ describe('Tier list – rows', () => {
   });
 
   it('renames a row, and the name survives a reload', () => {
-    visitWithCatalog('tl-rows-rename');
-
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-row-label"]').type('{selectall}God');
     cy.getByCy('tierlist-row-God').should('exist');
     cy.getByCy('tierlist-row-S').should('not.exist');
 
-    cy.window().its('localStorage').invoke('getItem', 'mawster-tierlist:board').should('contain', 'God');
+    storedBoard().should('contain', 'God');
 
     cy.reload();
     cy.getByCy('tierlist-row-God').should('exist');
   });
 
   it('recolours a row', () => {
-    visitWithCatalog('tl-rows-recolour');
-
     setColor('[data-cy="tierlist-row-color"]:first', '#123456');
     // The picker commits shortly after it stops moving, so the board only hears
     // about the colour once — waiting on the stored board is waiting on that.
-    cy.window().its('localStorage').invoke('getItem', 'mawster-tierlist:board').should('contain', '#123456');
+    storedBoard().should('contain', '#123456');
 
     cy.reload();
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-row-color"]').should('have.value', '#123456');
   });
 
   it('moves a row up and down, and stops at both ends', () => {
-    visitWithCatalog('tl-rows-move');
-
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-row-up"]').should('be.disabled');
     cy.getByCy('tierlist-row-D').find('[data-cy="tierlist-row-down"]').should('be.disabled');
 
@@ -94,10 +74,8 @@ describe('Tier list – rows', () => {
   });
 
   it('asks before emptying a row, and cancelling changes nothing', () => {
-    visitWithCatalog('tl-rows-clear-cancel');
-
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-row-clear"]').should('be.disabled');
-    rank('RowHero', 'S');
+    rankChampion('RowHero', 'S');
 
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-row-clear"]').click();
     cy.contains('Send the 1 champions in row S back to the pool?').should('be.visible');
@@ -107,10 +85,8 @@ describe('Tier list – rows', () => {
   });
 
   it('empties a row back into the pool once confirmed', () => {
-    visitWithCatalog('tl-rows-clear');
-
-    rank('RowHero', 'S');
-    rank('RowMate', 'S');
+    rankChampion('RowHero', 'S');
+    rankChampion('RowMate', 'S');
     cy.contains('0 of 2').should('be.visible');
 
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-row-clear"]').click();
@@ -123,9 +99,7 @@ describe('Tier list – rows', () => {
   });
 
   it('asks before deleting a row, and its champions come back', () => {
-    visitWithCatalog('tl-rows-remove');
-
-    rank('RowHero', 'A');
+    rankChampion('RowHero', 'A');
 
     cy.getByCy('tierlist-row-A').find('[data-cy="tierlist-row-remove"]').click();
     cy.contains('Delete row A? Its champions go back to the pool.').should('be.visible');
@@ -137,8 +111,6 @@ describe('Tier list – rows', () => {
   });
 
   it('will not delete the last row left', () => {
-    visitWithCatalog('tl-rows-last');
-
     for (const label of ['A', 'B', 'C', 'D']) {
       cy.getByCy(`tierlist-row-${label}`).find('[data-cy="tierlist-row-remove"]').click();
       cy.getByCy('confirmation-dialog-confirm').click();
