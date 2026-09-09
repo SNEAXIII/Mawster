@@ -1,4 +1,4 @@
-import { BACKEND, openWarNode, setupAttackerScenario } from '../../support/e2e';
+import { BACKEND, setupAssignedAttacker } from '../../support/e2e';
 
 /** A defender is exhausted after 3 attacker KOs, so nothing may record more. */
 const MAX_KO = 3;
@@ -11,10 +11,8 @@ describe('War – KO cap', () => {
   // ── The increment button ──────────────────────────────────────────────────
 
   it('stops incrementing once the node reaches three KOs', () => {
-    setupAttackerScenario('ko-cap-inc').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-      openWarNode(10);
+    setupAssignedAttacker('ko-cap-inc').then(({ ownerData }) => {
+      cy.openWarAttackerPanel(ownerData.user_id);
 
       for (let i = 0; i < MAX_KO; i += 1) {
         cy.getByCy('ko-inc-node-10').click();
@@ -26,11 +24,9 @@ describe('War – KO cap', () => {
   });
 
   it('re-enables the increment once a KO is taken back', () => {
-    setupAttackerScenario('ko-cap-dec').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+    setupAssignedAttacker('ko-cap-dec').then(({ ownerData, allianceId, warId }) => {
       cy.apiUpdateWarKo(ownerData.access_token, allianceId, warId, 1, 10, MAX_KO);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-      openWarNode(10);
+      cy.openWarAttackerPanel(ownerData.user_id);
 
       cy.getByCy('ko-inc-node-10').should('be.disabled');
       cy.getByCy('ko-dec-node-10').click();
@@ -41,10 +37,8 @@ describe('War – KO cap', () => {
   });
 
   it('keeps the decrement disabled at zero', () => {
-    setupAttackerScenario('ko-cap-zero').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-      cy.goToWarMode(ownerData.user_id, 'attackers');
-      openWarNode(10);
+    setupAssignedAttacker('ko-cap-zero').then(({ ownerData }) => {
+      cy.openWarAttackerPanel(ownerData.user_id);
 
       cy.getByCy('ko-value-node-10').should('have.text', '0');
       cy.getByCy('ko-dec-node-10').should('be.disabled');
@@ -54,9 +48,7 @@ describe('War – KO cap', () => {
   // ── The API behind it ─────────────────────────────────────────────────────
 
   it('refuses a KO count above three', () => {
-    setupAttackerScenario('ko-cap-api').then(({ memberData, ownerData, allianceId, warId, championUserId }) => {
-      cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
-
+    setupAssignedAttacker('ko-cap-api').then(({ ownerData, allianceId, warId }) => {
       cy.request({
         method: 'PATCH',
         url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/node/10/ko`,
