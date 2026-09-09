@@ -10,7 +10,7 @@ import { SITE_NAME, SITE_URL } from '@/app/lib/site'
 
 const TITLE = 'Mawster — Alliance War planner for Marvel Contest of Champions'
 const DESCRIPTION =
-  'Plan Alliance War in Marvel Contest of Champions: defense placements, attack assignments, synergies and war stats for your whole alliance.'
+  'Plan Alliance War in Marvel Contest of Champions: roster management, fight history, defense placements, attack assignments, synergies and war stats.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -28,6 +28,8 @@ export const metadata: Metadata = {
     'defense placement',
     'attack assignments',
     'roster manager',
+    'roster management',
+    'fight history',
     'war stats',
   ],
   alternates: {
