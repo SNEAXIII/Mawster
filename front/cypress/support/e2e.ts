@@ -198,7 +198,13 @@ Cypress.Commands.add(
   'apiLoadChampions',
   (
     adminToken: string,
-    champions: Array<{ name: string; cls: string; is_ascendable?: boolean; has_prefight?: boolean }>,
+    champions: Array<{
+      name: string;
+      cls: string;
+      is_7_stars_available?: boolean;
+      is_ascendable?: boolean;
+      has_prefight?: boolean;
+    }>,
   ) => {
     cy.request({
       method: 'POST',
@@ -207,6 +213,8 @@ Cypress.Commands.add(
       body: champions.map((c) => ({
         name: c.name,
         champion_class: c.cls,
+        // Omitted rather than defaulted, so the model default (true) applies.
+        is_7_stars_available: c.is_7_stars_available,
         is_ascendable: c.is_ascendable ?? false,
         has_prefight: c.has_prefight ?? false,
       })),

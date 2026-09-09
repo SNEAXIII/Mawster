@@ -1,7 +1,6 @@
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from src.dto.admin.dto_champion import ChampionResponse
 from src.dto.dto_catalog import CatalogChampionResponse, CatalogResponse
 from src.models import Champion
 from src.services.admin.SagaService import SagaService
@@ -26,12 +25,13 @@ class CatalogService:
         return CatalogResponse(
             season_number=season.number if season is not None else None,
             champions=[
-                CatalogChampionResponse(
-                    # Through the shared champion shape rather than field by field, so a
-                    # column added there reaches the catalog without a second edit.
-                    **ChampionResponse.model_validate(champion).model_dump(),
-                    is_saga_attacker=saga_roles.get(champion.id, (False, False))[0],
-                    is_saga_defender=saga_roles.get(champion.id, (False, False))[1],
+                # Read whole rather than field by field, so a column added to the shared
+                # champion shape reaches the catalog without a second edit.
+                CatalogChampionResponse.model_validate(champion).model_copy(
+                    update={
+                        "is_saga_attacker": saga_roles.get(champion.id, (False, False))[0],
+                        "is_saga_defender": saga_roles.get(champion.id, (False, False))[1],
+                    }
                 )
                 for champion in champions
             ],

@@ -76,6 +76,8 @@ export function useAddChampionForm(selectedAccountId: string | null) {
       is_ascendable: entry.is_ascendable ?? false,
       has_prefight: entry.has_prefight ?? false,
       alias: null,
+      is_saga_attacker: false,
+      is_saga_defender: false,
     }
     setSelectedChampion(champion)
     setChampionSearch(entry.champion_name)

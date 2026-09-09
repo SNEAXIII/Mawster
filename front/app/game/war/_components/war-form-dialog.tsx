@@ -54,7 +54,7 @@ export default function WarFormDialog({
     if (championsCache) {
       setChampions(championsCache)
     } else {
-      getChampions(1, 9999)
+      getChampions({ page: 1, size: 9999 })
         .then((res) => {
           championsCache = res.champions
           setChampions(res.champions)

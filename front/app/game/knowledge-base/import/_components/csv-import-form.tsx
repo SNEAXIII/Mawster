@@ -86,7 +86,7 @@ export default function CsvImportForm() {
 
   const loadResources = async (): Promise<Champion[]> => {
     const [champsData, accessibleAlliances, rolesData] = await Promise.all([
-      getChampions(1, 9999),
+      getChampions({ page: 1, size: 9999 }),
       getAccessibleAlliances(),
       getMyAllianceRoles(),
     ])
