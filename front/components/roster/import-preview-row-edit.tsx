@@ -45,7 +45,7 @@ export function marginLevel(margin: number | null | undefined): MarginLevel {
   return 'high'
 }
 
-const MARGIN_CLASSES: Record<'low' | 'medium' | 'high', string> = {
+const MARGIN_CLASSES: Record<MarginLevel, string> = {
   low: 'bg-red-600 text-white border-transparent',
   medium: 'bg-orange-500 text-white border-transparent',
   high: 'bg-green-600 text-white border-transparent',
@@ -63,9 +63,11 @@ function clamp(raw: string, max: number): number {
   return Math.min(max, Math.max(0, Math.trunc(n)))
 }
 
+export type RowStatus = 'new' | 'updated' | 'unchanged'
+
 // isNew wins over hasChanges: the row-change handler forces hasChanges to true on
 // new rows so they always count toward the import, so the two are not exclusive.
-function rowStatus(row: PreviewRow): 'new' | 'updated' | 'unchanged' {
+function rowStatus(row: PreviewRow): RowStatus {
   if (row.isNew) return 'new'
   return row.hasChanges ? 'updated' : 'unchanged'
 }
@@ -76,7 +78,7 @@ function rowStateClass(ignored: boolean, invalid: boolean): string {
   return ''
 }
 
-const STATUS_CLASSES: Record<'new' | 'updated' | 'unchanged', string> = {
+const STATUS_CLASSES: Record<RowStatus, string> = {
   new: 'bg-green-600 text-white border-transparent',
   updated: 'bg-blue-600 text-white border-transparent',
   unchanged: 'bg-transparent text-muted-foreground border-border italic',
@@ -97,14 +99,14 @@ export default function ImportPreviewRowEdit({
   const [spriteFailed, setSpriteFailed] = React.useState(false)
 
   const level = marginLevel(row.margin)
-  const marginLabels: Record<'low' | 'medium' | 'high', string> = {
+  const marginLabels: Record<MarginLevel, string> = {
     low: t.roster.importExport.vision.marginAmbiguous,
     medium: t.roster.importExport.vision.marginUncertain,
     high: t.roster.importExport.vision.marginClear,
   }
 
   const status = rowStatus(row)
-  const statusLabels: Record<'new' | 'updated' | 'unchanged', string> = {
+  const statusLabels: Record<RowStatus, string> = {
     new: t.roster.importExport.badgeNew,
     updated: t.roster.importExport.badgeUpdated,
     unchanged: t.roster.importExport.badgeUnchanged,
@@ -141,14 +143,9 @@ export default function ImportPreviewRowEdit({
                 src={row.spriteUrl}
                 alt={row.champion_name}
                 onError={() => setSpriteFailed(true)}
-                // The sheet is always SPRITE_COLS cells wide, so scaling it to
-                // SPRITE_COLS box-widths makes one cell exactly one box. Still one
-                // request for the whole screenshot, as with the background-image.
-                // Width and both offsets are percentages of the same box, so the
-                // border eating into the content width shifts nothing — and a
-                // percentage margin-top resolves against the *width* too, which is
-                // what makes the vertical step match the horizontal one on a
-                // square cell.
+                // SPRITE_COLS box-widths wide makes one cell exactly one box. Width
+                // and both offsets are percentages of that box — margin-top included,
+                // which resolves against the width, so the steps stay square.
                 className='max-w-none'
                 style={{
                   width: `${SPRITE_COLS * 100}%`,
