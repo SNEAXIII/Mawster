@@ -278,7 +278,7 @@
     "sonarjs/no-empty-collection": "warn",
     "sonarjs/no-redundant-assignments": "warn",
     "sonarjs/prefer-type-guard": "warn",
-    "sonarjs/use-type-alias": "warn",
+    "sonarjs/use-type-alias": "error",
     "sonarjs/weak-ssl": "warn",
     "sonarjs/no-weak-keys": "warn",
     "sonarjs/csrf": "warn",
