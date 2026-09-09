@@ -27,7 +27,9 @@ class Settings(BaseSettings):
     MARIADB_PASSWORD: str = Field(... if IS_PROD else "password")
     MARIADB_ROOT_PASSWORD: str | None = Field(None if IS_PROD else "rootpassword")
     MARIADB_PORT: int = Field(... if IS_PROD else _default_database())
-    MARIADB_HOST: str = Field("mariadb" if IS_PROD else "localhost")
+    # Not "localhost": on Windows it resolves to ::1, and that route stalls ~44 ms
+    # once a statement outgrows a buffer - which selectinload does on a full roster.
+    MARIADB_HOST: str = Field("mariadb" if IS_PROD else "127.0.0.1")
     SECRET_KEY: str = Field(... if IS_PROD else "dev-secret-key_dev-secret-key_dev-secret-key")
     ALGORITHM: str = Field("HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(... if IS_PROD else 60, le=60)

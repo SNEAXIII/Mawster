@@ -25,7 +25,7 @@ async def test_valid_message_is_handed_to_the_service(mocker):
     handle = mocker.patch(
         "src.messaging.consumer.VisionResultService.handle", new_callable=AsyncMock
     )
-    mocker.patch("src.messaging.consumer.Session", MagicMock())
+    mocker.patch("src.messaging.consumer.SessionFactory", MagicMock())
     consumer = VisionResultConsumer()
     job_id = str(uuid.uuid4())
     import_id = str(uuid.uuid4())
@@ -57,7 +57,7 @@ async def test_handle_failure_not_yet_redelivered_is_nacked_for_one_retry(mocker
         new_callable=AsyncMock,
         side_effect=RuntimeError("boom"),
     )
-    mocker.patch("src.messaging.consumer.Session", MagicMock())
+    mocker.patch("src.messaging.consumer.SessionFactory", MagicMock())
     consumer = VisionResultConsumer()
     payload = {
         "job_id": str(uuid.uuid4()),
@@ -83,7 +83,7 @@ async def test_handle_failure_already_redelivered_is_rejected_without_requeue(mo
         new_callable=AsyncMock,
         side_effect=RuntimeError("boom"),
     )
-    mocker.patch("src.messaging.consumer.Session", MagicMock())
+    mocker.patch("src.messaging.consumer.SessionFactory", MagicMock())
     consumer = VisionResultConsumer()
     payload = {
         "job_id": str(uuid.uuid4()),
