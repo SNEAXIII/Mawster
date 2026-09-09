@@ -31,7 +31,7 @@ describe('Tier list – the champion catalog', () => {
     ]);
 
     publicCatalog().then((res) => {
-      expect(res.body.season_number).to.not.eq(null);
+      assert.isNotNull(res.body.season_number);
       const champions = res.body.champions as Array<{ name: string; is_saga_attacker: boolean }>;
       expect(champions.find((c) => c.name === 'SagaHero')?.is_saga_attacker).to.eq(true);
       expect(champions.find((c) => c.name === 'PlainHero')?.is_saga_attacker).to.eq(false);
@@ -46,7 +46,7 @@ describe('Tier list – the champion catalog', () => {
     setupTierList('tl-cat-noseason', [{ name: 'SeasonlessHero', championClass: 'Mystic' }]);
 
     publicCatalog().then((res) => {
-      expect(res.body.season_number).to.eq(null);
+      assert.isNull(res.body.season_number);
     });
 
     visitTierListSignedOut();
