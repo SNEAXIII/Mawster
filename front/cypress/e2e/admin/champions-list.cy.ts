@@ -1,5 +1,10 @@
 import { setupAdmin } from '../../support/e2e';
 
+const ROW_SELECTOR = '[data-cy^="champion-row-"]';
+
+/** Re-queried on each retry, unlike a subject captured through getByCy. */
+const firstRow = () => cy.get(ROW_SELECTOR).first();
+
 describe('Admin — champions list & filters', () => {
   let adminToken: string;
 
@@ -114,14 +119,13 @@ describe('Admin — champions list & filters', () => {
       { name: 'Wolverine', cls: 'Mutant' },
     ]).then(() => {
       cy.goToAdminChampionsTab();
-      cy.getByCy('champions-list').find('tbody tr').first().should('contain.text', 'Iron Man');
+      // cy.get is a query, so it is re-run on every retry. Going through the
+      // getByCy command instead would pin the subject to the pre-sort rows and
+      // the assertion would keep re-checking a detached <tr>.
+      firstRow().should('have.attr', 'data-cy', 'champion-row-Iron Man');
 
-      // The list is refetched behind a 300ms debounce and the old rows stay on
-      // screen meanwhile, so wait for the sorted response before asserting.
-      cy.intercept('GET', '**/champions?*order_dir=desc*').as('sortedDesc');
       cy.getByCy('champions-sort-name').click();
-      cy.wait('@sortedDesc');
-      cy.getByCy('champions-list').find('tbody tr').first().should('contain.text', 'Wolverine');
+      firstRow().should('have.attr', 'data-cy', 'champion-row-Wolverine');
     });
   });
 
@@ -132,18 +136,13 @@ describe('Admin — champions list & filters', () => {
       { name: 'Colossus', cls: 'Mutant' },
     ]).then(() => {
       cy.goToAdminChampionsTab();
-      cy.intercept('GET', '**/champions?*order_by=champion_class*').as('sortedByClass');
       cy.getByCy('champions-sort-champion_class').click();
-      cy.wait('@sortedByClass');
       // Mutant before Tech, and name breaks the tie inside a class.
-      cy.getByCy('champions-list')
-        .find('tbody tr')
-        .then(($rows) => {
-          const names = [...$rows].map((row) => row.textContent ?? '');
-          expect(names[0]).to.contain('Colossus');
-          expect(names[1]).to.contain('Wolverine');
-          expect(names[2]).to.contain('Iron Man');
-        });
+      firstRow().should('have.attr', 'data-cy', 'champion-row-Colossus');
+      cy.get(ROW_SELECTOR).then(($rows) => {
+        const order = [...$rows].map((row) => row.getAttribute('data-cy'));
+        expect(order).to.deep.equal(['champion-row-Colossus', 'champion-row-Wolverine', 'champion-row-Iron Man']);
+      });
     });
   });
 
