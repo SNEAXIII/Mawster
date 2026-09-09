@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Mawster — Alliance War planner for Marvel Contest of Champions',
     short_name: 'Mawster',
     description:
-      'Plan Alliance War in Marvel Contest of Champions: defense placements, attack assignments, synergies and war stats for your whole alliance.',
+      'Plan Alliance War in Marvel Contest of Champions: combat history, roster management, ia import roster, defense placements, attack assignments, synergies, prefights and war stats for your whole alliance.',
     start_url: '/',
     display: 'standalone',
     orientation: 'portrait',
