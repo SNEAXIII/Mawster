@@ -14,11 +14,10 @@ describe('War – KO cap', () => {
     setupAssignedAttacker('ko-cap-inc').then(({ ownerData }) => {
       cy.openWarAttackerPanel(ownerData.user_id);
 
-      for (let i = 0; i < MAX_KO; i += 1) {
+      for (let i = 1; i <= MAX_KO; i += 1) {
         cy.getByCy('ko-inc-node-10').click();
+        cy.getByCy('ko-value-node-10').should('have.text', String(i));
       }
-
-      cy.getByCy('ko-value-node-10').should('have.text', String(MAX_KO));
       cy.getByCy('ko-inc-node-10').should('be.disabled');
     });
   });

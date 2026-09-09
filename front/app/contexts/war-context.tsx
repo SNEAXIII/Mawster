@@ -117,7 +117,7 @@ interface WarContextValue {
   handleClearBg: () => Promise<void>
   handleAssignAttacker: (attacker: AvailableAttacker) => Promise<void>
   handleRemoveAttacker: (node: number) => Promise<void>
-  handleUpdateKo: (node: number, newKo: number) => Promise<void>
+  handleUpdateKo: (node: number, newKo: number) => void
 
   // Synergy
   synergies: WarSynergy[]
@@ -154,6 +154,8 @@ export function useWar(): WarContextValue {
 }
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
+
+const KO_FLUSH_DELAY_MS = 400
 
 export function WarProvider({
   children,
@@ -547,30 +549,45 @@ export function WarProvider({
     }
   }
 
-  const handleUpdateKo = async (nodeNumber: number, newKo: number) => {
+  const koFlushTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({})
+
+  useEffect(() => {
+    const pending = koFlushTimers.current
+    return () => Object.values(pending).forEach(clearTimeout)
+  }, [])
+
+  const patchPlacement = (nodeNumber: number, patch: Partial<WarPlacement>) =>
+    setWarSummary((prev) =>
+      prev
+        ? {
+            ...prev,
+            placements: prev.placements.map((p) =>
+              p.node_number === nodeNumber ? { ...p, ...patch } : p
+            ),
+          }
+        : prev
+    )
+
+  const handleUpdateKo = (nodeNumber: number, newKo: number) => {
     if (!selectedAllianceId || !activeWarId) return
     const koCount = Math.min(Math.max(newKo, 0), MAX_KO_COUNT)
-    try {
-      const updated = await updateWarKo(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        nodeNumber,
-        koCount
-      )
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: prev.placements.map((p) =>
-                p.node_number === updated.node_number ? updated : p
-              ),
-            }
-          : prev
-      )
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.war.loadError)
-    }
+
+    // The counter has to follow the clicks, not the round-trips: callers derive
+    // the next value from the rendered one, so waiting for the response would
+    // make a fast second click re-send the value the first one already sent.
+    patchPlacement(nodeNumber, { ko_count: koCount })
+
+    const pending = koFlushTimers.current
+    if (pending[nodeNumber]) clearTimeout(pending[nodeNumber])
+    pending[nodeNumber] = setTimeout(() => {
+      delete pending[nodeNumber]
+      updateWarKo(selectedAllianceId, activeWarId, selectedBg, nodeNumber, koCount)
+        .then((updated) => patchPlacement(nodeNumber, updated))
+        .catch((err: unknown) => {
+          toast.error((err as Error).message || t.game.war.loadError)
+          void fetchWarDefense(true)
+        })
+    }, KO_FLUSH_DELAY_MS)
   }
 
   const handleAddSynergy = async (championUserId: string, targetChampionUserId: string) => {
