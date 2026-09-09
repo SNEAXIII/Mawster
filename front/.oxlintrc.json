@@ -309,7 +309,7 @@
     "sonarjs/strict-transport-security": "warn",
     "sonarjs/no-same-argument-assert": "warn",
     "sonarjs/session-regeneration": "warn",
-    "sonarjs/prefer-specific-assertions": "warn",
+    "sonarjs/prefer-specific-assertions": "error",
     "sonarjs/no-trivial-assertions": "warn",
     "sonarjs/test-check-exception": "warn",
     "sonarjs/stable-tests": "warn",
