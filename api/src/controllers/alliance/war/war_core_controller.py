@@ -101,4 +101,6 @@ async def end_war(
 ):
     """Mark a war as ended with result. Officers/owner only."""
     await AllianceService.require_officer(session, alliance_id, current_user.id)
-    return await WarService.end_war(session, war_id, alliance_id, body.win, body.elo_change)
+    return await WarService.end_war(
+        session, war_id, alliance_id, body.win, body.elo_change, body.opponent_deaths
+    )

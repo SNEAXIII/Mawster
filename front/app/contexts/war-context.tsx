@@ -99,7 +99,11 @@ interface WarContextValue {
   handleNodeClick: (node: number) => void
   handleCreateWar: (opponentName: string, bannedChampionIds: string[]) => Promise<void>
   handleEditWar: (opponentName: string, bannedChampionIds: string[]) => Promise<void>
-  handleEndWar: (win: boolean, eloChange: number | null) => Promise<void>
+  handleEndWar: (
+    win: boolean,
+    eloChange: number | null,
+    opponentDeaths: number | null
+  ) => Promise<void>
   refreshAlliances: () => Promise<void>
   handlePlaceDefender: (
     championId: string,
@@ -376,10 +380,14 @@ export function WarProvider({
     }
   }
 
-  const handleEndWar = async (win: boolean, eloChange: number | null) => {
+  const handleEndWar = async (
+    win: boolean,
+    eloChange: number | null,
+    opponentDeaths: number | null
+  ) => {
     if (!currentWar) return
     try {
-      await endWar(selectedAllianceId, currentWar.id, win, eloChange)
+      await endWar(selectedAllianceId, currentWar.id, win, eloChange, opponentDeaths)
       await refresh()
       toast.success(t.game.war.endWarSuccess)
       setCurrentWar(null)

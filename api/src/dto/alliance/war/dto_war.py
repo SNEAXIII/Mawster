@@ -53,6 +53,7 @@ class WarResponse(BaseModel):
     season_id: uuid.UUID | None = None
     season_number: int | None = None
     win: bool | None = None
+    opponent_deaths: int | None = None
     elo_change: int | None = None
     tier: int | None = None
 
@@ -72,6 +73,7 @@ class WarResponse(BaseModel):
             "season_id": data.season_id,
             "season_number": data.season.number if data.season else None,
             "win": data.win,
+            "opponent_deaths": data.opponent_deaths,
             "elo_change": data.elo_change,
             "tier": data.tier,
         }
@@ -288,6 +290,7 @@ class WarUpdateRequest(BaseModel):
 class WarEndRequest(BaseModel):
     win: bool
     elo_change: int | None = None
+    opponent_deaths: int | None = Field(default=None, ge=0)
 
 
 class WarPrefightCreateRequest(BaseModel):

@@ -605,6 +605,7 @@ class WarService:
         alliance_id: uuid.UUID,
         win: bool,
         elo_change: int | None,
+        opponent_deaths: int | None = None,
     ) -> WarResponse:
 
         war = await cls.get_war(session, war_id, alliance_id)
@@ -632,6 +633,7 @@ class WarService:
 
         war.status = WarStatus.ended
         war.win = win
+        war.opponent_deaths = opponent_deaths
         war.tier = alliance.tier
         session.add(war)
         await session.commit()

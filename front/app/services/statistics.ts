@@ -76,3 +76,30 @@ export async function getChampionUsage(
   await throwOnError(response, 'Failed to load champion usage')
   return response.json()
 }
+
+export interface WarBattlegroupDeaths {
+  battlegroup: number
+  deaths: number
+}
+
+export interface SeasonWarStats {
+  war_id: string
+  war_number: number
+  opponent_name: string
+  win: boolean | null
+  opponent_deaths: number | null
+  total_deaths: number
+  battlegroups: WarBattlegroupDeaths[]
+}
+
+export async function getSeasonWarStats(
+  allianceId: string,
+  seasonId?: string
+): Promise<SeasonWarStats[]> {
+  const query = seasonId ? `?season_id=${seasonId}` : ''
+  const response = await fetch(`${PROXY}/statistics/season-wars/${allianceId}${query}`, {
+    headers: jsonHeaders,
+  })
+  await throwOnError(response, 'Failed to load season war statistics')
+  return response.json()
+}

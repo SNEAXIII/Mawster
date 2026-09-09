@@ -144,8 +144,8 @@ function WarLayout() {
         onOpenChange={setShowEndConfirm}
         hasSeason={!!currentWar?.season_id}
         currentElo={alliances.find((a) => a.id === selectedAllianceId)?.elo ?? 0}
-        onConfirm={async (win, eloChange) => {
-          await handleEndWar(win, eloChange)
+        onConfirm={async (win, eloChange, opponentDeaths) => {
+          await handleEndWar(win, eloChange, opponentDeaths)
         }}
       />
 

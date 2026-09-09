@@ -47,6 +47,7 @@ def _make_war(**overrides):
         "season_id": None,
         "season": None,
         "win": None,
+        "opponent_deaths": None,
         "elo_change": None,
         "tier": None,
     }
