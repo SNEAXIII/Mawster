@@ -46,6 +46,9 @@ Toujours `git fetch origin --tags --prune` d'abord.
    - `conclusion` ≠ `success` : s'arrêter en donnant l'URL du run. Un release-please rouge veut
      dire tag ou CHANGELOG manquants — c'est la cause racine d'un contenu non taggé.
 
+   Ce run-ci ne pose aucun tag : il vient d'une PR de feature et ne fait que rafraîchir la PR
+   release-please. Le tag arrive au run suivant, celui du squash — voir l'étape 2 du déroulé.
+
 2. **Contenu taggé**
 
    ```bash
@@ -110,7 +113,22 @@ sans redemander.
 
    Le titre (`chore(main): release 1.8.3`) donne la version cible.
 
-2. **PR de promotion**, immédiatement — sans attendre l'apparition du tag :
+2. **Attendre le tag.** Ce squash déclenche un *second* run Release Please — celui du pré-vol,
+   déclenché par la PR de feature précédente, ne pose aucun tag. Le contrôle du pré-vol ne
+   dispense donc pas de celui-ci.
+
+   ```bash
+   gh run list --workflow "Release Please" --branch main -L 1 --json databaseId --jq '.[0].databaseId'
+   gh run watch <id> --exit-status
+   git fetch origin --tags && git describe --tags --exact-match origin/main
+   ```
+
+   Tant que `git describe --exact-match` ne renvoie pas `vX.Y.Z`, ne pas promouvoir : le job
+   `changes` de la CI résout `LAST_TAG` sur le checkout de `release`, verrait encore le tag
+   précédent, poserait `released=false` et `deploy` échouerait sur « the content promoted to
+   release does not match the latest tag ». Plafond dur 10 min, puis s'arrêter.
+
+3. **PR de promotion** :
 
    ```bash
    git log --oneline origin/release..origin/main --grep '^chore(main): release'   # versions incluses
@@ -122,7 +140,7 @@ sans redemander.
    - Corps : uniquement la liste des versions incluses (`- v1.8.1`), une par ligne. Pas de
      CHANGELOG recopié — il diverge.
 
-3. **Merge en merge commit**, jamais en squash :
+4. **Merge en merge commit**, jamais en squash :
 
    ```bash
    gh pr merge <n> --merge
@@ -133,7 +151,7 @@ sans redemander.
 
 ## Déroulé — staging
 
-Identique, sans l'étape 1 :
+Identique, sans les étapes 1 et 2 — staging n'exige aucun tag :
 
 ```bash
 gh pr create --base staging --head main --title "staging: $(git describe --tags --match 'v*' origin/main)"
