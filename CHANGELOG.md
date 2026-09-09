@@ -3,6 +3,21 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.13.0](https://github.com/SNEAXIII/Mawster/compare/v1.12.1...v1.13.0) (2026-09-09)
+
+
+### Ajouté
+
+* add a web manifest so Mawster installs to the home screen ([#532](https://github.com/SNEAXIII/Mawster/issues/532)) ([8a3b37f](https://github.com/SNEAXIII/Mawster/commit/8a3b37fc22145b60be5f87aee693609079e7bf66))
+* add an Open Graph image so shared links render a preview card ([#530](https://github.com/SNEAXIII/Mawster/issues/530)) ([20fca17](https://github.com/SNEAXIII/Mawster/commit/20fca17104b1fe7823a0ba399816f265b24c483b))
+* add the site title, description and social metadata ([#529](https://github.com/SNEAXIII/Mawster/issues/529)) ([952d999](https://github.com/SNEAXIII/Mawster/commit/952d99931f0ff86228ed61c224f62cd6e9bbec9a))
+* filter champions by 7-star and saga role, and toggle 7-star availability ([#539](https://github.com/SNEAXIII/Mawster/issues/539)) ([4b69955](https://github.com/SNEAXIII/Mawster/commit/4b699552e18953bf2f5a2aec589eb824aeae78b2))
+
+
+### Corrigé
+
+* show skeletons instead of spinners and blank screens while loading ([#537](https://github.com/SNEAXIII/Mawster/issues/537)) ([45c2c06](https://github.com/SNEAXIII/Mawster/commit/45c2c06a32aad7df96fda45c0d56a345eda70995))
+
 ## [1.12.1](https://github.com/SNEAXIII/Mawster/compare/v1.12.0...v1.12.1) (2026-09-09)
 
 
