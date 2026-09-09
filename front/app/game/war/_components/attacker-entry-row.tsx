@@ -14,7 +14,7 @@ import {
   Ban,
   AlertTriangle,
 } from 'lucide-react'
-import type { WarPlacement } from '@/app/services/war'
+import { MAX_KO_COUNT, type WarPlacement } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import NodeSlot from './node-slot'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
@@ -253,9 +253,14 @@ export default function AttackerEntryRow({
                     type='button'
                     className={cn(
                       'rounded flex items-center justify-center text-xs bg-muted hover:bg-accent transition-colors',
-                      btnSize
+                      btnSize,
+                      placement.ko_count >= MAX_KO_COUNT && 'opacity-40 cursor-not-allowed'
                     )}
-                    onClick={() => handleUpdateKo(placement.node_number, placement.ko_count + 1)}
+                    onClick={() =>
+                      placement.ko_count < MAX_KO_COUNT &&
+                      handleUpdateKo(placement.node_number, placement.ko_count + 1)
+                    }
+                    disabled={placement.ko_count >= MAX_KO_COUNT}
                     data-cy={`ko-inc-node-${placement.node_number}`}
                   >
                     <Plus className={cn(iconSize)} />

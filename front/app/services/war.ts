@@ -2,6 +2,9 @@ import { PROXY, jsonHeaders } from '@/app/services/utils'
 
 // ─── War Service ─────────────────────────────────────────
 
+// Mirrors the KoCount bound in api/src/game_types.py.
+export const MAX_KO_COUNT = 3
+
 export interface BannedChampion {
   id: string
   name: string

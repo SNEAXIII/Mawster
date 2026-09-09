@@ -5,8 +5,12 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
+from pydantic import ValidationError
+
 from src.dto.alliance.war.dto_war import (
     WarCreateRequest,
+    WarKoUpdateRequest,
     WarPlacementResponse,
     WarPrefightResponse,
     WarResponse,
@@ -458,3 +462,17 @@ def test_war_response_includes_win_elo_change_tier():
     assert resp.win is True
     assert resp.elo_change == 50
     assert resp.tier == 8
+
+
+# ─── WarKoUpdateRequest ───────────────────────────────────
+
+
+class TestWarKoUpdateRequest:
+    @pytest.mark.parametrize("ko_count", [0, 1, 2, 3])
+    def test_within_bounds(self, ko_count):
+        assert WarKoUpdateRequest(ko_count=ko_count).ko_count == ko_count
+
+    @pytest.mark.parametrize("ko_count", [-1, 4, 99])
+    def test_out_of_bounds_rejected(self, ko_count):
+        with pytest.raises(ValidationError):
+            WarKoUpdateRequest(ko_count=ko_count)

@@ -21,6 +21,7 @@ from src.dto.alliance.war.dto_war import (
     WarSynergyResponse,
 )
 from src.enums.WarStatus import WarStatus
+from src.game_types import KoCount
 from src.Messages.war_messages import (
     ACTIVE_WAR_ALREADY_EXISTS,
     ASSIST_NO_ATTACKER_ASSIGNED,
@@ -1034,7 +1035,7 @@ class WarService:
         war_id: uuid.UUID,
         battlegroup: int,
         node_number: int,
-        ko_count: int,
+        ko_count: KoCount,
     ) -> WarPlacementResponse:
         placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
         if placement is None:

@@ -25,4 +25,5 @@ Rank = Annotated[int, Field(ge=1, le=6)]
 Ascension = Annotated[int, Field(ge=0, le=2)]
 Signature = Annotated[int, Field(ge=0, le=200)]
 
-KoCount = Annotated[int, Field(ge=0)]
+# A defender cannot take more than 3 attacker KOs before the node is exhausted.
+KoCount = Annotated[int, Field(ge=0, le=3)]

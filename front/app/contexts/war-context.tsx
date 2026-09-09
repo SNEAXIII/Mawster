@@ -34,6 +34,7 @@ import {
   assignWarAttacker,
   removeWarAttacker,
   updateWarKo,
+  MAX_KO_COUNT,
   getWarSynergies,
   addWarSynergy,
   removeWarSynergy,
@@ -540,13 +541,14 @@ export function WarProvider({
 
   const handleUpdateKo = async (nodeNumber: number, newKo: number) => {
     if (!selectedAllianceId || !activeWarId) return
+    const koCount = Math.min(Math.max(newKo, 0), MAX_KO_COUNT)
     try {
       const updated = await updateWarKo(
         selectedAllianceId,
         activeWarId,
         selectedBg,
         nodeNumber,
-        newKo
+        koCount
       )
       setWarSummary((prev) =>
         prev
