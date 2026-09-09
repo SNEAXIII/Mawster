@@ -43,6 +43,30 @@ describe('Knowledge Base – CSV Import', () => {
     });
   });
 
+  it('rejects a ko_count above the three-KO cap', () => {
+    setupWarOwner('csv-kocap', 'CapUser', 'CapAlliance', 'CAP').then(({ adminData, ownerData }) => {
+      cy.apiCreateSeason(adminData.access_token, 1).then(() => {
+        cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(() => {
+          cy.apiLoadChampion(adminData.access_token, 'Serpent', 'Cosmic').then(() => {
+            cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
+
+            const csv = `attacker,defender,node,season,ko_count
+Magik,Serpent,15,S1,4
+`;
+            cy.getByCy('csv-file-input').selectFile({
+              contents: Cypress.Buffer.from(csv),
+              fileName: 'fights.csv',
+              mimeType: 'text/csv',
+            });
+
+            cy.contains('invalid ko_count').should('be.visible');
+            cy.getByCy('import-confirm-btn').should('not.exist');
+          });
+        });
+      });
+    });
+  });
+
   it('skips duplicate records on re-import and shows skipped toast', () => {
     setupWarOwner('csv-dedup', 'DedupUser', 'DedupAlliance', 'DDP').then(({ adminData, ownerData, allianceId }) => {
       cy.apiCreateSeason(adminData.access_token, 1).then(() => {

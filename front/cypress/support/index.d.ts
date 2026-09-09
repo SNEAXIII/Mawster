@@ -285,7 +285,20 @@ declare global {
       ): Chainable<void>;
 
       /** Mark a war as ended (direct backend call). */
-      apiEndWar(token: string, allianceId: string, warId: string, win?: boolean, eloChange?: number): Chainable<any>;
+      apiEndWar(
+        token: string,
+        allianceId: string,
+        warId: string,
+        win?: boolean,
+        eloChange?: number,
+        opponentDeaths?: number,
+      ): Chainable<any>;
+      apiSetOpponentDeaths(
+        token: string,
+        allianceId: string,
+        warId: string,
+        opponentDeaths: number | null,
+      ): Chainable<any>;
 
       /** Assign an attacker champion to a war node (direct backend call). */
       apiAssignWarAttacker(
