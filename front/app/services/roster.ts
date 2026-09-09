@@ -109,12 +109,16 @@ export function getRankLabel(rarity: string): string {
 /** Shorten a champion name for card display.
  *  Removes parenthesized suffixes: "Spider-Woman (Jessica Drew)" → "Spider-Woman" */
 export function shortenChampionName(name: string): string {
-  return name.replace(/\s*\([^)]*\)\s*$/, '').trim()
+  const trimmed = name.trim()
+  if (!trimmed.endsWith(')')) return trimmed
+  // The suffix carries no ')' of its own, so it opens at the first '(' following any earlier one.
+  const open = trimmed.indexOf('(', trimmed.lastIndexOf(')', trimmed.length - 2) + 1)
+  return open === -1 ? trimmed : trimmed.slice(0, open).trim()
 }
 
 /** Numeric sort value for a rarity string (higher = better). Used for descending sort. */
 export function raritySortValue(rarity: string): number {
-  const parts = rarity.match(/(\d+)r(\d+)/)
+  const parts = rarity.match(/^(\d+)r(\d+)$/)
   if (!parts) return 0
   return Number.parseInt(parts[1]) * 10 + Number.parseInt(parts[2])
 }
