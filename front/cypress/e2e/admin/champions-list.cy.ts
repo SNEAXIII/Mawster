@@ -137,9 +137,11 @@ describe('Admin — champions list & filters', () => {
     ]).then(() => {
       cy.goToAdminChampionsTab();
       cy.getByCy('champions-sort-champion_class').click();
-      // Mutant before Tech, and name breaks the tie inside a class.
-      firstRow().should('have.attr', 'data-cy', 'champion-row-Colossus');
-      cy.get(ROW_SELECTOR).then(($rows) => {
+      // Mutant before Tech, and name breaks the tie inside a class. Asserted
+      // through should(callback), which retries; .then() runs once, and here it
+      // ran before the sorted list arrived — on rows still ordered by name,
+      // where Colossus happens to come first as well.
+      cy.get(ROW_SELECTOR).should(($rows) => {
         const order = [...$rows].map((row) => row.getAttribute('data-cy'));
         expect(order).to.deep.equal(['champion-row-Colossus', 'champion-row-Wolverine', 'champion-row-Iron Man']);
       });
