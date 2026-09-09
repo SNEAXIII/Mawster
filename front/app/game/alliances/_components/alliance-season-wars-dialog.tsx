@@ -11,12 +11,16 @@ export function AllianceSeasonWarsDialog({
   wars,
   allianceTag,
   seasonNumber,
+  canEdit,
+  onSaveOpponentDeaths,
 }: Readonly<{
   open: boolean
   onOpenChange: (open: boolean) => void
   wars: SeasonWarStats[]
   allianceTag: string
   seasonNumber: number | null
+  canEdit: boolean
+  onSaveOpponentDeaths: (warId: string, deaths: number | null) => Promise<void>
 }>) {
   const { t } = useI18n()
   const seasonWars = t.game.alliances.statistics.seasonWars
@@ -44,6 +48,8 @@ export function AllianceSeasonWarsDialog({
           <AllianceSeasonWarsTable
             wars={wars}
             allianceTag={allianceTag}
+            canEdit={canEdit}
+            onSaveOpponentDeaths={onSaveOpponentDeaths}
           />
         </div>
       </DialogContent>

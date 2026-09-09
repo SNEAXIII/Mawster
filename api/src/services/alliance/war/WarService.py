@@ -598,6 +598,25 @@ class WarService:
         )
 
     @classmethod
+    async def set_opponent_deaths(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+        opponent_deaths: int | None,
+    ) -> WarResponse:
+        """Correct the manually entered enemy deaths, on an ended war too.
+
+        Nothing tracks this figure yet, so an officer has to be able to backfill
+        wars that ended before the field existed.
+        """
+        war = await cls.get_war(session, war_id, alliance_id)
+        war.opponent_deaths = opponent_deaths
+        session.add(war)
+        await session.commit()
+        return WarResponse.model_validate(await cls._load_war(session, war.id))
+
+    @classmethod
     async def end_war(
         cls,
         session: SessionDep,

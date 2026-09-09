@@ -276,6 +276,20 @@ export async function endWar(
   return response.json()
 }
 
+export async function updateWarOpponentDeaths(
+  allianceId: string,
+  warId: string,
+  opponentDeaths: number | null
+): Promise<War> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/opponent-deaths`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+    body: JSON.stringify({ opponent_deaths: opponentDeaths }),
+  })
+  await throwOnError(response, 'Failed to update opponent deaths')
+  return response.json()
+}
+
 export async function clearWarBg(
   allianceId: string,
   warId: string,

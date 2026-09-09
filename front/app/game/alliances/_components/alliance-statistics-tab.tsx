@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
+import { useAllianceRole } from '@/hooks/use-alliance-role'
+import { updateWarOpponentDeaths } from '@/app/services/war'
 import AllianceSelect from '@/app/game/_components/alliance-select'
 import { AllianceStatsTable, type SortField, type SortDir } from './alliance-stats-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -69,6 +71,7 @@ export default function AllianceStatisticsTab({
   onSeasonChange,
 }: Readonly<AllianceStatisticsTabProps>) {
   const { t } = useI18n()
+  const { canPlace } = useAllianceRole()
   const stat = t.game.alliances.statistics
   const [ratioMin, setRatioMin] = useState(-Infinity)
   const [selectedGroup, setSelectedGroup] = useState('all')
@@ -160,6 +163,17 @@ export default function AllianceStatisticsTab({
       return sortDir === 'asc' ? av - bv : bv - av
     })
   }, [seasonStats, memberFilter, ratioMin, selectedGroup, sortField, sortDir])
+
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId)
+
+  // Patch the row in place: refetching the season would collapse the edited cell
+  // while the request is still in flight.
+  const handleSaveOpponentDeaths = async (warId: string, deaths: number | null) => {
+    await updateWarOpponentDeaths(selectedAllianceId, warId, deaths)
+    setSeasonWars((prev) =>
+      prev.map((w) => (w.war_id === warId ? { ...w, opponent_deaths: deaths } : w))
+    )
+  }
 
   const displayedSeasonNumber = useMemo(() => {
     const id = selectedSeasonId ?? seasons[0]?.id
@@ -462,8 +476,10 @@ export default function AllianceStatisticsTab({
         open={seasonWarsOpen}
         onOpenChange={setSeasonWarsOpen}
         wars={seasonWars}
-        allianceTag={alliances.find((a) => a.id === selectedAllianceId)?.tag ?? ''}
+        allianceTag={selectedAlliance?.tag ?? ''}
         seasonNumber={displayedSeasonNumber}
+        canEdit={selectedAlliance !== undefined && canPlace(selectedAlliance)}
+        onSaveOpponentDeaths={handleSaveOpponentDeaths}
       />
     </div>
   )

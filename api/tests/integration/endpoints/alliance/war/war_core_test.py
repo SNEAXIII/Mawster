@@ -11,6 +11,7 @@ from src.models.champion.Champion import Champion
 from src.models.war.Season import Season
 from tests.integration.endpoints.setup.game_setup import (
     get_game_account,
+    push_strategist,
 )
 from tests.integration.endpoints.setup.war_setup import (
     OPPONENT,
@@ -21,6 +22,7 @@ from tests.integration.endpoints.setup.war_setup import (
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
+    execute_patch_request,
     execute_post_request,
 )
 from tests.utils.utils_constant import (
@@ -200,6 +202,99 @@ class TestCreateWarStatus:
         assert len(body) >= 1
         assert "status" in body[0]
         assert body[0]["status"] == "active"
+
+
+# ─── TestSetOpponentDeaths ────────────────────────────────
+
+
+class TestSetOpponentDeaths:
+    @staticmethod
+    def _url(data):
+        return f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/opponent-deaths"
+
+    @pytest.mark.asyncio
+    async def test_officer_can_set(self):
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_patch_request(
+            self._url(data), payload={"opponent_deaths": 35}, headers=headers
+        )
+        assert response.status_code == 200
+        assert response.json()["opponent_deaths"] == 35
+
+    @pytest.mark.asyncio
+    async def test_officer_can_clear(self):
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        await execute_patch_request(
+            self._url(data), payload={"opponent_deaths": 35}, headers=headers
+        )
+
+        response = await execute_patch_request(
+            self._url(data), payload={"opponent_deaths": None}, headers=headers
+        )
+        assert response.status_code == 200
+        assert response.json()["opponent_deaths"] is None
+
+    @pytest.mark.asyncio
+    async def test_works_on_an_ended_war(self):
+        """Backfilling wars that ended before the field existed is the whole point."""
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end",
+            payload={"win": True},
+            headers=headers,
+        )
+
+        response = await execute_patch_request(
+            self._url(data), payload={"opponent_deaths": 12}, headers=headers
+        )
+        assert response.status_code == 200
+        assert response.json()["status"] == "ended"
+        assert response.json()["opponent_deaths"] == 12
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("opponent_deaths", [-1, 0])
+    async def test_below_one_is_rejected(self, opponent_deaths):
+        """Zero is not a reading, it is an unfilled cell — that is what null means."""
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_patch_request(
+            self._url(data), payload={"opponent_deaths": opponent_deaths}, headers=headers
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_strategist_can_set(self):
+        """The rank that plans the war owns this figure, not just officers."""
+        data = await _setup_war()
+        await push_strategist(data["alliance"], data["member"])
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_patch_request(
+            self._url(data), payload={"opponent_deaths": 22}, headers=headers
+        )
+        assert response.status_code == 200
+        assert response.json()["opponent_deaths"] == 22
+
+    @pytest.mark.asyncio
+    async def test_plain_member_forbidden(self):
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_patch_request(
+            self._url(data), payload={"opponent_deaths": 5}, headers=headers
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_unauthenticated(self):
+        data = await _setup_war()
+        response = await execute_patch_request(self._url(data), payload={"opponent_deaths": 5})
+        assert response.status_code == 401
 
 
 # ─── TestEndWar ───────────────────────────────────────────

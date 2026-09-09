@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { SeasonWarDeathsCell } from './season-war-deaths-cell'
 
 const BATTLEGROUPS = [1, 2, 3]
 
@@ -52,9 +53,15 @@ function ResultBadge({ win }: Readonly<{ win: boolean | null }>) {
 
 function BattlegroupCells({
   values,
+  rowKey,
   format,
   bold,
-}: Readonly<{ values: number[]; format?: (v: number) => string; bold?: boolean }>) {
+}: Readonly<{
+  values: number[]
+  rowKey: string
+  format?: (v: number) => string
+  bold?: boolean
+}>) {
   return (
     <>
       {values.map((value, index) => (
@@ -64,7 +71,7 @@ function BattlegroupCells({
             value,
             values
           )}`}
-          data-cy={`season-war-bg${BATTLEGROUPS[index]}`}
+          data-cy={`season-war-${rowKey}-bg${BATTLEGROUPS[index]}`}
         >
           {format ? format(value) : value}
         </TableCell>
@@ -76,7 +83,14 @@ function BattlegroupCells({
 export function AllianceSeasonWarsTable({
   wars,
   allianceTag,
-}: Readonly<{ wars: SeasonWarStats[]; allianceTag: string }>) {
+  canEdit = false,
+  onSaveOpponentDeaths,
+}: Readonly<{
+  wars: SeasonWarStats[]
+  allianceTag: string
+  canEdit?: boolean
+  onSaveOpponentDeaths?: (warId: string, deaths: number | null) => Promise<void>
+}>) {
   const { t } = useI18n()
   const seasonWars = t.game.alliances.statistics.seasonWars
 
@@ -134,23 +148,40 @@ export function AllianceSeasonWarsTable({
               key={war.war_id}
               data-cy={`season-war-row-${war.war_id}`}
             >
-              <TableCell className='py-1.5 font-medium whitespace-nowrap'>
+              <TableCell
+                className='py-1.5 font-medium whitespace-nowrap'
+                data-cy={`season-war-number-${war.war_id}`}
+              >
                 {seasonWars.warNumber.replace('{number}', String(war.war_number))}
               </TableCell>
-              <TableCell className='py-1.5 font-semibold'>{war.opponent_name}</TableCell>
-              <TableCell className='py-1.5 text-center'>
+              <TableCell
+                className='py-1.5 font-semibold'
+                data-cy={`season-war-opponent-${war.war_id}`}
+              >
+                {war.opponent_name}
+              </TableCell>
+              <TableCell
+                className='py-1.5 text-center'
+                data-cy={`season-war-result-${war.war_id}`}
+              >
                 <ResultBadge win={war.win} />
               </TableCell>
-              <TableCell className='py-1.5 text-right'>
-                {war.opponent_deaths ?? <span className='text-muted-foreground'>—</span>}
-              </TableCell>
+              <SeasonWarDeathsCell
+                warId={war.war_id}
+                value={war.opponent_deaths}
+                canEdit={canEdit && onSaveOpponentDeaths !== undefined}
+                onSave={onSaveOpponentDeaths ?? (async () => {})}
+              />
               <TableCell
                 className={`py-1.5 text-right font-semibold ${resultTextClass(war.win)}`}
                 data-cy={`season-war-deaths-${war.war_id}`}
               >
                 {war.total_deaths}
               </TableCell>
-              <BattlegroupCells values={BATTLEGROUPS.map((bg) => deathsOf(war, bg))} />
+              <BattlegroupCells
+                values={BATTLEGROUPS.map((bg) => deathsOf(war, bg))}
+                rowKey={war.war_id}
+              />
             </TableRow>
           ))}
         </TableBody>
@@ -163,10 +194,21 @@ export function AllianceSeasonWarsTable({
             >
               {seasonWars.totalDeaths}
             </TableCell>
-            <TableCell className='py-1.5 text-right font-semibold'>{totals.opponent}</TableCell>
-            <TableCell className='py-1.5 text-right font-semibold'>{totals.own}</TableCell>
+            <TableCell
+              className='py-1.5 text-right font-semibold'
+              data-cy='season-war-total-op'
+            >
+              {totals.opponent}
+            </TableCell>
+            <TableCell
+              className='py-1.5 text-right font-semibold'
+              data-cy='season-war-total-deaths'
+            >
+              {totals.own}
+            </TableCell>
             <BattlegroupCells
               values={totals.perBg}
+              rowKey='total'
               bold
             />
           </TableRow>
@@ -177,10 +219,21 @@ export function AllianceSeasonWarsTable({
             >
               {seasonWars.averageDeaths}
             </TableCell>
-            <TableCell className='py-1.5 text-right'>{average(totals.opponent)}</TableCell>
-            <TableCell className='py-1.5 text-right'>{average(totals.own)}</TableCell>
+            <TableCell
+              className='py-1.5 text-right'
+              data-cy='season-war-average-op'
+            >
+              {average(totals.opponent)}
+            </TableCell>
+            <TableCell
+              className='py-1.5 text-right'
+              data-cy='season-war-average-deaths'
+            >
+              {average(totals.own)}
+            </TableCell>
             <BattlegroupCells
               values={totals.perBgAverage}
+              rowKey='average'
               format={(v) => v.toFixed(2)}
             />
           </TableRow>

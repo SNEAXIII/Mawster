@@ -287,10 +287,14 @@ class WarUpdateRequest(BaseModel):
     )
 
 
+class WarOpponentDeathsRequest(BaseModel):
+    opponent_deaths: int | None = Field(default=None, ge=1)
+
+
 class WarEndRequest(BaseModel):
     win: bool
     elo_change: int | None = None
-    opponent_deaths: int | None = Field(default=None, ge=0)
+    opponent_deaths: int | None = Field(default=None, ge=1)
 
 
 class WarPrefightCreateRequest(BaseModel):
