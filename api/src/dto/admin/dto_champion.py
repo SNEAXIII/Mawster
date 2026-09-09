@@ -12,7 +12,7 @@ class ChampionResponse(BaseModel):
     name: str
     champion_class: str
     image_url: str | None = None
-    is_7_star: bool = False
+    is_7_stars_available: bool = False
     is_ascendable: bool = False
     has_prefight: bool = False
     alias: str | None = None

@@ -72,7 +72,7 @@ export function useAddChampionForm(selectedAccountId: string | null) {
       name: entry.champion_name,
       champion_class: entry.champion_class,
       image_url: entry.image_url,
-      is_7_star: entry.rarity.startsWith('7'),
+      is_7_stars_available: entry.rarity.startsWith('7'),
       is_ascendable: entry.is_ascendable ?? false,
       has_prefight: entry.has_prefight ?? false,
       alias: null,

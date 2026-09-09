@@ -9,7 +9,7 @@ export interface CatalogChampion {
   champion_class: string
   image_url: string | null
   alias: string | null
-  is_7_star: boolean
+  is_7_stars_available: boolean
   is_ascendable: boolean
   has_prefight: boolean
   is_saga_attacker: boolean

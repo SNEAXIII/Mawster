@@ -30,7 +30,7 @@ def _make_champion(**overrides):
         "name": "Spider-Man",
         "champion_class": "Science",
         "image_url": "/img/spider.png",
-        "is_7_star": True,
+        "is_7_stars_available": True,
         "is_ascendable": True,
         "has_prefight": False,
         "alias": "spidey;peter",

@@ -46,9 +46,9 @@ describe('Tier list – filters', () => {
   });
 
   /**
-   * SKIPPED until the `is_7_stars_available` lot lands.
+   * SKIPPED until the `is_7_stars_availables_available` lot lands.
    *
-   * `load_champions` forces `is_7_star` to false and no admin toggle sets it, so
+   * `load_champions` forces `is_7_stars_available` to false and no admin toggle sets it, so
    * today "7★ only" shows nothing and "6★ only" shows the whole catalog — the
    * filter would pass on data that says nothing. Once a champion can be flagged
    * 7★: flag one in the catalog above, then expect "7★ only" to show that one

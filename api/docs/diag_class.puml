@@ -54,7 +54,7 @@
     + name : str
     + champion_class : str
     + image_url : Optional[str]
-    + is_7_star : bool
+    + is_7_stars_available : bool
     --
     + instances : List[ChampionUser]
   }

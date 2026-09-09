@@ -48,7 +48,7 @@ entity "Champion" as champion {
   name
   champion_class
   image_url
-  is_7_star
+  is_7_stars_available
 }
 
 entity "ChampionUser\n(roster)" as roster {

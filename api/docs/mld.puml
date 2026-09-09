@@ -54,7 +54,7 @@ entity "champion" as champion <<table>> {
   name : varchar(100)
   champion_class : varchar(20)
   image_url : varchar(500) (nullable)
-  is_7_star : boolean
+  is_7_stars_available : boolean
 }
 
 entity "champion_user" as roster <<table>> {

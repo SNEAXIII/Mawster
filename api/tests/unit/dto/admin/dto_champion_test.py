@@ -19,7 +19,7 @@ def _make_champion(**overrides):
         "name": "Spider-Man",
         "champion_class": "Science",
         "image_url": "/img/spider.png",
-        "is_7_star": True,
+        "is_7_stars_available": True,
         "is_ascendable": True,
         "has_prefight": False,
         "alias": "spidey;peter",
@@ -37,7 +37,7 @@ class TestChampionResponseModelValidate:
         assert dto.name == "Spider-Man"
         assert dto.champion_class == "Science"
         assert dto.image_url == "/img/spider.png"
-        assert dto.is_7_star is True
+        assert dto.is_7_stars_available is True
         assert dto.is_ascendable is True
         assert dto.has_prefight is False
         assert dto.alias == "spidey;peter"
@@ -50,10 +50,10 @@ class TestChampionResponseModelValidate:
         assert dto.alias is None
 
     def test_defaults_booleans(self):
-        champ = _make_champion(is_7_star=False, is_ascendable=False)
+        champ = _make_champion(is_7_stars_available=False, is_ascendable=False)
         dto = ChampionResponse.model_validate(champ)
 
-        assert dto.is_7_star is False
+        assert dto.is_7_stars_available is False
         assert dto.is_ascendable is False
 
 

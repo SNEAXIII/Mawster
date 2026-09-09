@@ -54,5 +54,5 @@ export const SIGNATURE_PRESETS = [20, 60, 100, 200]
  * not a display toggle: one with no 7-star version always shows the 6★ frame.
  */
 export function frameRarity(champion: CatalogChampion): string {
-  return champion.is_7_star ? '7r1' : '6r1'
+  return champion.is_7_stars_available ? '7r1' : '6r1'
 }

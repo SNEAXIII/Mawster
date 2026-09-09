@@ -272,7 +272,7 @@ class TestGetChampionById:
             "name",
             "champion_class",
             "image_url",
-            "is_7_star",
+            "is_7_stars_available",
             "is_ascendable",
             "alias",
         }

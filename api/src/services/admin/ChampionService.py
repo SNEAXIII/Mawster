@@ -201,7 +201,7 @@ class ChampionService:
                     champion_class=data.champion_class,
                     image_url=data.image_url,
                     alias=data.alias,
-                    is_7_star=False,
+                    is_7_stars_available=False,
                     is_ascendable=data.is_ascendable or False,
                     has_prefight=data.has_prefight or False,
                 )
