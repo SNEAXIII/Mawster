@@ -1,0 +1,8 @@
+{
+    "oxc.configPath": "front/.oxlintrc.json",
+    "oxc.tsConfigPath": "front/tsconfig.json",
+    "sonarlint.connectedMode.project": {
+        "connectionId": "sneaxiii",
+        "projectKey": "SNEAXIII_Mawster"
+    }
+}
