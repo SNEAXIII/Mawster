@@ -6,8 +6,48 @@ import { Providers } from './providers'
 import { Toaster } from '@/components/ui/sonner'
 import MyModerationProvider from './contexts/moderation-context'
 import type { Metadata } from 'next'
+import { SITE_NAME, SITE_URL } from '@/app/lib/site'
+
+const TITLE = 'Mawster — Alliance War planner for Marvel Contest of Champions'
+const DESCRIPTION =
+  'Plan Alliance War in Marvel Contest of Champions: roster management, fight history, defense placements, attack assignments, synergies and war stats.'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: TITLE,
+    template: '%s · Mawster',
+  },
+  description: DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    'Marvel Contest of Champions',
+    'MCOC',
+    'alliance war',
+    'war planner',
+    'defense placement',
+    'attack assignments',
+    'roster manager',
+    'roster management',
+    'fight history',
+    'war stats',
+  ],
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    url: '/',
+    title: TITLE,
+    description: DESCRIPTION,
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITLE,
+    description: DESCRIPTION,
+  },
   icons: {
     icon: [
       { url: '/logos/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
