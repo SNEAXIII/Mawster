@@ -3,11 +3,13 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.dto.mixins import SagaRoles
+
 ChampionOrderBy = Literal["name", "champion_class"]
 ChampionOrderDir = Literal["asc", "desc"]
 
 
-class ChampionResponse(BaseModel):
+class ChampionResponse(SagaRoles):
     """DTO representing a champion in API responses."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -20,9 +22,6 @@ class ChampionResponse(BaseModel):
     is_ascendable: bool = False
     has_prefight: bool = False
     alias: str | None = None
-    # Only meaningful when the query carried a season_id; false otherwise.
-    is_saga_attacker: bool = False
-    is_saga_defender: bool = False
 
 
 class ChampionFilters(BaseModel):

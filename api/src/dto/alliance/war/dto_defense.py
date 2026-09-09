@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from src.dto.mixins import PlayerIdentity, WarCoords
+from src.dto.mixins import PlayerIdentity, SagaRoles, WarCoords
 from src.game_types import NodeNumber
 
 
@@ -22,7 +22,7 @@ class DefensePlacementBulkRequest(BaseModel):
     placements: list[DefensePlacementCreateRequest] = Field(..., min_length=1)
 
 
-class DefensePlacementResponse(PlayerIdentity, WarCoords):
+class DefensePlacementResponse(PlayerIdentity, WarCoords, SagaRoles):
     """DTO for a defense placement with resolved relations."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -38,8 +38,6 @@ class DefensePlacementResponse(PlayerIdentity, WarCoords):
     signature: int = 0
     is_preferred_attacker: bool = False
     ascension: int = 0
-    is_saga_attacker: bool = False
-    is_saga_defender: bool = False
     placed_by_id: uuid.UUID | None = None
     placed_by_pseudo: str | None = None
     created_at: datetime

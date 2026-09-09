@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from src.dto.mixins import ChampionRef
 from src.enums.MatchupTargetType import MatchupTargetType
 from src.enums.MatchupVerdict import MatchupVerdict
 from src.game_types import NodeNumber
@@ -54,15 +55,6 @@ class MatchupUpsertRequest(BaseModel):
         if len(set(types)) != len(types):
             raise ValueError(DUPLICATE_TARGET_TYPE)
         return self
-
-
-class ChampionRef(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    champion_id: uuid.UUID
-    champion_name: str
-    champion_class: str
-    image_url: str | None = None
 
 
 class MatchupSynergyResponse(ChampionRef):

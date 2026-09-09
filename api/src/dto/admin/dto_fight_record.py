@@ -2,20 +2,15 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, Field, model_validator
 
+from src.dto.mixins import ChampionRef
 from src.models.war.WarFightRecordImport import (
     WarFightRecordImport as _WarFightRecordImport,
 )
 
 
-class ChampionUserSnapshotResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    champion_id: uuid.UUID
-    champion_name: str
-    champion_class: str
-    image_url: str | None = None
+class ChampionUserSnapshotResponse(ChampionRef):
     stars: int
     ascension: int
 
@@ -39,9 +34,7 @@ WarFightSynergyResponse = ChampionUserSnapshotResponse
 WarFightPrefightResponse = ChampionUserSnapshotResponse
 
 
-class WarFightRecordResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class WarFightRecordResponse(ChampionRef):
     id: uuid.UUID
     is_imported: bool = False
     war_id: uuid.UUID | None = None
@@ -54,10 +47,6 @@ class WarFightRecordResponse(BaseModel):
     tier: int | None = None
     alliance_name: str
     alliance_tag: str | None = None
-    champion_id: uuid.UUID
-    champion_name: str
-    champion_class: str
-    image_url: str | None = None
     stars: int | None = None
     rank: int | None = None
     ascension: int | None = None
@@ -73,8 +62,10 @@ class WarFightRecordResponse(BaseModel):
     ko_count: int
     is_planning_error: bool = False
     assisted: bool = False
-    synergies: list[WarFightSynergyResponse] = []
-    prefights: list[WarFightPrefightResponse] = []
+    # Field(), not a bare [], because RUF012 no longer sees a BaseModel base here.
+    # default_factory would drop `"default": []` from the OpenAPI schema; this keeps it.
+    synergies: list[WarFightSynergyResponse] = Field(default=[])
+    prefights: list[WarFightPrefightResponse] = Field(default=[])
     created_at: datetime | None = None
     note: str | None = None
     note_id: uuid.UUID | None = None

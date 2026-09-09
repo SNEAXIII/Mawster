@@ -3,28 +3,20 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from src.game_types import Ascension, Signature
+from src.dto.mixins import ChampionIdentity, RosterEntryInput, SagaRoles
 
 
-class ChampionUserCreateRequest(BaseModel):
+class ChampionUserCreateRequest(RosterEntryInput):
     """DTO to add a champion to a game account roster."""
 
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
     champion_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440001"])
-    rarity: str = Field(..., examples=["6r4"])
-    signature: Signature = Field(default=0, examples=[200])
-    is_preferred_attacker: bool = Field(default=False)
-    ascension: Ascension = Field(default=0, examples=[0])
 
 
-class ChampionUserBulkEntry(BaseModel):
+class ChampionUserBulkEntry(RosterEntryInput):
     """Single entry in a bulk roster update request."""
 
     champion_name: str = Field(..., examples=["Spider-Man"])
-    rarity: str = Field(..., examples=["6r4"])
-    signature: Signature = Field(default=0, examples=[200])
-    is_preferred_attacker: bool = Field(default=False)
-    ascension: Ascension = Field(default=0, examples=[0])
 
 
 class ChampionUserBulkRequest(BaseModel):
@@ -48,17 +40,12 @@ class ChampionUserResponse(BaseModel):
     ascension: int = 0
 
 
-class ChampionUserDetailResponse(ChampionUserResponse):
+class ChampionUserDetailResponse(ChampionUserResponse, ChampionIdentity, SagaRoles):
     """Roster entry with champion details for display.
     Extends ChampionUserResponse with champion-level fields."""
 
     is_ascendable: bool = False
-    is_saga_attacker: bool = False
-    is_saga_defender: bool = False
-    champion_name: str
-    champion_class: str
     alias: str | None = None
-    image_url: str | None = None
 
     @model_validator(mode="before")
     @classmethod
