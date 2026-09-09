@@ -26,16 +26,13 @@ def _index_names() -> set[str]:
 
 
 def _rename_index(old: str, new: str) -> None:
-    # Create before drop: the FK to user needs a covering index at all times, and
-    # MariaDB refuses to drop the last one (errno 1553).
-    op.create_index(op.f(new), TABLE, ["user_id"], unique=False)
-    op.drop_index(op.f(old), table_name=TABLE)
+    # RENAME INDEX, not create-then-drop: creating a second index on the FK column makes
+    # InnoDB silently drop the now-redundant implicit one, and the drop then fails.
+    op.execute(f"ALTER TABLE {TABLE} RENAME INDEX {old} TO {new}")
 
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Only bases migrated under the older engine carry `id_user`: 2c5d182ad585 renamed
-    # the column, and MariaDB 11.4 now renames the FK index along with it.
     if "id_user" in _index_names():
         _rename_index("id_user", "user_id")
 
