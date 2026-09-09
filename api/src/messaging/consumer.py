@@ -5,18 +5,14 @@ import logging
 from aio_pika import connect_robust
 from aio_pika.abc import AbstractIncomingMessage, AbstractRobustConnection
 from pydantic import ValidationError
-from sqlalchemy.orm import sessionmaker
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.dto.account.game.dto_vision_result import VisionResultMessage
 from src.messaging.topology import QUEUE_RESULTS, declare_topology
 from src.security.secrets import SECRET
 from src.services.account.game.VisionResultService import VisionResultService
-from src.utils.db import async_engine
+from src.utils.db import SessionFactory
 
 logger = logging.getLogger(__name__)
-
-Session = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
 
 RECONNECT_DELAY_SECONDS = 5
 # A broker that is simply down keeps refusing forever. Repeating the same
@@ -112,7 +108,7 @@ class VisionResultConsumer:
             return
 
         try:
-            async with Session() as session:
+            async with SessionFactory() as session:
                 await VisionResultService.handle(session, result)
         except Exception:
             # Unlike a broken payload, we don't know whether this is transient
