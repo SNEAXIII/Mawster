@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react'
 import TabBar, { type TabItem } from '@/components/tab-bar'
+import { PageContainer } from '@/components/page-container'
 import { useI18n } from '@/app/i18n'
 import { useTabParam } from '@/hooks/use-tab-param'
 import TierListBoard from './_components/tierlist-board'
@@ -22,14 +23,14 @@ function ToolsContent() {
   ]
 
   return (
-    <div className='mx-auto px-3 py-4 sm:p-6'>
+    <PageContainer className='mx-auto'>
       <TabBar
         tabs={tabs}
         value={activeTab}
         onChange={setActiveTab}
       />
       {activeTab === ToolsTab.TierList && <TierListBoard />}
-    </div>
+    </PageContainer>
   )
 }
 

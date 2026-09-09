@@ -13,6 +13,7 @@ import {
 import { AllianceRoleProvider } from '@/hooks/use-alliance-role'
 import { RosterDialogs } from './roster-dialogs'
 import TabBar, { type TabItem } from '@/components/tab-bar'
+import { PageContainer } from '@/components/page-container'
 import GameAccountsSection from '@/components/profile/game-accounts-section'
 import AddChampionForm from './add-champion-form'
 import RosterGrid from './roster-grid'
@@ -43,7 +44,7 @@ export default function RosterContent() {
 
   return (
     <AllianceRoleProvider>
-      <div className='px-3 py-4 sm:p-6 mx-auto'>
+      <PageContainer className='mx-auto'>
         <TabBar
           tabs={tabs}
           value={vm.activeTab}
@@ -181,7 +182,7 @@ export default function RosterContent() {
           setAscendTarget={vm.setAscendTarget}
           confirmAscend={vm.confirmAscend}
         />
-      </div>
+      </PageContainer>
     </AllianceRoleProvider>
   )
 }

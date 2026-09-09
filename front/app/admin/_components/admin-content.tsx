@@ -2,6 +2,7 @@
 
 import { useI18n } from '@/app/i18n'
 import TabBar, { type TabItem } from '@/components/tab-bar'
+import { PageContainer } from '@/components/page-container'
 import UsersPanel from './users-panel'
 import ChampionsPanel from './champions-panel'
 import SeasonsPanel from './seasons-panel'
@@ -36,7 +37,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
   }
 
   return (
-    <div className='px-3 py-4 sm:p-6'>
+    <PageContainer>
       <TabBar
         tabs={tabs}
         value={vm.activeTab}
@@ -48,6 +49,6 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
       {vm.activeTab === AdminTab.KnowledgeBase && <KnowledgeBasePanel />}
       {vm.activeTab === AdminTab.VisionImports && <VisionStatsPanel />}
       {vm.activeTab === AdminTab.Moderation && <ModerationPanel />}
-    </div>
+    </PageContainer>
   )
 }

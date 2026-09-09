@@ -20,7 +20,7 @@ export default function TabBar<T extends string | number>({
   onChange,
 }: Readonly<TabBarProps<T>>) {
   return (
-    <div className='border-b mb-6'>
+    <div className='border-b mb-4'>
       <nav className='-mb-px flex gap-6'>
         {tabs.map((tab) => (
           <button
