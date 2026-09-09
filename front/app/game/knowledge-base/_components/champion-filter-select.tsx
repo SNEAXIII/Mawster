@@ -35,7 +35,7 @@ export default function ChampionFilterSelect({
 
   useEffect(() => {
     if (open && !loaded) {
-      getChampions(1, 500)
+      getChampions({ page: 1, size: 500 })
         .then((res) => {
           setChampions(res.champions)
           setLoaded(true)

@@ -15,7 +15,7 @@ class Champion(UUIDBase, table=True):
     name: str = Field(max_length=100, unique=True)
     champion_class: str = Field(max_length=20)
     image_url: str | None = Field(default=None, max_length=500)
-    is_7_stars_available: bool = Field(default=False)
+    is_7_stars_available: bool = Field(default=True)
     is_ascendable: bool = Field(default=False)
     has_prefight: bool = Field(default=False)
     alias: str | None = Field(default=None, max_length=500)

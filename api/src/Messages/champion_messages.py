@@ -15,4 +15,9 @@ CHAMPION_LOAD_SUCCESS = "Champions chargés avec succès"
 CHAMPION_ALIAS_UPDATED = "Alias du champion mis à jour avec succès"
 CHAMPION_ASCENDABLE_UPDATED = "Statut d'ascension du champion mis à jour avec succès"
 CHAMPION_PREFIGHT_UPDATED = "Statut pré-combat du champion mis à jour avec succès"
+CHAMPION_SEVEN_STARS_UPDATED = "Disponibilité 7 étoiles du champion mise à jour avec succès"
 CHAMPION_DELETED = "Champion supprimé avec succès"
+CHAMPION_SAGA_FILTER_NEEDS_SEASON = ChampionError(
+    "Un filtre saga nécessite une saison",
+    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+)

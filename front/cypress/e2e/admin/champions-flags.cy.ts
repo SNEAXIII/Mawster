@@ -2,10 +2,11 @@ import { setupAdmin } from '../../support/e2e';
 
 type Flag = 'prefight' | 'ascendable';
 
-const flagToggle = (flag: Flag, champion: string) => cy.getByCy(`toggle-${flag}-${champion}`);
+const flagToggle = (flag: Flag, champion: string) => cy.getByCy(`champion-attr-${flag}-${champion}`);
 
+/** The pills carry their state in aria-pressed; the label lives in the icon's title. */
 const expectFlag = (flag: Flag, champion: string, value: 'Yes' | 'No') =>
-  flagToggle(flag, champion).should('contain.text', value);
+  flagToggle(flag, champion).should('have.attr', 'aria-pressed', value === 'Yes' ? 'true' : 'false');
 
 /** Full page reload, then land back on the champions tab. */
 function reloadChampionsTab() {

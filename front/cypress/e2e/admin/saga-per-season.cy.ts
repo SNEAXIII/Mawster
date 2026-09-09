@@ -12,13 +12,42 @@ describe('Admin — per-season saga classification', () => {
       cy.apiLogin(user_id);
       cy.goToAdminChampionsTab();
 
-      cy.getByCy('toggle-saga-attacker-Iron Man').should('contain.text', 'No');
-      cy.getByCy('toggle-saga-attacker-Iron Man').click();
-      cy.getByCy('toggle-saga-attacker-Iron Man').should('contain.text', 'Yes');
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'false');
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').click();
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'true');
 
       cy.reload();
       cy.getByCy('tab-champions').click();
-      cy.getByCy('toggle-saga-attacker-Iron Man').should('contain.text', 'Yes');
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'true');
+    });
+  });
+
+  it('does not carry a saga role over to another season', () => {
+    setupAdmin('saga-isolation-admin').then(({ access_token, user_id }) => {
+      cy.apiCreateSeason(access_token, 32).then((first) => {
+        const firstSeasonId = first.body.id as string;
+        cy.apiLoadChampion(access_token, 'Iron Man', 'Tech');
+        cy.apiLogin(user_id);
+        cy.goToAdminChampionsTab();
+
+        cy.getByCy('champion-attr-saga-attacker-Iron Man').click();
+        cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'true');
+
+        // Only one season may be current, so the first is closed before the next.
+        cy.apiCloseSeason(access_token, firstSeasonId);
+        cy.apiCreateSeason(access_token, 33);
+        cy.reload();
+        cy.getByCy('tab-champions').click();
+
+        // The panel opens on the current season, which is now 33: the role set on
+        // 32 must not show here.
+        cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'false');
+
+        // ...and switching back to 32 must still show it.
+        cy.getByCy('admin-saga-season-select-trigger').click();
+        cy.contains('[role="option"]', 'Season 32').click();
+        cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'true');
+      });
     });
   });
 
@@ -29,9 +58,9 @@ describe('Admin — per-season saga classification', () => {
       cy.apiLogin(user_id);
       cy.goToAdminChampionsTab();
 
-      cy.getByCy('toggle-saga-defender-Wolverine').should('contain.text', 'No');
-      cy.getByCy('toggle-saga-defender-Wolverine').click();
-      cy.getByCy('toggle-saga-defender-Wolverine').should('contain.text', 'Yes');
+      cy.getByCy('champion-attr-saga-defender-Wolverine').should('have.attr', 'aria-pressed', 'false');
+      cy.getByCy('champion-attr-saga-defender-Wolverine').click();
+      cy.getByCy('champion-attr-saga-defender-Wolverine').should('have.attr', 'aria-pressed', 'true');
     });
   });
 });

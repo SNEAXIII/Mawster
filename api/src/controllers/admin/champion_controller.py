@@ -4,7 +4,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from src.dto.admin.dto_champion import (
+    ChampionFilters,
     ChampionLoadRequest,
+    ChampionOrderBy,
+    ChampionOrderDir,
     ChampionPaginatedResponse,
     ChampionResponse,
     ChampionUpdateAliasRequest,
@@ -15,6 +18,8 @@ from src.Messages.champion_messages import (
     CHAMPION_DELETED,
     CHAMPION_LOAD_SUCCESS,
     CHAMPION_PREFIGHT_UPDATED,
+    CHAMPION_SAGA_FILTER_NEEDS_SEASON,
+    CHAMPION_SEVEN_STARS_UPDATED,
 )
 from src.services.admin.ChampionService import ChampionService
 from src.services.auth.AuthService import AuthService
@@ -47,18 +52,30 @@ async def get_champions(
     size: Annotated[int, Query(ge=1)] = 20,
     champion_class: str | None = None,
     search: str | None = None,
+    is_7_stars_available: bool | None = None,
     is_ascendable: bool | None = None,
     has_prefight: bool | None = None,
+    season_id: uuid.UUID | None = None,
+    is_saga_attacker: bool | None = None,
+    is_saga_defender: bool | None = None,
+    order_by: ChampionOrderBy = "name",
+    order_dir: ChampionOrderDir = "asc",
 ):
-    return await ChampionService.get_champions_with_pagination(
-        session,
-        page,
-        size,
-        champion_class,
-        search,
-        is_ascendable,
-        has_prefight,
+    if season_id is None and (is_saga_attacker is not None or is_saga_defender is not None):
+        raise CHAMPION_SAGA_FILTER_NEEDS_SEASON
+    filters = ChampionFilters(
+        champion_class=champion_class,
+        search=search,
+        is_7_stars_available=is_7_stars_available,
+        is_ascendable=is_ascendable,
+        has_prefight=has_prefight,
+        season_id=season_id,
+        is_saga_attacker=is_saga_attacker,
+        is_saga_defender=is_saga_defender,
+        order_by=order_by,
+        order_dir=order_dir,
     )
+    return await ChampionService.get_champions_with_pagination(session, page, size, filters)
 
 
 @champion_read_controller.get("/{champion_id}", status_code=200, response_model=ChampionResponse)
@@ -84,6 +101,18 @@ async def toggle_champion_ascendable(
 ):
     champion = await ChampionService.toggle_ascendable(session, champion_id)
     return {"message": CHAMPION_ASCENDABLE_UPDATED, "is_ascendable": champion.is_ascendable}
+
+
+@champion_controller.patch("/{champion_id}/seven-stars", status_code=200)
+async def toggle_champion_seven_stars(
+    session: SessionDep,
+    champion_id: uuid.UUID,
+):
+    champion = await ChampionService.toggle_seven_stars(session, champion_id)
+    return {
+        "message": CHAMPION_SEVEN_STARS_UPDATED,
+        "is_7_stars_available": champion.is_7_stars_available,
+    }
 
 
 @champion_controller.patch("/{champion_id}/prefight", status_code=200)

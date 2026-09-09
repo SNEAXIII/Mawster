@@ -5,7 +5,7 @@ import uuid
 import pytest
 from fastapi import HTTPException
 
-from src.dto.admin.dto_champion import ChampionLoadRequest
+from src.dto.admin.dto_champion import ChampionFilters, ChampionLoadRequest
 from src.models.champion.Champion import Champion
 from src.services.admin.ChampionService import VALID_CLASSES, ChampionService
 
@@ -122,7 +122,9 @@ class TestGetTotalChampions:
         result_mock.one.return_value = 10
         session.exec.return_value = result_mock
 
-        total = await ChampionService.get_total_champions(session, champion_class="Science")
+        total = await ChampionService.get_total_champions(
+            session, ChampionFilters(champion_class="Science")
+        )
         assert total == 10
 
     @pytest.mark.asyncio
@@ -132,7 +134,7 @@ class TestGetTotalChampions:
         result_mock.one.return_value = 3
         session.exec.return_value = result_mock
 
-        total = await ChampionService.get_total_champions(session, search="spider")
+        total = await ChampionService.get_total_champions(session, ChampionFilters(search="spider"))
         assert total == 3
 
 
@@ -172,7 +174,10 @@ class TestGetChampionsPaginated:
         session.exec.return_value = result_mock
 
         result = await ChampionService.get_champions_paginated(
-            session, page=1, size=10, champion_class="Science", search="spider"
+            session,
+            page=1,
+            size=10,
+            filters=ChampionFilters(champion_class="Science", search="spider"),
         )
         assert len(result) == 1
 
