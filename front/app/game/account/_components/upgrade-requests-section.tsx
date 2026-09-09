@@ -9,7 +9,7 @@ import ChampionPortrait from '@/components/champion-portrait'
 import {
   getUpgradeRequests,
   cancelUpgradeRequest,
-  UpgradeRequest,
+  type UpgradeRequest,
   RARITY_LABELS,
   getClassColors,
 } from '@/app/services/roster'

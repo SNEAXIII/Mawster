@@ -179,6 +179,12 @@
     "jsx-a11y/tabindex-no-positive": "error",
     "no-nested-ternary": "error",
     "react/exhaustive-deps": "warn",
+    "react/no-unstable-nested-components": "error",
+    // Inline `type` specifiers keep one import per module, so this stays compatible
+    // with no-duplicate-imports.
+    "typescript/consistent-type-imports": ["error", { "fixStyle": "inline-type-imports" }],
+    "typescript/no-import-type-side-effects": "error",
+    "no-duplicate-imports": "error",
     "typescript/ban-ts-comment": "warn",
     "typescript/no-duplicate-enum-values": "error",
     "typescript/no-empty-object-type": "error",

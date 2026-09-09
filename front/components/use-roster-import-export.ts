@@ -1,8 +1,8 @@
 import { type ChangeEvent, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
-import { RosterEntry, raritySortValue } from '@/app/services/roster'
-import { type PreviewRow } from '@/components/roster/import-preview-row'
+import { type RosterEntry, raritySortValue } from '@/app/services/roster'
+import type { PreviewRow } from '@/components/roster/import-preview-row'
 import { isValidRarity } from '@/components/roster/import-row-validation'
 import {
   useRosterImportCore,

@@ -1,6 +1,6 @@
 'use client'
 
-import { type AllianceInvitation } from '@/app/services/game'
+import type { AllianceInvitation } from '@/app/services/game'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/app/i18n'

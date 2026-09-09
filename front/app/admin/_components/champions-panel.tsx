@@ -10,7 +10,7 @@ import {
   toggleChampionPrefight,
   getSeasonSagaRoles,
   setChampionSagaRole,
-  Champion,
+  type Champion,
   championClasses,
   boolFilterOptions,
 } from '@/app/services/champions'

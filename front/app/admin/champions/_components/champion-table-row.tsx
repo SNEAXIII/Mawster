@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Check, Pencil, Trash2, X } from 'lucide-react'
 import { ClassBadge } from '@/components/class-badge'
 import { ActionIconButton } from '@/components/action-icon-button'
-import { Champion, getChampionImageUrl } from '@/app/services/champions'
+import { type Champion, getChampionImageUrl } from '@/app/services/champions'
 import { useI18n } from '@/app/i18n'
 
 interface ChampionTableRowProps {

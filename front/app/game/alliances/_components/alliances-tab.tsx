@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { type GameAccount, type AllianceInvitation } from '@/app/services/game'
+import type { GameAccount, AllianceInvitation } from '@/app/services/game'
 import { Card, CardContent } from '@/components/ui/card'
 import { useI18n } from '@/app/i18n'
 import { Shield } from 'lucide-react'

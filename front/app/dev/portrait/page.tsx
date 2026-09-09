@@ -6,7 +6,7 @@ import ChampionPortrait, {
   getFrameWindowRect,
   pickThumbnailSize,
 } from '@/components/champion-portrait'
-import PortraitLabControls, { PortraitLabState } from './_components/portrait-lab-controls'
+import PortraitLabControls, { type PortraitLabState } from './_components/portrait-lab-controls'
 import { cn } from '@/app/lib/utils'
 
 // Static assets, no auth needed — served through the /static rewrite.

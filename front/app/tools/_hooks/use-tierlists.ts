@@ -2,8 +2,12 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { createTierList, deleteTierList, fetchTierLists } from '@/app/services/tierlist'
-import type { TierListSummary } from '@/app/services/tierlist'
+import {
+  createTierList,
+  deleteTierList,
+  fetchTierLists,
+  type TierListSummary,
+} from '@/app/services/tierlist'
 import { defaultBoard } from '../_lib/board'
 import { toSavePayload } from '../_lib/types'
 

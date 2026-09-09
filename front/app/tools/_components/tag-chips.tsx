@@ -3,9 +3,7 @@
 import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import { TAG_DISPLAY, TAG_ICON } from '../_lib/tags'
-import { TAG_KEYS } from '../_lib/types'
-import type { TagKey } from '../_lib/types'
-
+import { TAG_KEYS, type TagKey } from '../_lib/types'
 interface TagChipsProps {
   /** Which tags are drawn as set. */
   isActive: (key: TagKey) => boolean

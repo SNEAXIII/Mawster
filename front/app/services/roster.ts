@@ -1,4 +1,4 @@
-import { Champion } from './champions'
+import type { Champion } from './champions'
 import { PROXY, jsonHeaders } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────

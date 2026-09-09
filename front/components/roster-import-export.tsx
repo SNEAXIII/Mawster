@@ -1,6 +1,6 @@
 'use client'
 
-import { RosterEntry } from '@/app/services/roster'
+import type { RosterEntry } from '@/app/services/roster'
 import ImportPreviewDialog from '@/components/roster/import-preview-dialog'
 import ImportReportDialog from '@/components/roster/import-report-dialog'
 import RosterImportButtons from '@/components/roster/roster-import-buttons'

@@ -6,11 +6,11 @@ import { redirect } from 'next/navigation'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import { useTabParam } from '@/hooks/use-tab-param'
-import { getMyGameAccounts, GameAccount } from '@/app/services/game'
+import { getMyGameAccounts, type GameAccount } from '@/app/services/game'
 import {
   getRoster,
   deleteRosterEntry,
-  RosterEntry,
+  type RosterEntry,
   RARITIES,
   RARITY_LABELS,
   upgradeChampionRank,
@@ -21,11 +21,11 @@ import {
 import {
   getMasteries,
   saveMasteries,
-  MasteryEntry,
-  MasteryUpsertItem,
+  type MasteryEntry,
+  type MasteryUpsertItem,
 } from '@/app/services/masteries'
 import {
-  RosterFilters,
+  type RosterFilters,
   EMPTY_FILTERS,
   applyRosterFilters,
   isFilterActive,

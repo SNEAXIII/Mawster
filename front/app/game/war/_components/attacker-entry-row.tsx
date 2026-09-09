@@ -14,7 +14,7 @@ import {
   Ban,
   AlertTriangle,
 } from 'lucide-react'
-import { type WarPlacement } from '@/app/services/war'
+import type { WarPlacement } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import NodeSlot from './node-slot'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'

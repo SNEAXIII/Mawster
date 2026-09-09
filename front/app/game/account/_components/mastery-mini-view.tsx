@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
-import { MasteryEntry } from '@/app/services/masteries'
+import type { MasteryEntry } from '@/app/services/masteries'
 
 export type MasteryMode = 'all' | 'offense' | 'defense'
 

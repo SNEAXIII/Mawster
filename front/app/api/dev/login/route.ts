@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { encode } from '@auth/core/jwt'
 import jwt from 'jsonwebtoken'
 import { isServerDev } from '@/app/lib/dev-mode'

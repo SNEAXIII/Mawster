@@ -2,7 +2,7 @@
 
 import { useI18n } from '@/app/i18n'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
-import { RARITY_LABELS, getNextRarity, RosterEntry } from '@/app/services/roster'
+import { RARITY_LABELS, getNextRarity, type RosterEntry } from '@/app/services/roster'
 
 interface RosterDialogsProps {
   deleteTarget: RosterEntry | null

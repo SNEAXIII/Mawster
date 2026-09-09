@@ -14,7 +14,7 @@ import {
 import { useI18n } from '@/app/i18n'
 import type { ChampionUsageItem } from '@/app/services/statistics'
 import { getChampionImageUrl } from '@/app/services/champions'
-import { Metric } from './member-champion-chart'
+import type { Metric } from './member-champion-chart'
 
 interface ChampionDetailModalProps {
   open: boolean
@@ -25,6 +25,36 @@ interface ChampionDetailModalProps {
 }
 
 type SortField = 'fights' | 'kos'
+
+function SortHead({
+  field,
+  label,
+  sortField,
+  sortDir,
+  onToggle,
+}: Readonly<{
+  field: SortField
+  label: string
+  sortField: SortField
+  sortDir: 'asc' | 'desc'
+  onToggle: (field: SortField) => void
+}>) {
+  const active = sortField === field
+  const DirectionIcon = sortDir === 'asc' ? ChevronUp : ChevronDown
+  const Icon = active ? DirectionIcon : ChevronsUpDown
+  return (
+    <TableHead className='text-right'>
+      <button
+        type='button'
+        onClick={() => onToggle(field)}
+        className='inline-flex items-center justify-end gap-1 w-full hover:text-foreground transition-colors'
+      >
+        {label}
+        <Icon className={`h-3.5 w-3.5 shrink-0 ${active ? 'text-foreground' : 'opacity-40'}`} />
+      </button>
+    </TableHead>
+  )
+}
 
 export function ChampionDetailModal({
   open,
@@ -53,24 +83,6 @@ export function ChampionDetailModal({
     return sortDir === 'asc' ? av - bv : bv - av
   })
 
-  const SortHead = ({ field, label }: { field: SortField; label: string }) => {
-    const active = sortField === field
-    const DirectionIcon = sortDir === 'asc' ? ChevronUp : ChevronDown
-    const Icon = active ? DirectionIcon : ChevronsUpDown
-    return (
-      <TableHead className='text-right'>
-        <button
-          type='button'
-          onClick={() => toggleSort(field)}
-          className='inline-flex items-center justify-end gap-1 w-full hover:text-foreground transition-colors'
-        >
-          {label}
-          <Icon className={`h-3.5 w-3.5 shrink-0 ${active ? 'text-foreground' : 'opacity-40'}`} />
-        </button>
-      </TableHead>
-    )
-  }
-
   return (
     <Dialog
       open={open}
@@ -92,10 +104,16 @@ export function ChampionDetailModal({
                 <SortHead
                   field='fights'
                   label={stat.columns.fights}
+                  sortField={sortField}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
                 />
                 <SortHead
                   field='kos'
                   label={stat.columns.kos}
+                  sortField={sortField}
+                  sortDir={sortDir}
+                  onToggle={toggleSort}
                 />
               </TableRow>
             </TableHeader>

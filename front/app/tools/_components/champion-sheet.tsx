@@ -5,10 +5,9 @@ import { Button } from '@/components/ui/button'
 import ChampionPortrait from '@/components/champion-portrait'
 import { useI18n } from '@/app/i18n'
 import TagChips from './tag-chips'
-import { POOL_ID } from '../_hooks/use-board'
+import { POOL_ID, type BoardActions } from '../_hooks/use-board'
 import { readableTextColor } from '../_lib/color'
 import { SIGNATURE_PRESETS, frameRarity } from '../_lib/tags'
-import type { BoardActions } from '../_hooks/use-board'
 import type { BoardState, CatalogChampion, ChampionTags } from '../_lib/types'
 
 interface ChampionSheetProps {

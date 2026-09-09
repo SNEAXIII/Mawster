@@ -12,9 +12,7 @@ import { usePrefs } from '../_hooks/use-prefs'
 import { useTierLists } from '../_hooks/use-tierlists'
 import { defaultBoard, rankedIds } from '../_lib/board'
 import { boardFilename, exportJson, importJson } from '../_lib/export'
-import { EMPTY_FILTERS, matchesFilters } from '../_lib/filters'
-import type { FilterState } from '../_lib/filters'
-
+import { EMPTY_FILTERS, matchesFilters, type FilterState } from '../_lib/filters'
 /** Everything the tier list page holds, so the components stay presentational. */
 export function useTierListViewModel() {
   const { t } = useI18n()

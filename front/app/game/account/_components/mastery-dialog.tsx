@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { getMasteries, MasteryEntry } from '@/app/services/masteries'
+import { getMasteries, type MasteryEntry } from '@/app/services/masteries'
 import { useI18n } from '@/app/i18n'
-import MasteryMiniView, { MasteryMode } from './mastery-mini-view'
+import MasteryMiniView, { type MasteryMode } from './mastery-mini-view'
 
 interface MasteryDialogProps {
   open: boolean

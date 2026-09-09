@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Loader } from 'lucide-react'
-import { type GameAccount } from '@/app/services/game'
+import type { GameAccount } from '@/app/services/game'
 
 interface CreateAllianceFormProps {
   hasAnyAccounts: boolean

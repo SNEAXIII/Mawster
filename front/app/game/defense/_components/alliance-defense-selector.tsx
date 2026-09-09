@@ -7,11 +7,7 @@ import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/search-input'
 import ChampionPortrait from '@/components/champion-portrait'
 import { cn } from '@/app/lib/utils'
-import {
-  type AvailableChampion,
-  type ChampionOwner,
-  type DefensePlacement,
-} from '@/app/services/defense'
+import type { AvailableChampion, ChampionOwner, DefensePlacement } from '@/app/services/defense'
 import { RARITY_LABELS, getClassColors, shortenChampionName } from '@/app/services/roster'
 import { Separator } from '@/components/ui/separator'
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar'

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Card, CardContent } from '@/components/ui/card'
-import { type DefensePlacement, type BgMember } from '@/app/services/defense'
+import type { DefensePlacement, BgMember } from '@/app/services/defense'
 import { cn } from '@/app/lib/utils'
 import ChampionPortrait from '@/components/champion-portrait'
 import UsernameEnriched, { getMemberRole } from '@/components/username-enriched'

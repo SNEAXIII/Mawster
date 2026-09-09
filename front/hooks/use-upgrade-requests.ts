@@ -7,9 +7,9 @@ import {
   getUpgradeRequests,
   createUpgradeRequest,
   cancelUpgradeRequest,
-  UpgradeRequest,
+  type UpgradeRequest,
   RARITIES,
-  RosterEntry,
+  type RosterEntry,
 } from '@/app/services/roster'
 
 export interface UpgradeRequestsState {

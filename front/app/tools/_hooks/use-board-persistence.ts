@@ -1,13 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import type { Dispatch, SetStateAction } from 'react'
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { useSession } from 'next-auth/react'
 import { createTierList, fetchTierList, saveTierList } from '@/app/services/tierlist'
 import { fromDetail, forgetStoredBoard, loadStoredBoard, storeBoard } from '../_lib/board'
-import { toSavePayload } from '../_lib/types'
-import type { BoardState } from '../_lib/types'
-
+import { toSavePayload, type BoardState } from '../_lib/types'
 /** How long the board sits still before it is written back. */
 const SAVE_DELAY_MS = 1000
 

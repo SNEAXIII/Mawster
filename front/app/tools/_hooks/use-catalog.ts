@@ -1,9 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { fetchCatalog } from '@/app/services/tierlist'
-import type { CatalogChampion } from '@/app/services/tierlist'
-
+import { fetchCatalog, type CatalogChampion } from '@/app/services/tierlist'
 /**
  * Champions that exist in the catalog but nobody can own — event bosses, minions
  * and story stand-ins. They are there because the vision pipeline has to read

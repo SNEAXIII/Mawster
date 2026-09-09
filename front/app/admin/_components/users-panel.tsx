@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { getUsers, User } from '@/app/services/users'
+import { getUsers, type User } from '@/app/services/users'
 import Loading from '@/app/admin/dashboard/loading'
 import RenderUserDashboard from '@/components/dashboard/table/render-user-dashboard'
 import PaginationControls from '@/components/dashboard/pagination/pagination-controls'

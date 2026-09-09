@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { ChampionUsageItem } from '@/app/services/statistics'
-import { Metric, Perspective } from '@/app/components/statistics/member-champion-chart'
+import type { Metric, Perspective } from '@/app/components/statistics/member-champion-chart'
 
 /**
  * Shared champion-usage chart logic (profile + alliance).

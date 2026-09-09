@@ -4,7 +4,7 @@ import { useI18n } from '@/app/i18n'
 import ChampionPortrait from '@/components/champion-portrait'
 import { cn } from '@/app/lib/utils'
 import { X, Flame } from 'lucide-react'
-import { type WarPrefight, type WarPlacement } from '@/app/services/war'
+import type { WarPrefight, WarPlacement } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import NodeSlot from './node-slot'
 

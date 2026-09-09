@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useI18n } from '@/app/i18n'
-import { War } from '@/app/services/war'
+import type { War } from '@/app/services/war'
 
 interface WarManagementBarProps {
   loading: boolean

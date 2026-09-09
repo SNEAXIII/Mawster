@@ -12,8 +12,10 @@ import {
   rectIntersection,
   useSensor,
   useSensors,
+  type CollisionDetection,
+  type DragEndEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core'
-import type { CollisionDetection, DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { Play, Plus } from 'lucide-react'
 import { useI18n } from '@/app/i18n'

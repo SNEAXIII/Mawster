@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { type WarPlacement } from '@/app/services/war'
+import type { WarPlacement } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import PrefightEntryRow from './prefight-entry-row'
 import AssistAssignmentRow from './assist-assignment-row'
@@ -21,7 +21,7 @@ import SynergyPopover from './synergy-popover'
 import MasteryDialog from '@/app/game/account/_components/mastery-dialog'
 import { Swords } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
-import { fightStateFilter } from './war-tab'
+import type { fightStateFilter } from './war-tab'
 import ExportHeader from '@/app/game/_components/export-header'
 
 interface MemberGroup {

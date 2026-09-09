@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAllianceContext } from '@/app/contexts/alliance-context'
-import { type AllianceWithVisitorFlag } from '@/app/services/game'
+import type { AllianceWithVisitorFlag } from '@/app/services/game'
 
 // Re-exported because nine components import the type from here.
 export { type AllianceWithVisitorFlag }
