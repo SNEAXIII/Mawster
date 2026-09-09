@@ -57,7 +57,7 @@ export default function AttackerEntryRow({
   const { t } = useI18n()
   const {
     handleRemoveAttacker,
-    handleUpdateKo,
+    handleAdjustKo,
     handleToggleCombatCompleted,
     handleToggleFightNotDone,
     handleTogglePlanningError,
@@ -235,8 +235,7 @@ export default function AttackerEntryRow({
                       placement.ko_count <= 0 && 'opacity-40 cursor-not-allowed'
                     )}
                     onClick={() =>
-                      placement.ko_count > 0 &&
-                      handleUpdateKo(placement.node_number, placement.ko_count - 1)
+                      placement.ko_count > 0 && handleAdjustKo(placement.node_number, -1)
                     }
                     disabled={placement.ko_count <= 0}
                     data-cy={`ko-dec-node-${placement.node_number}`}
@@ -257,8 +256,7 @@ export default function AttackerEntryRow({
                       placement.ko_count >= MAX_KO_COUNT && 'opacity-40 cursor-not-allowed'
                     )}
                     onClick={() =>
-                      placement.ko_count < MAX_KO_COUNT &&
-                      handleUpdateKo(placement.node_number, placement.ko_count + 1)
+                      placement.ko_count < MAX_KO_COUNT && handleAdjustKo(placement.node_number, 1)
                     }
                     disabled={placement.ko_count >= MAX_KO_COUNT}
                     data-cy={`ko-inc-node-${placement.node_number}`}

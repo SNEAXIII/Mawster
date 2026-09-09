@@ -117,7 +117,7 @@ interface WarContextValue {
   handleClearBg: () => Promise<void>
   handleAssignAttacker: (attacker: AvailableAttacker) => Promise<void>
   handleRemoveAttacker: (node: number) => Promise<void>
-  handleUpdateKo: (node: number, newKo: number) => void
+  handleAdjustKo: (node: number, delta: number) => void
 
   // Synergy
   synergies: WarSynergy[]
@@ -308,7 +308,13 @@ export function WarProvider({
           getWarSynergies(selectedAllianceId, activeWarId, selectedBg),
           getWarPrefights(selectedAllianceId, activeWarId, selectedBg),
         ])
-        setWarSummary(summary)
+        const pending = koPending.current
+        setWarSummary({
+          ...summary,
+          placements: summary.placements.map((p) =>
+            pending[p.node_number] ? { ...p, ko_count: pending[p.node_number].value } : p
+          ),
+        })
         setSynergies(synergyList)
         setPrefights(prefightList)
       } catch {
@@ -549,11 +555,15 @@ export function WarProvider({
     }
   }
 
-  const koFlushTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({})
+  // Nodes whose KO write has not landed yet. The poll must not roll them back,
+  // and the next click must count from here rather than from the screen.
+  const koPending = useRef<Record<number, { value: number; timer: ReturnType<typeof setTimeout> }>>(
+    {}
+  )
 
   useEffect(() => {
-    const pending = koFlushTimers.current
-    return () => Object.values(pending).forEach(clearTimeout)
+    const pending = koPending.current
+    return () => Object.values(pending).forEach(({ timer }) => clearTimeout(timer))
   }, [])
 
   const patchPlacement = (nodeNumber: number, patch: Partial<WarPlacement>) =>
@@ -568,26 +578,34 @@ export function WarProvider({
         : prev
     )
 
-  const handleUpdateKo = (nodeNumber: number, newKo: number) => {
+  const handleAdjustKo = (nodeNumber: number, delta: number) => {
     if (!selectedAllianceId || !activeWarId) return
-    const koCount = Math.min(Math.max(newKo, 0), MAX_KO_COUNT)
 
-    // The counter has to follow the clicks, not the round-trips: callers derive
-    // the next value from the rendered one, so waiting for the response would
-    // make a fast second click re-send the value the first one already sent.
+    const pending = koPending.current
+    const base =
+      pending[nodeNumber]?.value ??
+      placements.find((p) => p.node_number === nodeNumber)?.ko_count ??
+      0
+    const koCount = Math.min(Math.max(base + delta, 0), MAX_KO_COUNT)
+    if (koCount === base) return
+
     patchPlacement(nodeNumber, { ko_count: koCount })
-
-    const pending = koFlushTimers.current
-    if (pending[nodeNumber]) clearTimeout(pending[nodeNumber])
-    pending[nodeNumber] = setTimeout(() => {
-      delete pending[nodeNumber]
-      updateWarKo(selectedAllianceId, activeWarId, selectedBg, nodeNumber, koCount)
-        .then((updated) => patchPlacement(nodeNumber, updated))
-        .catch((err: unknown) => {
-          toast.error((err as Error).message || t.game.war.loadError)
-          void fetchWarDefense(true)
-        })
-    }, KO_FLUSH_DELAY_MS)
+    if (pending[nodeNumber]) clearTimeout(pending[nodeNumber].timer)
+    pending[nodeNumber] = {
+      value: koCount,
+      timer: setTimeout(() => {
+        updateWarKo(selectedAllianceId, activeWarId, selectedBg, nodeNumber, koCount)
+          .then((updated) => {
+            if (pending[nodeNumber]?.value === koCount) delete pending[nodeNumber]
+            patchPlacement(nodeNumber, updated)
+          })
+          .catch((err: unknown) => {
+            if (pending[nodeNumber]?.value === koCount) delete pending[nodeNumber]
+            toast.error((err as Error).message || t.game.war.loadError)
+            void fetchWarDefense(true)
+          })
+      }, KO_FLUSH_DELAY_MS),
+    }
   }
 
   const handleAddSynergy = async (championUserId: string, targetChampionUserId: string) => {
@@ -859,7 +877,7 @@ export function WarProvider({
       handleClearBg,
       handleAssignAttacker,
       handleRemoveAttacker,
-      handleUpdateKo,
+      handleAdjustKo,
       synergies,
       handleAddSynergy,
       handleRemoveSynergy,
