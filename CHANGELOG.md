@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.12.1](https://github.com/SNEAXIII/Mawster/compare/v1.12.0...v1.12.1) (2026-09-09)
+
+
+### Modifié
+
+* rename is_7_star to is_7_stars_available ([06a4475](https://github.com/SNEAXIII/Mawster/commit/06a44753f6ad6ec7dd1ff55b61ff765ea84220f6))
+
 ## [1.12.0](https://github.com/SNEAXIII/Mawster/compare/v1.11.0...v1.12.0) (2026-09-08)
 
 
