@@ -3,6 +3,7 @@
 import { Suspense, useCallback } from 'react'
 import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 import { AllianceRoleProvider } from '@/hooks/use-alliance-role'
+import { PageContainer } from '@/components/page-container'
 import DefensePageContent from './_components/defense-content'
 
 function DefensePageInner() {
@@ -25,11 +26,13 @@ function DefensePageInner() {
 
   return (
     <AllianceRoleProvider>
-      <DefensePageContent
-        onStateChange={handleStateChange}
-        initialAllianceId={initialAllianceId}
-        initialBg={initialBg}
-      />
+      <PageContainer>
+        <DefensePageContent
+          onStateChange={handleStateChange}
+          initialAllianceId={initialAllianceId}
+          initialBg={initialBg}
+        />
+      </PageContainer>
     </AllianceRoleProvider>
   )
 }

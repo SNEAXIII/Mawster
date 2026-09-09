@@ -5,6 +5,7 @@ import { useI18n } from '@/app/i18n'
 import { FullPageSpinner } from '@/components/full-page-spinner'
 import { AllianceRoleProvider } from '@/hooks/use-alliance-role'
 import TabBar, { type TabItem } from '@/components/tab-bar'
+import { PageContainer } from '@/components/page-container'
 import CreateAllianceForm from './create-alliance-form'
 import AllianceRosterDialog from './alliance-roster-dialog'
 import InvitationsSection from './invitations-section'
@@ -43,7 +44,10 @@ export default function AllianceContent() {
 
   return (
     <AllianceRoleProvider>
-      <div className='w-full px-3 py-4 sm:p-6 flex flex-col gap-4 sm:gap-6'>
+      <PageContainer
+        stack
+        className='w-full sm:gap-6'
+      >
         {vm.myInvitations.length > 0 && (
           <InvitationsSection
             invitations={vm.myInvitations}
@@ -138,7 +142,7 @@ export default function AllianceContent() {
           gamePseudo={vm.rosterTarget?.pseudo ?? ''}
           canRequestUpgrade={vm.rosterTarget?.canRequestUpgrade ?? false}
         />
-      </div>
+      </PageContainer>
     </AllianceRoleProvider>
   )
 }

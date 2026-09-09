@@ -3,6 +3,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useI18n } from '@/app/i18n'
 import TabBar, { type TabItem } from '@/components/tab-bar'
+import { PageContainer } from '@/components/page-container'
 import HistoryTab from './_components/history-tab'
 import MatchupsTab from './_components/matchups-tab'
 
@@ -39,7 +40,7 @@ function KnowledgeBaseContent() {
   ]
 
   return (
-    <div className='px-3 py-4 sm:p-6 flex flex-col gap-4'>
+    <PageContainer stack>
       <TabBar
         tabs={tabs}
         value={activeTab}
@@ -47,7 +48,7 @@ function KnowledgeBaseContent() {
       />
       {activeTab === 'history' && <HistoryTab />}
       {activeTab === 'matchups' && <MatchupsTab />}
-    </div>
+    </PageContainer>
   )
 }
 

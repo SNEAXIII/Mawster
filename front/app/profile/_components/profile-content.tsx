@@ -5,6 +5,7 @@ import { useRequiredSession } from '@/hooks/use-required-session'
 import { useI18n } from '@/app/i18n'
 import { useTabParam } from '@/hooks/use-tab-param'
 import TabBar, { type TabItem } from '@/components/tab-bar'
+import { PageContainer } from '@/components/page-container'
 import GameAccountsSection from '@/components/profile/game-accounts-section'
 import { ProfileHeader } from './profile-header'
 import { AccountInfoCard } from './account-info-card'
@@ -34,7 +35,7 @@ export default function ProfileContent() {
   ]
 
   return (
-    <div className='max-w-5xl mx-auto px-3 py-4 sm:p-6 space-y-4 sm:space-y-6'>
+    <PageContainer className='max-w-5xl mx-auto space-y-4 sm:space-y-6'>
       <TabBar
         tabs={tabs}
         value={activeTab}
@@ -57,6 +58,6 @@ export default function ProfileContent() {
         </>
       )}
       {activeTab === 'stats' && <ProfileStatsTab />}
-    </div>
+    </PageContainer>
   )
 }
