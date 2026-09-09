@@ -39,9 +39,14 @@ describe('Admin — per-season saga classification', () => {
         cy.reload();
         cy.getByCy('tab-champions').click();
 
-        cy.getByCy('admin-saga-season-select').click();
-        cy.contains('[role="option"]', '33').click();
+        // The panel opens on the current season, which is now 33: the role set on
+        // 32 must not show here.
         cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'false');
+
+        // ...and switching back to 32 must still show it.
+        cy.getByCy('admin-saga-season-select-trigger').click();
+        cy.contains('[role="option"]', 'Season 32').click();
+        cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'true');
       });
     });
   });

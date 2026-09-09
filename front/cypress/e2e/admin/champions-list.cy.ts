@@ -116,7 +116,11 @@ describe('Admin — champions list & filters', () => {
       cy.goToAdminChampionsTab();
       cy.getByCy('champions-list').find('tbody tr').first().should('contain.text', 'Iron Man');
 
+      // The list is refetched behind a 300ms debounce and the old rows stay on
+      // screen meanwhile, so wait for the sorted response before asserting.
+      cy.intercept('GET', '**/champions?*order_dir=desc*').as('sortedDesc');
       cy.getByCy('champions-sort-name').click();
+      cy.wait('@sortedDesc');
       cy.getByCy('champions-list').find('tbody tr').first().should('contain.text', 'Wolverine');
     });
   });
@@ -128,7 +132,9 @@ describe('Admin — champions list & filters', () => {
       { name: 'Colossus', cls: 'Mutant' },
     ]).then(() => {
       cy.goToAdminChampionsTab();
+      cy.intercept('GET', '**/champions?*order_by=champion_class*').as('sortedByClass');
       cy.getByCy('champions-sort-champion_class').click();
+      cy.wait('@sortedByClass');
       // Mutant before Tech, and name breaks the tie inside a class.
       cy.getByCy('champions-list')
         .find('tbody tr')
