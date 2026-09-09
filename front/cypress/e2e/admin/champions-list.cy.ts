@@ -38,8 +38,8 @@ describe('Admin — champions list & filters', () => {
       { name: 'Wolverine', cls: 'Mutant', has_prefight: false },
     ]).then(() => {
       cy.goToAdminChampionsTab();
-      cy.getByCy('filter-prefight').click();
-      cy.contains('[role="menuitemradio"]', 'Yes').click();
+      cy.getByCy('champions-filter-trigger').click();
+      cy.getByCy('champions-filter-has_prefight').contains('button', 'Yes').click();
       cy.getByCy('champion-row-Iron Man').should('be.visible');
       cy.getByCy('champion-row-Wolverine').should('not.exist');
     });
@@ -51,8 +51,8 @@ describe('Admin — champions list & filters', () => {
       { name: 'Wolverine', cls: 'Mutant', is_ascendable: false },
     ]).then(() => {
       cy.goToAdminChampionsTab();
-      cy.getByCy('filter-ascendable').click();
-      cy.contains('[role="menuitemradio"]', 'Yes').click();
+      cy.getByCy('champions-filter-trigger').click();
+      cy.getByCy('champions-filter-is_ascendable').contains('button', 'Yes').click();
       cy.getByCy('champion-row-Iron Man').should('be.visible');
       cy.getByCy('champion-row-Wolverine').should('not.exist');
     });

@@ -10,6 +10,9 @@ export interface Champion {
   is_ascendable: boolean
   has_prefight: boolean
   alias: string | null
+  // Filled only when the query carried a seasonId; false otherwise.
+  is_saga_attacker: boolean
+  is_saga_defender: boolean
 }
 
 export interface FetchChampionsResponse {
@@ -56,19 +59,46 @@ export const boolFilterOptions = [
   { value: 'false', label: 'No' },
 ]
 
-export const getChampions = async (
-  page: number = 1,
-  size: number = 20,
-  championClass: string | null = null,
-  search: string | null = null,
-  isAscendable: string | null = null,
-  hasPrefight: string | null = null
-): Promise<FetchChampionsResponse> => {
+export type BoolFilter = 'all' | 'true' | 'false'
+export type ChampionOrderBy = 'name' | 'champion_class'
+export type ChampionOrderDir = 'asc' | 'desc'
+
+export interface ChampionQuery {
+  page?: number
+  size?: number
+  championClass?: string | null
+  search?: string | null
+  is7StarsAvailable?: BoolFilter | null
+  isAscendable?: BoolFilter | null
+  hasPrefight?: BoolFilter | null
+  seasonId?: string | null
+  isSagaAttacker?: BoolFilter | null
+  isSagaDefender?: BoolFilter | null
+  orderBy?: ChampionOrderBy
+  orderDir?: ChampionOrderDir
+}
+
+export const getChampions = async (query: ChampionQuery = {}): Promise<FetchChampionsResponse> => {
+  const { page = 1, size = 20, seasonId, orderBy, orderDir } = query
   const qs = new URLSearchParams({ page: String(page), size: String(size) })
-  if (championClass && championClass !== 'all') qs.set('champion_class', championClass)
-  if (search?.trim()) qs.set('search', search.trim())
-  if (isAscendable && isAscendable !== 'all') qs.set('is_ascendable', isAscendable)
-  if (hasPrefight && hasPrefight !== 'all') qs.set('has_prefight', hasPrefight)
+  if (query.championClass && query.championClass !== 'all')
+    qs.set('champion_class', query.championClass)
+  if (query.search?.trim()) qs.set('search', query.search.trim())
+  if (seasonId) qs.set('season_id', seasonId)
+  if (orderBy) qs.set('order_by', orderBy)
+  if (orderDir) qs.set('order_dir', orderDir)
+
+  const boolParams: [string, BoolFilter | null | undefined][] = [
+    ['is_7_stars_available', query.is7StarsAvailable],
+    ['is_ascendable', query.isAscendable],
+    ['has_prefight', query.hasPrefight],
+    // The API rejects these without a season_id, so they are dropped when none is set.
+    ['is_saga_attacker', seasonId ? query.isSagaAttacker : null],
+    ['is_saga_defender', seasonId ? query.isSagaDefender : null],
+  ]
+  for (const [key, value] of boolParams) {
+    if (value && value !== 'all') qs.set(key, value)
+  }
 
   const response = await fetch(`${PROXY}/champions?${qs}`, { headers: jsonHeaders })
   await throwOnError(response, 'Erreur lors de la récupération des champions')
@@ -93,6 +123,7 @@ export const loadChampions = async (
     champion_class: string
     image_url?: string | null
     alias?: string | null
+    is_7_stars_available?: boolean
     is_ascendable?: boolean
     has_prefight?: boolean
   }[]
@@ -112,6 +143,7 @@ export const exportAllChampions = async (): Promise<
     champion_class: string
     image_url: string | null
     alias: string | null
+    is_7_stars_available: boolean
     is_ascendable: boolean
     has_prefight: boolean
   }[]
@@ -126,6 +158,7 @@ export const exportAllChampions = async (): Promise<
     champion_class: c.champion_class,
     image_url: c.image_url,
     alias: c.alias,
+    is_7_stars_available: c.is_7_stars_available,
     is_ascendable: c.is_ascendable,
     has_prefight: c.has_prefight,
   }))
@@ -147,6 +180,17 @@ export const toggleChampionAscendable = async (
     headers: jsonHeaders,
   })
   await throwOnError(response, "Erreur lors du basculement de l'ascension")
+  return response.json()
+}
+
+export const toggleChampionSevenStars = async (
+  championId: string
+): Promise<{ is_7_stars_available: boolean }> => {
+  const response = await fetch(`${PROXY}/admin/champions/${championId}/seven-stars`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+  })
+  await throwOnError(response, 'Erreur lors du basculement de la disponibilité 7 étoiles')
   return response.json()
 }
 

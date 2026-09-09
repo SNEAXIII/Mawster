@@ -12,13 +12,13 @@ describe('Admin — per-season saga classification', () => {
       cy.apiLogin(user_id);
       cy.goToAdminChampionsTab();
 
-      cy.getByCy('toggle-saga-attacker-Iron Man').should('contain.text', 'No');
-      cy.getByCy('toggle-saga-attacker-Iron Man').click();
-      cy.getByCy('toggle-saga-attacker-Iron Man').should('contain.text', 'Yes');
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'false');
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').click();
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'true');
 
       cy.reload();
       cy.getByCy('tab-champions').click();
-      cy.getByCy('toggle-saga-attacker-Iron Man').should('contain.text', 'Yes');
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'true');
     });
   });
 
@@ -29,9 +29,9 @@ describe('Admin — per-season saga classification', () => {
       cy.apiLogin(user_id);
       cy.goToAdminChampionsTab();
 
-      cy.getByCy('toggle-saga-defender-Wolverine').should('contain.text', 'No');
-      cy.getByCy('toggle-saga-defender-Wolverine').click();
-      cy.getByCy('toggle-saga-defender-Wolverine').should('contain.text', 'Yes');
+      cy.getByCy('champion-attr-saga-defender-Wolverine').should('have.attr', 'aria-pressed', 'false');
+      cy.getByCy('champion-attr-saga-defender-Wolverine').click();
+      cy.getByCy('champion-attr-saga-defender-Wolverine').should('have.attr', 'aria-pressed', 'true');
     });
   });
 });

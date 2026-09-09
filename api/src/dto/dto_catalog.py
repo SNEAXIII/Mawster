@@ -8,11 +8,9 @@ class CatalogChampionResponse(ChampionResponse):
 
     Extends the champion shape every other response already uses, so a field added or
     renamed there travels here instead of drifting. Carries no player data: what the
-    game says about the character, plus the saga roles of the season now running.
+    game says about the character, plus the saga roles of the season now running —
+    those two flags now live on the parent, which fills them for a chosen season.
     """
-
-    is_saga_attacker: bool = False
-    is_saga_defender: bool = False
 
 
 class CatalogResponse(BaseModel):

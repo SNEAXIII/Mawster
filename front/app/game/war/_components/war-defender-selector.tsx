@@ -71,7 +71,7 @@ export default function WarDefenderSelector({
   const fetchChampions = useCallback(async (q: string, p: number) => {
     setLoading(true)
     try {
-      const data = await getChampions(p, PAGE_SIZE, null, q)
+      const data = await getChampions({ page: p, size: PAGE_SIZE, search: q })
       setChampions(p === 1 ? data.champions : (prev) => [...prev, ...data.champions])
       setTotalPages(data.total_pages)
       setPage(p)
