@@ -1,6 +1,6 @@
 'use client'
 
-import { BarChart3, ScrollText, Shield, Timer, ShieldCheck, MessagesSquare } from 'lucide-react'
+import { BarChart3, ScrollText, Shield, Users, ShieldCheck, MessagesSquare } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -14,11 +14,11 @@ export function FeatureGrid() {
       desc: t.landing.featNotesDesc,
       isNew: true,
     },
-    { icon: ShieldCheck, title: t.landing.featPrivacyTitle, desc: t.landing.featPrivacyDesc },
-    { icon: BarChart3, title: t.landing.featStatsTitle, desc: t.landing.featStatsDesc },
     { icon: ScrollText, title: t.landing.featHistoryTitle, desc: t.landing.featHistoryDesc },
+    { icon: Users, title: t.landing.featOnboardingTitle, desc: t.landing.featOnboardingDesc },
     { icon: Shield, title: t.landing.featWarTitle, desc: t.landing.featWarDesc },
-    { icon: Timer, title: t.landing.featOnboardingTitle, desc: t.landing.featOnboardingDesc },
+    { icon: BarChart3, title: t.landing.featStatsTitle, desc: t.landing.featStatsDesc },
+    { icon: ShieldCheck, title: t.landing.featPrivacyTitle, desc: t.landing.featPrivacyDesc },
   ]
 
   return (

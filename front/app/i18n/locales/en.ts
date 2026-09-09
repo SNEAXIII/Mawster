@@ -60,7 +60,7 @@ const en = {
     evolving: 'Evolving · Open source',
     heroTitle: 'Win your wars with a real plan.',
     heroSubtitle:
-      'Mawster turns Alliance War into one clear plan — defense, attack, synergies and stats in one place. No more screenshots or Excel sheets to manage your teammates rosters.',
+      'Mawster turns Alliance War into one clear plan — roster management, fight history, defense, attack, synergies and stats in one place. No more screenshots or Excel sheets to manage your teammates rosters.',
     heroCtaPrimary: 'Create an account',
     heroCtaSecondary: 'See features',
     heroNote: 'Discord & Google login · Line and more coming soon',
@@ -87,9 +87,9 @@ const en = {
     featWarTitle: 'War planning',
     featWarDesc:
       'Assign attackers to nodes with fight notes, synergies and prefights, lay out your defense per battlegroup and lock your ban list — then track KOs and assists as the war runs.',
-    featOnboardingTitle: '20-minute roster',
+    featOnboardingTitle: 'Roster management',
     featOnboardingDesc:
-      'Fill your entire roster in twenty minutes, tops — then never type it into a spreadsheet again.',
+      'Keep every teammate roster in one place, always up to date. Fill your entire roster in twenty minutes, tops — then never type it into a spreadsheet again.',
     featPrivacyTitle: 'Your data stays private',
     featPrivacyDesc:
       'No admin screen exposes your rosters, wars or plans — they stay inside your alliance. One exception, stated up front: a reported note is read by a moderator, along with its edit history.',
@@ -141,7 +141,7 @@ const en = {
       },
       {
         q: 'What can I manage with Mawster?',
-        a: 'Track your champion roster, plan alliance war defense placements and attack assignments across battlegroups, and manage your alliance members and officers.',
+        a: 'Manage your champion roster and your teammates rosters, review the fight history of every past war, plan alliance war defense placements and attack assignments across battlegroups, and manage your alliance members and officers.',
       },
       {
         q: 'Does every alliance member need an account?',

@@ -62,7 +62,7 @@ const fr: Translations = {
     evolving: 'En évolution · Open source',
     heroTitle: 'Gagne tes guerres avec un vrai plan.',
     heroSubtitle:
-      "Mawster transforme la Guerre d'Alliance en un plan clair — défense, attaque, synergies et stats au même endroit. Fini les screenshots et les fichiers Excel pour gérer les rosters de tes équipiers.",
+      "Mawster transforme la Guerre d'Alliance en un plan clair — gestion des rosters, historique des combats, défense, attaque, synergies et stats au même endroit. Fini les screenshots et les fichiers Excel pour gérer les rosters de tes équipiers.",
     heroCtaPrimary: 'Créez un compte',
     heroCtaSecondary: 'Voir les fonctionnalités',
     heroNote: 'Connexion Discord & Google · Line et plus à venir',
@@ -89,9 +89,9 @@ const fr: Translations = {
     featWarTitle: 'Planification de guerre',
     featWarDesc:
       'Assigne les attaquants aux nœuds avec notes, synergies et prefights, place ta défense par bataillon et verrouille ta liste de bannissements — puis suis les KO et assists au fil de la guerre.',
-    featOnboardingTitle: 'Roster en 20 minutes',
+    featOnboardingTitle: 'Gestion des rosters',
     featOnboardingDesc:
-      'Remplis tout ton roster en vingt minutes maximum — et ne le retape plus jamais dans un tableur.',
+      'Garde les rosters de tous tes équipiers au même endroit, toujours à jour. Remplis tout ton roster en vingt minutes maximum — et ne le retape plus jamais dans un tableur.',
     featPrivacyTitle: 'Vos données restent privées',
     featPrivacyDesc:
       "Aucun écran d'administration n'expose vos rosters, vos guerres ni vos plans : ils restent dans votre alliance. Une seule exception, et elle est assumée — une note signalée est lue par un modérateur, avec son historique d'édition.",
@@ -143,7 +143,7 @@ const fr: Translations = {
       },
       {
         q: 'Que puis-je gérer avec Mawster ?',
-        a: "Suis ton roster de champions, planifie les placements de défense et les assignations d'attaque en guerre d'alliance sur tous les battlegroups, et gère les membres et officiers de ton alliance.",
+        a: "Gère ton roster de champions et ceux de tes équipiers, consulte l'historique des combats de chaque guerre passée, planifie les placements de défense et les assignations d'attaque en guerre d'alliance sur tous les battlegroups, et gère les membres et officiers de ton alliance.",
       },
       {
         q: "Chaque membre de l'alliance doit-il avoir un compte ?",
