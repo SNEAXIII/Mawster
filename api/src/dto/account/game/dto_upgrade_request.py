@@ -4,6 +4,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from src.dto.mixins import ChampionIdentity
+
 
 class UpgradeRequestCreate(BaseModel):
     """DTO to create a new upgrade request."""
@@ -12,7 +14,7 @@ class UpgradeRequestCreate(BaseModel):
     requested_rarity: str = Field(..., min_length=3, max_length=3, examples=["7r3"])
 
 
-class UpgradeRequestResponse(BaseModel):
+class UpgradeRequestResponse(ChampionIdentity):
     """DTO for an upgrade request response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -23,9 +25,6 @@ class UpgradeRequestResponse(BaseModel):
     requester_pseudo: str
     requested_rarity: str
     current_rarity: str
-    champion_name: str
-    champion_class: str
-    image_url: str | None = None
     created_at: datetime
     done_at: datetime | None = None
 

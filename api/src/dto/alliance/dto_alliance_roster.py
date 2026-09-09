@@ -3,28 +3,22 @@ from typing import Any
 
 from pydantic import ConfigDict, model_validator
 
-from src.dto.mixins import PlayerIdentity
+from src.dto.mixins import ChampionRef, PlayerIdentity, SagaRoles
 
 
-class AllianceRosterEntryResponse(PlayerIdentity):
+class AllianceRosterEntryResponse(PlayerIdentity, ChampionRef, SagaRoles):
     """A single alliance member's champion entry — solo RosterEntry shape + owner identity."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     alliance_group: int | None = None
-    champion_id: uuid.UUID
-    champion_name: str
-    champion_class: str
     alias: str | None = None
-    image_url: str | None = None
     rarity: str
     signature: int
     ascension: int = 0
     is_preferred_attacker: bool = False
     is_ascendable: bool = False
-    is_saga_attacker: bool = False
-    is_saga_defender: bool = False
 
     @model_validator(mode="before")
     @classmethod
