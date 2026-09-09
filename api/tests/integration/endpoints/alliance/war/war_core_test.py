@@ -256,14 +256,24 @@ class TestSetOpponentDeaths:
         assert response.json()["opponent_deaths"] == 12
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("opponent_deaths", [-1, 0])
-    async def test_below_one_is_rejected(self, opponent_deaths):
-        """Zero is not a reading, it is an unfilled cell — that is what null means."""
+    async def test_zero_is_accepted(self):
+        """Zero is a reading — the opponent lost nobody. Null is the unfilled cell."""
         data = await _setup_war()
         headers = create_auth_headers(user_id=str(USER_ID))
 
         response = await execute_patch_request(
-            self._url(data), payload={"opponent_deaths": opponent_deaths}, headers=headers
+            self._url(data), payload={"opponent_deaths": 0}, headers=headers
+        )
+        assert response.status_code == 200
+        assert response.json()["opponent_deaths"] == 0
+
+    @pytest.mark.asyncio
+    async def test_negative_is_rejected(self):
+        data = await _setup_war()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_patch_request(
+            self._url(data), payload={"opponent_deaths": -1}, headers=headers
         )
         assert response.status_code == 422
 

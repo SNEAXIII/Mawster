@@ -29,7 +29,7 @@ export function SeasonWarDeathsCell({
   const commit = async () => {
     const trimmed = draft.trim()
     const parsed = trimmed === '' ? null : Number(trimmed)
-    if (parsed !== null && (!Number.isInteger(parsed) || parsed < 1)) {
+    if (parsed !== null && (!Number.isInteger(parsed) || parsed < 0)) {
       toast.error(seasonWars.deathsOpponentInvalid)
       return
     }
@@ -58,9 +58,9 @@ export function SeasonWarDeathsCell({
         <Input
           autoFocus
           type='number'
-          min='1'
+          min='0'
           disabled={saving}
-          className='h-7 w-20 text-right'
+          className='ml-auto h-7 w-20 text-right'
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}

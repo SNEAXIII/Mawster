@@ -470,7 +470,7 @@ const fr: Translations = {
           defeat: 'DEFAITE',
           deathsOpponent: 'Deaths OP',
           deathsOpponentEdit: 'Modifier les morts adverses',
-          deathsOpponentInvalid: 'Doit être un entier supérieur à zéro, ou vide',
+          deathsOpponentInvalid: 'Doit être un entier positif, ou vide',
           deathsAlliance: 'Deaths {tag}',
           deathsBattlegroup: 'Deaths BG{number}',
           totalDeaths: 'TOTAL DEATHS',
@@ -693,7 +693,7 @@ const fr: Translations = {
       opponentDeaths: 'Morts adverses',
       opponentDeathsHint:
         "Morts encaissées par l'adversaire sur notre défense. Laisser vide si inconnu.",
-      opponentDeathsInvalid: 'Doit être un entier supérieur à zéro',
+      opponentDeathsInvalid: 'Doit être un entier positif',
       elo: 'ELO',
       tier: 'Tier',
       progressFights: 'Combats',

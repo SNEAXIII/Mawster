@@ -48,7 +48,7 @@ export default function EndWarDialog({
   const parsedOpponentDeaths = opponentDeathsInput === '' ? null : Number(opponentDeathsInput)
   const opponentDeathsValid =
     parsedOpponentDeaths === null ||
-    (Number.isInteger(parsedOpponentDeaths) && parsedOpponentDeaths >= 1)
+    (Number.isInteger(parsedOpponentDeaths) && parsedOpponentDeaths >= 0)
 
   function handleConfirm() {
     if (!eloValid || !opponentDeathsValid || !confirmed) return
