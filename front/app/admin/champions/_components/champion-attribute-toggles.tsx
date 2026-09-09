@@ -1,9 +1,13 @@
 'use client'
 
 import { cn } from '@/app/lib/utils'
-import { useI18n } from '@/app/i18n'
 import type { Champion } from '@/app/services/champions'
-import type { ChampionAttribute } from '@/app/admin/_viewmodels/champion-filters'
+import {
+  CHAMPION_ATTRIBUTES,
+  attributeCy,
+  useChampionAttributeLabels,
+  type ChampionAttribute,
+} from '@/app/admin/_viewmodels/champion-attributes'
 
 interface ChampionAttributeTogglesProps {
   champion: Champion
@@ -11,28 +15,18 @@ interface ChampionAttributeTogglesProps {
   onToggle: (champion: Champion, attribute: ChampionAttribute) => void
 }
 
-const SAGA_ATTRIBUTES: ChampionAttribute[] = ['is_saga_attacker', 'is_saga_defender']
-
 export default function ChampionAttributeToggles({
   champion,
   sagaDisabled,
   onToggle,
 }: Readonly<ChampionAttributeTogglesProps>) {
-  const { t } = useI18n()
-
-  const attributes: { key: ChampionAttribute; label: string; cy: string }[] = [
-    { key: 'is_7_stars_available', label: t.champions.attributes.sevenStars, cy: 'seven-stars' },
-    { key: 'is_ascendable', label: t.champions.attributes.ascendable, cy: 'ascendable' },
-    { key: 'has_prefight', label: t.champions.attributes.prefight, cy: 'prefight' },
-    { key: 'is_saga_attacker', label: t.champions.attributes.sagaAttacker, cy: 'saga-attacker' },
-    { key: 'is_saga_defender', label: t.champions.attributes.sagaDefender, cy: 'saga-defender' },
-  ]
+  const labels = useChampionAttributeLabels()
 
   return (
     <div className='flex flex-wrap items-center gap-1'>
-      {attributes.map(({ key, label, cy }) => {
+      {CHAMPION_ATTRIBUTES.map(({ key, name, icon, requiresSeason }) => {
         const active = champion[key]
-        const disabled = sagaDisabled && SAGA_ATTRIBUTES.includes(key)
+        const disabled = sagaDisabled && requiresSeason
         return (
           <button
             key={key}
@@ -40,17 +34,25 @@ export default function ChampionAttributeToggles({
             onClick={() => onToggle(champion, key)}
             disabled={disabled}
             aria-pressed={active}
-            title={label}
-            data-cy={`champion-attr-${cy}-${champion.name}`}
+            aria-label={labels[key]}
+            title={labels[key]}
+            data-cy={`champion-attr-${attributeCy(name)}-${champion.name}`}
             className={cn(
-              'rounded px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide transition-colors',
-              'disabled:cursor-not-allowed disabled:opacity-40',
-              active
-                ? 'bg-primary/15 text-primary hover:bg-primary/25'
-                : 'bg-muted text-muted-foreground/70 hover:bg-muted/80'
+              'flex size-8 items-center justify-center rounded transition-colors',
+              'disabled:cursor-not-allowed disabled:opacity-30',
+              active ? 'bg-primary/15 hover:bg-primary/25' : 'bg-muted hover:bg-muted/80'
             )}
           >
-            {label}
+            <img
+              src={icon}
+              alt=''
+              className={cn(
+                'h-5 w-5 object-contain transition-[filter,opacity]',
+                // Dimmed rather than hidden, so an inactive attribute keeps its slot
+                // instead of shifting the row's icons around.
+                active ? 'opacity-100' : 'opacity-40 grayscale'
+              )}
+            />
           </button>
         )
       })}

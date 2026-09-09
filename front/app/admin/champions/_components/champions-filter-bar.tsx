@@ -7,10 +7,8 @@ import { Button } from '@/components/ui/button'
 import { useI18n } from '@/app/i18n'
 import { championClasses, type BoolFilter } from '@/app/services/champions'
 import type { Season } from '@/app/services/season'
-import type {
-  ChampionAttribute,
-  ChampionFiltersState,
-} from '@/app/admin/_viewmodels/champion-filters'
+import type { ChampionFiltersState } from '@/app/admin/_viewmodels/champion-filters'
+import type { ChampionAttribute } from '@/app/admin/_viewmodels/champion-attributes'
 import ChampionsFilterPopover from './champions-filter-popover'
 
 interface ChampionsFilterBarProps {

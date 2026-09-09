@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useI18n } from '@/app/i18n'
 import type { Champion, ChampionOrderBy, ChampionOrderDir } from '@/app/services/champions'
-import type { ChampionAttribute } from '@/app/admin/_viewmodels/champion-filters'
+import type { ChampionAttribute } from '@/app/admin/_viewmodels/champion-attributes'
 import ChampionTableRow from './champion-table-row'
 
 interface ChampionsTableProps {

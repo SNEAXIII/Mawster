@@ -9,7 +9,7 @@ import { ActionIconButton } from '@/components/action-icon-button'
 import { Champion, getChampionImageUrl } from '@/app/services/champions'
 import { useI18n } from '@/app/i18n'
 import ChampionAttributeToggles from './champion-attribute-toggles'
-import type { ChampionAttribute } from '@/app/admin/_viewmodels/champion-filters'
+import type { ChampionAttribute } from '@/app/admin/_viewmodels/champion-attributes'
 
 interface ChampionTableRowProps {
   champion: Champion

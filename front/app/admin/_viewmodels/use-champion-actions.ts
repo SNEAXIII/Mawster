@@ -12,7 +12,7 @@ import {
   type Champion,
 } from '@/app/services/champions'
 import { useI18n } from '@/app/i18n'
-import { SAGA_FILTER_KEYS, type ChampionAttribute } from './champion-filters'
+import { requiresSeason, type ChampionAttribute } from './champion-attributes'
 
 const TOGGLE_CALLS = {
   is_7_stars_available: toggleChampionSevenStars,
@@ -53,7 +53,7 @@ export function useChampionActions({
   function toggleAttribute(champion: Champion, attribute: ChampionAttribute) {
     const next = !champion[attribute]
 
-    if (SAGA_FILTER_KEYS.includes(attribute)) {
+    if (requiresSeason(attribute)) {
       if (!selectedSeasonId) return
       const body = {
         is_saga_attacker: attribute === 'is_saga_attacker' ? next : champion.is_saga_attacker,

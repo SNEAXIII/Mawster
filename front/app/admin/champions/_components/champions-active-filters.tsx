@@ -2,14 +2,15 @@
 
 import { X } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
+import type { ChampionFiltersState } from '@/app/admin/_viewmodels/champion-filters'
 import {
-  BOOL_FILTER_KEYS,
-  type ChampionFiltersState,
-} from '@/app/admin/_viewmodels/champion-filters'
+  CHAMPION_ATTRIBUTE_KEYS,
+  useChampionAttributeLabels,
+} from '@/app/admin/_viewmodels/champion-attributes'
 
 type ActiveFilterKey = Exclude<keyof ChampionFiltersState, 'search'>
 
-const ACTIVE_FILTER_KEYS: ActiveFilterKey[] = ['championClass', ...BOOL_FILTER_KEYS]
+const ACTIVE_FILTER_KEYS: ActiveFilterKey[] = ['championClass', ...CHAMPION_ATTRIBUTE_KEYS]
 
 interface ChampionsActiveFiltersProps {
   filters: ChampionFiltersState
@@ -23,14 +24,10 @@ export default function ChampionsActiveFilters({
   onClearAll,
 }: Readonly<ChampionsActiveFiltersProps>) {
   const { t } = useI18n()
-
+  const attributeLabels = useChampionAttributeLabels()
   const labels: Record<ActiveFilterKey, string> = {
     championClass: t.champions.classFilter,
-    is_7_stars_available: t.champions.attributes.sevenStarsLong,
-    is_ascendable: t.champions.attributes.ascendableLong,
-    has_prefight: t.champions.attributes.prefightLong,
-    is_saga_attacker: t.champions.attributes.sagaAttackerLong,
-    is_saga_defender: t.champions.attributes.sagaDefenderLong,
+    ...attributeLabels,
   }
 
   function displayValue(key: ActiveFilterKey, value: string) {
