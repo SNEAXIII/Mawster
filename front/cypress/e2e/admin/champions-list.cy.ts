@@ -58,8 +58,88 @@ describe('Admin — champions list & filters', () => {
     });
   });
 
-  // Saga attacker/defender filters were removed — saga roles are now
-  // scoped to a selected season (see admin/saga-per-season.cy.ts).
+  it('filter by is_7_stars_available=No shows only champions without 7 stars', () => {
+    cy.apiLoadChampions(adminToken, [
+      { name: 'Iron Man', cls: 'Tech', is_7_stars_available: true },
+      { name: 'Wolverine', cls: 'Mutant', is_7_stars_available: false },
+    ]).then(() => {
+      cy.goToAdminChampionsTab();
+      cy.getByCy('champions-filter-trigger').click();
+      cy.getByCy('champions-filter-is_7_stars_available').contains('button', 'No').click();
+      cy.getByCy('champion-row-Wolverine').should('be.visible');
+      cy.getByCy('champion-row-Iron Man').should('not.exist');
+    });
+  });
+
+  it('filter by saga attacker=Yes shows only the season’s attackers', () => {
+    cy.apiCreateSeason(adminToken, 40);
+    cy.apiLoadChampions(adminToken, [
+      { name: 'Iron Man', cls: 'Tech' },
+      { name: 'Wolverine', cls: 'Mutant' },
+    ]).then(() => {
+      cy.goToAdminChampionsTab();
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').click();
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'true');
+
+      cy.getByCy('champions-filter-trigger').click();
+      cy.getByCy('champions-filter-is_saga_attacker').contains('button', 'Yes').click();
+      cy.getByCy('champion-row-Iron Man').should('be.visible');
+      cy.getByCy('champion-row-Wolverine').should('not.exist');
+    });
+  });
+
+  it('filter by saga attacker=No keeps champions that have no saga role at all', () => {
+    // The listing outer-joins the saga table: a champion with no role row for the
+    // season must still come back as "not an attacker". An inner join would drop
+    // Wolverine here, and the filter would silently hide most of the catalogue.
+    cy.apiCreateSeason(adminToken, 41);
+    cy.apiLoadChampions(adminToken, [
+      { name: 'Iron Man', cls: 'Tech' },
+      { name: 'Wolverine', cls: 'Mutant' },
+    ]).then(() => {
+      cy.goToAdminChampionsTab();
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').click();
+      cy.getByCy('champion-attr-saga-attacker-Iron Man').should('have.attr', 'aria-pressed', 'true');
+
+      cy.getByCy('champions-filter-trigger').click();
+      cy.getByCy('champions-filter-is_saga_attacker').contains('button', 'No').click();
+      cy.getByCy('champion-row-Wolverine').should('be.visible');
+      cy.getByCy('champion-row-Iron Man').should('not.exist');
+    });
+  });
+
+  it('sorting by name reverses the order on a second click', () => {
+    cy.apiLoadChampions(adminToken, [
+      { name: 'Iron Man', cls: 'Tech' },
+      { name: 'Wolverine', cls: 'Mutant' },
+    ]).then(() => {
+      cy.goToAdminChampionsTab();
+      cy.getByCy('champions-list').find('tbody tr').first().should('contain.text', 'Iron Man');
+
+      cy.getByCy('champions-sort-name').click();
+      cy.getByCy('champions-list').find('tbody tr').first().should('contain.text', 'Wolverine');
+    });
+  });
+
+  it('sorting by class groups champions by class', () => {
+    cy.apiLoadChampions(adminToken, [
+      { name: 'Wolverine', cls: 'Mutant' },
+      { name: 'Iron Man', cls: 'Tech' },
+      { name: 'Colossus', cls: 'Mutant' },
+    ]).then(() => {
+      cy.goToAdminChampionsTab();
+      cy.getByCy('champions-sort-champion_class').click();
+      // Mutant before Tech, and name breaks the tie inside a class.
+      cy.getByCy('champions-list')
+        .find('tbody tr')
+        .then(($rows) => {
+          const names = [...$rows].map((row) => row.textContent ?? '');
+          expect(names[0]).to.contain('Colossus');
+          expect(names[1]).to.contain('Wolverine');
+          expect(names[2]).to.contain('Iron Man');
+        });
+    });
+  });
 
   it('search by name filters to matching champion', () => {
     cy.apiLoadChampions(adminToken, [

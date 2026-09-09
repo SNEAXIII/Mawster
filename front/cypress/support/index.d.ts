@@ -118,7 +118,13 @@ declare global {
        */
       apiLoadChampions(
         adminToken: string,
-        champions: Array<{ name: string; cls: string; is_ascendable?: boolean; has_prefight?: boolean }>,
+        champions: Array<{
+          name: string;
+          cls: string;
+          is_7_stars_available?: boolean;
+          is_ascendable?: boolean;
+          has_prefight?: boolean;
+        }>,
       ): Chainable<Record<string, { id: string; name: string; has_prefight?: boolean }>>;
 
       /**
