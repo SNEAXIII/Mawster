@@ -6,7 +6,7 @@ export interface Champion {
   name: string
   champion_class: string
   image_url: string | null
-  is_7_star: boolean
+  is_7_stars_available: boolean
   is_ascendable: boolean
   has_prefight: boolean
   alias: string | null

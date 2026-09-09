@@ -35,7 +35,7 @@ def _make_champion(name="Spider-Man", champion_class="Science") -> Champion:
         id=CHAMPION_ID,
         name=name,
         champion_class=champion_class,
-        is_7_star=False,
+        is_7_stars_available=False,
     )
 
 

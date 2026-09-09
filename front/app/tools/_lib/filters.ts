@@ -59,8 +59,8 @@ export function matchesFilters(
   ) {
     return false
   }
-  if (filters.rarity === '7' && !champion.is_7_star) return false
-  if (filters.rarity === '6' && champion.is_7_star) return false
+  if (filters.rarity === '7' && !champion.is_7_stars_available) return false
+  if (filters.rarity === '6' && champion.is_7_stars_available) return false
   if (filters.ascendable && !champion.is_ascendable) return false
   if (filters.sagaAttacker && !champion.is_saga_attacker) return false
   if (filters.sagaDefender && !champion.is_saga_defender) return false

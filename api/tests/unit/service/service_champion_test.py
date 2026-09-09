@@ -30,7 +30,7 @@ def _make_champion(
     name=CHAMPION_NAME,
     champion_class=CHAMPION_CLASS,
     image_url=None,
-    is_7_star=False,
+    is_7_stars_available=False,
     alias=None,
     champion_id=None,
 ) -> Champion:
@@ -39,7 +39,7 @@ def _make_champion(
         name=name,
         champion_class=champion_class,
         image_url=image_url,
-        is_7_star=is_7_star,
+        is_7_stars_available=is_7_stars_available,
         alias=alias,
     )
 
