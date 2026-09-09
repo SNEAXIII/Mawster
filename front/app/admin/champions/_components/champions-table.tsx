@@ -7,6 +7,44 @@ import type { Champion, ChampionOrderBy, ChampionOrderDir } from '@/app/services
 import type { ChampionAttribute } from '@/app/admin/_viewmodels/champion-attributes'
 import ChampionTableRow from './champion-table-row'
 
+interface SortState {
+  orderBy: ChampionOrderBy
+  orderDir: ChampionOrderDir
+}
+
+function SortIcon({ field, orderBy, orderDir }: Readonly<{ field: ChampionOrderBy } & SortState>) {
+  if (orderBy !== field) return <ChevronsUpDown className='size-3.5 opacity-40' />
+  return orderDir === 'asc' ? <ArrowUp className='size-3.5' /> : <ArrowDown className='size-3.5' />
+}
+
+function SortableHeader({
+  field,
+  label,
+  orderBy,
+  orderDir,
+  onSort,
+}: Readonly<
+  { field: ChampionOrderBy; label: string; onSort: (field: ChampionOrderBy) => void } & SortState
+>) {
+  return (
+    <th className='text-left p-3'>
+      <button
+        type='button'
+        onClick={() => onSort(field)}
+        className='flex items-center gap-1 hover:text-foreground'
+        data-cy={`champions-sort-${field}`}
+      >
+        {label}
+        <SortIcon
+          field={field}
+          orderBy={orderBy}
+          orderDir={orderDir}
+        />
+      </button>
+    </th>
+  )
+}
+
 interface ChampionsTableProps {
   champions: Champion[]
   isLoading: boolean
@@ -33,31 +71,7 @@ export default function ChampionsTable({
   onDelete,
 }: Readonly<ChampionsTableProps>) {
   const { t } = useI18n()
-
-  function SortIcon({ field }: Readonly<{ field: ChampionOrderBy }>) {
-    if (orderBy !== field) return <ChevronsUpDown className='size-3.5 opacity-40' />
-    return orderDir === 'asc' ? (
-      <ArrowUp className='size-3.5' />
-    ) : (
-      <ArrowDown className='size-3.5' />
-    )
-  }
-
-  function SortableHeader({ field, label }: Readonly<{ field: ChampionOrderBy; label: string }>) {
-    return (
-      <th className='text-left p-3'>
-        <button
-          type='button'
-          onClick={() => onSort(field)}
-          className='flex items-center gap-1 hover:text-foreground'
-          data-cy={`champions-sort-${field}`}
-        >
-          {label}
-          <SortIcon field={field} />
-        </button>
-      </th>
-    )
-  }
+  const sort = { orderBy, orderDir }
 
   if (isLoading) {
     return (
@@ -88,10 +102,14 @@ export default function ChampionsTable({
             <SortableHeader
               field='name'
               label={t.champions.tableHeaders.name}
+              onSort={onSort}
+              {...sort}
             />
             <SortableHeader
               field='champion_class'
               label={t.champions.tableHeaders.class}
+              onSort={onSort}
+              {...sort}
             />
             <th className='text-left p-3'>{t.champions.tableHeaders.alias}</th>
             <th className='text-left p-3'>{t.champions.tableHeaders.attributes}</th>
