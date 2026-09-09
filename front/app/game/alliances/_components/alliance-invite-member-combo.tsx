@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { type GameAccount } from '@/app/services/game'
+import type { GameAccount } from '@/app/services/game'
 
 interface InviteMemberComboProps {
   eligibleMembers: GameAccount[]

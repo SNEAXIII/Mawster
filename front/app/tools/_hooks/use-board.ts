@@ -2,9 +2,13 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import { TIER_PALETTE, defaultBoard, newTierId, tagsOf } from '../_lib/board'
-import { NO_TAGS, hasAnyTag } from '../_lib/types'
-import type { BoardState, BoardTier, TagKey } from '../_lib/types'
-
+import {
+  type NO_TAGS,
+  hasAnyTag,
+  type BoardState,
+  type BoardTier,
+  type TagKey,
+} from '../_lib/types'
 /** The pool is a droppable container like any row; this is its container id. */
 export const POOL_ID = 'pool'
 

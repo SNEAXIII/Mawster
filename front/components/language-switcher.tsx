@@ -1,6 +1,6 @@
 'use client'
 
-import { useI18n, Locale } from '@/app/i18n'
+import { useI18n, type Locale } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 
 const flags: Record<Locale, string> = {

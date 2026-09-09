@@ -1,4 +1,4 @@
-import { BACKEND, setupUser, UserSetupData } from '../../support/e2e';
+import { BACKEND, setupUser, type UserSetupData } from '../../support/e2e';
 
 const NIL_UUID = '00000000-0000-0000-0000-000000000000';
 

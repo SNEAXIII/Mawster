@@ -2,14 +2,14 @@ import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import {
-  RosterEntry,
+  type RosterEntry,
   bulkUpdateRoster,
   getRoster,
-  BulkChampionEntry,
+  type BulkChampionEntry,
   searchChampions,
 } from '@/app/services/roster'
-import { type ImportResult } from '@/components/roster/import-report-dialog'
-import { type PreviewRow } from '@/components/roster/import-preview-row'
+import type { ImportResult } from '@/components/roster/import-report-dialog'
+import type { PreviewRow } from '@/components/roster/import-preview-row'
 import { blockingRows } from '@/components/roster/import-row-validation'
 
 // ─── Shared entry shape consumed by the preview builders ──

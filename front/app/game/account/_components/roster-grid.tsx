@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react'
 import { useI18n } from '@/app/i18n'
-import { RosterEntry, RARITY_LABELS, UpgradeRequest } from '@/app/services/roster'
-import RosterChampionCard, { RosterChampionCardProps } from './roster-champion-card'
+import { type RosterEntry, RARITY_LABELS, type UpgradeRequest } from '@/app/services/roster'
+import RosterChampionCard, { type RosterChampionCardProps } from './roster-champion-card'
 
 /** Everything the grid forwards as-is to each card */
 type RosterCardActions = Omit<RosterChampionCardProps, 'entry' | 'pendingRequestId'>

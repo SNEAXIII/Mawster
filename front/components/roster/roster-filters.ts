@@ -1,4 +1,4 @@
-import { RosterEntry } from '@/app/services/roster'
+import type { RosterEntry } from '@/app/services/roster'
 
 export interface RosterFilters {
   name: string

@@ -7,13 +7,17 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Shield, UserPlus, Users, X, Pencil, Check, Eye } from 'lucide-react'
 import InviteMemberCombo from './alliance-invite-member-combo'
-import { type GameAccount, type AllianceInvitation } from '@/app/services/game'
+import {
+  type GameAccount,
+  type AllianceInvitation,
+  patchAllianceElo,
+  patchAllianceTier,
+} from '@/app/services/game'
 import { formatDateMedium } from '@/app/lib/utils'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
 import { CollapsibleSection } from '@/components/collapsible-section'
 import AllianceMemberRow from './alliance-member-row'
 import UsernameEnriched from '@/components/username-enriched'
-import { patchAllianceElo, patchAllianceTier } from '@/app/services/game'
 import { toast } from 'sonner'
 import AllianceVisitorsSection from './alliance-visitors-section'
 import AllianceDeleteButton from './alliance-delete-button'

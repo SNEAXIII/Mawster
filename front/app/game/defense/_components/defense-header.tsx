@@ -3,7 +3,7 @@
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { type DefenseSummary } from '@/app/services/defense'
+import type { DefenseSummary } from '@/app/services/defense'
 import { Trash2, Camera } from 'lucide-react'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 import AllianceSelect from '@/app/game/_components/alliance-select'

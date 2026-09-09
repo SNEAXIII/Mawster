@@ -1,6 +1,6 @@
 'use client'
 
-import { type DefensePlacement } from '@/app/services/defense'
+import type { DefensePlacement } from '@/app/services/defense'
 import ChampionPortrait from '@/components/champion-portrait'
 import { cn } from '@/app/lib/utils'
 import { X, StickyNote } from 'lucide-react'

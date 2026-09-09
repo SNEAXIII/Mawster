@@ -6,7 +6,7 @@ import ChampionPortrait, {
   getFrameWindowRect,
   pickThumbnailSize,
 } from '@/components/champion-portrait'
-import PortraitLabControls, { PortraitLabState } from './_components/portrait-lab-controls'
+import PortraitLabControls, { type PortraitLabState } from './_components/portrait-lab-controls'
 import { cn } from '@/app/lib/utils'
 
 // Static assets, no auth needed — served through the /static rewrite.
@@ -72,7 +72,8 @@ export default function PortraitLabPage() {
   const resolution = (size: number) => {
     const windowPx = getFrameWindowRect(size, rarity, state.window).width
     const picked = pickThumbnailSize(windowPx)
-    return `${Math.round(windowPx)}px → ${picked ? `${picked}x${picked}` : 'full'}`
+    const variant = picked ? `${picked}x${picked}` : 'full'
+    return `${Math.round(windowPx)}px → ${variant}`
   }
 
   const boxClass = state.outline ? 'outline outline-1 outline-dashed outline-red-500/60' : ''

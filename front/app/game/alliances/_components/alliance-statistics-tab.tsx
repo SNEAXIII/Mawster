@@ -2,8 +2,11 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { useI18n } from '@/app/i18n'
-import type { RankingHistoryPoint, SeasonStatus } from '@/app/services/game'
-import { fetchAllianceRankingHistory } from '@/app/services/game'
+import {
+  type RankingHistoryPoint,
+  type SeasonStatus,
+  fetchAllianceRankingHistory,
+} from '@/app/services/game'
 import AllianceRankingChart from './alliance-ranking-chart'
 import type { PlayerSeasonStats } from '@/app/services/statistics'
 import { Button } from '@/components/ui/button'

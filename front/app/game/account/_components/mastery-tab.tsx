@@ -4,7 +4,7 @@ import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { MasteryEntry, MasteryUpsertItem } from '@/app/services/masteries'
+import type { MasteryEntry, MasteryUpsertItem } from '@/app/services/masteries'
 
 interface MasteryTabProps {
   masteries: MasteryEntry[]

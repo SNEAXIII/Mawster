@@ -1,6 +1,4 @@
-import { NO_TAGS, hasAnyTag } from './types'
-import type { BoardState, ChampionTags } from './types'
-
+import { NO_TAGS, hasAnyTag, type BoardState, type ChampionTags } from './types'
 /** Shape of a board written to a file. Versioned so a future one can be read. */
 interface BoardExport {
   version: 1

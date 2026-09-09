@@ -1,5 +1,7 @@
 pytest-*/**
 **/.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 node_modules/
 .claude/settings.local.json
 .claude/worktrees/

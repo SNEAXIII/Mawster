@@ -1,5 +1,5 @@
 import { TableRow } from '@/components/ui/table'
-import { User } from '@/app/services/users'
+import type { User } from '@/app/services/users'
 import {
   RowUserCreatedAt,
   RowUserLastLoginDate,

@@ -13,7 +13,11 @@ import {
 import AllianceSelect from '@/app/game/_components/alliance-select'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 import RosterFilterBar from '@/components/roster/roster-filter-bar'
-import { EMPTY_FILTERS, RosterFilters, isFilterActive } from '@/components/roster/roster-filters'
+import {
+  EMPTY_FILTERS,
+  type RosterFilters,
+  isFilterActive,
+} from '@/components/roster/roster-filters'
 import UpgradeRequestDialogs from '@/components/upgrade-request-dialogs'
 import { useUpgradeRequests } from '@/hooks/use-upgrade-requests'
 import { ChampionClass } from '@/app/services/champions'

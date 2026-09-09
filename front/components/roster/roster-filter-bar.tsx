@@ -13,7 +13,12 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/app/lib/utils'
 import { RARITY_LABELS } from '@/app/services/roster'
-import { RosterFilters, RANK_OPTIONS, ASCENSION_OPTIONS, isFilterActive } from './roster-filters'
+import {
+  type RosterFilters,
+  RANK_OPTIONS,
+  ASCENSION_OPTIONS,
+  isFilterActive,
+} from './roster-filters'
 import FilterToggleGroup from './filter-toggle-group'
 
 interface RosterFilterBarProps {

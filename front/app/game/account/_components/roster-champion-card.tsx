@@ -4,7 +4,7 @@ import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import ChampionPortrait from '@/components/champion-portrait'
 import {
-  RosterEntry,
+  type RosterEntry,
   getClassColors,
   shortenChampionName,
   getNextRarity,

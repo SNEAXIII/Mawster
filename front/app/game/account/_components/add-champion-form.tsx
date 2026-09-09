@@ -11,7 +11,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { SearchInput } from '@/components/search-input'
 import { CollapsibleSection } from '@/components/collapsible-section'
 import { getChampionImageUrl } from '@/app/services/champions'
-import { RosterEntry, RARITIES, RARITY_LABELS, SIGNATURE_PRESETS } from '@/app/services/roster'
+import { type RosterEntry, RARITIES, RARITY_LABELS, SIGNATURE_PRESETS } from '@/app/services/roster'
 import { useAddChampionForm } from '@/hooks/use-add-champion-form'
 
 interface AddChampionFormProps {

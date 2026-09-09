@@ -1,6 +1,6 @@
 'use client'
 
-import { FrameWindow } from '@/components/champion-portrait'
+import type { FrameWindow } from '@/components/champion-portrait'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 

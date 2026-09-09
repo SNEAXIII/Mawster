@@ -8,8 +8,8 @@ import RosterGrid from '@/app/game/account/_components/roster-grid'
 import UpgradeRequestsSection from '@/app/game/account/_components/upgrade-requests-section'
 import MasteryMiniView from '@/app/game/account/_components/mastery-mini-view'
 import UpgradeRequestDialogs from '@/components/upgrade-request-dialogs'
-import { getRoster, RosterEntry, RARITIES } from '@/app/services/roster'
-import { getMasteries, MasteryEntry } from '@/app/services/masteries'
+import { getRoster, type RosterEntry, RARITIES } from '@/app/services/roster'
+import { getMasteries, type MasteryEntry } from '@/app/services/masteries'
 import { useUpgradeRequests } from '@/hooks/use-upgrade-requests'
 
 interface AllianceRosterDialogProps {

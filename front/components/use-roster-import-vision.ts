@@ -1,7 +1,7 @@
 import { type ChangeEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
-import { RosterEntry } from '@/app/services/roster'
+import type { RosterEntry } from '@/app/services/roster'
 import {
   createVisionImport,
   getVisionImport,
@@ -11,7 +11,7 @@ import {
   type VisionPrediction,
   type ConfirmedRow,
 } from '@/app/services/vision'
-import { type PreviewRow, type PreviewRowPatch } from '@/components/roster/import-preview-row'
+import type { PreviewRow, PreviewRowPatch } from '@/components/roster/import-preview-row'
 import { isValidRarity } from '@/components/roster/import-row-validation'
 import {
   useRosterImportCore,

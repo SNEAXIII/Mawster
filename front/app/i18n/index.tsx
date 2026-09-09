@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import en, { Translations } from './locales/en'
+import en, { type Translations } from './locales/en'
 import fr from './locales/fr'
 
 export type Locale = 'en' | 'fr'

@@ -3,9 +3,9 @@
 import { useState, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
-import { Champion } from '@/app/services/champions'
+import type { Champion } from '@/app/services/champions'
 import {
-  RosterEntry,
+  type RosterEntry,
   RARITIES,
   searchChampions,
   updateChampionInRoster,

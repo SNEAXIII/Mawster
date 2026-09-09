@@ -1,5 +1,5 @@
 import { RARITIES } from '@/app/services/roster'
-import { type PreviewRow } from './import-preview-row'
+import type { PreviewRow } from './import-preview-row'
 
 // The bulk endpoint is atomic: one row the API rejects fails the whole batch,
 // so a single misread rank used to turn a 22-champion import into 22 errors.

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { RosterEntry } from '@/app/services/roster'
+import type { RosterEntry } from '@/app/services/roster'
 import { useI18n } from '@/app/i18n'
 import { useRosterImportVision } from './use-roster-import-vision'
 import { useVisionImportGuard } from './use-vision-import-guard'

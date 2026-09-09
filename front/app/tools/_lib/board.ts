@@ -1,8 +1,6 @@
 import type { TierListDetail } from '@/app/services/tierlist'
 import { readStored, removeStored, writeStored } from './storage'
-import { NO_TAGS, hasAnyTag } from './types'
-import type { BoardState, BoardTier, ChampionTags } from './types'
-
+import { NO_TAGS, hasAnyTag, type BoardState, type BoardTier, type ChampionTags } from './types'
 const STORAGE_NAME = 'board'
 
 /** Classic tier-maker ramp, warm to cool. Reused when a row is added. */

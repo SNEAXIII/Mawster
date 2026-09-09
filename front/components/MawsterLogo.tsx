@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { JSX } from 'react/jsx-dev-runtime'
+import type { JSX } from 'react/jsx-dev-runtime'
 
 interface MainMawsterLogoProps {
   className?: string

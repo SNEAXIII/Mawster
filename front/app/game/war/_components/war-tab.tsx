@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { ReactNode, useState, useEffect, useRef } from 'react'
+import { type ReactNode, useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Shield, Swords, Trash2, Pencil, Camera, Link2 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'

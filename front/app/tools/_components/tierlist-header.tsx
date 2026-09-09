@@ -11,13 +11,15 @@ import {
 } from '@/components/ui/select'
 import SelectorFilterBar, { type ToggleConfig } from '@/app/game/_components/selector-filter-bar'
 import TagChips from './tag-chips'
-import { CHAMPION_CLASSES } from '../_lib/types'
-import { EMPTY_FILTERS, hasActiveFilters } from '../_lib/filters'
+import { CHAMPION_CLASSES, type BoardState, type ChampionClass } from '../_lib/types'
+import {
+  EMPTY_FILTERS,
+  hasActiveFilters,
+  type FilterState,
+  type RarityFilter,
+} from '../_lib/filters'
 import type { DisplayPrefs } from '../_hooks/use-prefs'
 import type { BoardActions } from '../_hooks/use-board'
-import type { FilterState, RarityFilter } from '../_lib/filters'
-import type { BoardState, ChampionClass } from '../_lib/types'
-
 interface TierListHeaderProps {
   board: BoardState
   actions: BoardActions
