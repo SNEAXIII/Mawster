@@ -6,6 +6,7 @@ from src.dto.admin.dto_fight_record import (
     WarFightRecordResponse,
     WarFightSynergyResponse,
 )
+from src.enums.WarBoost import WarBoost
 from src.models.Base import utcnow
 
 
@@ -67,6 +68,10 @@ def test_fight_record_response_flattens_all():
     record.defender_ascension = 0
     record.defender_is_saga_defender = False
     record.ko_count = 2
+    record.war_boost = WarBoost.INVULNERABILITY
+    record.has_defense_boost = True
+    record.has_power_boost = False
+    record.has_specials_boost = False
     record.synergies = []
     record.prefights = []
     record.created_at = utcnow()

@@ -18,6 +18,7 @@ import { toast } from 'sonner'
 import {
   type War,
   type WarPlacement,
+  type WarBoosts,
   type WarDefenseSummary,
   type WarProgress,
   type AvailableAttacker,
@@ -34,6 +35,7 @@ import {
   assignWarAttacker,
   removeWarAttacker,
   updateWarKo,
+  updateWarBoosts,
   MAX_KO_COUNT,
   getWarSynergies,
   addWarSynergy,
@@ -118,6 +120,7 @@ interface WarContextValue {
   handleAssignAttacker: (attacker: AvailableAttacker) => Promise<void>
   handleRemoveAttacker: (node: number) => Promise<void>
   handleAdjustKo: (node: number, delta: number) => void
+  handleUpdateBoosts: (nodeNumber: number, boosts: WarBoosts) => Promise<void>
 
   // Synergy
   synergies: WarSynergy[]
@@ -608,6 +611,25 @@ export function WarProvider({
     }
   }
 
+  const handleUpdateBoosts = async (nodeNumber: number, boosts: WarBoosts) => {
+    if (!selectedAllianceId || !activeWarId) return
+    const previous = placements.find((p) => p.node_number === nodeNumber)
+    patchPlacement(nodeNumber, boosts)
+    try {
+      const updated = await updateWarBoosts(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        nodeNumber,
+        boosts
+      )
+      patchPlacement(nodeNumber, updated)
+    } catch (err: unknown) {
+      if (previous) patchPlacement(nodeNumber, previous)
+      toast.error((err as Error).message || t.game.war.boosts.updateError)
+    }
+  }
+
   const handleAddSynergy = async (championUserId: string, targetChampionUserId: string) => {
     if (!selectedAllianceId || !activeWarId) return
     try {
@@ -878,6 +900,7 @@ export function WarProvider({
       handleAssignAttacker,
       handleRemoveAttacker,
       handleAdjustKo,
+      handleUpdateBoosts,
       synergies,
       handleAddSynergy,
       handleRemoveSynergy,

@@ -9,6 +9,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
 from src.enums.Roles import Roles
 from src.enums.SeasonStatus import SeasonStatus
+from src.enums.WarBoost import WarBoost
 from src.enums.WarStatus import WarStatus
 from src.models import User
 from src.models.champion.Champion import Champion
@@ -39,6 +40,7 @@ from tests.utils.utils_client import (
     execute_get_request,
     execute_patch_request,
     execute_post_request,
+    execute_put_request,
 )
 from tests.utils.utils_constant import (
     ALLIANCE_NAME,
@@ -213,6 +215,26 @@ class TestWarFightRecordSnapshot:
         assert r.defender_stars == 6
         assert r.ko_count == 1
         assert r.alliance_id == data["alliance"].id
+
+    @pytest.mark.asyncio
+    async def test_end_war_freezes_boosts_on_fight_record(self, session):
+        """Boosts are copied onto the record like stars and rank: clearing them on the node
+        afterwards must not rewrite what the fight was fought with."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_put_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/boosts",
+            payload={"war_boost": "power_start", "has_specials_boost": True},
+            headers=headers,
+        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+
+        r = await _fetch_single_record(session, data["war"].id)
+        assert r.war_boost == WarBoost.POWER_START
+        assert r.has_specials_boost is True
+        assert r.has_defense_boost is False
+        assert r.has_power_boost is False
 
     @pytest.mark.asyncio
     async def test_end_war_snapshot_uses_war_season_saga_role(self, session):

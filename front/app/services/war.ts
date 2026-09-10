@@ -32,6 +32,16 @@ export interface War {
   tier: number | null
 }
 
+// The three are mutually exclusive in-game, hence one slot rather than three flags.
+export type WarBoost = 'power_start' | 'invulnerability' | 'regeneration'
+
+export interface WarBoosts {
+  war_boost: WarBoost | null
+  has_defense_boost: boolean
+  has_power_boost: boolean
+  has_specials_boost: boolean
+}
+
 export interface WarPlacement {
   id: string
   war_id: string
@@ -49,6 +59,10 @@ export interface WarPlacement {
   is_combat_completed: boolean
   is_fight_not_done: boolean
   is_planning_error: boolean
+  war_boost: WarBoost | null
+  has_defense_boost: boolean
+  has_power_boost: boolean
+  has_specials_boost: boolean
   attacker_champion_user_id: string | null
   attacker_game_account_id: string | null
   attacker_pseudo: string | null
@@ -353,6 +367,25 @@ export async function removeWarAttacker(
     { method: 'DELETE', headers: jsonHeaders }
   )
   await throwOnError(response, 'Failed to remove attacker')
+  return response.json()
+}
+
+export async function updateWarBoosts(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  nodeNumber: number,
+  boosts: WarBoosts
+): Promise<WarPlacement> {
+  const response = await fetch(
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/boosts`,
+    {
+      method: 'PUT',
+      headers: jsonHeaders,
+      body: JSON.stringify(boosts),
+    }
+  )
+  await throwOnError(response, 'Failed to update boosts')
   return response.json()
 }
 

@@ -19,6 +19,7 @@ CHAMPION_BANNED_FOR_WAR = "This champion is banned for this war"
 CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE = "This champion is already placed in the alliance defense"
 NO_ATTACKER_ASSIGNED_ON_NODE = "No attacker assigned to this node"
 KO_COUNT_NO_ATTACKER_ASSIGNED = "Cannot update KO count: no attacker assigned to this node"
+BOOSTS_NO_ATTACKER_ASSIGNED = "Cannot set boosts: no attacker assigned to this node"
 ONLY_OWN_CHAMPIONS_SYNERGY = "You can only add your own champions as synergy providers"
 TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER = (
     "Target champion is not assigned as a node attacker in this war+BG"

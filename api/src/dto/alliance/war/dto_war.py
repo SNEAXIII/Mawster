@@ -12,6 +12,7 @@ from src.dto.mixins import (
     SagaRoles,
     WarCoords,
 )
+from src.enums.WarBoost import WarBoost
 from src.game_types import Ascension, KoCount, NodeNumber, Rank, Stars
 from src.Messages.war_messages import BANNED_CHAMPION_LIST_TOO_LONG
 
@@ -107,6 +108,10 @@ class WarPlacementResponse(WarCoords, ChampionRef, SagaRoles):
     is_combat_completed: bool = False
     is_fight_not_done: bool = False
     is_planning_error: bool = False
+    war_boost: WarBoost | None = None
+    has_defense_boost: bool = False
+    has_power_boost: bool = False
+    has_specials_boost: bool = False
     attacker_champion_user_id: uuid.UUID | None = None
     attacker_game_account_id: uuid.UUID | None = None
     attacker_pseudo: str | None = None
@@ -154,6 +159,10 @@ class WarPlacementResponse(WarCoords, ChampionRef, SagaRoles):
             "is_combat_completed": data.is_combat_completed,
             "is_fight_not_done": data.is_fight_not_done,
             "is_planning_error": data.is_planning_error,
+            "war_boost": data.war_boost,
+            "has_defense_boost": data.has_defense_boost,
+            "has_power_boost": data.has_power_boost,
+            "has_specials_boost": data.has_specials_boost,
             "attacker_champion_user_id": data.attacker_champion_user_id,
             "attacker_is_preferred_attacker": attacker.is_preferred_attacker if attacker else None,
             "is_assisted": data.assist_champion_user_id is not None,
@@ -192,6 +201,15 @@ class WarDefenseSummaryResponse(BaseModel):
 
 class WarAttackerAssignRequest(BaseModel):
     champion_user_id: uuid.UUID
+
+
+class WarBoostUpdateRequest(BaseModel):
+    """Full replacement of a node's boosts — an omitted field clears that boost."""
+
+    war_boost: WarBoost | None = None
+    has_defense_boost: bool = False
+    has_power_boost: bool = False
+    has_specials_boost: bool = False
 
 
 class WarKoUpdateRequest(BaseModel):

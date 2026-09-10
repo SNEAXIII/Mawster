@@ -1,6 +1,7 @@
 """Integration tests for war attacker endpoints."""
 
 import uuid
+from typing import ClassVar
 
 import pytest
 
@@ -24,6 +25,7 @@ from tests.utils.utils_client import (
     execute_get_request,
     execute_patch_request,
     execute_post_request,
+    execute_put_request,
 )
 from tests.utils.utils_constant import (
     USER2_ID,
@@ -749,3 +751,101 @@ class TestBigThingFormat:
             headers=headers_member,
         )
         assert r3.status_code == 409, f"Expected 409 but got {r3.status_code}: {r3.json()}"
+
+
+class TestUpdateBoosts:
+    BOOSTS: ClassVar[dict[str, object]] = {
+        "war_boost": "invulnerability",
+        "has_defense_boost": True,
+        "has_power_boost": False,
+        "has_specials_boost": True,
+    }
+
+    @staticmethod
+    async def _assign(data, headers, node: int = 10):
+        return await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/{node}/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers,
+        )
+
+    @pytest.mark.asyncio
+    async def test_update_boosts_success_by_member(self):
+        """Non-officer member can set boosts once an attacker is assigned."""
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+        await self._assign(data, headers)
+
+        response = await execute_put_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/boosts",
+            payload=self.BOOSTS,
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["war_boost"] == "invulnerability"
+        assert body["has_defense_boost"] is True
+        assert body["has_power_boost"] is False
+        assert body["has_specials_boost"] is True
+
+    @pytest.mark.asyncio
+    async def test_update_boosts_replaces_previous_exclusive(self):
+        """The war boost is a slot, not an accumulation: the new value replaces the old."""
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+        await self._assign(data, headers)
+        url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/boosts"
+
+        await execute_put_request(url, payload=self.BOOSTS, headers=headers)
+        response = await execute_put_request(
+            url, payload={"war_boost": "regeneration"}, headers=headers
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["war_boost"] == "regeneration"
+        # Omitted fields clear their boost — the request is a full replacement.
+        assert body["has_defense_boost"] is False
+        assert body["has_specials_boost"] is False
+
+    @pytest.mark.asyncio
+    async def test_update_boosts_without_attacker_returns_400(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+
+        response = await execute_put_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/boosts",
+            payload=self.BOOSTS,
+            headers=headers,
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_update_boosts_unknown_war_boost_returns_422(self):
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+        await self._assign(data, headers)
+
+        response = await execute_put_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/boosts",
+            payload={"war_boost": "attack"},
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_removing_attacker_clears_boosts(self):
+        """Boosts belong to the attacker, so detaching it must not leave them on the node."""
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER2_ID))
+        await self._assign(data, headers)
+        base = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10"
+        await execute_put_request(f"{base}/boosts", payload=self.BOOSTS, headers=headers)
+
+        await execute_delete_request(f"{base}/attacker", headers=headers)
+        response = await self._assign(data, headers)
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["war_boost"] is None
+        assert body["has_defense_boost"] is False
+        assert body["has_specials_boost"] is False

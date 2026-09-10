@@ -19,6 +19,7 @@ import { useWar } from '@/app/contexts/war-context'
 import NodeSlot from './node-slot'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import NodeActionsPopover from './node-actions-popover'
+import BoostPopover from './boost-popover'
 
 interface AttackerEntryRowProps {
   placement: WarPlacement
@@ -134,6 +135,12 @@ export default function AttackerEntryRow({
           >
             <CircleQuestionMark className={swordsSize} />
           </div>
+        )}
+        {placement.attacker_champion_user_id && (
+          <BoostPopover
+            placement={placement}
+            canManage={!readonly && !isVisitor && !placement.is_combat_completed}
+          />
         )}
         <Swords className={cn('text-muted-foreground shrink-0', swordsSize)} />
         <ChampionPortrait
