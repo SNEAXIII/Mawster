@@ -3,12 +3,8 @@
 import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import ChampionPortrait from '@/components/champion-portrait'
-import {
-  type RosterEntry,
-  getClassColors,
-  shortenChampionName,
-  getNextRarity,
-} from '@/app/services/roster'
+import { type RosterEntry, shortenChampionName, getNextRarity } from '@/app/services/roster'
+import { getClassColors } from '@/app/lib/champion-class'
 import { Trash2, Pencil, ArrowUp, X, Star } from 'lucide-react'
 import { memo } from 'react'
 

@@ -175,6 +175,28 @@ release-please then counts a second time alongside the real commits, duplicating
 - Before switching branches, check `git status` and warn about uncommitted changes rather than
   stashing them silently.
 
+### Worktrees
+
+A fresh worktree carries none of the four gitignored dependency directories, so `oxlint`,
+`prettier`, `tsc` and the front pre-commit hooks fail there with `MODULE_NOT_FOUND` or exit 127.
+**Offer to link them from the main checkout and wait for a yes** — never install per worktree,
+never link silently:
+
+| Directory | |
+| --- | --- |
+| `node_modules` (root) | `ln -s <main>/node_modules node_modules` |
+| `front/node_modules` | idem |
+| `api/.venv` | idem |
+| `static-assets/.venv` | idem |
+
+A link **shares** the environment, it does not copy it. Read-only tooling — lint, format,
+typecheck, hooks, `npm run dev` — is safe. Anything that writes (`npm install`, `uv sync`, or
+`uv run` against a lockfile the branch changed) reaches into the main checkout and corrupts it:
+warn first, and install for real in the worktree instead.
+
+On Windows outside WSL a symlink needs Developer Mode or an elevated shell; use a junction
+(`mklink /J <link> <target>`), which needs neither. Same volume only, no network share.
+
 ### Verification before claiming
 
 - Never state a fact about an external tool, API or CI behaviour from memory. Read the actual

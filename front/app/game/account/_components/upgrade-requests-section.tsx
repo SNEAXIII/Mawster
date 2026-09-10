@@ -11,8 +11,8 @@ import {
   cancelUpgradeRequest,
   type UpgradeRequest,
   RARITY_LABELS,
-  getClassColors,
 } from '@/app/services/roster'
+import { getClassColors } from '@/app/lib/champion-class'
 import { X } from 'lucide-react'
 
 interface UpgradeRequestsSectionProps {

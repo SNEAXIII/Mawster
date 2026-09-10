@@ -13,7 +13,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import ChampionPortrait from '@/components/champion-portrait'
-import { shortenChampionName, getClassColors, RARITY_LABELS } from '@/app/services/roster'
+import { shortenChampionName, RARITY_LABELS } from '@/app/services/roster'
+import { getClassColors } from '@/app/lib/champion-class'
 
 export interface ImportResult {
   champion_name: string
