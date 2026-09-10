@@ -363,6 +363,26 @@ class TestWarFightRecordSnapshot:
 
 class TestListFightRecords:
     @pytest.mark.asyncio
+    async def test_list_fight_records_exposes_boosts(self):
+        """The knowledge base reads its boosts from this listing, not from the war."""
+        data = await _setup_war_with_fight()
+        headers_owner = create_auth_headers(user_id=str(USER_ID))
+
+        await execute_put_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/boosts",
+            payload={"war_boost": WarBoost.INVULNERABILITY, "has_defense_boost": True},
+            headers=headers_owner,
+        )
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers_owner)
+
+        response = await execute_get_request("/fight-records", headers=headers_owner)
+        assert response.status_code == 200
+        record = response.json()["items"][0]
+        assert record["war_boost"] == WarBoost.INVULNERABILITY
+        assert record["has_defense_boost"] is True
+        assert record["has_power_boost"] is False
+
+    @pytest.mark.asyncio
     async def test_list_fight_records_returns_snapshot(self):
         data = await _setup_war_with_fight()
         headers_owner = create_auth_headers(user_id=str(USER_ID))

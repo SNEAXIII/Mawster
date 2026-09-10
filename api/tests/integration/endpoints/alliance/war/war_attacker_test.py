@@ -6,6 +6,7 @@ from typing import ClassVar
 import pytest
 
 from src.enums.Roles import Roles
+from src.enums.WarBoost import WarBoost
 from src.models import User
 from src.models.alliance.DefensePlacement import DefensePlacement
 from src.models.war.War import War
@@ -755,7 +756,7 @@ class TestBigThingFormat:
 
 class TestUpdateBoosts:
     BOOSTS: ClassVar[dict[str, object]] = {
-        "war_boost": "invulnerability",
+        "war_boost": WarBoost.INVULNERABILITY,
         "has_defense_boost": True,
         "has_power_boost": False,
         "has_specials_boost": True,
@@ -783,7 +784,7 @@ class TestUpdateBoosts:
         )
         assert response.status_code == 200
         body = response.json()
-        assert body["war_boost"] == "invulnerability"
+        assert body["war_boost"] == WarBoost.INVULNERABILITY
         assert body["has_defense_boost"] is True
         assert body["has_power_boost"] is False
         assert body["has_specials_boost"] is True

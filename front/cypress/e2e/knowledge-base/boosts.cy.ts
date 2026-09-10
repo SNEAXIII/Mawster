@@ -2,6 +2,17 @@ import { BACKEND, setupAssignedAttacker } from '../../support/e2e';
 
 const NODE = 10;
 
+// The war these records come from belongs to no season, and the page defaults to
+// `all_seasons` — which means "every season", not "everything", and drops them.
+const KB_URL = '/game/knowledge-base?season_selector=all';
+
+const icon = (key: string) => cy.getByCy(`war-node-boost-${key}-${NODE}`);
+
+/** Assert the record landed before reading its boosts: the empty state is a row too. */
+function expectOneRecord() {
+  cy.getByCy('fight-record-node').should('have.length', 1).and('have.text', String(NODE));
+}
+
 /**
  * The boosts must survive the war they were used in. The fast setup inserts fight records
  * directly, so these go through the real path — assign, boost, close — which is what
@@ -21,8 +32,7 @@ describe('Knowledge Base – boosts', () => {
         body,
       });
       cy.apiEndWar(ownerData.access_token, allianceId, warId, true, 10);
-      cy.apiLogin(ownerData.user_id, 'knowledge-base');
-      return cy.wrap(ownerData, { log: false });
+      cy.apiLogin(ownerData.user_id, KB_URL);
     });
   }
 
@@ -33,33 +43,35 @@ describe('Knowledge Base – boosts', () => {
       has_specials_boost: true,
     });
 
-    cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
+    expectOneRecord();
     cy.getByCy('fight-record-boosts').within(() => {
-      cy.getByCy(`war-node-boost-invulnerability-${NODE}`).should('exist');
-      cy.getByCy(`war-node-boost-defense-${NODE}`).should('exist');
-      cy.getByCy(`war-node-boost-specials-${NODE}`).should('exist');
-      cy.getByCy(`war-node-boost-power-${NODE}`).should('not.exist');
+      icon('invulnerability').should('exist');
+      icon('defense').should('exist');
+      icon('specials').should('exist');
+      icon('power').should('not.exist');
     });
   });
 
   it('leaves the boost cell empty for a fight fought without any', () => {
     setupAssignedAttacker('kb-boost-none').then(({ ownerData, allianceId, warId }) => {
       cy.apiEndWar(ownerData.access_token, allianceId, warId, true, 10);
-      cy.apiLogin(ownerData.user_id, 'knowledge-base');
+      cy.apiLogin(ownerData.user_id, KB_URL);
 
-      cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 1);
+      expectOneRecord();
       cy.getByCy('fight-record-boosts').find('[data-cy^="war-node-boost-"]').should('have.length', 0);
     });
   });
 
-  it('keeps the record intact after the war it came from is gone', () => {
+  it('keeps the record intact after a reload', () => {
     endWarWithBoosts('kb-boost-frozen', { war_boost: 'power_start', has_power_boost: true });
 
+    expectOneRecord();
     // The record is a copy, not a join: it still reads the same on a reload.
     cy.reload();
+    expectOneRecord();
     cy.getByCy('fight-record-boosts').within(() => {
-      cy.getByCy(`war-node-boost-power_start-${NODE}`).should('exist');
-      cy.getByCy(`war-node-boost-power-${NODE}`).should('exist');
+      icon('power_start').should('exist');
+      icon('power').should('exist');
     });
   });
 });

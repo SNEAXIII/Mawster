@@ -2,6 +2,14 @@ import { BACKEND, setupAssignedAttacker } from '../../support/e2e';
 
 const NODE = 10;
 
+const nodeUrl = (allianceId: string, warId: string) =>
+  `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/node/${NODE}`;
+const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
+
+const openPicker = () => cy.getByCy(`boost-trigger-node-${NODE}`).click();
+const pick = (key: string) => cy.getByCy(`boost-option-${key}-node-${NODE}`).click();
+const icon = (key: string) => cy.getByCy(`war-node-boost-${key}-${NODE}`);
+
 /** The mosaic holds four cells at most: one war-exclusive boost plus the three stackable ones. */
 describe('War – attacker boosts', () => {
   beforeEach(() => {
@@ -14,10 +22,10 @@ describe('War – attacker boosts', () => {
     setupAssignedAttacker('boost-pick').then(({ ownerData }) => {
       cy.openWarAttackerPanel(ownerData.user_id);
 
-      cy.getByCy(`boost-trigger-node-${NODE}`).click();
-      cy.getByCy(`boost-option-invulnerability-node-${NODE}`).click();
+      openPicker();
+      pick('invulnerability');
 
-      cy.getByCy(`war-node-boost-invulnerability-${NODE}`).should('be.visible');
+      icon('invulnerability').should('be.visible');
     });
   });
 
@@ -25,14 +33,14 @@ describe('War – attacker boosts', () => {
     setupAssignedAttacker('boost-replace').then(({ ownerData }) => {
       cy.openWarAttackerPanel(ownerData.user_id);
 
-      cy.getByCy(`boost-trigger-node-${NODE}`).click();
-      cy.getByCy(`boost-option-invulnerability-node-${NODE}`).click();
-      cy.getByCy(`war-node-boost-invulnerability-${NODE}`).should('exist');
+      openPicker();
+      pick('invulnerability');
+      icon('invulnerability').should('exist');
 
-      cy.getByCy(`boost-option-regeneration-node-${NODE}`).click();
+      pick('regeneration');
 
-      cy.getByCy(`war-node-boost-regeneration-${NODE}`).should('exist');
-      cy.getByCy(`war-node-boost-invulnerability-${NODE}`).should('not.exist');
+      icon('regeneration').should('exist');
+      icon('invulnerability').should('not.exist');
     });
   });
 
@@ -40,13 +48,13 @@ describe('War – attacker boosts', () => {
     setupAssignedAttacker('boost-untoggle').then(({ ownerData }) => {
       cy.openWarAttackerPanel(ownerData.user_id);
 
-      cy.getByCy(`boost-trigger-node-${NODE}`).click();
-      cy.getByCy(`boost-option-power_start-node-${NODE}`).click();
-      cy.getByCy(`war-node-boost-power_start-${NODE}`).should('exist');
+      openPicker();
+      pick('power_start');
+      icon('power_start').should('exist');
 
-      cy.getByCy(`boost-option-power_start-node-${NODE}`).click();
+      pick('power_start');
 
-      cy.getByCy(`war-node-boost-power_start-${NODE}`).should('not.exist');
+      icon('power_start').should('not.exist');
     });
   });
 
@@ -56,16 +64,10 @@ describe('War – attacker boosts', () => {
     setupAssignedAttacker('boost-stack').then(({ ownerData }) => {
       cy.openWarAttackerPanel(ownerData.user_id);
 
-      cy.getByCy(`boost-trigger-node-${NODE}`).click();
-      cy.getByCy(`boost-option-power_start-node-${NODE}`).click();
-      cy.getByCy(`boost-option-defense-node-${NODE}`).click();
-      cy.getByCy(`boost-option-power-node-${NODE}`).click();
-      cy.getByCy(`boost-option-specials-node-${NODE}`).click();
+      openPicker();
+      ['power_start', 'defense', 'power', 'specials'].forEach(pick);
 
-      cy.getByCy(`war-node-boost-power_start-${NODE}`).should('exist');
-      cy.getByCy(`war-node-boost-defense-${NODE}`).should('exist');
-      cy.getByCy(`war-node-boost-power-${NODE}`).should('exist');
-      cy.getByCy(`war-node-boost-specials-${NODE}`).should('exist');
+      ['power_start', 'defense', 'power', 'specials'].forEach((key) => icon(key).should('exist'));
     });
   });
 
@@ -73,16 +75,16 @@ describe('War – attacker boosts', () => {
 
   it('drops the boosts when the attacker leaves the node', () => {
     setupAssignedAttacker('boost-detach').then(({ ownerData, memberData, allianceId, warId, championUserId }) => {
-      const auth = { Authorization: `Bearer ${ownerData.access_token}` };
-      const node = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/node/${NODE}`;
+      const url = nodeUrl(allianceId, warId);
+      const headers = authHeader(ownerData.access_token);
 
       cy.request({
         method: 'PUT',
-        url: `${node}/boosts`,
-        headers: auth,
+        url: `${url}/boosts`,
+        headers,
         body: { war_boost: 'regeneration', has_defense_boost: true },
       });
-      cy.request({ method: 'DELETE', url: `${node}/attacker`, headers: auth });
+      cy.request({ method: 'DELETE', url: `${url}/attacker`, headers });
 
       cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, NODE, championUserId);
       cy.openWarAttackerPanel(ownerData.user_id);
@@ -96,8 +98,8 @@ describe('War – attacker boosts', () => {
     setupAssignedAttacker('boost-unknown').then(({ ownerData, allianceId, warId }) => {
       cy.request({
         method: 'PUT',
-        url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/node/${NODE}/boosts`,
-        headers: { Authorization: `Bearer ${ownerData.access_token}` },
+        url: `${nodeUrl(allianceId, warId)}/boosts`,
+        headers: authHeader(ownerData.access_token),
         body: { war_boost: 'attack' },
         failOnStatusCode: false,
       }).then((res) => {
@@ -108,14 +110,14 @@ describe('War – attacker boosts', () => {
 
   it('refuses boosts on a node nobody is attacking', () => {
     setupAssignedAttacker('boost-no-attacker').then(({ ownerData, allianceId, warId }) => {
-      const node = `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/1/node/${NODE}`;
-      const auth = { Authorization: `Bearer ${ownerData.access_token}` };
+      const url = nodeUrl(allianceId, warId);
+      const headers = authHeader(ownerData.access_token);
 
-      cy.request({ method: 'DELETE', url: `${node}/attacker`, headers: auth });
+      cy.request({ method: 'DELETE', url: `${url}/attacker`, headers });
       cy.request({
         method: 'PUT',
-        url: `${node}/boosts`,
-        headers: auth,
+        url: `${url}/boosts`,
+        headers,
         body: { war_boost: 'power_start' },
         failOnStatusCode: false,
       }).then((res) => {
