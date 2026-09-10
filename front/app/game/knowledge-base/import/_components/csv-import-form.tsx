@@ -21,6 +21,7 @@ import {
   type AccessibleAlliance,
 } from '@/app/services/fight-records'
 import { getMyAllianceRoles } from '@/app/services/game'
+import { MAX_KO_COUNT } from '@/app/services/war'
 
 interface RawRow {
   attackerName: string
@@ -49,7 +50,8 @@ function parseCSV(text: string): RawRow[] {
       const koCount = koRaw === '' ? 0 : Number.parseInt(koRaw, 10)
       if (Number.isNaN(node) || node < 1 || node > 50)
         throw new Error(`Row ${i + 1}: invalid node (1-50)`)
-      if (Number.isNaN(koCount) || koCount < 0) throw new Error(`Row ${i + 1}: invalid ko_count`)
+      if (Number.isNaN(koCount) || koCount < 0 || koCount > MAX_KO_COUNT)
+        throw new Error(`Row ${i + 1}: invalid ko_count (0-${MAX_KO_COUNT})`)
       return {
         attackerName: parts[0],
         defenderName: parts[1],

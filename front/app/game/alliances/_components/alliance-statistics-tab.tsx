@@ -8,7 +8,12 @@ import {
   fetchAllianceRankingHistory,
 } from '@/app/services/game'
 import AllianceRankingChart from './alliance-ranking-chart'
-import type { PlayerSeasonStats } from '@/app/services/statistics'
+import {
+  getSeasonWarStats,
+  type PlayerSeasonStats,
+  type SeasonWarStats,
+} from '@/app/services/statistics'
+import { AllianceSeasonWarsDialog } from './alliance-season-wars-dialog'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -18,6 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
+import { useAllianceRole } from '@/hooks/use-alliance-role'
+import { updateWarOpponentDeaths } from '@/app/services/war'
 import AllianceSelect from '@/app/game/_components/alliance-select'
 import { AllianceStatsTable, type SortField, type SortDir } from './alliance-stats-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -64,12 +71,23 @@ export default function AllianceStatisticsTab({
   onSeasonChange,
 }: Readonly<AllianceStatisticsTabProps>) {
   const { t } = useI18n()
+  const { canPlace } = useAllianceRole()
   const stat = t.game.alliances.statistics
   const [ratioMin, setRatioMin] = useState(-Infinity)
   const [selectedGroup, setSelectedGroup] = useState('all')
+  const [seasonWars, setSeasonWars] = useState<SeasonWarStats[]>([])
+  const [seasonWarsOpen, setSeasonWarsOpen] = useState(false)
   const [rankingPoints, setRankingPoints] = useState<RankingHistoryPoint[]>([])
   const [rankingSeasonNumber, setRankingSeasonNumber] = useState<number | null>(null)
   const [rankingSeasonStatus, setRankingSeasonStatus] = useState<SeasonStatus | null>(null)
+
+  useEffect(() => {
+    if (!selectedAllianceId) return
+    setSeasonWars([])
+    getSeasonWarStats(selectedAllianceId, selectedSeasonId ?? undefined)
+      .then(setSeasonWars)
+      .catch(() => {})
+  }, [selectedAllianceId, selectedSeasonId])
 
   useEffect(() => {
     if (!selectedAllianceId) return
@@ -146,6 +164,22 @@ export default function AllianceStatisticsTab({
     })
   }, [seasonStats, memberFilter, ratioMin, selectedGroup, sortField, sortDir])
 
+  const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId)
+
+  // Patch the row in place: refetching the season would collapse the edited cell
+  // while the request is still in flight.
+  const handleSaveOpponentDeaths = async (warId: string, deaths: number | null) => {
+    await updateWarOpponentDeaths(selectedAllianceId, warId, deaths)
+    setSeasonWars((prev) =>
+      prev.map((w) => (w.war_id === warId ? { ...w, opponent_deaths: deaths } : w))
+    )
+  }
+
+  const displayedSeasonNumber = useMemo(() => {
+    const id = selectedSeasonId ?? seasons[0]?.id
+    return seasons.find((season) => season.id === id)?.number ?? null
+  }, [seasons, selectedSeasonId])
+
   const selectedPlayer = useMemo(
     () => seasonStats.find((s) => s.id === selectedGameAccountId) ?? null,
     [seasonStats, selectedGameAccountId]
@@ -183,14 +217,50 @@ export default function AllianceStatisticsTab({
           {stat.seasonBadgeEnded.replace('{number}', String(rankingSeasonNumber))}
         </span>
       )}
-      {alliances.length > 1 && (
-        <AllianceSelect
-          alliances={alliances}
-          value={selectedAllianceId}
-          onChange={onAllianceChange}
-          dataCy='statistics-alliance-select'
-        />
-      )}
+      <div className='flex flex-wrap items-center gap-3'>
+        {alliances.length > 1 && (
+          <AllianceSelect
+            alliances={alliances}
+            value={selectedAllianceId}
+            onChange={onAllianceChange}
+            dataCy='statistics-alliance-select'
+          />
+        )}
+
+        {seasons.length > 0 && (
+          <Select
+            value={selectedSeasonId ?? seasons[0].id}
+            onValueChange={onSeasonChange}
+          >
+            <SelectTrigger
+              className='w-36'
+              data-cy='statistics-season-filter'
+            >
+              <SelectValue placeholder={stat.seasonFilter} />
+            </SelectTrigger>
+            <SelectContent>
+              {seasons.map((season) => (
+                <SelectItem
+                  key={season.id}
+                  value={season.id}
+                  data-cy={`statistics-season-${season.id}`}
+                >
+                  {stat.seasonOption.replace('{number}', String(season.number))}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        <Button
+          size='sm'
+          variant='outline'
+          onClick={() => setSeasonWarsOpen(true)}
+          data-cy='statistics-open-season-wars'
+        >
+          {stat.seasonWars.open}
+        </Button>
+      </div>
 
       <CollapsibleSection
         title={t.game.alliances.rankingHistory}
@@ -244,31 +314,6 @@ export default function AllianceStatisticsTab({
                 <SelectItem value='former'>{stat.memberFilter.former}</SelectItem>
               </SelectContent>
             </Select>
-
-            {seasons.length > 0 && (
-              <Select
-                value={selectedSeasonId ?? seasons[0].id}
-                onValueChange={onSeasonChange}
-              >
-                <SelectTrigger
-                  className='w-36'
-                  data-cy='statistics-season-filter'
-                >
-                  <SelectValue placeholder={stat.seasonFilter} />
-                </SelectTrigger>
-                <SelectContent>
-                  {seasons.map((season) => (
-                    <SelectItem
-                      key={season.id}
-                      value={season.id}
-                      data-cy={`statistics-season-${season.id}`}
-                    >
-                      {stat.seasonOption.replace('{number}', String(season.number))}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
 
             <Select
               value={selectedWarId ?? 'all'}
@@ -425,6 +470,16 @@ export default function AllianceStatisticsTab({
         data={championUsage}
         metric={chartMetric}
         playerName={selectedPlayer?.game_pseudo ?? null}
+      />
+
+      <AllianceSeasonWarsDialog
+        open={seasonWarsOpen}
+        onOpenChange={setSeasonWarsOpen}
+        wars={seasonWars}
+        allianceTag={selectedAlliance?.tag ?? ''}
+        seasonNumber={displayedSeasonNumber}
+        canEdit={selectedAlliance !== undefined && canPlace(selectedAlliance)}
+        onSaveOpponentDeaths={handleSaveOpponentDeaths}
       />
     </div>
   )

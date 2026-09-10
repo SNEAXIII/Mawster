@@ -232,12 +232,20 @@ GitHub operations (PRs, issues, reviews) go through the `gh` CLI. Backend tests,
 
 Backups are gzipped SQL dumps in `backups/` (e.g. `mawster_YYYY-MM-DD_HH-MM.sql.gz`) — **gzip, not zip** (`unzip` will fail).
 
+The client is `mariadb`, never `mysql` — the pinned 11.4 image ships no `mysql*` alias.
+
 Restore a dump into the dev DB (stream, no temp file):
 ```bash
-gunzip -c backups/<file>.sql.gz | mysql -h 127.0.0.1 -P 3305 -u root -prootpassword mawster
+gunzip -c backups/<file>.sql.gz | docker exec -i mariadb-dev mariadb -u root -prootpassword mawster
 ```
 
-Or directly into the container:
-```bash
-gunzip -c backups/<file>.sql.gz | docker exec -i mariadb-dev mysql -u root -prootpassword mawster
+A plain `.sql` file goes through the container, never through a host redirection — PowerShell
+rejects `<`, and `Get-Content |` re-encodes the stream to cp1252 and corrupts the UTF-8:
+```powershell
+docker cp <file>.sql mariadb-dev:/tmp/dump.sql
+docker exec mariadb-dev sh -c "mariadb -u root -prootpassword mawster < /tmp/dump.sql"
+docker exec mariadb-dev rm /tmp/dump.sql
 ```
+
+A restore overwrites the dev DB, and the dump's `alembic_version` lags the local head — run
+`make migrate` from `api/` afterwards.

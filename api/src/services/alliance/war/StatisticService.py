@@ -9,6 +9,8 @@ from src.dto.alliance.war.dto_statistic import (
     NOT_FOUGHT_KOS,
     ChampionUsageResponse,
     PlayerSeasonStatsResponse,
+    SeasonWarStatsResponse,
+    WarBattlegroupDeaths,
 )
 from src.enums.WarStatus import WarStatus
 from src.models import ChampionUser, GameAccount, User, War, WarDefensePlacement
@@ -193,6 +195,16 @@ class StatisticService:
         rows = (await session.exec(sql)).mappings().all()
         return [PlayerSeasonStatsResponse.model_validate(row) for row in rows]
 
+    @staticmethod
+    async def _assert_alliance_visible(
+        session: SessionDep, current_user: User, alliance_id: uuid.UUID
+    ) -> None:
+        alliance = await session.get(Alliance, alliance_id)
+        if alliance is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+        if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
     @classmethod
     async def get_champion_usage(
         cls,
@@ -206,11 +218,7 @@ class StatisticService:
         perspective: str = "attacker",
         season_id: uuid.UUID | None = None,
     ) -> list[ChampionUsageResponse]:
-        alliance = await session.get(Alliance, alliance_id)
-        if alliance is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
-        if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+        await cls._assert_alliance_visible(session, current_user, alliance_id)
 
         target_season_id = await cls._resolve_season_id(session, season_id)
         if target_season_id is None:
@@ -254,3 +262,77 @@ class StatisticService:
         )
         rows = (await session.exec(stmt)).mappings().all()
         return [ChampionUsageResponse.model_validate(dict(row)) for row in rows]
+
+    @classmethod
+    async def get_season_war_stats(
+        cls,
+        session: SessionDep,
+        current_user: User,
+        alliance_id: uuid.UUID,
+        season_id: uuid.UUID | None = None,
+    ) -> list[SeasonWarStatsResponse]:
+        """One row per ended war of the season, deaths split per battlegroup.
+
+        Deaths are the raw sum of ``ko_count``: planning errors are kept in, since
+        the point is the alliance's real death count, not anyone's ratio.
+        """
+        await cls._assert_alliance_visible(session, current_user, alliance_id)
+
+        target_season_id = await cls._resolve_season_id(session, season_id)
+        if target_season_id is None:
+            return []
+
+        stmt = (
+            select(
+                War.id.label("war_id"),
+                War.opponent_name,
+                War.win,
+                War.opponent_deaths,
+                War.created_at,
+                WarDefensePlacement.battlegroup,
+                cast(func.coalesce(func.sum(WarDefensePlacement.ko_count), 0), Integer).label(
+                    "deaths"
+                ),
+            )
+            .select_from(War)
+            .outerjoin(WarDefensePlacement, WarDefensePlacement.war_id == War.id)
+            .where(
+                War.alliance_id == alliance_id,
+                War.season_id == target_season_id,
+                War.status == WarStatus.ended,
+            )
+            .group_by(
+                War.id,
+                War.opponent_name,
+                War.win,
+                War.opponent_deaths,
+                War.created_at,
+                WarDefensePlacement.battlegroup,
+            )
+            .order_by(War.created_at.asc(), WarDefensePlacement.battlegroup.asc())
+        )
+        rows = (await session.exec(stmt)).mappings().all()
+
+        wars: dict[uuid.UUID, SeasonWarStatsResponse] = {}
+        for row in rows:
+            war = wars.get(row["war_id"])
+            if war is None:
+                war = SeasonWarStatsResponse(
+                    war_id=row["war_id"],
+                    # Chronological position in the season, as the alliance played them.
+                    war_number=len(wars) + 1,
+                    opponent_name=row["opponent_name"],
+                    win=row["win"],
+                    opponent_deaths=row["opponent_deaths"],
+                    total_deaths=0,
+                    battlegroups=[],
+                )
+                wars[row["war_id"]] = war
+            if row["battlegroup"] is None:
+                continue
+            war.battlegroups.append(
+                WarBattlegroupDeaths(battlegroup=row["battlegroup"], deaths=row["deaths"])
+            )
+            war.total_deaths += row["deaths"]
+
+        return list(wars.values())

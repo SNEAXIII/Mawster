@@ -3,7 +3,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from src.dto.alliance.war.dto_statistic import ChampionUsageResponse, PlayerSeasonStatsResponse
+from src.dto.alliance.war.dto_statistic import (
+    ChampionUsageResponse,
+    PlayerSeasonStatsResponse,
+    SeasonWarStatsResponse,
+)
 from src.dto.player.dto_player_stats import PlayerSeasonOption, PlayerStatsResponse
 from src.services.alliance.war.StatisticService import StatisticService
 from src.services.auth.AuthService import AuthService
@@ -34,6 +38,22 @@ async def get_current_season_statistics(
     """Season statistics, defaulting to the display season, optionally one war."""
     return await StatisticService.get_display_season_statistics(
         session, current_user, alliance_id, season_id, war_id
+    )
+
+
+@statistics_controller.get(
+    "/season-wars/{alliance_id}",
+    response_model=list[SeasonWarStatsResponse],
+)
+async def get_season_war_stats(
+    session: SessionDep,
+    current_user: CurrentUser,
+    alliance_id: uuid.UUID,
+    season_id: Annotated[uuid.UUID | None, Query()] = None,
+):
+    """Per-war deaths of a season, split per battlegroup."""
+    return await StatisticService.get_season_war_stats(
+        session, current_user, alliance_id, season_id
     )
 
 

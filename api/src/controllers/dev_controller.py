@@ -658,7 +658,7 @@ async def _insert_fight_records(
             defender_rank=3,
             defender_ascension=0,
             defender_is_saga_defender=saga.get(dfn.id, (False, False))[1],
-            ko_count=node,
+            ko_count=node % 4,
         )
         session.add(record)
 

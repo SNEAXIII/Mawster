@@ -2,6 +2,9 @@ import { PROXY, jsonHeaders } from '@/app/services/utils'
 
 // ─── War Service ─────────────────────────────────────────
 
+// Mirrors the KoCount bound in api/src/game_types.py.
+export const MAX_KO_COUNT = 3
+
 export interface BannedChampion {
   id: string
   name: string
@@ -24,6 +27,7 @@ export interface War {
   season_id: string | null
   season_number: number | null
   win: boolean | null
+  opponent_deaths: number | null
   elo_change: number | null
   tier: number | null
 }
@@ -260,14 +264,29 @@ export async function endWar(
   allianceId: string,
   warId: string,
   win: boolean,
-  eloChange: number | null
+  eloChange: number | null,
+  opponentDeaths: number | null
 ): Promise<War> {
   const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/end`, {
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({ win, elo_change: eloChange }),
+    body: JSON.stringify({ win, elo_change: eloChange, opponent_deaths: opponentDeaths }),
   })
   await throwOnError(response, 'Failed to end war')
+  return response.json()
+}
+
+export async function updateWarOpponentDeaths(
+  allianceId: string,
+  warId: string,
+  opponentDeaths: number | null
+): Promise<War> {
+  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/opponent-deaths`, {
+    method: 'PATCH',
+    headers: jsonHeaders,
+    body: JSON.stringify({ opponent_deaths: opponentDeaths }),
+  })
+  await throwOnError(response, 'Failed to update opponent deaths')
   return response.json()
 }
 

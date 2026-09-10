@@ -617,6 +617,19 @@ class TestUpdateKo:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
+    async def test_update_ko_above_max_rejected(self):
+        """A KO count over the 3 cap is refused before reaching the service."""
+        data = await _setup_attacker_scenario()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        response = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/ko",
+            payload={"ko_count": 4},
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
     async def test_update_ko_node_not_found(self):
         data = await _setup_attacker_scenario()
         headers = create_auth_headers(user_id=str(USER_ID))

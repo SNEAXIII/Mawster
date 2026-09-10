@@ -1273,17 +1273,35 @@ Cypress.Commands.add(
   },
 );
 
-Cypress.Commands.add('apiEndWar', (token: string, allianceId: string, warId: string, win = true, eloChange = 10) => {
-  cy.request({
-    method: 'POST',
-    url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/end`,
-    headers: { Authorization: `Bearer ${token}` },
-    body: { win, elo_change: eloChange },
-  }).then((res) => {
-    expect(res.status).to.eq(200);
-    return res.body;
-  });
-});
+Cypress.Commands.add(
+  'apiEndWar',
+  (token: string, allianceId: string, warId: string, win = true, eloChange = 10, opponentDeaths?: number) => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/end`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { win, elo_change: eloChange, opponent_deaths: opponentDeaths ?? null },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  },
+);
+
+Cypress.Commands.add(
+  'apiSetOpponentDeaths',
+  (token: string, allianceId: string, warId: string, opponentDeaths: number | null) => {
+    cy.request({
+      method: 'PATCH',
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/opponent-deaths`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { opponent_deaths: opponentDeaths },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body;
+    });
+  },
+);
 
 Cypress.Commands.add(
   'apiUpsertWarNote',

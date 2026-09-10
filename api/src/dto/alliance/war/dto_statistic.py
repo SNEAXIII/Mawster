@@ -35,3 +35,24 @@ class ChampionUsageResponse(BaseModel):
     fight_count: int
     total_kos: int
     image_url: str | None = None
+
+
+class WarBattlegroupDeaths(BaseModel):
+    battlegroup: int
+    deaths: int
+
+
+class SeasonWarStatsResponse(BaseModel):
+    """One ended war of the season, with its deaths split per battlegroup.
+
+    Totals and averages stay out on purpose: the table derives them from these rows,
+    so the formula lives in one place instead of two.
+    """
+
+    war_id: uuid.UUID
+    war_number: int
+    opponent_name: str
+    win: bool | None = None
+    opponent_deaths: int | None = None
+    total_deaths: int
+    battlegroups: list[WarBattlegroupDeaths] = []

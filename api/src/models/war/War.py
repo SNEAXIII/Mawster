@@ -29,6 +29,8 @@ class War(UUIDBase, SeasonFk, AllianceFk, TimestampMixin, table=True):
     status: WarStatus = Field(default=WarStatus.active)
     created_by_id: uuid.UUID = Field(foreign_key=FK_GAME_ACCOUNT)
     win: bool | None = Field(default=None)
+    # Enemy deaths on our defense: nothing tracks them, an officer types the total in.
+    opponent_deaths: int | None = Field(default=None, ge=0)
     elo_change: int | None = Field(default=None)
     tier: Tier | None = Field(default=None)
     snapshotted_at: datetime | None = Field(default=None)

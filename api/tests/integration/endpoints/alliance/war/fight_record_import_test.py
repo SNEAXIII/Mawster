@@ -117,6 +117,25 @@ class TestImportFightRecords:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("ko_count", [4, 99])
+    async def test_ko_count_above_max_returns_422(self, officer_with_champions, ko_count):
+        alliance_id, _officer_acc_id, champ_id, defender_id, _season_id = officer_with_champions
+        payload = {
+            "rows": [
+                {
+                    "champion_id": str(champ_id),
+                    "defender_champion_id": str(defender_id),
+                    "node_number": 15,
+                    "season_name": "S1",
+                    "ko_count": ko_count,
+                }
+            ]
+        }
+        url = f"/alliances/{alliance_id}/fight-records/import"
+        response = await execute_post_request(url, payload, HEADERS_USER2)
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
     async def test_wrong_alliance_returns_404(self, officer_with_champions):
         other_alliance_id = uuid.uuid4()
         _alliance_id, _officer_acc_id, champ_id, defender_id, _season_id = officer_with_champions

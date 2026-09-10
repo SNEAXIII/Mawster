@@ -33,6 +33,7 @@ USER2_HEADERS = create_auth_headers(user_id=str(USER2_ID), role=Roles.USER)
 
 STATS_URL = "/statistics/current_season"
 CHAMPION_USAGE_URL = "/statistics/champion-usage"
+SEASON_WARS_URL = "/statistics/season-wars"
 
 
 async def _base_setup():
@@ -828,3 +829,99 @@ class TestAssistStatistics:
         response = await execute_get_request(f"{STATS_URL}/{other_alliance.id}", USER_HEADERS)
         assert response.status_code == 200
         assert response.json() == []
+
+
+class TestGetSeasonWarStats:
+    @pytest.mark.anyio
+    async def test_returns_empty_when_no_season(self):
+        data = await _base_setup()
+        response = await execute_get_request(
+            f"{SEASON_WARS_URL}/{data['alliance'].id}", USER_HEADERS
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.anyio
+    async def test_splits_deaths_per_battlegroup(self):
+        data = await _setup_with_active_season()
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, 1, 1, ko_count=1)
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, 2, 2, ko_count=2)
+        await _add_placement(data["war"].id, data["cu"].id, data["champ"].id, 3, 3, ko_count=3)
+
+        response = await execute_get_request(
+            f"{SEASON_WARS_URL}/{data['alliance'].id}", USER_HEADERS
+        )
+        assert response.status_code == 200
+        rows = response.json()
+        assert len(rows) == 1
+        assert rows[0]["war_number"] == 1
+        assert rows[0]["opponent_name"] == "Enemy"
+        assert rows[0]["total_deaths"] == 6
+        assert {bg["battlegroup"]: bg["deaths"] for bg in rows[0]["battlegroups"]} == {
+            1: 1,
+            2: 2,
+            3: 3,
+        }
+
+    @pytest.mark.anyio
+    async def test_counts_planning_errors(self):
+        """Deaths are the alliance's real toll, so a misplanned fight still counts."""
+        data = await _setup_with_active_season()
+        placement = await _add_placement(
+            data["war"].id, data["cu"].id, data["champ"].id, 1, 1, ko_count=2
+        )
+        placement.is_planning_error = True
+        await load_objects([placement])
+
+        response = await execute_get_request(
+            f"{SEASON_WARS_URL}/{data['alliance'].id}", USER_HEADERS
+        )
+        assert response.json()[0]["total_deaths"] == 2
+
+    @pytest.mark.anyio
+    async def test_returns_opponent_deaths_and_result(self):
+        data = await _setup_with_active_season()
+        war = data["war"]
+        war.win = True
+        war.opponent_deaths = 35
+        await load_objects([war])
+
+        response = await execute_get_request(
+            f"{SEASON_WARS_URL}/{data['alliance'].id}", USER_HEADERS
+        )
+        row = response.json()[0]
+        assert row["win"] is True
+        assert row["opponent_deaths"] == 35
+
+    @pytest.mark.anyio
+    async def test_skips_active_wars(self):
+        data = await _setup_with_active_season()
+        active = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="Ongoing",
+            created_by_id=data["owner"].id,
+            season_id=data["season"].id,
+            status=WarStatus.active,
+        )
+        await load_objects([active])
+
+        response = await execute_get_request(
+            f"{SEASON_WARS_URL}/{data['alliance'].id}", USER_HEADERS
+        )
+        assert [row["opponent_name"] for row in response.json()] == ["Enemy"]
+
+    @pytest.mark.anyio
+    async def test_stranger_gets_403(self):
+        data = await _base_setup()
+        await push_user2()
+        response = await execute_get_request(
+            f"{SEASON_WARS_URL}/{data['alliance'].id}", USER2_HEADERS
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.anyio
+    async def test_unknown_alliance_gets_404(self):
+        await _base_setup()
+        response = await execute_get_request(f"{SEASON_WARS_URL}/{uuid.uuid4()}", USER_HEADERS)
+        assert response.status_code == 404

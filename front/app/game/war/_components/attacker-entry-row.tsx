@@ -14,7 +14,7 @@ import {
   Ban,
   AlertTriangle,
 } from 'lucide-react'
-import type { WarPlacement } from '@/app/services/war'
+import { MAX_KO_COUNT, type WarPlacement } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import NodeSlot from './node-slot'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
@@ -57,7 +57,7 @@ export default function AttackerEntryRow({
   const { t } = useI18n()
   const {
     handleRemoveAttacker,
-    handleUpdateKo,
+    handleAdjustKo,
     handleToggleCombatCompleted,
     handleToggleFightNotDone,
     handleTogglePlanningError,
@@ -235,8 +235,7 @@ export default function AttackerEntryRow({
                       placement.ko_count <= 0 && 'opacity-40 cursor-not-allowed'
                     )}
                     onClick={() =>
-                      placement.ko_count > 0 &&
-                      handleUpdateKo(placement.node_number, placement.ko_count - 1)
+                      placement.ko_count > 0 && handleAdjustKo(placement.node_number, -1)
                     }
                     disabled={placement.ko_count <= 0}
                     data-cy={`ko-dec-node-${placement.node_number}`}
@@ -253,9 +252,13 @@ export default function AttackerEntryRow({
                     type='button'
                     className={cn(
                       'rounded flex items-center justify-center text-xs bg-muted hover:bg-accent transition-colors',
-                      btnSize
+                      btnSize,
+                      placement.ko_count >= MAX_KO_COUNT && 'opacity-40 cursor-not-allowed'
                     )}
-                    onClick={() => handleUpdateKo(placement.node_number, placement.ko_count + 1)}
+                    onClick={() =>
+                      placement.ko_count < MAX_KO_COUNT && handleAdjustKo(placement.node_number, 1)
+                    }
+                    disabled={placement.ko_count >= MAX_KO_COUNT}
                     data-cy={`ko-inc-node-${placement.node_number}`}
                   >
                     <Plus className={cn(iconSize)} />

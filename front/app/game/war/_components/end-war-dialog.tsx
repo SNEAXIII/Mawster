@@ -20,7 +20,7 @@ interface EndWarDialogProps {
   onOpenChange: (open: boolean) => void
   hasSeason: boolean
   currentElo: number
-  onConfirm: (win: boolean, eloChange: number | null) => void
+  onConfirm: (win: boolean, eloChange: number | null, opponentDeaths: number | null) => void
 }
 
 export default function EndWarDialog({
@@ -33,6 +33,7 @@ export default function EndWarDialog({
   const { t } = useI18n()
   const [win, setWin] = useState(true)
   const [eloInput, setEloInput] = useState('')
+  const [opponentDeathsInput, setOpponentDeathsInput] = useState('')
   const [confirmInput, setConfirmInput] = useState('')
 
   const parsedElo = eloInput === '' ? null : Number(eloInput)
@@ -44,11 +45,17 @@ export default function EndWarDialog({
   const nextElo = signedElo === null ? null : Math.max(0, Math.min(4500, currentElo + signedElo))
   const confirmed = confirmInput.trim().toLowerCase() === 'confirm'
 
+  const parsedOpponentDeaths = opponentDeathsInput === '' ? null : Number(opponentDeathsInput)
+  const opponentDeathsValid =
+    parsedOpponentDeaths === null ||
+    (Number.isInteger(parsedOpponentDeaths) && parsedOpponentDeaths >= 0)
+
   function handleConfirm() {
-    if (!eloValid || !confirmed) return
-    onConfirm(win, hasSeason ? signedElo : null)
+    if (!eloValid || !opponentDeathsValid || !confirmed) return
+    onConfirm(win, hasSeason ? signedElo : null, parsedOpponentDeaths)
     onOpenChange(false)
     setEloInput('')
+    setOpponentDeathsInput('')
     setConfirmInput('')
     setWin(true)
   }
@@ -139,6 +146,28 @@ export default function EndWarDialog({
             </div>
           )}
 
+          <div className='flex flex-col gap-1'>
+            <Label htmlFor='opponent-deaths'>{t.game.war.opponentDeaths}</Label>
+            <Input
+              id='opponent-deaths'
+              type='number'
+              min='0'
+              placeholder='0'
+              value={opponentDeathsInput}
+              onChange={(e) => setOpponentDeathsInput(e.target.value)}
+              data-cy='end-war-opponent-deaths-input'
+            />
+            <p className='text-xs text-muted-foreground'>{t.game.war.opponentDeathsHint}</p>
+            {opponentDeathsInput !== '' && !opponentDeathsValid && (
+              <p
+                className='text-xs text-destructive'
+                data-cy='end-war-opponent-deaths-error'
+              >
+                {t.game.war.opponentDeathsInvalid}
+              </p>
+            )}
+          </div>
+
           <Input
             placeholder='confirm'
             value={confirmInput}
@@ -157,7 +186,7 @@ export default function EndWarDialog({
           </Button>
           <Button
             variant='destructive'
-            disabled={!eloValid || !confirmed}
+            disabled={!eloValid || !opponentDeathsValid || !confirmed}
             onClick={handleConfirm}
             data-cy='confirmation-dialog-confirm'
           >

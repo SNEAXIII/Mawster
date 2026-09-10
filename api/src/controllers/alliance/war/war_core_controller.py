@@ -6,6 +6,7 @@ from starlette import status
 from src.dto.alliance.war.dto_war import (
     WarCreateRequest,
     WarEndRequest,
+    WarOpponentDeathsRequest,
     WarResponse,
     WarUpdateRequest,
 )
@@ -88,6 +89,22 @@ async def update_war(
     )
 
 
+@war_core_controller.patch(
+    "/{war_id}/opponent-deaths",
+    response_model=WarResponse,
+)
+async def set_opponent_deaths(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    body: WarOpponentDeathsRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+):
+    """Set or clear the enemy deaths of a war, ended or not. Strategists and above."""
+    await AllianceService.require_strategist(session, alliance_id, current_user.id)
+    return await WarService.set_opponent_deaths(session, war_id, alliance_id, body.opponent_deaths)
+
+
 @war_core_controller.post(
     "/{war_id}/end",
     response_model=WarResponse,
@@ -101,4 +118,6 @@ async def end_war(
 ):
     """Mark a war as ended with result. Officers/owner only."""
     await AllianceService.require_officer(session, alliance_id, current_user.id)
-    return await WarService.end_war(session, war_id, alliance_id, body.win, body.elo_change)
+    return await WarService.end_war(
+        session, war_id, alliance_id, body.win, body.elo_change, body.opponent_deaths
+    )
