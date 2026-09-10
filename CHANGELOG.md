@@ -3,6 +3,15 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.15.0](https://github.com/SNEAXIII/Mawster/compare/v1.14.0...v1.15.0) (2026-09-10)
+
+
+### Ajouté
+
+* implement boost icons and update mosaic to use them ([d56ff0c](https://github.com/SNEAXIII/Mawster/commit/d56ff0c6cb80166bfff0753069672a7b2b4be033))
+* plan attacker boosts on war nodes and freeze them on fight records ([#548](https://github.com/SNEAXIII/Mawster/issues/548)) ([a8b549f](https://github.com/SNEAXIII/Mawster/commit/a8b549fab9f4ce14522cdac1878e8238b1ac2e84))
+* show the champion class symbol next to its name ([a34c9a0](https://github.com/SNEAXIII/Mawster/commit/a34c9a0ccfa2b8e2719da573ab858545a223e13c))
+
 ## [1.14.0](https://github.com/SNEAXIII/Mawster/compare/v1.13.0...v1.14.0) (2026-09-10)
 
 
