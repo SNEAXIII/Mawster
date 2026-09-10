@@ -1,9 +1,9 @@
 import type { TierListSavePayload, TierListTag } from '@/app/services/tierlist'
+import { CLASS_ORDER, ChampionClass } from '@/app/lib/champion-class'
 
-/** The six champion classes, in the order the class filter shows them. */
-export const CHAMPION_CLASSES = ['Cosmic', 'Tech', 'Mutant', 'Skill', 'Science', 'Mystic'] as const
+export const CHAMPION_CLASSES = CLASS_ORDER
 
-export type ChampionClass = (typeof CHAMPION_CLASSES)[number]
+export { ChampionClass }
 
 /**
  * The tags a champion carries in one tier list, without the champion id the API

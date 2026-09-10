@@ -5,12 +5,8 @@ import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import { Button } from '@/components/ui/button'
 import { getChampionImageUrl } from '@/app/services/champions'
-import {
-  RARITY_LABELS,
-  getClassColors,
-  raritySortValue,
-  shortenChampionName,
-} from '@/app/services/roster'
+import { RARITY_LABELS, raritySortValue, shortenChampionName } from '@/app/services/roster'
+import { getClassColors } from '@/app/lib/champion-class'
 import type { AllianceRosterEntry } from '@/app/services/game'
 
 interface Props {
