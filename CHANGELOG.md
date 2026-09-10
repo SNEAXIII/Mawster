@@ -3,6 +3,18 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.14.0](https://github.com/SNEAXIII/Mawster/compare/v1.13.0...v1.14.0) (2026-09-10)
+
+
+### Ajouté
+
+* season war results per battlegroup, with enemy deaths entered by hand ([68bf695](https://github.com/SNEAXIII/Mawster/commit/68bf69525b1698c4c48c18f9989168e6a2d7dcad))
+
+
+### Modifié
+
+* factor the repeated champion fields into shared DTO mixins ([#546](https://github.com/SNEAXIII/Mawster/issues/546)) ([a97a642](https://github.com/SNEAXIII/Mawster/commit/a97a64298363b5620a6844448106e6198f5a7d1e))
+
 ## [1.13.0](https://github.com/SNEAXIII/Mawster/compare/v1.12.1...v1.13.0) (2026-09-09)
 
 
