@@ -1,8 +1,8 @@
 # TODO — war boost icons
 
-The 2×2 boost mosaic on a war defense node renders `lucide-react` placeholders until the
-real assets land here. Drop the PNGs below in this directory, then swap the placeholders in
-`front/app/game/defense/_components/` (search for `BOOST_ICONS`).
+The 2×2 boost mosaic renders `lucide-react` placeholders until the real assets land here.
+Drop the PNGs below in this directory, then swap them into the single `BOOST_ICONS` map in
+`front/components/boost-mosaic.tsx` — one edit covers both the war map and the knowledge base.
 
 | File | Boost | Placeholder |
 | --- | --- | --- |
