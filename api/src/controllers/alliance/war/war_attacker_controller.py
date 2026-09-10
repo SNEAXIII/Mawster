@@ -7,6 +7,7 @@ from src.dto.alliance.war.dto_war import (
     AvailableAttackerResponse,
     AvailablePrefightAttackerResponse,
     WarAttackerAssignRequest,
+    WarBoostUpdateRequest,
     WarKoUpdateRequest,
     WarPlacementResponse,
 )
@@ -118,6 +119,25 @@ async def update_war_ko(
     """Update the KO count for a war node. All members can update."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
     return await WarService.update_ko(session, war_id, battlegroup, node_number, body.ko_count)
+
+
+@war_attacker_controller.put(
+    "/{war_id}/bg/{battlegroup}/node/{node_number}/boosts",
+    response_model=WarPlacementResponse,
+)
+async def update_war_boosts(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    node_number: int,
+    body: WarBoostUpdateRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+    war: WarDep,
+):
+    """Replace the boosts planned for a war node's attacker. All members can update."""
+    await AllianceService.require_member(session, alliance_id, current_user.id)
+    return await WarService.update_boosts(session, war_id, battlegroup, node_number, body)
 
 
 @war_attacker_controller.patch(

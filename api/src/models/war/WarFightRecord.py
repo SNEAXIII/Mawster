@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
+from src.enums.WarBoost import WarBoost
 from src.models.Base import (
     AllianceFk,
     Ascension,
@@ -55,6 +56,10 @@ class WarFightRecord(
     ko_count: KoCount = 0
     is_planning_error: bool = Field(default=False)
     assisted: bool = Field(default=False)
+    war_boost: WarBoost | None = Field(default=None)
+    has_defense_boost: bool = Field(default=False)
+    has_power_boost: bool = Field(default=False)
+    has_specials_boost: bool = Field(default=False)
 
     war: "War" = Relationship(sa_relationship_kwargs={"foreign_keys": "[WarFightRecord.war_id]"})
     alliance: "Alliance" = Relationship(

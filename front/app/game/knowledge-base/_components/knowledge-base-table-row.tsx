@@ -3,6 +3,7 @@ import { AlertTriangle, Users } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import type { FightRecord } from '@/app/services/fight-records'
 import { cn } from '@/app/lib/utils'
+import BoostMosaic from '@/components/boost-mosaic'
 import { ChampionCell, ChampionIconList, NoteCell } from './knowledge-base-cells'
 import { COMPACT_COL } from './knowledge-base-columns'
 
@@ -77,6 +78,15 @@ export default function KnowledgeBaseTableRow({
         champions={r.prefights}
         dataCy='fight-record-prefights'
       />
+      <td
+        className={cn(COMPACT_COL, 'py-2')}
+        data-cy='fight-record-boosts'
+      >
+        <BoostMosaic
+          boosts={r}
+          nodeNumber={r.node_number}
+        />
+      </td>
       <td
         className={cn(COMPACT_COL, 'py-2', r.ko_count ? 'text-red-500' : 'text-green-500')}
         data-cy='fight-record-ko'
