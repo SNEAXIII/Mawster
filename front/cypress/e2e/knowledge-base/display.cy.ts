@@ -20,6 +20,7 @@ describe('Knowledge Base', () => {
         cy.contains('th', 'Defender').should('exist');
         cy.contains('th', 'Synergies').should('exist');
         cy.contains('th', 'Prefights').should('exist');
+        cy.contains('th', 'Boosts').should('exist');
         cy.contains('th', 'Node').should('exist');
         cy.contains('th', 'KO').should('exist');
         cy.contains('th', 'Alliance').should('exist');

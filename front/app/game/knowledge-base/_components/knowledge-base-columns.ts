@@ -10,6 +10,7 @@ export interface KnowledgeBaseColumnLabels {
   defender: string
   synergies: string
   prefights: string
+  boosts: string
   node: string
   ko: string
   alliance: string
@@ -69,6 +70,7 @@ export function buildKnowledgeBaseColumns(
     // At most 2 synergies and 3 prefights per record — both fit in their content width.
     { id: 'synergies', col: null, label: labels.synergies, compact: true },
     { id: 'prefights', col: null, label: labels.prefights, compact: true },
+    { id: 'boosts', col: null, label: labels.boosts, compact: true },
     { id: 'ko', col: 'ko_count', label: labels.ko, compact: true },
     { id: 'alliance', col: 'alliance_name', label: labels.alliance, compact: true },
     { id: 'season', col: 'season_number', label: labels.season, compact: true },

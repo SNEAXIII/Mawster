@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Check, Pencil, Trash2, X } from 'lucide-react'
-import { ClassBadge } from '@/components/class-badge'
+import { ClassChip } from '@/components/class-chip'
 import { ActionIconButton } from '@/components/action-icon-button'
 import { type Champion, getChampionImageUrl } from '@/app/services/champions'
 import { useI18n } from '@/app/i18n'
@@ -63,7 +63,10 @@ export default function ChampionTableRow({
       <td className='p-3 font-medium'>{champion.name}</td>
 
       <td className='p-3'>
-        <ClassBadge championClass={champion.champion_class} />
+        <ClassChip
+          championClass={champion.champion_class}
+          variant='pill'
+        />
       </td>
 
       <td className='p-3'>

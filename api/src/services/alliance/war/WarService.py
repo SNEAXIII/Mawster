@@ -12,6 +12,7 @@ from src.dto.alliance.war.dto_war import (
     AvailableAttackerResponse,
     AvailablePrefightAttackerResponse,
     WarBgProgressResponse,
+    WarBoostUpdateRequest,
     WarDefenseSummaryResponse,
     WarPlacementCreateRequest,
     WarPlacementResponse,
@@ -29,6 +30,7 @@ from src.Messages.war_messages import (
     ASSIST_SAME_ACCOUNT,
     BANNED_CHAMPION_LIST_DUPLICATES,
     BANNED_CHAMPION_LIST_TOO_LONG,
+    BOOSTS_NO_ATTACKER_ASSIGNED,
     CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE,
     CHAMPION_ALREADY_PREFIGHT_ON_NODE,
     CHAMPION_ALREADY_SYNERGY_PROVIDER,
@@ -1040,12 +1042,51 @@ class WarService:
         removed_champion_user_id = placement.attacker_champion_user_id
         placement.attacker_champion_user_id = None
         placement.ko_count = 0
+        cls._clear_boosts(placement)
         session.add(placement)
         await session.commit()
 
         await cls._cleanup_attacker_associations(
             session, war_id, battlegroup, node_number, removed_champion_user_id
         )
+
+        return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
+
+    @staticmethod
+    def _clear_boosts(placement: WarDefensePlacement) -> None:
+        placement.war_boost = None
+        placement.has_defense_boost = False
+        placement.has_power_boost = False
+        placement.has_specials_boost = False
+
+    @classmethod
+    async def update_boosts(
+        cls,
+        session: SessionDep,
+        war_id: uuid.UUID,
+        battlegroup: int,
+        node_number: int,
+        boosts: WarBoostUpdateRequest,
+    ) -> WarPlacementResponse:
+        placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
+        if placement is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=NO_DEFENDER_ON_NODE)
+        if placement.attacker_champion_user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=BOOSTS_NO_ATTACKER_ASSIGNED
+            )
+        if placement.is_combat_completed:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=COMBAT_COMPLETED_LOCKED,
+            )
+
+        placement.war_boost = boosts.war_boost
+        placement.has_defense_boost = boosts.has_defense_boost
+        placement.has_power_boost = boosts.has_power_boost
+        placement.has_specials_boost = boosts.has_specials_boost
+        session.add(placement)
+        await session.commit()
 
         return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 

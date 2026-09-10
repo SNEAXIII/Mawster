@@ -1,4 +1,5 @@
 import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { CLASS_ORDER } from '@/app/lib/champion-class'
 
 // ─── Types ───────────────────────────────────────────────
 export interface Champion {
@@ -37,19 +38,9 @@ async function throwOnError(response: Response, fallback: string) {
   throw err
 }
 
-// ─── Champion classes ────────────────────────────────────
-export enum ChampionClass {
-  SCIENCE = 'Science',
-  COSMIC = 'Cosmic',
-  MUTANT = 'Mutant',
-  SKILL = 'Skill',
-  TECH = 'Tech',
-  MYSTIC = 'Mystic',
-}
-
 export const championClasses = [
   { value: 'all', label: 'All' },
-  ...Object.values(ChampionClass).map((c) => ({ value: c, label: c })),
+  ...CLASS_ORDER.map((c) => ({ value: c, label: c })),
 ]
 
 // ─── API ─────────────────────────────────────────────────

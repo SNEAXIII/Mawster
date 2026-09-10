@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship
 
+from src.enums.WarBoost import WarBoost
 from src.models.Base import (
     FK_CHAMPION_USER,
     Ascension,
@@ -39,6 +40,10 @@ class WarDefensePlacement(
     attacker_champion_user_id: uuid.UUID | None = Field(default=None, foreign_key=FK_CHAMPION_USER)
     assist_champion_user_id: uuid.UUID | None = Field(default=None, foreign_key=FK_CHAMPION_USER)
     ko_count: KoCount = 0
+    war_boost: WarBoost | None = Field(default=None)
+    has_defense_boost: bool = Field(default=False)
+    has_power_boost: bool = Field(default=False)
+    has_specials_boost: bool = Field(default=False)
     is_combat_completed: bool = Field(default=False)
     is_fight_not_done: bool = Field(default=False)
     is_planning_error: bool = Field(default=False)

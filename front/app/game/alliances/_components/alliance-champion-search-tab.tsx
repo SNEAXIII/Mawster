@@ -20,7 +20,7 @@ import {
 } from '@/components/roster/roster-filters'
 import UpgradeRequestDialogs from '@/components/upgrade-request-dialogs'
 import { useUpgradeRequests } from '@/hooks/use-upgrade-requests'
-import { ChampionClass } from '@/app/services/champions'
+import { CLASS_ORDER } from '@/app/lib/champion-class'
 import {
   getAllianceRoster,
   getMyAllianceRoles,
@@ -34,7 +34,7 @@ const DISTINCT_CHAMPION_LIMIT = 20
 /** Debounce for the free-text name filter before hitting the API. */
 const NAME_DEBOUNCE_MS = 300
 
-const AVAILABLE_CLASSES = Object.values(ChampionClass)
+const AVAILABLE_CLASSES = CLASS_ORDER
 const GROUP_OPTIONS = ['1', '2', '3'] as const
 
 interface Props {

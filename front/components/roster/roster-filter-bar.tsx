@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/app/lib/utils'
 import { RARITY_LABELS } from '@/app/services/roster'
+import { sortByClassOrder } from '@/app/lib/champion-class'
+import { ClassChip } from '@/components/class-chip'
 import {
   type RosterFilters,
   RANK_OPTIONS,
@@ -97,12 +99,12 @@ export default function RosterFilterBar({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value='all'>{f.allClasses}</SelectItem>
-              {availableClasses.map((c) => (
+              {sortByClassOrder(availableClasses).map((c) => (
                 <SelectItem
                   key={c}
                   value={c}
                 >
-                  {c}
+                  <ClassChip championClass={c} />
                 </SelectItem>
               ))}
             </SelectContent>

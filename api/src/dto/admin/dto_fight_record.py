@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import BaseModel, Field, model_validator
 
 from src.dto.mixins import ChampionRef
+from src.enums.WarBoost import WarBoost
 from src.models.war.WarFightRecordImport import (
     WarFightRecordImport as _WarFightRecordImport,
 )
@@ -62,6 +63,10 @@ class WarFightRecordResponse(ChampionRef):
     ko_count: int
     is_planning_error: bool = False
     assisted: bool = False
+    war_boost: WarBoost | None = None
+    has_defense_boost: bool = False
+    has_power_boost: bool = False
+    has_specials_boost: bool = False
     # Field(), not a bare [], because RUF012 no longer sees a BaseModel base here.
     # default_factory would drop `"default": []` from the OpenAPI schema; this keeps it.
     synergies: list[WarFightSynergyResponse] = Field(default=[])
@@ -112,6 +117,10 @@ class WarFightRecordResponse(ChampionRef):
                 "ko_count": data.ko_count,
                 "is_planning_error": False,
                 "assisted": False,
+                "war_boost": None,
+                "has_defense_boost": False,
+                "has_power_boost": False,
+                "has_specials_boost": False,
                 "synergies": [],
                 "prefights": [],
                 "created_at": data.created_at,
@@ -152,6 +161,10 @@ class WarFightRecordResponse(ChampionRef):
             "ko_count": data.ko_count,
             "is_planning_error": data.is_planning_error,
             "assisted": data.assisted,
+            "war_boost": data.war_boost,
+            "has_defense_boost": data.has_defense_boost,
+            "has_power_boost": data.has_power_boost,
+            "has_specials_boost": data.has_specials_boost,
             "synergies": data.synergies,
             "prefights": data.prefights,
             "created_at": data.created_at,

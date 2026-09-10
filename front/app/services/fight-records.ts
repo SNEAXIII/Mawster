@@ -1,4 +1,5 @@
 import { PROXY, jsonHeaders } from '@/app/services/utils'
+import type { WarBoost } from '@/app/services/war'
 
 export interface AllianceSnapshotStat {
   alliance_id: string
@@ -59,6 +60,10 @@ export interface FightRecord {
   ko_count: number
   is_planning_error: boolean
   assisted: boolean
+  war_boost: WarBoost | null
+  has_defense_boost: boolean
+  has_power_boost: boolean
+  has_specials_boost: boolean
   synergies: SynergyRecord[]
   prefights: PrefightRecord[]
   is_imported?: boolean
