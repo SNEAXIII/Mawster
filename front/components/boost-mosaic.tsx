@@ -1,30 +1,29 @@
 'use client'
 
-import {
-  BatteryCharging,
-  HeartPulse,
-  ShieldCheck,
-  ShieldHalf,
-  Swords,
-  Zap,
-  type LucideIcon,
-} from 'lucide-react'
-
 import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import type { WarBoost, WarBoosts } from '@/app/services/war'
 
+import {
+  BoostFlaskIcon,
+  BoostHeartArrowIcon,
+  BoostShieldIcon,
+  BoostShieldSparkIcon,
+  BoostSnowflakeIcon,
+  BoostSunburstIcon,
+  type BoostIcon,
+} from '@/components/boost-icons'
+
 type BoostKey = WarBoost | 'defense' | 'power' | 'specials'
 
-// Every icon in one place: swapping in the real assets is one edit, not six.
-// Placeholders until they land — see the note in static-assets/static/icons/
-const BOOST_ICONS: Record<BoostKey, LucideIcon> = {
-  power_start: Zap,
-  invulnerability: ShieldCheck,
-  regeneration: HeartPulse,
-  defense: ShieldHalf,
-  power: BatteryCharging,
-  specials: Swords,
+// Every icon in one place: one edit covers the war map and the knowledge base.
+const BOOST_ICONS: Record<BoostKey, BoostIcon> = {
+  power_start: BoostFlaskIcon,
+  invulnerability: BoostShieldIcon,
+  regeneration: BoostHeartArrowIcon,
+  defense: BoostShieldSparkIcon,
+  power: BoostSnowflakeIcon,
+  specials: BoostSunburstIcon,
 }
 
 type Cell = { key: BoostKey; label: string } | null
@@ -38,10 +37,10 @@ function BoostCell({
     <span
       title={entry.label}
       data-cy={`war-node-boost-${entry.key}-${nodeNumber}`}
-      className='flex size-3 items-center justify-center rounded-xs bg-card/80 text-muted-foreground'
+      className='flex size-5 items-center justify-center rounded-xs bg-card/80 text-muted-foreground'
     >
       <Icon
-        className='size-2.5'
+        className='size-4'
         aria-hidden
       />
     </span>
@@ -86,7 +85,7 @@ export default function BoostMosaic({ boosts, nodeNumber, className }: BoostMosa
         ) : (
           <span
             key={`empty-${index}`}
-            className='size-3'
+            className='size-5'
             aria-hidden
           />
         )
