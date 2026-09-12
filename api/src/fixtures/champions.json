@@ -1653,5 +1653,20 @@
     "name": "Agatha Harkness",
     "champion_class": "Mystic",
     "image_url": "/static/champions/agatha_harkness.png"
+  },
+  {
+    "name": "Green Goblin (Stellar-Forged)",
+    "champion_class": "Science",
+    "image_url": "/static/champions/green_goblin_stellar-forged.png"
+  },
+  {
+    "name": "Gwenom",
+    "champion_class": "Cosmic",
+    "image_url": "/static/champions/gwenom.png"
+  },
+  {
+    "name": "Spider-Man Noir",
+    "champion_class": "Skill",
+    "image_url": "/static/champions/spider-man_noir.png"
   }
 ]
