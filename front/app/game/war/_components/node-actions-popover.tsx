@@ -117,7 +117,7 @@ export default function NodeActionsPopover({
                     disabled={!canManage}
                     onClick={async () => {
                       setOpen(false)
-                      await handleRemovePrefight(p.champion_user_id)
+                      await handleRemovePrefight(p.champion_user_id, p.target_node_number)
                     }}
                   >
                     {t.game.war.prefight.revoke}
