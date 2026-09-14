@@ -167,9 +167,7 @@ export default function RosterContent() {
           />
         )}
 
-        {vm.activeTab === RosterTab.Accounts && (
-          <GameAccountsSection onAccountsChange={vm.fetchAccounts} />
-        )}
+        {vm.activeTab === RosterTab.Accounts && <GameAccountsSection />}
 
         <RosterDialogs
           deleteTarget={vm.deleteTarget}
