@@ -407,13 +407,14 @@ declare global {
         targetNodeNumber: number,
       ): Chainable<Cypress.Response<unknown>>;
 
-      /** Remove a prefight champion from a war battlegroup (direct backend call). */
+      /** Remove a champion's prefight on one node of a war battlegroup (direct backend call). */
       apiRemoveWarPrefight(
         token: string,
         allianceId: string,
         warId: string,
         battlegroup: number,
         championUserId: string,
+        targetNodeNumber: number,
       ): Chainable<Cypress.Response<unknown>>;
 
       /** Create a mastery definition (admin only). */

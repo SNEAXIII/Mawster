@@ -509,16 +509,77 @@ class TestRemovePrefight:
             headers=data["headers_member"],
         )
         response = await execute_delete_request(
-            _prefight_url(data["alliance"].id, data["war"].id) + f"/{data['prefight_cu'].id}",
+            _prefight_url(data["alliance"].id, data["war"].id)
+            + f"/{data['prefight_cu'].id}/node/5",
             headers=data["headers_member"],
         )
         assert response.status_code == 204
 
     @pytest.mark.asyncio
+    async def test_remove_prefight_keeps_the_same_champion_on_other_nodes(self):
+        data = await _setup_prefight_scenario()
+        alliance_id, war_id = data["alliance"].id, data["war"].id
+        second_defender = await push_champion(name="Hulk", champion_class="Science")
+        await execute_post_request(
+            f"/alliances/{alliance_id}/wars/{war_id}/bg/1/place",
+            payload={
+                "node_number": 6,
+                "champion_id": str(second_defender.id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=data["headers_owner"],
+        )
+        owner_attacker = await push_champion(name="Cyclops", champion_class="Mutant")
+        owner_attacker_cu = await push_champion_user(data["owner"], owner_attacker, stars=7, rank=3)
+        await execute_post_request(
+            f"/alliances/{alliance_id}/wars/{war_id}/bg/1/node/6/attacker",
+            payload={"champion_user_id": str(owner_attacker_cu.id)},
+            headers=data["headers_owner"],
+        )
+        for node in (5, 6):
+            added = await execute_post_request(
+                _prefight_url(alliance_id, war_id),
+                payload={
+                    "champion_user_id": str(data["prefight_cu"].id),
+                    "target_node_number": node,
+                },
+                headers=data["headers_member"],
+            )
+            assert added.status_code == 201
+
+        response = await execute_delete_request(
+            _prefight_url(alliance_id, war_id) + f"/{data['prefight_cu'].id}/node/6",
+            headers=data["headers_member"],
+        )
+        assert response.status_code == 204
+
+        remaining = await execute_get_request(
+            _prefight_url(alliance_id, war_id), headers=data["headers_member"]
+        )
+        assert [p["target_node_number"] for p in remaining.json()] == [5]
+
+    @pytest.mark.asyncio
     async def test_remove_prefight_not_found(self):
         data = await _setup_prefight_scenario()
         response = await execute_delete_request(
-            _prefight_url(data["alliance"].id, data["war"].id) + f"/{uuid.uuid4()}",
+            _prefight_url(data["alliance"].id, data["war"].id) + f"/{uuid.uuid4()}/node/5",
+            headers=data["headers_member"],
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_remove_prefight_on_another_node_not_found(self):
+        data = await _setup_prefight_scenario()
+        await execute_post_request(
+            _prefight_url(data["alliance"].id, data["war"].id),
+            payload={"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 5},
+            headers=data["headers_member"],
+        )
+        response = await execute_delete_request(
+            _prefight_url(data["alliance"].id, data["war"].id)
+            + f"/{data['prefight_cu'].id}/node/6",
             headers=data["headers_member"],
         )
         assert response.status_code == 404

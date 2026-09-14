@@ -1,6 +1,5 @@
 'use client'
 
-import { useCallback } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
@@ -10,7 +9,6 @@ import { cn } from '@/app/lib/utils'
 import { shortenChampionName } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
 import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
-import { getAvailableAttackers } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import { useAvailableAttackers } from './use-available-attackers'
 
@@ -28,13 +26,9 @@ export default function AssistSelectorDialog({
   attackerGameAccountId,
 }: Readonly<AssistSelectorDialogProps>) {
   const { t } = useI18n()
-  const { selectedAllianceId, activeWarId, selectedBg, handleAssignAssist } = useWar()
+  const { selectedAllianceId, activeWarId, handleAssignAssist, loadAvailableAttackers } = useWar()
 
-  const fetchFn = useCallback(
-    () => getAvailableAttackers(selectedAllianceId!, activeWarId!, selectedBg),
-    [selectedAllianceId, activeWarId, selectedBg]
-  )
-  const guardedFetch = selectedAllianceId && activeWarId ? fetchFn : null
+  const guardedFetch = selectedAllianceId && activeWarId ? loadAvailableAttackers : null
 
   const {
     available,

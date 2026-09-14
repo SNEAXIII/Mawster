@@ -1,13 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'sonner'
 import { FiFlag, FiTrash2 } from 'react-icons/fi'
 import { AlertTriangle } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { useWar } from '@/app/contexts/war-context'
 import { useMyModeration } from '@/app/contexts/moderation-context'
-import { reportNote } from '@/app/services/moderation'
 
 interface WarNoteEditorProps {
   nodeNumber: number
@@ -27,7 +25,7 @@ export default function WarNoteEditor({
   onSaved,
 }: Readonly<WarNoteEditorProps>) {
   const { t } = useI18n()
-  const { handleSaveNote, handleDeleteNote } = useWar()
+  const { handleSaveNote, handleDeleteNote, handleReportNote } = useWar()
   const { mute } = useMyModeration()
   const [value, setValue] = useState(note ?? '')
   const [saving, setSaving] = useState(false)
@@ -53,13 +51,7 @@ export default function WarNoteEditor({
 
   const onReport = async () => {
     if (!noteId) return
-    try {
-      await reportNote(noteId)
-      setReported(true)
-      toast.success(t.moderation.reportSuccess)
-    } catch (err) {
-      toast.error((err as Error).message || t.moderation.reportError)
-    }
+    if (await handleReportNote(noteId)) setReported(true)
   }
 
   const reportButton = noteId && !noteBlocked && (
