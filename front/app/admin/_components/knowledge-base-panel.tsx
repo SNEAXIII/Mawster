@@ -1,51 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
-import {
-  getSnapshotStats,
-  forceSnapshotWars,
-  type AllianceSnapshotStat,
-} from '@/app/services/fight-records'
+import { useSnapshotStatsViewModel } from '../_viewmodels/use-snapshot-stats-viewmodel'
 
 export default function KnowledgeBasePanel() {
   const { t } = useI18n()
-  const [stats, setStats] = useState<AllianceSnapshotStat[]>([])
-  const [loading, setLoading] = useState(false)
-  const [refreshResult, setRefreshResult] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const load = useCallback(async () => {
-    setError(null)
-    try {
-      setStats(await getSnapshotStats())
-    } catch {
-      setError(t.admin.knowledgeBase.loadError)
-    }
-  }, [t])
-
-  useEffect(() => {
-    load()
-  }, [load])
-
-  const handleRefresh = async () => {
-    setLoading(true)
-    setRefreshResult(null)
-    setError(null)
-    try {
-      const result = await forceSnapshotWars()
-      const msg = t.admin.knowledgeBase.refreshResult
-        .replace('{{count}}', String(result.snapshotted))
-        .replace('{{skipped}}', String(result.skipped))
-      setRefreshResult(msg)
-      await load()
-    } catch {
-      setError(t.admin.knowledgeBase.refreshError)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { stats, loading, refreshResult, error, handleRefresh } = useSnapshotStatsViewModel()
 
   return (
     <div
