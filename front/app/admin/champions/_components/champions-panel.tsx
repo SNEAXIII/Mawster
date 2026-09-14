@@ -42,7 +42,8 @@ export default function ChampionsPanel() {
       />
 
       <ChampionsIoButtons
-        onImported={vm.reload}
+        onExport={vm.exportChampions}
+        onImport={vm.importChampions}
         onError={vm.setError}
       />
 
