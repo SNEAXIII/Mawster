@@ -13,6 +13,9 @@ import {
   type AccessibleAlliance,
 } from '@/app/services/fight-records'
 import { getMyAllianceRoles } from '@/app/services/game'
+import { reportNote } from '@/app/services/moderation'
+import { toast } from 'sonner'
+import { useI18n } from '@/app/i18n'
 
 interface Filters {
   champion_id: string | null
@@ -46,6 +49,7 @@ function getInitialParams(): URLSearchParams {
 }
 
 export function useKnowledgeBaseViewModel() {
+  const { t } = useI18n()
   const pathname = usePathname()
   const requestIdRef = useRef(0)
 
@@ -197,6 +201,19 @@ export function useKnowledgeBaseViewModel() {
     load()
   }, [load])
 
+  // A report can push a note past the auto-block threshold, so the page is reloaded.
+  const handleReportNote = async (noteId: string) => {
+    try {
+      await reportNote(noteId)
+      toast.success(t.moderation.reportSuccess)
+      await load()
+      return true
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.moderation.reportError)
+      return false
+    }
+  }
+
   const handleFilterChange = (key: keyof Filters, value: string | null) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
     setPage(1)
@@ -292,6 +309,7 @@ export function useKnowledgeBaseViewModel() {
     handleSourceChange,
     handleSort,
     handleClearFilters,
+    handleReportNote,
     setPage,
     setSize,
   }
