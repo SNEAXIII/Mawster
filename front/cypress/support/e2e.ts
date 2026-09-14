@@ -1378,10 +1378,17 @@ Cypress.Commands.add(
 
 Cypress.Commands.add(
   'apiRemoveWarPrefight',
-  (token: string, allianceId: string, warId: string, battlegroup: number, championUserId: string) => {
+  (
+    token: string,
+    allianceId: string,
+    warId: string,
+    battlegroup: number,
+    championUserId: string,
+    targetNodeNumber: number,
+  ) => {
     return cy.request({
       method: 'DELETE',
-      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}`,
+      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}/node/${targetNodeNumber}`,
       headers: { Authorization: `Bearer ${token}` },
     });
   },
