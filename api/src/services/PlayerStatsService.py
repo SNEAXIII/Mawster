@@ -29,6 +29,7 @@ from src.services.alliance.war._stat_expressions import (
     total_kos,
     total_not_fought,
 )
+from src.services.knowledge._fight_context import join_fight_context
 from src.utils.db import SessionDep
 
 
@@ -280,32 +281,32 @@ class PlayerStatsService:
         await cls.assert_can_view_account(session, current_user, game_account_id)
 
         conditions = [
-            WarFightRecord.game_account_id == game_account_id,
-            WarFightRecord.is_planning_error.is_(False),
+            ChampionUser.game_account_id == game_account_id,
+            WarDefensePlacement.is_planning_error.is_(False),
         ]
         if season_id is not None:
-            conditions.append(WarFightRecord.season_id == season_id)
+            conditions.append(War.season_id == season_id)
         if deathless is True:
-            conditions.append(WarFightRecord.ko_count == 0)
+            conditions.append(WarDefensePlacement.ko_count == 0)
 
         if perspective == "defender":
-            champion_id_col = WarFightRecord.defender_champion_id.label("champion_id")
-            champion_join = Champion.id == WarFightRecord.defender_champion_id
-            group_by_col = WarFightRecord.defender_champion_id
+            champion_id_col = WarDefensePlacement.champion_id.label("champion_id")
+            group_by_col = WarDefensePlacement.champion_id
         else:
-            champion_id_col = WarFightRecord.champion_id
-            champion_join = Champion.id == WarFightRecord.champion_id
-            group_by_col = WarFightRecord.champion_id
+            champion_id_col = ChampionUser.champion_id.label("champion_id")
+            group_by_col = ChampionUser.champion_id
 
         stmt = (
-            select(
-                champion_id_col,
-                Champion.name.label("champion_name"),
-                Champion.image_url,
-                cast(func.count(WarFightRecord.id), Integer).label("fight_count"),
-                cast(func.sum(WarFightRecord.ko_count), Integer).label("total_kos"),
+            join_fight_context(
+                select(
+                    champion_id_col,
+                    Champion.name.label("champion_name"),
+                    Champion.image_url,
+                    cast(func.count(WarFightRecord.id), Integer).label("fight_count"),
+                    cast(func.sum(WarDefensePlacement.ko_count), Integer).label("total_kos"),
+                )
             )
-            .join(Champion, champion_join)
+            .join(Champion, Champion.id == group_by_col)
             .where(and_(*conditions))
             .group_by(group_by_col, Champion.name, Champion.image_url)
             .order_by(func.count(WarFightRecord.id).desc())
