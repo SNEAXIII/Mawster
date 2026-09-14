@@ -1,7 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
-import { listReports, resolveReport, type NoteReport } from '@/app/services/moderation'
+import { useModerationViewModel } from '../_viewmodels/use-moderation-viewmodel'
 import RevisionHistoryDialog from './revision-history-dialog'
 import MutesWarnsSection from './mutes-warns-section'
 
@@ -21,35 +20,12 @@ const STATUSES = ['all', 'pending', 'resolved', 'dismissed'] as const
 export default function ModerationPanel() {
   const { t } = useI18n()
   const m = t.moderation
-  const [reports, setReports] = useState<NoteReport[]>([])
-  const [status, setStatus] = useState<string>('pending')
+  const vm = useModerationViewModel()
+  const { reports, status, setStatus } = vm
   const [historyNoteId, setHistoryNoteId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [dismissTarget, setDismissTarget] = useState<string | null>(null)
-  const [actionCount, setActionCount] = useState(0)
-
-  const load = useCallback(async () => {
-    try {
-      const res = await listReports(status === 'all' ? undefined : status)
-      setReports(res.items)
-    } catch (err) {
-      toast.error((err as Error).message || m.loadError)
-    }
-  }, [status, m.loadError])
-
-  useEffect(() => {
-    load()
-  }, [load])
-
-  const onResolve = async (id: string, action: 'delete' | 'dismiss') => {
-    try {
-      await resolveReport(id, action)
-      toast.success(m.resolveSuccess)
-      await load()
-    } catch (err) {
-      toast.error((err as Error).message || m.resolveError)
-    }
-  }
+  const onResolve = vm.resolve
 
   const statusLabel = (s: string) =>
     ({ pending: m.statusPending, resolved: m.statusResolved, dismissed: m.statusDismissed })[s] ?? s
@@ -191,12 +167,12 @@ export default function ModerationPanel() {
         </table>
       </div>
 
-      <MutesWarnsSection refreshSignal={actionCount} />
+      <MutesWarnsSection vm={vm} />
 
       <RevisionHistoryDialog
         noteId={historyNoteId}
         onClose={() => setHistoryNoteId(null)}
-        onActionDone={() => setActionCount((c) => c + 1)}
+        vm={vm}
       />
 
       <ConfirmationDialog
