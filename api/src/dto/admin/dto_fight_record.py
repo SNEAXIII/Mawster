@@ -20,13 +20,14 @@ class ChampionUserSnapshotResponse(ChampionRef):
     def flatten_relations(cls, data: Any) -> Any:
         if isinstance(data, dict):
             return data
+        cu = data.champion_user
         return {
-            "champion_id": data.champion_id,
-            "champion_name": data.champion.name,
-            "champion_class": data.champion.champion_class,
-            "image_url": data.champion.image_url,
-            "stars": data.stars,
-            "ascension": data.ascension,
+            "champion_id": cu.champion_id,
+            "champion_name": cu.champion.name,
+            "champion_class": cu.champion.champion_class,
+            "image_url": cu.champion.image_url,
+            "stars": cu.stars,
+            "ascension": cu.ascension,
         }
 
 

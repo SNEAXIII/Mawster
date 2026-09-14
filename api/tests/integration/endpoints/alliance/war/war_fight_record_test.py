@@ -27,6 +27,7 @@ from src.services.admin.SagaService import SagaService
 from src.services.alliance.war.WarFightNoteService import WarFightNoteService
 from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.email_hash import hash_email
+from tests.integration.endpoints.setup.fight_record_setup import push_ended_war, push_fight_record
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -203,6 +204,15 @@ async def _push_extra_ended_war(data, *, headers, ko_count=1, node_number=10, el
     await load_objects([war, placement])
     await _end_war(data["alliance"].id, war.id, headers=headers, elo_change=elo_change)
     return war
+
+
+async def _push_fights_in_two_wars(data, first_season_id, second_season_id):
+    """Node 10 fought in a war of the first season, node 11 in a war of the second."""
+    for season_id, node_number in ((first_season_id, 10), (second_season_id, 11)):
+        war = await push_ended_war(data["alliance"].id, data["owner"].id, season_id=season_id)
+        await push_fight_record(
+            war, data["attacker_cu"], data["defender_champ"], node_number=node_number
+        )
 
 
 class TestWarFightRecordSnapshot:
@@ -592,25 +602,8 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        record = WarFightRecord(
-            war_id=data["war"].id,
-            alliance_id=data["alliance"].id,
-            game_account_id=data["member"].id,
-            battlegroup=1,
-            node_number=10,
-            tier=5,
-            champion_id=data["attacker_champ"].id,
-            stars=7,
-            rank=4,
-            ascension=0,
-            is_saga_attacker=True,
-            defender_champion_id=data["defender_champ"].id,
-            defender_stars=6,
-            defender_rank=3,
-            defender_ascension=0,
-            defender_is_saga_defender=False,
-        )
-        await load_objects([record])
+        war = await push_ended_war(data["alliance"].id, data["owner"].id, tier=5)
+        await push_fight_record(war, data["attacker_cu"], data["defender_champ"])
 
         resp = await execute_get_request("/fight-records?tier=5", headers=headers)
         assert resp.status_code == 200
@@ -738,28 +731,7 @@ class TestListFightRecords:
         newer_season = Season(number=71, status=SeasonStatus.ended)
         await load_objects([older_season, newer_season])
 
-        def _record(node_number: int, season_id):
-            return WarFightRecord(
-                war_id=data["war"].id,
-                alliance_id=data["alliance"].id,
-                game_account_id=data["member"].id,
-                battlegroup=1,
-                node_number=node_number,
-                tier=1,
-                season_id=season_id,
-                champion_id=data["attacker_champ"].id,
-                stars=7,
-                rank=4,
-                ascension=0,
-                is_saga_attacker=True,
-                defender_champion_id=data["defender_champ"].id,
-                defender_stars=6,
-                defender_rank=3,
-                defender_ascension=0,
-                defender_is_saga_defender=False,
-            )
-
-        await load_objects([_record(10, older_season.id), _record(11, newer_season.id)])
+        await _push_fights_in_two_wars(data, older_season.id, newer_season.id)
 
         resp = await execute_get_request(
             "/fight-records?sort_by=season_number&sort_order=asc", headers=headers
@@ -797,47 +769,7 @@ class TestListFightRecords:
         season = Season(number=65, status=SeasonStatus.ended)
         await load_objects([season])
 
-        # Record with season
-        record_with_season = WarFightRecord(
-            war_id=data["war"].id,
-            alliance_id=data["alliance"].id,
-            game_account_id=data["member"].id,
-            battlegroup=1,
-            node_number=10,
-            tier=1,
-            season_id=season.id,
-            champion_id=data["attacker_champ"].id,
-            stars=7,
-            rank=4,
-            ascension=0,
-            is_saga_attacker=True,
-            defender_champion_id=data["defender_champ"].id,
-            defender_stars=6,
-            defender_rank=3,
-            defender_ascension=0,
-            defender_is_saga_defender=False,
-        )
-        # Record without season (off-season)
-        record_off_season = WarFightRecord(
-            war_id=data["war"].id,
-            alliance_id=data["alliance"].id,
-            game_account_id=data["member"].id,
-            battlegroup=1,
-            node_number=11,
-            tier=1,
-            season_id=None,
-            champion_id=data["attacker_champ"].id,
-            stars=7,
-            rank=4,
-            ascension=0,
-            is_saga_attacker=True,
-            defender_champion_id=data["defender_champ"].id,
-            defender_stars=6,
-            defender_rank=3,
-            defender_ascension=0,
-            defender_is_saga_defender=False,
-        )
-        await load_objects([record_with_season, record_off_season])
+        await _push_fights_in_two_wars(data, season.id, None)
 
         resp = await execute_get_request(
             "/fight-records?season_selector=all_seasons", headers=headers
@@ -856,45 +788,7 @@ class TestListFightRecords:
         season = Season(number=66, status=SeasonStatus.ended)
         await load_objects([season])
 
-        record_with_season = WarFightRecord(
-            war_id=data["war"].id,
-            alliance_id=data["alliance"].id,
-            game_account_id=data["member"].id,
-            battlegroup=1,
-            node_number=10,
-            tier=1,
-            season_id=season.id,
-            champion_id=data["attacker_champ"].id,
-            stars=7,
-            rank=4,
-            ascension=0,
-            is_saga_attacker=True,
-            defender_champion_id=data["defender_champ"].id,
-            defender_stars=6,
-            defender_rank=3,
-            defender_ascension=0,
-            defender_is_saga_defender=False,
-        )
-        record_off_season = WarFightRecord(
-            war_id=data["war"].id,
-            alliance_id=data["alliance"].id,
-            game_account_id=data["member"].id,
-            battlegroup=1,
-            node_number=11,
-            tier=1,
-            season_id=None,
-            champion_id=data["attacker_champ"].id,
-            stars=7,
-            rank=4,
-            ascension=0,
-            is_saga_attacker=True,
-            defender_champion_id=data["defender_champ"].id,
-            defender_stars=6,
-            defender_rank=3,
-            defender_ascension=0,
-            defender_is_saga_defender=False,
-        )
-        await load_objects([record_with_season, record_off_season])
+        await _push_fights_in_two_wars(data, season.id, None)
 
         resp = await execute_get_request(
             "/fight-records?season_selector=off_season", headers=headers
@@ -914,45 +808,7 @@ class TestListFightRecords:
         old_season = Season(number=66, status=SeasonStatus.ended)
         await load_objects([active_season, old_season])
 
-        record_current = WarFightRecord(
-            war_id=data["war"].id,
-            alliance_id=data["alliance"].id,
-            game_account_id=data["member"].id,
-            battlegroup=1,
-            node_number=10,
-            tier=1,
-            season_id=active_season.id,
-            champion_id=data["attacker_champ"].id,
-            stars=7,
-            rank=4,
-            ascension=0,
-            is_saga_attacker=True,
-            defender_champion_id=data["defender_champ"].id,
-            defender_stars=6,
-            defender_rank=3,
-            defender_ascension=0,
-            defender_is_saga_defender=False,
-        )
-        record_old = WarFightRecord(
-            war_id=data["war"].id,
-            alliance_id=data["alliance"].id,
-            game_account_id=data["member"].id,
-            battlegroup=1,
-            node_number=11,
-            tier=1,
-            season_id=old_season.id,
-            champion_id=data["attacker_champ"].id,
-            stars=7,
-            rank=4,
-            ascension=0,
-            is_saga_attacker=True,
-            defender_champion_id=data["defender_champ"].id,
-            defender_stars=6,
-            defender_rank=3,
-            defender_ascension=0,
-            defender_is_saga_defender=False,
-        )
-        await load_objects([record_current, record_old])
+        await _push_fights_in_two_wars(data, active_season.id, old_season.id)
 
         resp = await execute_get_request("/fight-records?season_selector=current", headers=headers)
         assert resp.status_code == 200
@@ -968,45 +824,7 @@ class TestListFightRecords:
         season = Season(number=68, status=SeasonStatus.ended)
         await load_objects([season])
 
-        record1 = WarFightRecord(
-            war_id=data["war"].id,
-            alliance_id=data["alliance"].id,
-            game_account_id=data["member"].id,
-            battlegroup=1,
-            node_number=10,
-            tier=1,
-            season_id=season.id,
-            champion_id=data["attacker_champ"].id,
-            stars=7,
-            rank=4,
-            ascension=0,
-            is_saga_attacker=True,
-            defender_champion_id=data["defender_champ"].id,
-            defender_stars=6,
-            defender_rank=3,
-            defender_ascension=0,
-            defender_is_saga_defender=False,
-        )
-        record2 = WarFightRecord(
-            war_id=data["war"].id,
-            alliance_id=data["alliance"].id,
-            game_account_id=data["member"].id,
-            battlegroup=1,
-            node_number=11,
-            tier=1,
-            season_id=None,
-            champion_id=data["attacker_champ"].id,
-            stars=7,
-            rank=4,
-            ascension=0,
-            is_saga_attacker=True,
-            defender_champion_id=data["defender_champ"].id,
-            defender_stars=6,
-            defender_rank=3,
-            defender_ascension=0,
-            defender_is_saga_defender=False,
-        )
-        await load_objects([record1, record2])
+        await _push_fights_in_two_wars(data, season.id, None)
 
         resp = await execute_get_request("/fight-records?season_selector=specific", headers=headers)
         assert resp.status_code == 200
@@ -1108,6 +926,130 @@ class TestSnapshotWithPrefightsAndSynergies:
         ).all()
         assert len(synergies) == 1
         assert synergies[0].champion_id == synergy_cu_champ.id
+
+
+class TestFightRecordReadsTheWar:
+    @pytest.mark.asyncio
+    async def test_boost_corrected_after_snapshot_shows_in_listing(self):
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+
+        await execute_put_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/boosts",
+            payload={"war_boost": "power_start"},
+            headers=headers,
+        )
+
+        record = (await execute_get_request("/fight-records", headers=headers)).json()["items"][0]
+        assert record["war_boost"] == WarBoost.POWER_START
+
+    @pytest.mark.asyncio
+    async def test_rank_up_after_snapshot_keeps_frozen_rank(self, session):
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+
+        cu = await session.get(ChampionUser, data["attacker_cu"].id)
+        cu.rank = 5
+        cu.ascension = 1
+        session.add(cu)
+        await session.commit()
+
+        record = (await execute_get_request("/fight-records", headers=headers)).json()["items"][0]
+        assert record["rank"] == 4
+        assert record["ascension"] == 0
+
+    @pytest.mark.asyncio
+    async def test_record_without_attacker_drops_out_of_listing(self, session):
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+
+        placement = await session.get(WarDefensePlacement, data["placement"].id)
+        placement.attacker_champion_user_id = None
+        session.add(placement)
+        await session.commit()
+
+        assert (await execute_get_request("/fight-records", headers=headers)).json()["total"] == 0
+
+    @pytest.mark.asyncio
+    async def test_record_marked_not_fought_drops_out_of_listing(self, session):
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+
+        placement = await session.get(WarDefensePlacement, data["placement"].id)
+        placement.is_fight_not_done = True
+        session.add(placement)
+        await session.commit()
+
+        assert (await execute_get_request("/fight-records", headers=headers)).json()["total"] == 0
+
+    @pytest.mark.asyncio
+    async def test_saga_roles_edited_after_snapshot_reach_the_listing(self, session):
+        data = await _setup_war_with_fight()
+        season = Season(number=901)
+        other_season = Season(number=902)
+        await load_objects([season, other_season])
+        war = await session.get(War, data["war"].id)
+        war.season_id = season.id
+        session.add(war)
+        await session.commit()
+        headers = create_auth_headers(user_id=str(USER_ID))
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+
+        await SagaService.upsert_role(session, season.id, data["attacker_champ"].id, True, False)
+        await SagaService.upsert_role(
+            session, other_season.id, data["defender_champ"].id, False, True
+        )
+
+        record = (await execute_get_request("/fight-records", headers=headers)).json()["items"][0]
+        assert record["is_saga_attacker"] is True
+        assert record["defender_is_saga_defender"] is False
+
+    @pytest.mark.asyncio
+    async def test_listing_shows_prefight_and_synergy_with_current_stats(self, session):
+        data = await _setup_war_with_fight()
+        prefight_champ = Champion(name="Iron Man", champion_class="Tech")
+        synergy_champ = Champion(name="Thor", champion_class="Cosmic")
+        prefight_cu = ChampionUser(
+            game_account_id=data["member"].id, champion_id=prefight_champ.id, stars=6, rank=3
+        )
+        synergy_cu = ChampionUser(
+            game_account_id=data["member"].id, champion_id=synergy_champ.id, stars=6, rank=3
+        )
+        await load_objects([prefight_champ, synergy_champ, prefight_cu, synergy_cu])
+        await load_objects(
+            [
+                WarPrefightAttacker(
+                    war_id=data["war"].id,
+                    battlegroup=1,
+                    game_account_id=data["member"].id,
+                    champion_user_id=prefight_cu.id,
+                    target_node_number=10,
+                ),
+                WarSynergyAttacker(
+                    war_id=data["war"].id,
+                    battlegroup=1,
+                    game_account_id=data["member"].id,
+                    champion_user_id=synergy_cu.id,
+                    target_champion_user_id=data["attacker_cu"].id,
+                ),
+            ]
+        )
+        headers = create_auth_headers(user_id=str(USER_ID))
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+
+        cu = await session.get(ChampionUser, prefight_cu.id)
+        cu.ascension = 1
+        session.add(cu)
+        await session.commit()
+
+        record = (await execute_get_request("/fight-records", headers=headers)).json()["items"][0]
+        assert [p["champion_name"] for p in record["prefights"]] == ["Iron Man"]
+        assert record["prefights"][0]["ascension"] == 1
+        assert [s["champion_name"] for s in record["synergies"]] == ["Thor"]
 
 
 class TestFightRecordScoping:

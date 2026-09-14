@@ -18,27 +18,24 @@ def _make_champion(name="Wolverine", champion_class="Mutant", image_url=None):
     return c
 
 
-def test_synergy_response_flattens_champion():
-    syn = MagicMock()
-    syn.champion_id = uuid.uuid4()
-    syn.champion = _make_champion("Wolverine", "Mutant")
-    syn.stars = 6
-    syn.ascension = 1
+def _make_link(name, champion_class, stars, ascension):
+    link = MagicMock()
+    link.champion_user.champion_id = uuid.uuid4()
+    link.champion_user.champion = _make_champion(name, champion_class)
+    link.champion_user.stars = stars
+    link.champion_user.ascension = ascension
+    return link
 
-    result = WarFightSynergyResponse.model_validate(syn)
+
+def test_synergy_response_flattens_champion():
+    result = WarFightSynergyResponse.model_validate(_make_link("Wolverine", "Mutant", 6, 1))
     assert result.champion_name == "Wolverine"
     assert result.champion_class == "Mutant"
     assert result.stars == 6
 
 
 def test_prefight_response_flattens_champion():
-    pf = MagicMock()
-    pf.champion_id = uuid.uuid4()
-    pf.champion = _make_champion("Magneto", "Mutant")
-    pf.stars = 7
-    pf.ascension = 0
-
-    result = WarFightPrefightResponse.model_validate(pf)
+    result = WarFightPrefightResponse.model_validate(_make_link("Magneto", "Mutant", 7, 0))
     assert result.champion_name == "Magneto"
     assert result.stars == 7
 
