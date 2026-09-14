@@ -1,5 +1,6 @@
 import { TableRow } from '@/components/ui/table'
 import type { User } from '@/app/services/users'
+import type { UserAction } from '@/app/admin/_viewmodels/use-users-viewmodel'
 import {
   RowUserCreatedAt,
   RowUserLastLoginDate,
@@ -11,11 +12,11 @@ import { UserActions } from '@/components/dashboard/actions/user-actions'
 
 interface UserRowProps {
   readonly user: Readonly<User>
-  readonly loadUsers: () => void
+  readonly onUserAction: (action: UserAction, userId: string) => Promise<void>
   readonly currentUserRole?: string
 }
 
-export function UserRow({ user, loadUsers, currentUserRole }: UserRowProps) {
+export function UserRow({ user, onUserAction, currentUserRole }: UserRowProps) {
   return (
     <TableRow data-cy={`user-row-${user.login}`}>
       <RowUserLogin login={user.login} />
@@ -37,7 +38,7 @@ export function UserRow({ user, loadUsers, currentUserRole }: UserRowProps) {
         isSuperAdmin={currentUserRole === 'super_admin'}
         isDisabled={!!user.disabled_at}
         isDeleted={!!user.deleted_at}
-        loadUsers={loadUsers}
+        onUserAction={onUserAction}
       />
     </TableRow>
   )
