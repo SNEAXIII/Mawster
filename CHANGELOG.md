@@ -3,6 +3,23 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.15.1](https://github.com/SNEAXIII/Mawster/compare/v1.15.0...v1.15.1) (2026-09-14)
+
+
+### Corrigé
+
+* keep the war map in sync with the server after each planning change ([e7491d8](https://github.com/SNEAXIII/Mawster/commit/e7491d822df834f13b66aab1978c5accd5fa8753))
+
+
+### Modifié
+
+* move admin panel calls into viewmodels ([7c68f5a](https://github.com/SNEAXIII/Mawster/commit/7c68f5a8550b8d5078979e247daf6c1ffb3e339a))
+* move profile and landing calls into viewmodel hooks ([91d1bbb](https://github.com/SNEAXIII/Mawster/commit/91d1bbb6b90b5b9d2ee40688748a5f38d1c3e907))
+* route alliance and upgrade request calls through viewmodels ([624f22d](https://github.com/SNEAXIII/Mawster/commit/624f22d0a59d0b80797dd9f767d4e5c6ca4c7e5d))
+* route knowledge base calls through viewmodels ([b8e3ebb](https://github.com/SNEAXIII/Mawster/commit/b8e3ebbef339477b4418933c5dfb13bfaba3d532))
+* share champion catalog loading in a hook ([5156a11](https://github.com/SNEAXIII/Mawster/commit/5156a110d44f853bd2bb29750112640fb70f09ad))
+* share game accounts, roles and current season across viewmodels ([353d45d](https://github.com/SNEAXIII/Mawster/commit/353d45dd683db96d5fc8dd69351cbe64a748bea8))
+
 ## [1.15.0](https://github.com/SNEAXIII/Mawster/compare/v1.14.0...v1.15.0) (2026-09-10)
 
 
