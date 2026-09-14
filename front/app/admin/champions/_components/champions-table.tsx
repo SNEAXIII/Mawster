@@ -27,7 +27,7 @@ function SortableHeader({
   { field: ChampionOrderBy; label: string; onSort: (field: ChampionOrderBy) => void } & SortState
 >) {
   return (
-    <th className='text-left p-3'>
+    <th className='text-left p-2'>
       <button
         type='button'
         onClick={() => onSort(field)}
@@ -98,7 +98,7 @@ export default function ChampionsTable({
       <table className='w-full text-sm border-collapse'>
         <thead>
           <tr className='border-b bg-muted/50'>
-            <th className='text-left p-3 w-16'>{t.champions.tableHeaders.image}</th>
+            <th className='text-left p-2 w-16'>{t.champions.tableHeaders.image}</th>
             <SortableHeader
               field='name'
               label={t.champions.tableHeaders.name}
@@ -111,9 +111,9 @@ export default function ChampionsTable({
               onSort={onSort}
               {...sort}
             />
-            <th className='text-left p-3'>{t.champions.tableHeaders.alias}</th>
-            <th className='text-left p-3'>{t.champions.tableHeaders.attributes}</th>
-            <th className='text-left p-3 w-24'>{t.champions.tableHeaders.actions}</th>
+            <th className='text-left p-2'>{t.champions.tableHeaders.alias}</th>
+            <th className='text-left p-2'>{t.champions.tableHeaders.attributes}</th>
+            <th className='text-left p-2 w-24'>{t.champions.tableHeaders.actions}</th>
           </tr>
         </thead>
         <tbody>
