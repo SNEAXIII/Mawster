@@ -188,7 +188,8 @@ lands on the War and on the Elo it moves.
 **Fight Record**:
 A frozen record of one fight that actually happened. It points at the placement the
 fight was fought on and copies only the attacker's rank and ascension at the time, the
-two stats a later upgrade could rewrite. Everything else is read from the War.
+two stats a later upgrade could rewrite. Everything else is read through the placement
+and its War.
 _Table_: `war_fight_record`.
 _Avoid_: fight, combat log.
 
