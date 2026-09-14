@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useI18n } from '@/app/i18n'
 import { toast } from 'sonner'
 import {
@@ -65,7 +65,10 @@ export function useUpgradeRequests(): UpgradeRequestsState {
   const [selectedRarity, setSelectedRarity] = useState<string>('')
   const [cancelTarget, setCancelTarget] = useState<{ id: string; name: string } | null>(null)
 
+  const loadedAccountId = useRef<string | null>(null)
+
   const fetchUpgradeRequests = useCallback(async (gameAccountId: string) => {
+    loadedAccountId.current = gameAccountId
     try {
       const data = await getUpgradeRequests(gameAccountId)
       setUpgradeRequests(data)
@@ -129,14 +132,15 @@ export function useUpgradeRequests(): UpgradeRequestsState {
     if (!cancelTarget) return
     try {
       await cancelUpgradeRequest(cancelTarget.id)
-      setUpgradeRequests((prev) => prev.filter((r) => r.id !== cancelTarget.id))
       toast.success(t.roster.upgradeRequests.cancelSuccess)
+      if (loadedAccountId.current) await fetchUpgradeRequests(loadedAccountId.current)
+      else setUpgradeRequests((prev) => prev.filter((r) => r.id !== cancelTarget.id))
     } catch {
       toast.error(t.roster.upgradeRequests.cancelError)
     } finally {
       setCancelTarget(null)
     }
-  }, [cancelTarget, t])
+  }, [cancelTarget, fetchUpgradeRequests, t])
 
   return {
     upgradeRequests,

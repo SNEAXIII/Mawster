@@ -1,17 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'sonner'
 import { FiTrash2 } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
-import { deleteAlliance, type Alliance } from '@/app/services/game'
+import type { Alliance } from '@/app/services/game'
+import type { AllianceActions } from '../_viewmodels/use-alliance-actions'
 
 interface AllianceDeleteButtonProps {
   alliance: Alliance
-  onDeleted: () => Promise<void>
+  actions: AllianceActions
 }
 
 /**
@@ -21,7 +21,7 @@ interface AllianceDeleteButtonProps {
  */
 export default function AllianceDeleteButton({
   alliance,
-  onDeleted,
+  actions,
 }: Readonly<AllianceDeleteButtonProps>) {
   const { t } = useI18n()
   const { isOwner } = useAllianceRole()
@@ -35,16 +35,8 @@ export default function AllianceDeleteButton({
   async function handleConfirm() {
     setOpen(false)
     setDeleting(true)
-    try {
-      await deleteAlliance(alliance.id, alliance.name)
-      toast.success(t.game.alliances.deleteSuccess)
-      await onDeleted()
-    } catch (err: unknown) {
-      console.error(err)
-      toast.error((err as Error).message || t.game.alliances.deleteError)
-    } finally {
-      setDeleting(false)
-    }
+    await actions.disband(alliance)
+    setDeleting(false)
   }
 
   return (

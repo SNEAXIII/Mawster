@@ -21,6 +21,7 @@ import { useRequiredSession } from '@/hooks/use-required-session'
 import { useTabParam } from '@/hooks/use-tab-param'
 import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { getCurrentSeasonStatistics, type PlayerSeasonStats } from '@/app/services/statistics'
+import { useAllianceActions } from './use-alliance-actions'
 
 export enum AllianceTab {
   Create = 'create',
@@ -150,18 +151,20 @@ export function useAlliancesViewModel() {
   const refreshMembership = () =>
     Promise.all([refreshAlliances(), fetchEligibleOwners(), fetchMyAccounts()])
 
+  const allianceActions = useAllianceActions(refreshMembership)
+
   useEffect(() => {
     if (status === 'authenticated') {
       Promise.all([fetchEligibleOwners(), fetchMyAccounts()])
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [status])
 
   useEffect(() => {
     if (!loading && activeTab === AllianceTab.Create && eligibleOwners.length === 0) {
       router.replace('/game/alliances')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [loading, activeTab, eligibleOwners])
 
   useEffect(() => {
@@ -276,13 +279,6 @@ export function useAlliancesViewModel() {
     }
   }
 
-  // Also refreshes the eligible owners: any membership change — a member
-  // leaving, the alliance being disbanded — can free a game account, and the
-  // "Create" tab only shows up when at least one is eligible.
-  const handleMemberRefresh = async () => {
-    await refreshMembership()
-  }
-
   const handleAcceptInvitation = async (invitationId: string) => {
     try {
       await acceptInvitation(invitationId)
@@ -360,7 +356,7 @@ export function useAlliancesViewModel() {
     handleOpenInviteMember,
     handleCloseInviteMember,
     handleInviteMember,
-    handleMemberRefresh,
+    allianceActions,
     handleAcceptInvitation,
     handleDeclineInvitation,
     handleCancelInvitation,

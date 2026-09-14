@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { getMasteries, type MasteryEntry } from '@/app/services/masteries'
+import { useAccountMasteries } from '../_viewmodels/use-account-masteries'
 import { useI18n } from '@/app/i18n'
 import MasteryMiniView, { type MasteryMode } from './mastery-mini-view'
 
@@ -22,17 +21,7 @@ export default function MasteryDialog({
   defaultMode = 'all',
 }: Readonly<MasteryDialogProps>) {
   const { t } = useI18n()
-  const [masteries, setMasteries] = useState<MasteryEntry[]>([])
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!open || !gameAccountId) return
-    setLoading(true)
-    getMasteries(gameAccountId)
-      .then(setMasteries)
-      .catch(() => setMasteries([]))
-      .finally(() => setLoading(false))
-  }, [open, gameAccountId])
+  const { masteries, loading } = useAccountMasteries(open, gameAccountId)
 
   return (
     <Dialog

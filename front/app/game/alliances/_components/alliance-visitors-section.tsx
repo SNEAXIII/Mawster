@@ -4,51 +4,41 @@ import { useEffect, useState } from 'react'
 import { Eye, X, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/app/i18n'
-import {
-  type AllianceVisitor,
-  getAllianceVisitors,
-  kickVisitor,
-  inviteMember,
-} from '@/app/services/game'
+import type { AllianceVisitor } from '@/app/services/game'
+import type { AllianceActions } from '../_viewmodels/use-alliance-actions'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 
 interface AllianceVisitorsSectionProps {
   allianceId: string
   canManage: boolean
   onViewRoster: (gameAccountId: string, pseudo: string) => void
-  onRefresh: () => Promise<void>
+  actions: AllianceActions
 }
 
 export default function AllianceVisitorsSection({
   allianceId,
   canManage,
   onViewRoster,
-  onRefresh,
+  actions,
 }: Readonly<AllianceVisitorsSectionProps>) {
   const { t } = useI18n()
-  const [visitors, setVisitors] = useState<AllianceVisitor[]>([])
   const [kickTarget, setKickTarget] = useState<AllianceVisitor | null>(null)
+  const { loadVisitors } = actions
+  const visitors = actions.visitors[allianceId] ?? []
 
   useEffect(() => {
-    if (!allianceId) return
-    getAllianceVisitors(allianceId)
-      .then(setVisitors)
-      .catch(() => setVisitors([]))
-  }, [allianceId])
+    if (allianceId) void loadVisitors(allianceId)
+  }, [allianceId, loadVisitors])
 
   async function handleKickConfirm() {
     if (!kickTarget) return
     const target = kickTarget
     setKickTarget(null)
-    await kickVisitor(allianceId, target.game_account_id)
-    setVisitors((prev) => prev.filter((v) => v.id !== target.id))
-    await onRefresh()
+    await actions.removeVisitor(allianceId, target)
   }
 
-  async function handleInviteAsMember(visitor: AllianceVisitor) {
-    await inviteMember(allianceId, visitor.game_account_id)
-    await onRefresh()
-  }
+  const handleInviteAsMember = (visitor: AllianceVisitor) =>
+    actions.inviteVisitorAsMember(allianceId, visitor)
 
   if (visitors.length === 0) return null
 

@@ -9,6 +9,7 @@ import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 import AllianceSelect from '@/app/game/_components/alliance-select'
 
 import AllianceCard from './alliance-card'
+import type { AllianceActions } from '../_viewmodels/use-alliance-actions'
 
 interface AlliancesTabProps {
   alliances: AllianceWithVisitorFlag[]
@@ -24,7 +25,7 @@ interface AlliancesTabProps {
   onOpenInviteMember: (allianceId: string) => void
   onCloseInviteMember: () => void
   onInviteMember: (allianceId: string) => Promise<void>
-  onRefresh: () => Promise<void>
+  actions: AllianceActions
   onViewRoster: (gameAccountId: string, pseudo: string, canReq: boolean) => void
   onCancelInvitation: (allianceId: string, invitationId: string) => Promise<void>
 }
@@ -43,7 +44,7 @@ export default function AlliancesTab({
   onOpenInviteMember,
   onCloseInviteMember,
   onInviteMember,
-  onRefresh,
+  actions,
   onViewRoster,
   onCancelInvitation,
 }: Readonly<AlliancesTabProps>) {
@@ -99,7 +100,7 @@ export default function AlliancesTab({
         onOpenInviteMember={onOpenInviteMember}
         onCloseInviteMember={onCloseInviteMember}
         onInviteMember={onInviteMember}
-        onRefresh={onRefresh}
+        actions={actions}
         onViewRoster={onViewRoster}
         pendingInvitations={pendingInvitations[selectedAlliance.id] ?? []}
         onCancelInvitation={onCancelInvitation}

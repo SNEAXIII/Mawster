@@ -54,6 +54,7 @@ interface AllianceContextValue {
   myInvitations: AllianceInvitation[]
   pendingInvitations: Record<string, AllianceInvitation[]>
   // Actions
+  applyAlliance: (updated: Alliance) => void
   refresh: () => Promise<void>
   refreshRoles: () => Promise<void>
   /** @deprecated use refresh() */
@@ -75,6 +76,7 @@ const AllianceContext = createContext<AllianceContextValue>({
   rolesLoading: true,
   myInvitations: [],
   pendingInvitations: {},
+  applyAlliance: () => {},
   refresh: async () => {},
   refreshRoles: async () => {},
   refreshHasAlliance: async () => {},
@@ -183,6 +185,16 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
     refresh()
   }, [refresh, status])
 
+  const applyAlliance = useCallback((updated: Alliance) => {
+    setAlliances((prev) => {
+      const next = prev.map((a) =>
+        a.id === updated.id ? { ...updated, isVisitor: a.isVisitor } : a
+      )
+      writeCache(next)
+      return next
+    })
+  }, [])
+
   const accountIdSet = useMemo(() => new Set(myAccountIds), [myAccountIds])
 
   const contextValue = useMemo<AllianceContextValue>(
@@ -201,6 +213,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
       rolesLoading,
       myInvitations,
       pendingInvitations,
+      applyAlliance,
       refresh,
       refreshRoles,
       refreshHasAlliance: refresh,
@@ -214,6 +227,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
       rolesLoading,
       myInvitations,
       pendingInvitations,
+      applyAlliance,
       refresh,
       refreshRoles,
     ]

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,28 +20,9 @@ import {
   ShieldMinus,
   UserMinus,
 } from 'lucide-react'
-import {
-  type Alliance,
-  addOfficer,
-  addStrategist,
-  removeOfficer,
-  removeStrategist,
-  removeMember,
-  transferOwnership,
-} from '@/app/services/game'
+import type { Alliance } from '@/app/services/game'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
-
-const AllianceMemberAction = {
-  PROMOTE: 'promote',
-  DEMOTE: 'demote',
-  PROMOTE_STRATEGIST: 'promote_strategist',
-  DEMOTE_STRATEGIST: 'demote_strategist',
-  REMOVE: 'remove',
-  LEAVE: 'leave',
-  TRANSFER_OWNER: 'transfer_owner',
-} as const
-
-type AllianceMemberAction = (typeof AllianceMemberAction)[keyof typeof AllianceMemberAction]
+import { AllianceMemberAction, type AllianceActions } from '../_viewmodels/use-alliance-actions'
 
 interface AllianceMember {
   id: string
@@ -55,13 +35,13 @@ interface AllianceMember {
 interface AllianceMemberActionsProps {
   member: AllianceMember
   alliance: Alliance
-  onRefresh: () => void
+  actions: AllianceActions
 }
 
 export function AllianceMemberActions({
   member,
   alliance,
-  onRefresh,
+  actions,
 }: Readonly<AllianceMemberActionsProps>) {
   const { t } = useI18n()
   const { isMine: isMineCheck, isOwner, canManage } = useAllianceRole()
@@ -85,66 +65,17 @@ export function AllianceMemberActions({
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false)
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false)
 
-  const actionErrors: Record<AllianceMemberAction, string> = {
-    [AllianceMemberAction.PROMOTE]: t.game.alliances.officerAddError,
-    [AllianceMemberAction.DEMOTE]: t.game.alliances.officerRemoveError,
-    [AllianceMemberAction.PROMOTE_STRATEGIST]: t.game.alliances.strategistAddError,
-    [AllianceMemberAction.DEMOTE_STRATEGIST]: t.game.alliances.strategistRemoveError,
-    [AllianceMemberAction.TRANSFER_OWNER]: t.game.alliances.transferOwnerError,
-    [AllianceMemberAction.LEAVE]: t.game.alliances.leaveError,
-    [AllianceMemberAction.REMOVE]: t.game.alliances.memberRemoveError,
+  const closeDialog: Partial<Record<AllianceMemberAction, () => void>> = {
+    [AllianceMemberAction.PROMOTE]: () => setIsPromoteDialogOpen(false),
+    [AllianceMemberAction.REMOVE]: () => setIsExcludeDialogOpen(false),
+    [AllianceMemberAction.LEAVE]: () => setIsLeaveDialogOpen(false),
+    [AllianceMemberAction.TRANSFER_OWNER]: () => setIsTransferDialogOpen(false),
   }
 
   const handleAction = async (action: AllianceMemberAction) => {
     setIsLoading((prev) => ({ ...prev, [action]: true }))
-    try {
-      switch (action) {
-        case AllianceMemberAction.PROMOTE:
-          await addOfficer(allianceId, member.id)
-          toast.success(t.game.alliances.officerAddSuccess)
-          setIsPromoteDialogOpen(false)
-          break
-        case AllianceMemberAction.DEMOTE:
-          await removeOfficer(allianceId, member.id)
-          toast.success(t.game.alliances.officerRemoveSuccess)
-          break
-        case AllianceMemberAction.PROMOTE_STRATEGIST:
-          await addStrategist(allianceId, member.id)
-          toast.success(t.game.alliances.strategistAddSuccess)
-          break
-        case AllianceMemberAction.DEMOTE_STRATEGIST:
-          await removeStrategist(allianceId, member.id)
-          toast.success(t.game.alliances.strategistRemoveSuccess)
-          break
-        case AllianceMemberAction.REMOVE:
-          await removeMember(allianceId, member.id)
-          toast.success(t.game.alliances.memberRemoveSuccess)
-          setIsExcludeDialogOpen(false)
-          break
-        case AllianceMemberAction.LEAVE:
-          await removeMember(allianceId, member.id)
-          toast.success(t.game.alliances.leaveSuccess)
-          setIsLeaveDialogOpen(false)
-          break
-        case AllianceMemberAction.TRANSFER_OWNER:
-          await transferOwnership(allianceId, member.id)
-          toast.success(
-            t.game.alliances.transferOwnerSuccess.replace('{pseudo}', member.game_pseudo)
-          )
-          setIsTransferDialogOpen(false)
-          break
-      }
-      onRefresh()
-    } catch (err: unknown) {
-      console.error(err)
-      const errorMsg = actionErrors[action]
-      // An Error carrying an empty message must fall through to errorMsg, hence the
-      // truthiness check here rather than a bare `??` on err.message.
-      const errMessage = err instanceof Error && err.message ? err.message : undefined
-      toast.error(errMessage ?? errorMsg)
-    } finally {
-      setIsLoading((prev) => ({ ...prev, [action]: false }))
-    }
+    if (await actions.runMemberAction(allianceId, member, action)) closeDialog[action]?.()
+    setIsLoading((prev) => ({ ...prev, [action]: false }))
   }
 
   const canPromote = userIsOwner && !member.is_owner && !member.is_officer
