@@ -1,43 +1,34 @@
 import { setupOwnerMemberAlliance } from '../../support/e2e';
 
+const FIELDS = [
+  { field: 'elo', prefix: 'elo-edit', value: '2350' },
+  { field: 'tier', prefix: 'tier-edit', value: '7' },
+] as const;
+
 describe('Alliances – Elo and tier editing on the alliance card', () => {
   beforeEach(() => {
     cy.truncateDb();
   });
 
-  it('owner edits the elo and the card shows the saved value', () => {
-    setupOwnerMemberAlliance('elo-edit', 'EloOwner', 'EloMember', 'EloAlliance', 'EL').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id, 'alliances');
+  FIELDS.forEach(({ field, prefix, value }) => {
+    it(`owner edits the ${field} and the card shows the saved value`, () => {
+      setupOwnerMemberAlliance(prefix, `${field}Owner`, `${field}Member`, 'EditAlliance', 'ED').then(
+        ({ ownerData }) => {
+          cy.apiLogin(ownerData.user_id, 'alliances');
 
-      cy.getByCy('alliance-card-EloAlliance').within(() => {
-        cy.getByCy('alliance-elo-edit').click();
-        cy.getByCy('alliance-elo-input').clear();
-        cy.getByCy('alliance-elo-input').type('2350');
-        cy.getByCy('alliance-elo-save').click();
-        cy.get('[data-cy="alliance-elo-input"]').should('not.exist');
-        cy.get('[data-cy="alliance-elo"]').should('contain.text', '2350');
-      });
+          cy.getByCy('alliance-card-EditAlliance').within(() => {
+            cy.getByCy(`alliance-${field}-edit`).click();
+            cy.getByCy(`alliance-${field}-input`).clear();
+            cy.getByCy(`alliance-${field}-input`).type(value);
+            cy.getByCy(`alliance-${field}-save`).click();
+            cy.get(`[data-cy="alliance-${field}-input"]`).should('not.exist');
+            cy.get(`[data-cy="alliance-${field}"]`).should('contain.text', value);
+          });
 
-      cy.reload();
-      cy.get('[data-cy="alliance-card-EloAlliance"] [data-cy="alliance-elo"]').should('contain.text', '2350');
-    });
-  });
-
-  it('owner edits the tier and the card shows the saved value', () => {
-    setupOwnerMemberAlliance('tier-edit', 'TierOwner', 'TierMember', 'TierAlliance', 'TI').then(({ ownerData }) => {
-      cy.apiLogin(ownerData.user_id, 'alliances');
-
-      cy.getByCy('alliance-card-TierAlliance').within(() => {
-        cy.getByCy('alliance-tier-edit').click();
-        cy.getByCy('alliance-tier-input').clear();
-        cy.getByCy('alliance-tier-input').type('7');
-        cy.getByCy('alliance-tier-save').click();
-        cy.get('[data-cy="alliance-tier-input"]').should('not.exist');
-        cy.get('[data-cy="alliance-tier"]').should('contain.text', '7');
-      });
-
-      cy.reload();
-      cy.get('[data-cy="alliance-card-TierAlliance"] [data-cy="alliance-tier"]').should('contain.text', '7');
+          cy.reload();
+          cy.get(`[data-cy="alliance-card-EditAlliance"] [data-cy="alliance-${field}"]`).should('contain.text', value);
+        },
+      );
     });
   });
 
