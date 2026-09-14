@@ -1,6 +1,5 @@
 'use client'
 
-import { useCallback } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
@@ -10,7 +9,6 @@ import { cn } from '@/app/lib/utils'
 import { shortenChampionName } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
 import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
-import { getAvailablePrefightAttackers } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import { useAvailableAttackers } from './use-available-attackers'
 
@@ -27,13 +25,15 @@ export default function PrefightSelectorDialog({
   targetNodeNumber,
 }: Readonly<PrefightSelectorDialogProps>) {
   const { t } = useI18n()
-  const { selectedAllianceId, activeWarId, selectedBg, handleAddPrefight, prefights } = useWar()
+  const {
+    selectedAllianceId,
+    activeWarId,
+    handleAddPrefight,
+    prefights,
+    loadAvailablePrefightAttackers,
+  } = useWar()
 
-  const fetchFn = useCallback(
-    () => getAvailablePrefightAttackers(selectedAllianceId!, activeWarId!, selectedBg),
-    [selectedAllianceId, activeWarId, selectedBg]
-  )
-  const guardedFetch = selectedAllianceId && activeWarId ? fetchFn : null
+  const guardedFetch = selectedAllianceId && activeWarId ? loadAvailablePrefightAttackers : null
 
   const {
     available,
