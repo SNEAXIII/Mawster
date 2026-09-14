@@ -12,11 +12,7 @@ import { cn } from '@/app/lib/utils'
 import { shortenChampionName } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
 import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
-import {
-  type AvailableAttacker,
-  type WarPlacement,
-  getAvailableAttackers,
-} from '@/app/services/war'
+import type { AvailableAttacker, WarPlacement } from '@/app/services/war'
 import AttackerEntryRow from './attacker-entry-row'
 import WarNoteEditor from './war-note-editor'
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar'
@@ -28,9 +24,6 @@ interface WarAttackerSelectorProps {
   open: boolean
   onClose: () => void
   nodeNumber: number
-  allianceId: string
-  warId: string
-  battlegroup: number
   placements: WarPlacement[]
   onSelect: (attacker: AvailableAttacker) => void
 }
@@ -46,14 +39,11 @@ export default function WarAttackerSelector({
   open,
   onClose,
   nodeNumber,
-  allianceId,
-  warId,
-  battlegroup,
   placements,
   onSelect,
 }: Readonly<WarAttackerSelectorProps>) {
   const { t } = useI18n()
-  const { canManageWar } = useWar()
+  const { canManageWar, loadAvailableAttackers } = useWar()
   const currentSeason = useCurrentSeason()
   const maxAttackers = currentSeason?.max_attackers_per_member ?? 3
   const searchRef = useRef<HTMLInputElement>(null)
@@ -76,20 +66,14 @@ export default function WarAttackerSelector({
     setLoading(true)
     setError(false)
     try {
-      const data = await getAvailableAttackers(
-        allianceId,
-        warId,
-        battlegroup,
-        undefined,
-        nodeNumber
-      )
+      const data = await loadAvailableAttackers(undefined, nodeNumber)
       setAvailable(data)
     } catch {
       setError(true)
     } finally {
       setLoading(false)
     }
-  }, [allianceId, warId, battlegroup, nodeNumber])
+  }, [loadAvailableAttackers, nodeNumber])
 
   const currentPlacement = placements.find((p) => p.node_number === nodeNumber)
   const existingNote = currentPlacement?.note
@@ -105,7 +89,7 @@ export default function WarAttackerSelector({
       // Unfold the note when one already exists, fold it otherwise.
       setShowNote(!!existingNote)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [open, fetchAvailable])
 
   // A note saved just before reopening can land after the effect above ran, which
