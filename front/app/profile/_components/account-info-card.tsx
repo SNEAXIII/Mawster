@@ -1,15 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { User, Calendar } from 'lucide-react'
 import { FiEdit2, FiCheck, FiX } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
 import { formatDateLong } from '@/app/lib/utils'
 import { InfoRow } from './info-row'
-import { updateLogin } from '@/app/services/users'
+import { useUpdateLogin } from '../_viewmodels/use-update-login'
 
 const LOGIN_REGEX = /^[a-zA-Z0-9]{3,30}$/
 
@@ -24,8 +22,7 @@ export function AccountInfoCard({
   createdAt?: string | null
 }>) {
   const { locale, t } = useI18n()
-  const router = useRouter()
-  const { update } = useSession()
+  const saveLogin = useUpdateLogin()
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(name ?? '')
   const [displayName, setDisplayName] = useState(name ?? '')
@@ -51,15 +48,9 @@ export function AccountInfoCard({
     setLoading(true)
     setError(null)
     try {
-      await updateLogin(value)
+      await saveLogin(value)
       setDisplayName(value)
       setEditing(false)
-      // The session caches the backend profile on the token, so a router refresh
-      // alone would keep showing the old name everywhere else (the sidebar). The
-      // argument is mandatory: bare, next-auth sends a GET and the jwt callback
-      // gets no `update` trigger.
-      await update({})
-      router.refresh()
     } catch (err) {
       const e = err as Error & { status?: number }
       setError(e.status === 409 ? t.profile.editUsernameTaken : t.profile.editUsernameError)
