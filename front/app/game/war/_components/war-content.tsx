@@ -53,7 +53,6 @@ function WarLayout() {
     alliances,
     selectedAllianceId,
     handleAllianceChange,
-    selectedBg,
     loading,
     canManageWar,
     currentWar,
@@ -163,9 +162,6 @@ function WarLayout() {
         open={attackerSelectorNode !== null}
         onClose={() => setAttackerSelectorNode(null)}
         nodeNumber={attackerSelectorNode ?? 0}
-        allianceId={selectedAllianceId}
-        warId={activeWarId}
-        battlegroup={selectedBg}
         placements={placements}
         onSelect={handleAssignAttacker}
       />
