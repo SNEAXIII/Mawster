@@ -1753,6 +1753,7 @@ class WarService:
         war_id: uuid.UUID,
         battlegroup: int,
         champion_user_id: uuid.UUID,
+        target_node_number: int,
     ) -> None:
         result = await session.exec(
             select(WarPrefightAttacker).where(
@@ -1760,6 +1761,7 @@ class WarService:
                     WarPrefightAttacker.war_id == war_id,
                     WarPrefightAttacker.battlegroup == battlegroup,
                     WarPrefightAttacker.champion_user_id == champion_user_id,
+                    WarPrefightAttacker.target_node_number == target_node_number,
                 )
             )
         )
