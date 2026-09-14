@@ -5,7 +5,7 @@ import { useI18n } from '@/app/i18n'
 import { toast } from 'sonner'
 import type { GameAccount, AllianceRoleEntry, DeletedGameAccount } from '@/app/services/game'
 import { useAllianceContext } from '@/app/contexts/alliance-context'
-import { useGameAccounts } from '@/hooks/use-game-accounts'
+import { useGameAccounts } from '@/app/contexts/game-accounts-context'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -56,19 +56,12 @@ function getRoleKey(
   return 'visitor'
 }
 
-interface GameAccountsSectionProps {
-  onAccountsChange?: () => void
-}
-
-export default function GameAccountsSection({
-  onAccountsChange,
-}: Readonly<GameAccountsSectionProps>) {
+export default function GameAccountsSection() {
   const { t } = useI18n()
   // The provider already holds my-roles: refetching it here made the profile
   // page ask the backend for the same payload twice.
   const { rolesByAccount } = useAllianceContext()
-  const { accounts, deletedAccounts, loading, create, remove, restore, update } =
-    useGameAccounts(onAccountsChange)
+  const { accounts, deletedAccounts, loading, create, remove, restore, update } = useGameAccounts()
   const [creating, setCreating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [restoringId, setRestoringId] = useState<string | null>(null)
