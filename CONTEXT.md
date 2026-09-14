@@ -178,17 +178,17 @@ An Alliance's war rating. It moves only on Wars fought inside a Season
 **Tier**:
 The difficulty bracket an Alliance wars in, derived from its Elo — 1 is the top, 20
 the bottom and the starting point. It sets how hard the nodes hit, so two fights are
-only comparable at equal Tier; that is why every War and every Fight Record carries
-the Tier it was fought at.
+only comparable at equal Tier; that is why every War carries the Tier it was fought at, and every Fight Record
+reads it from there.
 
 A running War carries no Tier yet: it is stamped when the War is closed, on purpose,
 so an Alliance Tier corrected late — after someone noticed it was stale mid-war — still
 lands on the War and on the Elo it moves.
 
 **Fight Record**:
-A frozen record of one fight that actually happened: attacker and defender with the
-stars, rank and ascension they had at the time. Stats are copied, never joined, so a
-later rank-up cannot rewrite history.
+A frozen record of one fight that actually happened. It points at the placement the
+fight was fought on and copies only the attacker's rank and ascension at the time, the
+two stats a later upgrade could rewrite. Everything else is read from the War.
 _Table_: `war_fight_record`.
 _Avoid_: fight, combat log.
 
