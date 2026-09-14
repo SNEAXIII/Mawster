@@ -7,7 +7,8 @@ import {
   type ChampionOrderBy,
   type ChampionOrderDir,
 } from '@/app/services/champions'
-import { listSeasons, getCurrentSeason, type Season } from '@/app/services/season'
+import { listSeasons, type Season } from '@/app/services/season'
+import { useSeasonContext } from '@/app/contexts/season-context'
 import { useI18n } from '@/app/i18n'
 import {
   BASE_SIZE,
@@ -68,7 +69,7 @@ export function useChampionsViewModel() {
     } finally {
       setIsLoading(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [currentPage, perPage, filters, selectedSeasonId, orderBy, orderDir])
 
   useEffect(() => {
@@ -79,16 +80,24 @@ export function useChampionsViewModel() {
     }
   }, [load])
 
+  const { season: currentSeason, loading: currentSeasonLoading } = useSeasonContext()
+  const [seasonsLoaded, setSeasonsLoaded] = useState(false)
+
   useEffect(() => {
     listSeasons()
-      .then(async (list) => {
+      .then((list) => {
         setSeasons(list)
-        const current = await getCurrentSeason()
-        setSelectedSeasonId(current?.id ?? list[0]?.id ?? null)
+        setSeasonsLoaded(true)
       })
       .catch(() => setError(t.champions.errors.loadError))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [])
+
+  // Preselect the active season once both the list and the shared current season are known.
+  useEffect(() => {
+    if (!seasonsLoaded || currentSeasonLoading) return
+    setSelectedSeasonId((selected) => selected ?? currentSeason?.id ?? seasons[0]?.id ?? null)
+  }, [seasonsLoaded, currentSeasonLoading, currentSeason, seasons])
 
   function setFilter(key: keyof ChampionFiltersState, value: string) {
     setFilters((prev) => ({ ...prev, [key]: value }))
