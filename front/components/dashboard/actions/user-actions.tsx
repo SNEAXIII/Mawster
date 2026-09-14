@@ -10,26 +10,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { MoreHorizontal, Power, Trash, UserPlus, UserMinus } from 'lucide-react'
 import { useState } from 'react'
-import {
-  disableUser,
-  enableUser,
-  deleteUser,
-  promoteToAdmin,
-  demoteFromAdmin,
-} from '@/app/services/users'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { useI18n } from '@/app/i18n'
-
-const UserAction = {
-  DISABLE: 'disable',
-  ENABLE: 'enable',
-  DELETE: 'delete',
-  PROMOTE: 'promote',
-  DEMOTE: 'demote',
-} as const
-
-type UserAction = (typeof UserAction)[keyof typeof UserAction]
+import { UserAction } from '@/app/admin/_viewmodels/use-users-viewmodel'
 
 interface UserActionsProps {
   userId: string
@@ -39,7 +23,7 @@ interface UserActionsProps {
   isSuperAdmin?: boolean
   isDisabled?: boolean
   isDeleted?: boolean
-  loadUsers: () => void
+  onUserAction: (action: UserAction, userId: string) => Promise<void>
 }
 
 export const UserActions: React.FC<UserActionsProps> = ({
@@ -50,7 +34,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
   isSuperAdmin = false,
   isDisabled = false,
   isDeleted = false,
-  loadUsers,
+  onUserAction,
 }) => {
   const initialLoadingState = {
     [UserAction.DISABLE]: false,
@@ -63,40 +47,19 @@ export const UserActions: React.FC<UserActionsProps> = ({
   const [isLoading, setIsLoading] = useState<Record<UserAction, boolean>>(initialLoadingState)
   const { t } = useI18n()
 
-  const handleAction = async (action: UserAction, userId: string) => {
-    try {
-      setIsLoading((prev) => ({ ...prev, [action]: true }))
+  const closeDialog: Record<UserAction, () => void> = {
+    [UserAction.DISABLE]: () => setIsDisableDialogOpen(false),
+    [UserAction.ENABLE]: () => setIsDisableDialogOpen(false),
+    [UserAction.DELETE]: () => setIsDeleteDialogOpen(false),
+    [UserAction.PROMOTE]: () => setIsPromoteToAdminDialogOpen(false),
+    [UserAction.DEMOTE]: () => setIsDemoteDialogOpen(false),
+  }
 
-      switch (action) {
-        case UserAction.DISABLE:
-          await disableUser(userId)
-          setIsDisableDialogOpen(false)
-          loadUsers()
-          break
-        case UserAction.ENABLE:
-          await enableUser(userId)
-          setIsDisableDialogOpen(false)
-          loadUsers()
-          break
-        case UserAction.DELETE:
-          await deleteUser(userId)
-          setIsDeleteDialogOpen(false)
-          loadUsers()
-          break
-        case UserAction.PROMOTE:
-          await promoteToAdmin(userId)
-          setIsPromoteToAdminDialogOpen(false)
-          loadUsers()
-          break
-        case UserAction.DEMOTE:
-          await demoteFromAdmin(userId)
-          setIsDemoteDialogOpen(false)
-          loadUsers()
-          break
-      }
-    } catch (error) {
-      console.error(`Error during ${action} user:`, error)
-      throw error
+  const handleAction = async (action: UserAction, userId: string) => {
+    setIsLoading((prev) => ({ ...prev, [action]: true }))
+    try {
+      await onUserAction(action, userId)
+      closeDialog[action]()
     } finally {
       setIsLoading((prev) => ({ ...prev, [action]: false }))
     }
