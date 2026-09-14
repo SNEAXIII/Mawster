@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,10 +12,11 @@ import {
 } from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Eye } from 'lucide-react'
-import { type Alliance, setMemberGroup } from '@/app/services/game'
+import type { Alliance } from '@/app/services/game'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
 import UsernameEnriched, { getMemberRole } from '@/components/username-enriched'
 import { AllianceMemberActions } from './alliance-member-actions'
+import type { AllianceActions } from '../_viewmodels/use-alliance-actions'
 
 interface AllianceMember {
   id: string
@@ -30,14 +30,14 @@ interface AllianceMember {
 interface AllianceMemberRowProps {
   member: AllianceMember
   alliance: Alliance
-  onRefresh: () => void
+  actions: AllianceActions
   onViewRoster: (gameAccountId: string, pseudo: string) => void
 }
 
 export default function AllianceMemberRow({
   member,
   alliance,
-  onRefresh,
+  actions,
   onViewRoster,
 }: Readonly<AllianceMemberRowProps>) {
   const { t } = useI18n()
@@ -60,20 +60,8 @@ export default function AllianceMemberRow({
   const handleSetGroup = async (val: string) => {
     const group = val === 'none' ? null : Number.parseInt(val)
     setIsChangingGroup(true)
-    try {
-      await setMemberGroup(allianceId, member.id, group)
-      const groupLabel = group ? `${t.game.alliances.group} ${group}` : t.game.alliances.noGroup
-      toast.success(
-        t.game.alliances.groupSetSuccess
-          .replace('{pseudo}', member.game_pseudo)
-          .replace('{group}', groupLabel)
-      )
-      onRefresh()
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.alliances.groupSetError)
-    } finally {
-      setIsChangingGroup(false)
-    }
+    await actions.changeMemberGroup(allianceId, member, group)
+    setIsChangingGroup(false)
   }
 
   return (
@@ -113,7 +101,7 @@ export default function AllianceMemberRow({
           <AllianceMemberActions
             member={member}
             alliance={alliance}
-            onRefresh={onRefresh}
+            actions={actions}
           />
 
           {/* Group selector — only for officers/owners */}
