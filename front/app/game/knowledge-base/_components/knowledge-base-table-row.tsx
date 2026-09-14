@@ -11,12 +11,14 @@ type KnowledgeBaseTableRowProps = Readonly<{
   record: FightRecord
   /** Keep in sync with `buildKnowledgeBaseColumns` — same columns, same order. */
   exporting: boolean
+  onReportNote: (noteId: string) => Promise<boolean>
 }>
 
 /** One fight record. Cell order must match the header built from the columns. */
 export default function KnowledgeBaseTableRow({
   record: r,
   exporting,
+  onReportNote,
 }: KnowledgeBaseTableRowProps) {
   const { t } = useI18n()
   const kb = t.game.knowledgeBase
@@ -113,7 +115,12 @@ export default function KnowledgeBaseTableRow({
           {r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}
         </td>
       )}
-      {!exporting && <NoteCell record={r} />}
+      {!exporting && (
+        <NoteCell
+          record={r}
+          onReport={onReportNote}
+        />
+      )}
     </tr>
   )
 }
