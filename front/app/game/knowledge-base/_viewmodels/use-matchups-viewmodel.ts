@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useAllianceSelector } from '@/hooks/use-alliance-selector'
-import { getAllianceRoster, getMyAllianceRoles, type AllianceMyRoles } from '@/app/services/game'
+import { getAllianceRoster } from '@/app/services/game'
+import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { evaluateMatchups, type MatchupEvaluationRow } from '@/app/services/matchups'
 import { useMatchupGrid } from './use-matchup-grid'
 import { useMatchupDefenderGrid } from './use-matchup-defender-grid'
@@ -135,12 +136,7 @@ export function useMatchupsViewModel() {
     removeMatchup,
   } = useMatchupRatings(selectedAllianceId, matchupAttackerId, reloadActive)
 
-  const [roles, setRoles] = useState<AllianceMyRoles['roles']>({})
-  useEffect(() => {
-    getMyAllianceRoles()
-      .then((result) => setRoles(result.roles))
-      .catch(() => setRoles({}))
-  }, [])
+  const { roles } = useAllianceContext()
 
   // Only officers and the owner may write. A plain member reads like everyone else, so
   // showing them a form that the API answers with 403 would be a lie.

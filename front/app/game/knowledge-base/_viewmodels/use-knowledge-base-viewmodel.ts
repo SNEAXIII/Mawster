@@ -12,7 +12,7 @@ import {
   type Season,
   type AccessibleAlliance,
 } from '@/app/services/fight-records'
-import { getMyAllianceRoles } from '@/app/services/game'
+import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { reportNote } from '@/app/services/moderation'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
@@ -82,7 +82,10 @@ export function useKnowledgeBaseViewModel() {
     () => (getInitialParams().get('source') as FightRecordSource) ?? 'all'
   )
   const [accessibleAlliances, setAccessibleAlliances] = useState<AccessibleAlliance[]>([])
-  const [canImport, setCanImport] = useState(false)
+  const { roles } = useAllianceContext()
+  const canImport = accessibleAlliances.some(
+    (a) => roles[a.id]?.is_owner || roles[a.id]?.is_officer
+  )
   const [data, setData] = useState<PaginatedFightRecords | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -104,19 +107,9 @@ export function useKnowledgeBaseViewModel() {
   }, [])
 
   useEffect(() => {
-    Promise.all([getAccessibleAlliances(), getMyAllianceRoles()])
-      .then(([alliances, rolesData]) => {
-        setAccessibleAlliances(alliances)
-        setCanImport(
-          alliances.some(
-            (a) => rolesData.roles[a.id]?.is_owner || rolesData.roles[a.id]?.is_officer
-          )
-        )
-      })
-      .catch(() => {
-        setAccessibleAlliances([])
-        setCanImport(false)
-      })
+    getAccessibleAlliances()
+      .then(setAccessibleAlliances)
+      .catch(() => setAccessibleAlliances([]))
   }, [])
 
   useEffect(() => {

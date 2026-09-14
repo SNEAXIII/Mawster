@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
-import { getMyGameAccounts, type GameAccount } from '@/app/services/game'
+import { useGameAccounts } from '@/app/contexts/game-accounts-context'
 import {
   getPlayerSeasons,
   getPlayerStats,
@@ -16,8 +16,7 @@ import { useChampionUsageChart } from '@/app/components/statistics/use-champion-
 export function useProfileStats() {
   const { t } = useI18n()
   const hasStatsRef = useRef(false)
-  const [accounts, setAccounts] = useState<GameAccount[]>([])
-  const [accountsLoading, setAccountsLoading] = useState(true)
+  const { accounts, loading: accountsLoading } = useGameAccounts()
   const [accountId, setAccountId] = useState('')
   const [seasons, setSeasons] = useState<PlayerSeasonOption[]>([])
   const [seasonId, setSeasonId] = useState<string | undefined>(undefined)
@@ -25,15 +24,10 @@ export function useProfileStats() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Default to the first account, and fall back when the selected one disappears.
   useEffect(() => {
-    getMyGameAccounts()
-      .then((a) => {
-        setAccounts(a)
-        setAccountId(a[0]?.id ?? '')
-      })
-      .catch(() => setAccounts([]))
-      .finally(() => setAccountsLoading(false))
-  }, [])
+    if (!accounts.some((a) => a.id === accountId)) setAccountId(accounts[0]?.id ?? '')
+  }, [accounts, accountId])
 
   useEffect(() => {
     if (!accountId) return

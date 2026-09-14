@@ -6,7 +6,6 @@ import { useI18n } from '@/app/i18n'
 import { toast } from 'sonner'
 import {
   type GameAccount,
-  getMyGameAccounts,
   getEligibleOwners,
   getEligibleMembers,
   getEligibleVisitors,
@@ -20,6 +19,7 @@ import {
 import { useRequiredSession } from '@/hooks/use-required-session'
 import { useTabParam } from '@/hooks/use-tab-param'
 import { useAllianceContext } from '@/app/contexts/alliance-context'
+import { useGameAccounts } from '@/app/contexts/game-accounts-context'
 import { getCurrentSeasonStatistics, type PlayerSeasonStats } from '@/app/services/statistics'
 import { useAllianceActions } from './use-alliance-actions'
 
@@ -43,6 +43,13 @@ export function useAlliancesViewModel() {
     pendingInvitations,
     refresh: refreshAlliances,
   } = useAllianceContext()
+  const {
+    accounts: myAccounts,
+    loading: accountsLoading,
+    refresh: refreshAccounts,
+  } = useGameAccounts()
+  // Assume accounts exist until the list loads, so the empty state never flashes.
+  const hasAnyAccounts = accountsLoading || myAccounts.length > 0
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -50,7 +57,6 @@ export function useAlliancesViewModel() {
   const [eligibleOwners, setEligibleOwners] = useState<GameAccount[]>([])
   const [eligibleMembers, setEligibleMembers] = useState<GameAccount[]>([])
   const [eligibleVisitors, setEligibleVisitors] = useState<GameAccount[]>([])
-  const [hasAnyAccounts, setHasAnyAccounts] = useState(true)
   const [creating, setCreating] = useState(false)
   const [statsAllianceId, setStatsAllianceId] = useState('')
   const [seasonStats, setSeasonStats] = useState<PlayerSeasonStats[]>([])
@@ -114,15 +120,6 @@ export function useAlliancesViewModel() {
     }
   }
 
-  const fetchMyAccounts = async () => {
-    try {
-      const data = await getMyGameAccounts()
-      setHasAnyAccounts(data.length > 0)
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
   const loadSeasonStats = useCallback(
     async (allianceId: string, warId?: string | null, seasonId?: string | null) => {
       setStatsRefreshing(true)
@@ -149,13 +146,13 @@ export function useAlliancesViewModel() {
   // are fetched when the invite dialog opens rather than on every membership
   // change — there is no alliance to ask about here.
   const refreshMembership = () =>
-    Promise.all([refreshAlliances(), fetchEligibleOwners(), fetchMyAccounts()])
+    Promise.all([refreshAlliances(), fetchEligibleOwners(), refreshAccounts()])
 
   const allianceActions = useAllianceActions(refreshMembership)
 
   useEffect(() => {
     if (status === 'authenticated') {
-      Promise.all([fetchEligibleOwners(), fetchMyAccounts()])
+      void fetchEligibleOwners()
     }
     // oxlint-disable-next-line react/exhaustive-deps
   }, [status])
