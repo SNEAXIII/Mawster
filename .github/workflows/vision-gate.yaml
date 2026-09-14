@@ -67,10 +67,8 @@ jobs:
               -e MAWSTER_REPO=/mawster \
               "$IMAGE" sh -c "
                 python -m src.naming.embed build &&
-                python -m src.pipeline data/real \
-                  --weights out/runs/card_detector/weights/best.onnx --debug &&
-                # eval exits non-zero on a naming regression; tolerated so only
-                # a pipeline crash can fail this job.
+                python -m src.pipeline data/real --debug &&
+                # A report, not a gate: mcoc-vision's CI gates the image itself.
                 (python -m src.eval --all --dir data/real || true)" | tee "eval-$side.txt"
             mkdir -p "gate-out/$side"
             docker cp "gate-$side:/app/out/debug/." "gate-out/$side/"
