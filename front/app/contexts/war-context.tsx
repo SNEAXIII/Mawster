@@ -48,8 +48,11 @@ import {
   togglePlanningError,
   assignWarAssist,
   removeWarAssist,
+  getAvailableAttackers,
+  getAvailablePrefightAttackers,
 } from '@/app/services/war'
 import { upsertWarFightNote, deleteWarFightNote } from '@/app/services/war-notes'
+import { reportNote } from '@/app/services/moderation'
 import { WarMode } from '@/app/game/war/_components/war-types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -121,6 +124,11 @@ interface WarContextValue {
   handleRemoveAttacker: (node: number) => Promise<void>
   handleAdjustKo: (node: number, delta: number) => void
   handleUpdateBoosts: (nodeNumber: number, boosts: WarBoosts) => Promise<void>
+  loadAvailableAttackers: (
+    gameAccountId?: string,
+    nodeNumber?: number
+  ) => Promise<AvailableAttacker[]>
+  loadAvailablePrefightAttackers: () => Promise<AvailableAttacker[]>
 
   // Synergy
   synergies: WarSynergy[]
@@ -130,7 +138,7 @@ interface WarContextValue {
   // Prefight
   prefights: WarPrefight[]
   handleAddPrefight: (championUserId: string, targetNodeNumber: number) => Promise<void>
-  handleRemovePrefight: (championUserId: string) => Promise<void>
+  handleRemovePrefight: (championUserId: string, targetNodeNumber: number) => Promise<void>
 
   // Combat completion
   handleToggleCombatCompleted: (nodeNumber: number) => Promise<void>
@@ -144,6 +152,7 @@ interface WarContextValue {
   // Fight note
   handleSaveNote: (nodeNumber: number, content: string) => Promise<void>
   handleDeleteNote: (nodeNumber: number) => Promise<void>
+  handleReportNote: (noteId: string) => Promise<boolean>
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -208,6 +217,17 @@ export function WarProvider({
     tRef.current = t
   }, [t])
 
+  // Bumped before and after every write: a fetch that overlapped one drops its snapshot.
+  const writeSeq = useRef(0)
+  const write = async <T,>(call: () => Promise<T>): Promise<T> => {
+    writeSeq.current += 1
+    try {
+      return await call()
+    } finally {
+      writeSeq.current += 1
+    }
+  }
+
   // ─── Derived values ────────────────────────────────────────────────────────
   const activeWarId = currentWar?.id ?? ''
   const placements = useMemo<WarPlacement[]>(() => warSummary?.placements ?? [], [warSummary])
@@ -268,7 +288,7 @@ export function WarProvider({
       setSelectedAllianceId(alliances[0].id)
       onStateChange?.(alliances[0].id, selectedBg)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [alliances, selectedAllianceId, setSelectedAllianceId])
 
   // ─── Fetch current war ─────────────────────────────────────────────────────
@@ -305,12 +325,14 @@ export function WarProvider({
     async (silent = false) => {
       if (!selectedAllianceId || !activeWarId) return
       if (!silent) setWarLoading(true)
+      const seq = writeSeq.current
       try {
         const [summary, synergyList, prefightList] = await Promise.all([
           getWarDefense(selectedAllianceId, activeWarId, selectedBg),
           getWarSynergies(selectedAllianceId, activeWarId, selectedBg),
           getWarPrefights(selectedAllianceId, activeWarId, selectedBg),
         ])
+        if (seq !== writeSeq.current) return
         const pending = koPending.current
         setWarSummary({
           ...summary,
@@ -336,6 +358,43 @@ export function WarProvider({
 
   // Polling every 10s, on-screen tabs only
   useVisiblePoll(() => void fetchWarDefense(true), 10_000, Boolean(activeWarId))
+
+  const reloadSynergies = async () => {
+    if (!selectedAllianceId || !activeWarId) return
+    const seq = writeSeq.current
+    const list = await getWarSynergies(selectedAllianceId, activeWarId, selectedBg)
+    if (seq === writeSeq.current) setSynergies(list)
+  }
+
+  const reloadPrefights = async () => {
+    if (!selectedAllianceId || !activeWarId) return
+    const seq = writeSeq.current
+    const list = await getWarPrefights(selectedAllianceId, activeWarId, selectedBg)
+    if (seq === writeSeq.current) setPrefights(list)
+  }
+
+  const setPlacement = (updated: WarPlacement) =>
+    setWarSummary((prev) =>
+      prev
+        ? {
+            ...prev,
+            placements: prev.placements.some((p) => p.node_number === updated.node_number)
+              ? prev.placements.map((p) => (p.node_number === updated.node_number ? updated : p))
+              : [...prev.placements, updated],
+          }
+        : prev
+    )
+
+  const loadAvailableAttackers = useCallback(
+    (gameAccountId?: string, nodeNumber?: number) =>
+      getAvailableAttackers(selectedAllianceId, activeWarId, selectedBg, gameAccountId, nodeNumber),
+    [selectedAllianceId, activeWarId, selectedBg]
+  )
+
+  const loadAvailablePrefightAttackers = useCallback(
+    () => getAvailablePrefightAttackers(selectedAllianceId, activeWarId, selectedBg),
+    [selectedAllianceId, activeWarId, selectedBg]
+  )
 
   // ─── Actions ───────────────────────────────────────────────────────────────
 
@@ -416,28 +475,25 @@ export function WarProvider({
   ) => {
     if (!selectedAllianceId || !activeWarId || selectorNode === null) return
     const node = selectorNode
+    const replaced = placements.some((p) => p.node_number === node)
     try {
-      const placement = await placeWarDefender(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        node,
-        championId,
-        stars,
-        rank,
-        ascension
+      const placement = await write(() =>
+        placeWarDefender(
+          selectedAllianceId,
+          activeWarId,
+          selectedBg,
+          node,
+          championId,
+          stars,
+          rank,
+          ascension
+        )
       )
       toast.success(
         t.game.war.placeSuccess.replace('{name}', championName).replace('{node}', String(node))
       )
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: [...prev.placements.filter((p) => p.node_number !== node), placement],
-            }
-          : prev
-      )
+      setPlacement(placement)
+      if (replaced) await Promise.all([reloadSynergies(), reloadPrefights()])
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.placeError)
     }
@@ -446,13 +502,9 @@ export function WarProvider({
   const doRemoveDefender = async (nodeNumber: number) => {
     if (!selectedAllianceId || !activeWarId) return
     try {
-      await removeWarDefender(selectedAllianceId, activeWarId, selectedBg, nodeNumber)
+      await write(() => removeWarDefender(selectedAllianceId, activeWarId, selectedBg, nodeNumber))
       toast.success(t.game.war.removeSuccess)
-      setWarSummary((prev) =>
-        prev
-          ? { ...prev, placements: prev.placements.filter((p) => p.node_number !== nodeNumber) }
-          : prev
-      )
+      await fetchWarDefense(true)
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.removeError)
     }
@@ -478,9 +530,9 @@ export function WarProvider({
   const handleClearBg = async () => {
     if (!selectedAllianceId || !activeWarId) return
     try {
-      await clearWarBg(selectedAllianceId, activeWarId, selectedBg)
+      await write(() => clearWarBg(selectedAllianceId, activeWarId, selectedBg))
       toast.success(t.game.war.clearSuccess)
-      setWarSummary((prev) => (prev ? { ...prev, placements: [] } : prev))
+      await fetchWarDefense(true)
     } catch {
       toast.error(t.game.war.loadError)
     }
@@ -490,42 +542,21 @@ export function WarProvider({
     if (!selectedAllianceId || !activeWarId || attackerSelectorNode === null) return
     const nodeNumber = attackerSelectorNode
     try {
-      await assignWarAttacker(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        nodeNumber,
-        attacker.champion_user_id
+      const updated = await write(() =>
+        assignWarAttacker(
+          selectedAllianceId,
+          activeWarId,
+          selectedBg,
+          nodeNumber,
+          attacker.champion_user_id
+        )
       )
       toast.success(
         t.game.war.assignSuccess
           .replace('{name}', attacker.champion_name)
           .replace('{node}', String(nodeNumber))
       )
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: prev.placements.map((p) =>
-                p.node_number === nodeNumber
-                  ? {
-                      ...p,
-                      attacker_champion_user_id: attacker.champion_user_id,
-                      attacker_pseudo: attacker.game_pseudo,
-                      attacker_champion_name: attacker.champion_name,
-                      attacker_champion_class: attacker.champion_class,
-                      attacker_image_url: attacker.image_url,
-                      attacker_rarity: attacker.rarity,
-                      attacker_is_preferred_attacker: attacker.is_preferred_attacker,
-                      attacker_ascension: attacker.ascension,
-                      attacker_is_saga_attacker: attacker.is_saga_attacker,
-                      attacker_is_saga_defender: attacker.is_saga_defender,
-                    }
-                  : p
-              ),
-            }
-          : prev
-      )
+      setPlacement(updated)
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.assignError)
     }
@@ -534,25 +565,12 @@ export function WarProvider({
   const handleRemoveAttacker = async (nodeNumber: number) => {
     if (!selectedAllianceId || !activeWarId) return
     try {
-      const updated = await removeWarAttacker(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        nodeNumber
+      const updated = await write(() =>
+        removeWarAttacker(selectedAllianceId, activeWarId, selectedBg, nodeNumber)
       )
       toast.success(t.game.war.removeAttackerSuccess)
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: prev.placements.map((p) =>
-                p.node_number === updated.node_number ? updated : p
-              ),
-            }
-          : prev
-      )
-      const updatedSynergies = await getWarSynergies(selectedAllianceId, activeWarId, selectedBg)
-      setSynergies(updatedSynergies)
+      setPlacement(updated)
+      await Promise.all([reloadSynergies(), reloadPrefights()])
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.removeAttackerError)
     }
@@ -616,14 +634,10 @@ export function WarProvider({
     const previous = placements.find((p) => p.node_number === nodeNumber)
     patchPlacement(nodeNumber, boosts)
     try {
-      const updated = await updateWarBoosts(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        nodeNumber,
-        boosts
+      const updated = await write(() =>
+        updateWarBoosts(selectedAllianceId, activeWarId, selectedBg, nodeNumber, boosts)
       )
-      patchPlacement(nodeNumber, updated)
+      setPlacement(updated)
     } catch (err: unknown) {
       if (previous) patchPlacement(nodeNumber, previous)
       toast.error((err as Error).message || t.game.war.boosts.updateError)
@@ -633,15 +647,20 @@ export function WarProvider({
   const handleAddSynergy = async (championUserId: string, targetChampionUserId: string) => {
     if (!selectedAllianceId || !activeWarId) return
     try {
-      const synergy = await addWarSynergy(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        championUserId,
-        targetChampionUserId
+      const synergy = await write(() =>
+        addWarSynergy(
+          selectedAllianceId,
+          activeWarId,
+          selectedBg,
+          championUserId,
+          targetChampionUserId
+        )
       )
       toast.success(t.game.war.synergy.addSuccess.replace('{target}', synergy.target_champion_name))
-      setSynergies((prev) => [...prev, synergy])
+      setSynergies((prev) => [
+        ...prev.filter((s) => s.champion_user_id !== synergy.champion_user_id),
+        synergy,
+      ])
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.synergy.addError)
     }
@@ -650,9 +669,11 @@ export function WarProvider({
   const handleRemoveSynergy = async (championUserId: string) => {
     if (!selectedAllianceId || !activeWarId) return
     try {
-      await removeWarSynergy(selectedAllianceId, activeWarId, selectedBg, championUserId)
+      await write(() =>
+        removeWarSynergy(selectedAllianceId, activeWarId, selectedBg, championUserId)
+      )
       toast.success(t.game.war.synergy.removeSuccess)
-      setSynergies((prev) => prev.filter((s) => s.champion_user_id !== championUserId))
+      await reloadSynergies()
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.synergy.removeError)
     }
@@ -661,12 +682,14 @@ export function WarProvider({
   const handleAddPrefight = async (championUserId: string, targetNodeNumber: number) => {
     if (!selectedAllianceId || !activeWarId) return
     try {
-      const prefight = await addWarPrefight(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        championUserId,
-        targetNodeNumber
+      const prefight = await write(() =>
+        addWarPrefight(
+          selectedAllianceId,
+          activeWarId,
+          selectedBg,
+          championUserId,
+          targetNodeNumber
+        )
       )
       toast.success(
         t.game.war.prefight.addSuccess.replace('#{node}', String(prefight.target_node_number))
@@ -677,156 +700,81 @@ export function WarProvider({
     }
   }
 
-  const handleRemovePrefight = async (championUserId: string) => {
+  const handleRemovePrefight = async (championUserId: string, targetNodeNumber: number) => {
     if (!selectedAllianceId || !activeWarId) return
     try {
-      await removeWarPrefight(selectedAllianceId, activeWarId, selectedBg, championUserId)
+      await write(() =>
+        removeWarPrefight(
+          selectedAllianceId,
+          activeWarId,
+          selectedBg,
+          championUserId,
+          targetNodeNumber
+        )
+      )
       toast.success(t.game.war.prefight.removeSuccess)
-      setPrefights((prev) => prev.filter((p) => p.champion_user_id !== championUserId))
+      await reloadPrefights()
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.prefight.removeError)
     }
   }
 
-  const handleToggleCombatCompleted = async (nodeNumber: number) => {
+  const applyPlacementWrite = async (
+    call: () => Promise<WarPlacement>,
+    errorMessage: string,
+    successMessage?: string
+  ) => {
     if (!selectedAllianceId || !activeWarId) return
     try {
-      const updated = await toggleCombatCompleted(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        nodeNumber
-      )
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: prev.placements.map((p) =>
-                p.node_number === updated.node_number ? updated : p
-              ),
-            }
-          : prev
-      )
+      const updated = await write(call)
+      if (successMessage) toast.success(successMessage)
+      setPlacement(updated)
     } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.war.markCombatError)
+      toast.error((err as Error).message || errorMessage)
     }
   }
 
-  const handleToggleFightNotDone = async (nodeNumber: number) => {
-    if (!selectedAllianceId || !activeWarId) return
-    try {
-      const updated = await toggleFightNotDone(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        nodeNumber
-      )
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: prev.placements.map((p) =>
-                p.node_number === updated.node_number ? updated : p
-              ),
-            }
-          : prev
-      )
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.war.markCombatError)
-    }
-  }
+  const handleToggleCombatCompleted = (nodeNumber: number) =>
+    applyPlacementWrite(
+      () => toggleCombatCompleted(selectedAllianceId, activeWarId, selectedBg, nodeNumber),
+      t.game.war.markCombatError
+    )
 
-  const handleTogglePlanningError = async (nodeNumber: number) => {
-    if (!selectedAllianceId || !activeWarId) return
-    try {
-      const updated = await togglePlanningError(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        nodeNumber
-      )
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: prev.placements.map((p) =>
-                p.node_number === updated.node_number ? updated : p
-              ),
-            }
-          : prev
-      )
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.war.markCombatError)
-    }
-  }
+  const handleToggleFightNotDone = (nodeNumber: number) =>
+    applyPlacementWrite(
+      () => toggleFightNotDone(selectedAllianceId, activeWarId, selectedBg, nodeNumber),
+      t.game.war.markCombatError
+    )
 
-  const handleAssignAssist = async (nodeNumber: number, championUserId: string) => {
-    if (!selectedAllianceId || !activeWarId) return
-    try {
-      const updated = await assignWarAssist(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        nodeNumber,
-        championUserId
-      )
-      toast.success(t.game.war.assist.addSuccess)
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: prev.placements.map((p) =>
-                p.node_number === updated.node_number ? updated : p
-              ),
-            }
-          : prev
-      )
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.war.assist.addError)
-    }
-  }
+  const handleTogglePlanningError = (nodeNumber: number) =>
+    applyPlacementWrite(
+      () => togglePlanningError(selectedAllianceId, activeWarId, selectedBg, nodeNumber),
+      t.game.war.markCombatError
+    )
 
-  const handleRemoveAssist = async (nodeNumber: number) => {
-    if (!selectedAllianceId || !activeWarId) return
-    try {
-      const updated = await removeWarAssist(selectedAllianceId, activeWarId, selectedBg, nodeNumber)
-      toast.success(t.game.war.assist.removeSuccess)
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: prev.placements.map((p) =>
-                p.node_number === updated.node_number ? updated : p
-              ),
-            }
-          : prev
-      )
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.war.assist.removeError)
-    }
-  }
+  const handleAssignAssist = (nodeNumber: number, championUserId: string) =>
+    applyPlacementWrite(
+      () =>
+        assignWarAssist(selectedAllianceId, activeWarId, selectedBg, nodeNumber, championUserId),
+      t.game.war.assist.addError,
+      t.game.war.assist.addSuccess
+    )
+
+  const handleRemoveAssist = (nodeNumber: number) =>
+    applyPlacementWrite(
+      () => removeWarAssist(selectedAllianceId, activeWarId, selectedBg, nodeNumber),
+      t.game.war.assist.removeError,
+      t.game.war.assist.removeSuccess
+    )
 
   const handleSaveNote = async (nodeNumber: number, content: string) => {
     if (!selectedAllianceId || !activeWarId) return
     try {
-      const note = await upsertWarFightNote(
-        selectedAllianceId,
-        activeWarId,
-        selectedBg,
-        nodeNumber,
-        content
+      const note = await write(() =>
+        upsertWarFightNote(selectedAllianceId, activeWarId, selectedBg, nodeNumber, content)
       )
       toast.success(t.game.war.noteSaved)
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: prev.placements.map((p) =>
-                p.node_number === nodeNumber ? { ...p, note: note.content } : p
-              ),
-            }
-          : prev
-      )
+      patchPlacement(nodeNumber, { note: note.content, note_id: note.id })
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.loadError)
     }
@@ -835,20 +783,24 @@ export function WarProvider({
   const handleDeleteNote = async (nodeNumber: number) => {
     if (!selectedAllianceId || !activeWarId) return
     try {
-      await deleteWarFightNote(selectedAllianceId, activeWarId, selectedBg, nodeNumber)
+      await write(() => deleteWarFightNote(selectedAllianceId, activeWarId, selectedBg, nodeNumber))
       toast.success(t.game.war.noteDeleted)
-      setWarSummary((prev) =>
-        prev
-          ? {
-              ...prev,
-              placements: prev.placements.map((p) =>
-                p.node_number === nodeNumber ? { ...p, note: null } : p
-              ),
-            }
-          : prev
-      )
+      patchPlacement(nodeNumber, { note: null, note_id: null, note_blocked: false })
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.noteDeleteError)
+    }
+  }
+
+  // A report can push the note past the auto-block threshold, so the map is reloaded.
+  const handleReportNote = async (noteId: string) => {
+    try {
+      await write(() => reportNote(noteId))
+      toast.success(t.moderation.reportSuccess)
+      await fetchWarDefense(true)
+      return true
+    } catch (err: unknown) {
+      toast.error((err as Error).message || t.moderation.reportError)
+      return false
     }
   }
 
@@ -901,6 +853,8 @@ export function WarProvider({
       handleRemoveAttacker,
       handleAdjustKo,
       handleUpdateBoosts,
+      loadAvailableAttackers,
+      loadAvailablePrefightAttackers,
       synergies,
       handleAddSynergy,
       handleRemoveSynergy,
@@ -914,8 +868,9 @@ export function WarProvider({
       handleRemoveAssist,
       handleSaveNote,
       handleDeleteNote,
+      handleReportNote,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
     [
       alliances,
       selectedAllianceId,
