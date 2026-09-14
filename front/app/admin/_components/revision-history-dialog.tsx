@@ -1,42 +1,31 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
 import { FiVolumeX, FiAlertTriangle, FiTrash2 } from 'react-icons/fi'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/app/i18n'
-import { getRevisions, muteUser, warnUser, type NoteRevision } from '@/app/services/moderation'
+import type { ModerationViewModel } from '../_viewmodels/use-moderation-viewmodel'
 import UserModerationDialog, { type ModerationKind } from './user-moderation-dialog'
 
 type RevisionHistoryDialogProps = Readonly<{
   noteId: string | null
   onClose: () => void
-  onActionDone?: () => void
+  vm: ModerationViewModel
 }>
 
 type Target = { userId: string; userLogin: string }
 
-export default function RevisionHistoryDialog({
-  noteId,
-  onClose,
-  onActionDone,
-}: RevisionHistoryDialogProps) {
+export default function RevisionHistoryDialog({ noteId, onClose, vm }: RevisionHistoryDialogProps) {
   const { t } = useI18n()
   const m = t.moderation
-  const [revisions, setRevisions] = useState<NoteRevision[]>([])
-  const [loading, setLoading] = useState(false)
+  const { revisions, revisionsLoading: loading, loadRevisions } = vm
   const [dialogKind, setDialogKind] = useState<ModerationKind | null>(null)
   const [dialogTarget, setDialogTarget] = useState<Target | null>(null)
 
   useEffect(() => {
-    if (!noteId) return
-    setLoading(true)
-    getRevisions(noteId)
-      .then(setRevisions)
-      .catch(() => setRevisions([]))
-      .finally(() => setLoading(false))
-  }, [noteId])
+    if (noteId) void loadRevisions(noteId)
+  }, [noteId, loadRevisions])
 
   const openDialog = (kind: ModerationKind, target: Target) => {
     setDialogTarget(target)
@@ -47,18 +36,7 @@ export default function RevisionHistoryDialog({
     if (!dialogTarget || !dialogKind) return
     const kind = dialogKind
     setDialogKind(null)
-    try {
-      if (kind === 'mute') {
-        await muteUser(dialogTarget.userId, reason, expiresAt)
-        toast.success(m.muteSuccess)
-      } else {
-        await warnUser(dialogTarget.userId, reason)
-        toast.success(m.warnSuccess)
-      }
-      onActionDone?.()
-    } catch (err) {
-      toast.error((err as Error).message || (kind === 'mute' ? m.muteError : m.warnError))
-    }
+    await vm.sanction(kind, dialogTarget.userId, reason, expiresAt)
   }
 
   return (
