@@ -5,7 +5,7 @@ import type { FightRecord } from '@/app/services/fight-records'
 import { cn } from '@/app/lib/utils'
 import BoostMosaic from '@/components/boost-mosaic'
 import { ChampionCell, ChampionIconList, NoteCell } from './knowledge-base-cells'
-import { COMPACT_COL } from './knowledge-base-columns'
+import { COMPACT_COL, PLAYER_COL } from './knowledge-base-columns'
 
 type KnowledgeBaseTableRowProps = Readonly<{
   record: FightRecord
@@ -26,11 +26,16 @@ export default function KnowledgeBaseTableRow({
   return (
     <tr className='border-t border-border hover:bg-muted/30 transition-colors'>
       <td
-        className={cn(COMPACT_COL, 'py-2 whitespace-nowrap')}
+        className={cn(PLAYER_COL, 'py-2 whitespace-nowrap')}
         data-cy='fight-record-player'
       >
         <div className='flex items-center justify-center gap-1'>
-          {r.game_account_pseudo}
+          <span
+            className='truncate'
+            title={r.game_account_pseudo ?? undefined}
+          >
+            {r.game_account_pseudo}
+          </span>
           {r.is_planning_error && (
             <span
               title={kb.planningErrorBadge}
