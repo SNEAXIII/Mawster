@@ -5,18 +5,20 @@ import type { FightRecord } from '@/app/services/fight-records'
 import { cn } from '@/app/lib/utils'
 import BoostMosaic from '@/components/boost-mosaic'
 import { ChampionCell, ChampionIconList, NoteCell } from './knowledge-base-cells'
-import { COMPACT_COL } from './knowledge-base-columns'
+import { COMPACT_COL, PLAYER_COL } from './knowledge-base-columns'
 
 type KnowledgeBaseTableRowProps = Readonly<{
   record: FightRecord
   /** Keep in sync with `buildKnowledgeBaseColumns` — same columns, same order. */
   exporting: boolean
+  onReportNote: (noteId: string) => Promise<boolean>
 }>
 
 /** One fight record. Cell order must match the header built from the columns. */
 export default function KnowledgeBaseTableRow({
   record: r,
   exporting,
+  onReportNote,
 }: KnowledgeBaseTableRowProps) {
   const { t } = useI18n()
   const kb = t.game.knowledgeBase
@@ -24,11 +26,16 @@ export default function KnowledgeBaseTableRow({
   return (
     <tr className='border-t border-border hover:bg-muted/30 transition-colors'>
       <td
-        className={cn(COMPACT_COL, 'py-2 whitespace-nowrap')}
+        className={cn(PLAYER_COL, 'py-2 whitespace-nowrap')}
         data-cy='fight-record-player'
       >
         <div className='flex items-center justify-center gap-1'>
-          {r.game_account_pseudo}
+          <span
+            className='truncate'
+            title={r.game_account_pseudo ?? undefined}
+          >
+            {r.game_account_pseudo}
+          </span>
           {r.is_planning_error && (
             <span
               title={kb.planningErrorBadge}
@@ -113,7 +120,12 @@ export default function KnowledgeBaseTableRow({
           {r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}
         </td>
       )}
-      {!exporting && <NoteCell record={r} />}
+      {!exporting && (
+        <NoteCell
+          record={r}
+          onReport={onReportNote}
+        />
+      )}
     </tr>
   )
 }
