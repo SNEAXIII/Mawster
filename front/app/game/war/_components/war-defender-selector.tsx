@@ -219,6 +219,7 @@ export default function WarDefenderSelector({
                           variant='outline'
                           size='sm'
                           onClick={() => void loadMore()}
+                          data-cy='war-champion-load-more'
                           disabled={loading}
                         >
                           {t.game.war.loadMore}
