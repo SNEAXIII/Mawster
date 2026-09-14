@@ -78,6 +78,7 @@ class FightRecordService:
             defender_champ: Champion = placement.champion
 
             record = WarFightRecord(
+                war_defense_placement_id=placement.id,
                 war_id=war.id,
                 alliance_id=war.alliance_id,
                 season_id=war.season_id,

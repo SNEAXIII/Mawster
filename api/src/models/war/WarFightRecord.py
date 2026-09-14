@@ -1,9 +1,11 @@
+import uuid
 from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship
 
 from src.enums.WarBoost import WarBoost
 from src.models.Base import (
+    FK_WAR_DEFENSE_PLACEMENT,
     AllianceFk,
     Ascension,
     ChampionFk,
@@ -43,6 +45,11 @@ class WarFightRecord(
     table=True,
 ):
     __tablename__ = "war_fight_record"
+
+    # Nullable until the copied columns are dropped in the same branch.
+    war_defense_placement_id: uuid.UUID | None = Field(
+        default=None, foreign_key=FK_WAR_DEFENSE_PLACEMENT, unique=True
+    )
 
     tier: Tier
     stars: Stars

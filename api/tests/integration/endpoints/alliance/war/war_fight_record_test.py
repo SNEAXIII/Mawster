@@ -138,7 +138,16 @@ async def _end_war(alliance_id, war_id, *, headers, win=True, elo_change=50, exp
 
 async def _fetch_records(session, war_id):
     """Every WarFightRecord snapshotted for one war."""
-    return (await session.exec(select(WarFightRecord).where(WarFightRecord.war_id == war_id))).all()
+    return (
+        await session.exec(
+            select(WarFightRecord)
+            .join(
+                WarDefensePlacement,
+                WarFightRecord.war_defense_placement_id == WarDefensePlacement.id,
+            )
+            .where(WarDefensePlacement.war_id == war_id)
+        )
+    ).all()
 
 
 async def _fetch_single_record(session, war_id):
@@ -197,6 +206,18 @@ async def _push_extra_ended_war(data, *, headers, ko_count=1, node_number=10, el
 
 
 class TestWarFightRecordSnapshot:
+    @pytest.mark.asyncio
+    async def test_end_war_links_record_to_its_placement(self, session):
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+
+        r = await _fetch_single_record(session, data["war"].id)
+        assert r.war_defense_placement_id == data["placement"].id
+        assert r.rank == 4
+        assert r.ascension == 0
+
     @pytest.mark.asyncio
     async def test_end_war_creates_fight_record(self, session):
         data = await _setup_war_with_fight()
