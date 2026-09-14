@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useAllianceSelector } from '@/hooks/use-alliance-selector'
-import { getMyAllianceRoles, type AllianceMyRoles } from '@/app/services/game'
+import { getAllianceRoster, getMyAllianceRoles, type AllianceMyRoles } from '@/app/services/game'
 import { evaluateMatchups, type MatchupEvaluationRow } from '@/app/services/matchups'
 import { useMatchupGrid } from './use-matchup-grid'
 import { useMatchupDefenderGrid } from './use-matchup-defender-grid'
@@ -33,14 +33,30 @@ export function useMatchupsViewModel() {
   const [rows, setRows] = useState<MatchupEvaluationRow[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pseudoToAccountId, setPseudoToAccountId] = useState<Record<string, string>>({})
 
   // Preselect the first alliance once they load, like the defense and war pages do.
   useEffect(() => {
     if (alliances.length > 0 && !selectedAllianceId) {
       setSelectedAllianceId(alliances[0].id)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [alliances])
+
+  useEffect(() => {
+    if (!selectedAllianceId) return
+    getAllianceRoster(selectedAllianceId)
+      .then((entries) =>
+        setPseudoToAccountId(
+          Object.fromEntries(entries.map((entry) => [entry.game_pseudo, entry.game_account_id]))
+        )
+      )
+      .catch(() => setPseudoToAccountId({}))
+  }, [selectedAllianceId])
+
+  const players = Object.keys(pseudoToAccountId).sort((a, b) => a.localeCompare(b))
+  const selectedPseudo =
+    Object.entries(pseudoToAccountId).find(([, id]) => id === filters.gameAccountId)?.[0] ?? ''
 
   // Attacker picked alone (no defender/node target): mutually exclusive with hasTarget below,
   // since it requires both defenderChampionId and nodeNumber to be empty.
@@ -161,5 +177,8 @@ export function useMatchupsViewModel() {
     setMatchupAttackerId,
     saveMatchup,
     removeMatchup,
+    pseudoToAccountId,
+    players,
+    selectedPseudo,
   }
 }
