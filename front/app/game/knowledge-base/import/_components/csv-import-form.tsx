@@ -13,14 +13,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import ChampionFilterSelect from '@/app/game/knowledge-base/_components/champion-filter-select'
-import { getChampions, type Champion } from '@/app/services/champions'
-import {
-  getAccessibleAlliances,
-  importFightRecords,
-  type ImportRow,
-  type AccessibleAlliance,
-} from '@/app/services/fight-records'
-import { getMyAllianceRoles } from '@/app/services/game'
+import type { Champion } from '@/app/services/champions'
+import type { ImportRow } from '@/app/services/fight-records'
+import { useCsvImport } from '../_viewmodels/use-csv-import'
 import { MAX_KO_COUNT } from '@/app/services/war'
 
 interface RawRow {
@@ -77,46 +72,29 @@ export default function CsvImportForm() {
   const kb = t.game.knowledgeBase
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const [champions, setChampions] = useState<Champion[]>([])
-  const [alliances, setAlliances] = useState<AccessibleAlliance[]>([])
-  const [selectedAllianceId, setSelectedAllianceId] = useState<string | null>(null)
+  const {
+    champions,
+    alliances,
+    selectedAllianceId,
+    setSelectedAllianceId,
+    loading,
+    ensureResources,
+    submitImport,
+  } = useCsvImport()
   const [rows, setRows] = useState<RawRow[]>([])
   const [nameMap, setNameMap] = useState<Record<string, string | null>>({})
   const [unknownLabels, setUnknownLabels] = useState<Record<string, string>>({})
-  const [loading, setLoading] = useState(false)
-  const [resourcesLoaded, setResourcesLoaded] = useState(false)
-
-  const loadResources = async (): Promise<Champion[]> => {
-    const [champsData, accessibleAlliances, rolesData] = await Promise.all([
-      getChampions({ page: 1, size: 9999 }),
-      getAccessibleAlliances(),
-      getMyAllianceRoles(),
-    ])
-    const champs = champsData.champions
-    setChampions(champs)
-    const managedAlliances = accessibleAlliances.filter(
-      (a) => rolesData.roles[a.id]?.is_owner || rolesData.roles[a.id]?.is_officer
-    )
-    setAlliances(managedAlliances)
-    if (managedAlliances.length === 1) {
-      setSelectedAllianceId(managedAlliances[0].id)
-    }
-    setResourcesLoaded(true)
-    return champs
-  }
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    let champs = champions
-    if (!resourcesLoaded) {
-      try {
-        champs = await loadResources()
-      } catch {
-        toast.error(kb.importError)
-        return
-      }
+    let champs: Champion[]
+    try {
+      champs = await ensureResources()
+    } catch {
+      toast.error(kb.importError)
+      return
     }
 
     const text = await file.text()
@@ -167,19 +145,11 @@ export default function CsvImportForm() {
       season_name: r.seasonName,
       ko_count: r.koCount,
     }))
-    setLoading(true)
-    try {
-      const res = await importFightRecords(selectedAllianceId, { rows: payload })
-      toast.success(kb.importSuccess.replace('{count}', String(res.imported)))
-      if (res.skipped > 0) toast.info(kb.importSkipped.replace('{count}', String(res.skipped)))
+    if (await submitImport(payload)) {
       setRows([])
       setNameMap({})
       setUnknownLabels({})
       if (fileRef.current) fileRef.current.value = ''
-    } catch {
-      toast.error(kb.importError)
-    } finally {
-      setLoading(false)
     }
   }
 

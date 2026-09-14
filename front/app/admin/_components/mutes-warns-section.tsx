@@ -1,50 +1,26 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { useState } from 'react'
 import { FiRefreshCw, FiVolumeX, FiAlertTriangle, FiVolume2 } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
-import {
-  listMutes,
-  listWarns,
-  muteUser,
-  warnUser,
-  liftMute,
-  type Mute,
-  type Warn,
-} from '@/app/services/moderation'
+import type { ModerationViewModel } from '../_viewmodels/use-moderation-viewmodel'
 import UserModerationDialog, { type ModerationKind } from './user-moderation-dialog'
 
 type Target = { userId: string; userLogin: string }
 
 type MutesWarnsSectionProps = Readonly<{
-  refreshSignal?: number
+  vm: ModerationViewModel
 }>
 
-export default function MutesWarnsSection({ refreshSignal }: MutesWarnsSectionProps) {
+export default function MutesWarnsSection({ vm }: MutesWarnsSectionProps) {
   const { t } = useI18n()
   const m = t.moderation
-  const [mutes, setMutes] = useState<Mute[]>([])
-  const [warns, setWarns] = useState<Warn[]>([])
+  const { mutes, warns, loadSanctions: load } = vm
   const [dialogKind, setDialogKind] = useState<ModerationKind | null>(null)
   const [dialogTarget, setDialogTarget] = useState<Target | null>(null)
   const [liftTarget, setLiftTarget] = useState<Target | null>(null)
-
-  const load = useCallback(async () => {
-    try {
-      const [mu, wa] = await Promise.all([listMutes(true), listWarns()])
-      setMutes(mu)
-      setWarns(wa)
-    } catch (err) {
-      toast.error((err as Error).message || m.loadError)
-    }
-  }, [m.loadError])
-
-  useEffect(() => {
-    load()
-  }, [load, refreshSignal])
 
   const openDialog = (kind: ModerationKind, target: Target) => {
     setDialogTarget(target)
@@ -55,29 +31,12 @@ export default function MutesWarnsSection({ refreshSignal }: MutesWarnsSectionPr
     if (!dialogTarget || !dialogKind) return
     const kind = dialogKind
     setDialogKind(null)
-    try {
-      if (kind === 'mute') {
-        await muteUser(dialogTarget.userId, reason, expiresAt)
-        toast.success(m.muteSuccess)
-      } else {
-        await warnUser(dialogTarget.userId, reason)
-        toast.success(m.warnSuccess)
-      }
-      await load()
-    } catch (err) {
-      toast.error((err as Error).message || (kind === 'mute' ? m.muteError : m.warnError))
-    }
+    await vm.sanction(kind, dialogTarget.userId, reason, expiresAt)
   }
 
   const onLift = async () => {
     if (!liftTarget) return
-    try {
-      await liftMute(liftTarget.userId)
-      toast.success(m.liftSuccess)
-      await load()
-    } catch (err) {
-      toast.error((err as Error).message || m.liftError)
-    }
+    await vm.lift(liftTarget.userId)
     setLiftTarget(null)
   }
 

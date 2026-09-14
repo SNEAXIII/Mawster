@@ -1,16 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'sonner'
 import { LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { useI18n } from '@/app/i18n'
-import { leaveAsVisitor } from '@/app/services/game'
+import type { AllianceActions } from '../_viewmodels/use-alliance-actions'
 
 interface AllianceLeaveVisitButtonProps {
   allianceId: string
-  onRefresh: () => Promise<void>
+  actions: AllianceActions
 }
 
 /**
@@ -20,7 +19,7 @@ interface AllianceLeaveVisitButtonProps {
  */
 export default function AllianceLeaveVisitButton({
   allianceId,
-  onRefresh,
+  actions,
 }: Readonly<AllianceLeaveVisitButtonProps>) {
   const { t } = useI18n()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -28,17 +27,8 @@ export default function AllianceLeaveVisitButton({
 
   async function handleConfirm() {
     setIsLeaving(true)
-    try {
-      await leaveAsVisitor(allianceId)
-      setIsDialogOpen(false)
-      toast.success(t.game.alliances.leaveVisitSuccess)
-      await onRefresh()
-    } catch (err: unknown) {
-      console.error(err)
-      toast.error((err as Error).message || t.game.alliances.leaveVisitError)
-    } finally {
-      setIsLeaving(false)
-    }
+    if (await actions.leaveVisit(allianceId)) setIsDialogOpen(false)
+    setIsLeaving(false)
   }
 
   return (

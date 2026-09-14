@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,26 +12,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  listSeasons,
-  createSeason,
-  openSeason,
-  closeSeason,
-  revertSeason,
-  type Season,
-  type SeasonFormat,
-} from '@/app/services/season'
+import type { Season, SeasonFormat } from '@/app/services/season'
+import { useSeasonsViewModel, type SeasonAction } from '../_viewmodels/use-seasons-viewmodel'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 
 export default function SeasonsPanel() {
   const { t } = useI18n()
-  const [seasons, setSeasons] = useState<Season[]>([])
+  const { seasons, error, create, runAction } = useSeasonsViewModel()
   const [newNumber, setNewNumber] = useState('')
   const [newFormat, setNewFormat] = useState<SeasonFormat>('regular')
-  const [error, setError] = useState<string | null>(null)
   const [confirm, setConfirm] = useState<{
     id: string
-    action: 'open' | 'close' | 'revert'
+    action: SeasonAction
   } | null>(null)
 
   const statusLabel = (status: Season['status']) => {
@@ -57,55 +49,12 @@ export default function SeasonsPanel() {
   }
   const pendingCopy = confirmCopy[confirm?.action ?? 'open']
 
-  const load = useCallback(async () => {
-    try {
-      setSeasons(await listSeasons())
-    } catch {
-      setError(t.game.season.admin.createError)
-    }
-  }, [t])
-
-  useEffect(() => {
-    load()
-  }, [load])
-
   const handleCreate = async () => {
     const n = Number.parseInt(newNumber, 10)
     if (Number.isNaN(n)) return
-    try {
-      await createSeason(n, newFormat)
+    if (await create(n, newFormat)) {
       setNewNumber('')
       setNewFormat('regular')
-      await load()
-    } catch {
-      setError(t.game.season.admin.createError)
-    }
-  }
-
-  const handleOpen = async (id: string) => {
-    try {
-      await openSeason(id)
-      await load()
-    } catch {
-      setError(t.game.season.admin.openError)
-    }
-  }
-
-  const handleClose = async (id: string) => {
-    try {
-      await closeSeason(id)
-      await load()
-    } catch {
-      setError(t.game.season.admin.closeError)
-    }
-  }
-
-  const handleRevert = async (id: string) => {
-    try {
-      await revertSeason(id)
-      await load()
-    } catch {
-      setError(t.game.season.admin.revertError)
     }
   }
 
@@ -113,9 +62,7 @@ export default function SeasonsPanel() {
     if (!confirm) return
     const { id, action } = confirm
     setConfirm(null)
-    if (action === 'open') await handleOpen(id)
-    else if (action === 'close') await handleClose(id)
-    else await handleRevert(id)
+    await runAction(id, action)
   }
 
   return (

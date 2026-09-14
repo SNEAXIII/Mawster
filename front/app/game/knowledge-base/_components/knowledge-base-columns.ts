@@ -28,6 +28,8 @@ export interface KnowledgeBaseColumn {
   compact?: boolean
   /** Soaks up whatever width the compact columns left behind. */
   grow?: boolean
+  /** Width classes that override `compact` / `grow`. */
+  width?: string
 }
 
 /**
@@ -50,6 +52,9 @@ export const COMPACT_COL = 'w-px px-1 text-center'
  */
 export const GROW_COL = 'w-full min-w-48 max-w-0 px-3'
 
+/** Locked width: fits a 16-char pseudo plus both badges, so paging never shifts the table. */
+export const PLAYER_COL = 'w-44 min-w-44 max-w-44 px-1 text-center'
+
 /**
  * Columns dropped from the exported image: the tier is already implied by the
  * season, and the date and the note are text nobody reads on a screenshot.
@@ -61,9 +66,7 @@ export function buildKnowledgeBaseColumns(
   exporting: boolean
 ): ReadonlyArray<KnowledgeBaseColumn> {
   const columns: ReadonlyArray<KnowledgeBaseColumn> = [
-    // `game_pseudo` is capped at 16 chars in the model, so the column never needs
-    // more than that — no reason to let `w-full` hand it any leftover width.
-    { id: 'player', col: null, label: labels.player, compact: true },
+    { id: 'player', col: null, label: labels.player, compact: true, width: PLAYER_COL },
     { id: 'attacker', col: 'champion_name', label: labels.attacker, compact: true },
     { id: 'defender', col: 'defender_champion_name', label: labels.defender, compact: true },
     { id: 'node', col: 'node_number', label: labels.node, compact: true },

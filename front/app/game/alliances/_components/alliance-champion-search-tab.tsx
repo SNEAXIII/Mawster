@@ -21,12 +21,8 @@ import {
 import UpgradeRequestDialogs from '@/components/upgrade-request-dialogs'
 import { useUpgradeRequests } from '@/hooks/use-upgrade-requests'
 import { CLASS_ORDER } from '@/app/lib/champion-class'
-import {
-  getAllianceRoster,
-  getMyAllianceRoles,
-  type AllianceRosterEntry,
-  type AllianceRosterQuery,
-} from '@/app/services/game'
+import type { AllianceRosterEntry, AllianceRosterQuery } from '@/app/services/game'
+import { useAllianceRosterSearch } from '../_viewmodels/use-alliance-roster-search'
 import AllianceChampionGroup from './alliance-champion-group'
 
 /** Max distinct champions the API returns for this tab. */
@@ -50,9 +46,6 @@ export default function AllianceChampionSearchTab({
 }: Readonly<Props>) {
   const { t } = useI18n()
   const cs = t.game.alliances.championSearch
-  const [roster, setRoster] = useState<AllianceRosterEntry[]>([])
-  const [loading, setLoading] = useState(false)
-  const [canRequestUpgrade, setCanRequestUpgrade] = useState(false)
   const [filters, setFilters] = useState<RosterFilters>(EMPTY_FILTERS)
   const [group, setGroup] = useState('all')
   const [debouncedName, setDebouncedName] = useState('')
@@ -66,17 +59,6 @@ export default function AllianceChampionSearchTab({
     setLastAllianceId(selectedAllianceId)
     setGroup('all')
   }
-
-  // Resolve upgrade rights once per alliance (independent of filters).
-  useEffect(() => {
-    if (!selectedAllianceId) return
-    getMyAllianceRoles()
-      .then((roles) => {
-        const role = roles.roles[selectedAllianceId]
-        setCanRequestUpgrade(!!role && (role.is_officer || role.is_owner))
-      })
-      .catch(() => setCanRequestUpgrade(false))
-  }, [selectedAllianceId])
 
   // Debounce the free-text name filter so typing doesn't hammer the API.
   useEffect(() => {
@@ -110,29 +92,7 @@ export default function AllianceChampionSearchTab({
     ]
   )
 
-  useEffect(() => {
-    if (!selectedAllianceId) {
-      setRoster([])
-      return
-    }
-    // Filters change faster than the API answers: ignore a response that is no longer
-    // the current query, otherwise a slow earlier request overwrites a fresher one.
-    let stale = false
-    setLoading(true)
-    getAllianceRoster(selectedAllianceId, query)
-      .then((entries) => {
-        if (!stale) setRoster(entries)
-      })
-      .catch(() => {
-        if (!stale) setRoster([])
-      })
-      .finally(() => {
-        if (!stale) setLoading(false)
-      })
-    return () => {
-      stale = true
-    }
-  }, [selectedAllianceId, query])
+  const { roster, loading, canRequestUpgrade } = useAllianceRosterSearch(selectedAllianceId, query)
 
   // Group the returned entries by champion for display (API already filtered + capped).
   const groups = useMemo(() => {

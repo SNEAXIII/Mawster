@@ -1,27 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useI18n } from '@/app/i18n'
-import { getPublicStats, type PublicStats } from '@/app/services/stats'
-
-// Shown while the public stats endpoint loads or if it is unreachable, so the
-// strip never collapses to an empty hole on the landing page.
-const FALLBACK_STATS: PublicStats = {
-  active_alliances: 0,
-  participating_players: 0,
-  knowledge_base_fights: 0,
-  wars_recorded: 0,
-}
+import { usePublicStats } from '@/app/_viewmodels/use-public-stats'
 
 export function StatStrip() {
   const { t } = useI18n()
-  const [stats, setStats] = useState<PublicStats>(FALLBACK_STATS)
-
-  useEffect(() => {
-    getPublicStats().then((s) => {
-      if (s) setStats(s)
-    })
-  }, [])
+  const stats = usePublicStats()
 
   const items = [
     { value: stats.active_alliances, label: t.landing.statActiveAlliances },

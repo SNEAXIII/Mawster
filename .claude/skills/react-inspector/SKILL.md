@@ -119,7 +119,6 @@ puis dans le `<body>`, juste après `<TestModeBanner />` :
 ### 6. Vérifier
 
 ```bash
-npx prettier --write app/_components/dev-inspector.tsx app/api/dev/open-editor/route.ts app/layout.tsx
 npm run build
 ```
 

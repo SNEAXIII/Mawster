@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -8,8 +7,8 @@ import RosterGrid from '@/app/game/account/_components/roster-grid'
 import UpgradeRequestsSection from '@/app/game/account/_components/upgrade-requests-section'
 import MasteryMiniView from '@/app/game/account/_components/mastery-mini-view'
 import UpgradeRequestDialogs from '@/components/upgrade-request-dialogs'
-import { getRoster, type RosterEntry, RARITIES } from '@/app/services/roster'
-import { getMasteries, type MasteryEntry } from '@/app/services/masteries'
+import { type RosterEntry, RARITIES } from '@/app/services/roster'
+import { useMemberRoster } from '../_viewmodels/use-member-roster'
 import { useUpgradeRequests } from '@/hooks/use-upgrade-requests'
 
 interface AllianceRosterDialogProps {
@@ -29,37 +28,15 @@ export default function AllianceRosterDialog({
   canRequestUpgrade = false,
 }: Readonly<AllianceRosterDialogProps>) {
   const { t } = useI18n()
-  const [roster, setRoster] = useState<RosterEntry[]>([])
-  const [masteries, setMasteries] = useState<MasteryEntry[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
   const upgrade = useUpgradeRequests()
-  const {
-    upgradeRequests,
-    setUpgradeRequests,
-    fetchUpgradeRequests,
-    initiateUpgrade,
-    initiateCancelRequest,
-  } = upgrade
+  const { upgradeRequests, fetchUpgradeRequests, initiateUpgrade, initiateCancelRequest } = upgrade
 
-  useEffect(() => {
-    if (!open || !gameAccountId) return
-    setLoading(true)
-    setError('')
-    Promise.all([
-      getRoster(gameAccountId),
-      fetchUpgradeRequests(gameAccountId),
-      getMasteries(gameAccountId),
-    ])
-      .then(([rosterData, , masteryData]) => {
-        setRoster(rosterData)
-        setMasteries(masteryData)
-      })
-      .catch(() => setError(t.game.alliances.rosterError))
-      .finally(() => setLoading(false))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, gameAccountId])
+  const { roster, masteries, loading, error } = useMemberRoster(
+    open,
+    gameAccountId,
+    fetchUpgradeRequests,
+    t.game.alliances.rosterError
+  )
 
   // Group roster by rarity descending
   const groupedRoster = (() => {
@@ -100,10 +77,7 @@ export default function AllianceRosterDialog({
                 <UpgradeRequestsSection
                   gameAccountId={gameAccountId}
                   canCancel={canRequestUpgrade}
-                  externalRequests={upgradeRequests}
-                  onRequestCancelled={(id) =>
-                    setUpgradeRequests((prev) => prev.filter((r) => r.id !== id))
-                  }
+                  requests={upgradeRequests}
                   onInitiateCancel={initiateCancelRequest}
                 />
               )}

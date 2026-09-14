@@ -1,9 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { CollapsibleSection } from '@/components/collapsible-section'
-import { getAllianceRoster } from '@/app/services/game'
 import { useMatchupsViewModel } from '../_viewmodels/use-matchups-viewmodel'
 import MatchupEvaluationFilters from './matchup-evaluation-filters'
 import MatchupEvaluationTable from './matchup-evaluation-table'
@@ -15,24 +13,7 @@ import MatchupTable from './matchup-table'
 export default function MatchupsTab() {
   const { t } = useI18n()
   const vm = useMatchupsViewModel()
-  const [pseudoToAccountId, setPseudoToAccountId] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    if (!vm.allianceId) return
-    getAllianceRoster(vm.allianceId)
-      .then((entries) => {
-        const map: Record<string, string> = {}
-        entries.forEach((entry) => {
-          map[entry.game_pseudo] = entry.game_account_id
-        })
-        setPseudoToAccountId(map)
-      })
-      .catch(() => setPseudoToAccountId({}))
-  }, [vm.allianceId])
-
-  const players = Object.keys(pseudoToAccountId).sort((a, b) => a.localeCompare(b))
-  const selectedPseudo =
-    Object.entries(pseudoToAccountId).find(([, id]) => id === vm.filters.gameAccountId)?.[0] ?? ''
+  const { pseudoToAccountId, players, selectedPseudo } = vm
 
   return (
     <div

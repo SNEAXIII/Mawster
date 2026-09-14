@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -12,10 +12,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import { exportAllChampions } from '@/app/services/champions'
+import { useChampionCatalog } from '@/hooks/use-champion-catalog'
 import ChampionThumbnail from '@/components/champion-thumbnail'
-
-type CatalogChampion = Awaited<ReturnType<typeof exportAllChampions>>[number]
 
 interface ImportPreviewChampionPickerProps {
   index: number
@@ -34,16 +32,9 @@ export default function ImportPreviewChampionPicker({
 }: Readonly<ImportPreviewChampionPickerProps>) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
-  const [champions, setChampions] = useState<CatalogChampion[]>([])
-
   // Loaded on first open only: the catalogue is large and most rows are never
   // corrected, so paying for it upfront on 48 rows would be waste.
-  useEffect(() => {
-    if (!open || champions.length > 0) return
-    void exportAllChampions()
-      .then(setChampions)
-      .catch(() => setChampions([]))
-  }, [open, champions.length])
+  const { champions } = useChampionCatalog(open)
 
   // Candidates carry only a name; resolve their portrait from the catalogue.
   const imageByName = new Map(champions.map((c) => [c.name.toLowerCase(), c.image_url]))

@@ -19,7 +19,8 @@ function SortIcon({ col, sortBy, sortOrder }: SortState & Readonly<{ col: string
 
 const TH_BASE = 'py-2 text-xs font-semibold text-muted-foreground'
 
-function columnWidth(compact?: boolean, grow?: boolean) {
+function columnWidth({ compact, grow, width }: KnowledgeBaseColumn) {
+  if (width) return width
   if (compact) return COMPACT_COL
   if (grow) return GROW_COL
   return 'px-3'
@@ -44,8 +45,9 @@ export default function KnowledgeBaseTableHead({
   return (
     <thead className='bg-muted/50'>
       <tr>
-        {columns.map(({ id, col, label, compact, grow }) => {
-          const width = columnWidth(compact, grow)
+        {columns.map((column) => {
+          const { id, col, label, compact } = column
+          const width = columnWidth(column)
           return col && !exporting ? (
             <th
               key={id}

@@ -2,17 +2,8 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { useI18n } from '@/app/i18n'
-import {
-  type RankingHistoryPoint,
-  type SeasonStatus,
-  fetchAllianceRankingHistory,
-} from '@/app/services/game'
 import AllianceRankingChart from './alliance-ranking-chart'
-import {
-  getSeasonWarStats,
-  type PlayerSeasonStats,
-  type SeasonWarStats,
-} from '@/app/services/statistics'
+import type { PlayerSeasonStats } from '@/app/services/statistics'
 import { AllianceSeasonWarsDialog } from './alliance-season-wars-dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,14 +15,14 @@ import {
 } from '@/components/ui/select'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
-import { updateWarOpponentDeaths } from '@/app/services/war'
 import AllianceSelect from '@/app/game/_components/alliance-select'
 import { AllianceStatsTable, type SortField, type SortDir } from './alliance-stats-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CollapsibleSection } from '@/components/collapsible-section'
 import { MemberChampionChart } from '@/app/components/statistics/member-champion-chart'
 import { ChampionDetailModal } from '@/app/components/statistics/champion-detail-modal'
-import { useChampionStats } from './use-champion-stats'
+import { useChampionStats } from '../_viewmodels/use-champion-stats'
+import { useAllianceSeasonHistory } from '../_viewmodels/use-alliance-season-history'
 
 interface AllianceStatisticsTabProps {
   alliances: AllianceWithVisitorFlag[]
@@ -75,33 +66,14 @@ export default function AllianceStatisticsTab({
   const stat = t.game.alliances.statistics
   const [ratioMin, setRatioMin] = useState(-Infinity)
   const [selectedGroup, setSelectedGroup] = useState('all')
-  const [seasonWars, setSeasonWars] = useState<SeasonWarStats[]>([])
   const [seasonWarsOpen, setSeasonWarsOpen] = useState(false)
-  const [rankingPoints, setRankingPoints] = useState<RankingHistoryPoint[]>([])
-  const [rankingSeasonNumber, setRankingSeasonNumber] = useState<number | null>(null)
-  const [rankingSeasonStatus, setRankingSeasonStatus] = useState<SeasonStatus | null>(null)
-
-  useEffect(() => {
-    if (!selectedAllianceId) return
-    setSeasonWars([])
-    getSeasonWarStats(selectedAllianceId, selectedSeasonId ?? undefined)
-      .then(setSeasonWars)
-      .catch(() => {})
-  }, [selectedAllianceId, selectedSeasonId])
-
-  useEffect(() => {
-    if (!selectedAllianceId) return
-    setRankingPoints([])
-    setRankingSeasonNumber(null)
-    setRankingSeasonStatus(null)
-    fetchAllianceRankingHistory(selectedAllianceId)
-      .then((data) => {
-        setRankingPoints(data.points)
-        setRankingSeasonNumber(data.season_number)
-        setRankingSeasonStatus(data.season_status)
-      })
-      .catch(() => {})
-  }, [selectedAllianceId])
+  const {
+    seasonWars,
+    rankingPoints,
+    rankingSeasonNumber,
+    rankingSeasonStatus,
+    saveOpponentDeaths,
+  } = useAllianceSeasonHistory(selectedAllianceId, selectedSeasonId)
   const [memberFilter, setMemberFilter] = useState<MemberFilter>('current')
   const [sortField, setSortField] = useState<SortField>('ratio')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
@@ -165,15 +137,6 @@ export default function AllianceStatisticsTab({
   }, [seasonStats, memberFilter, ratioMin, selectedGroup, sortField, sortDir])
 
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId)
-
-  // Patch the row in place: refetching the season would collapse the edited cell
-  // while the request is still in flight.
-  const handleSaveOpponentDeaths = async (warId: string, deaths: number | null) => {
-    await updateWarOpponentDeaths(selectedAllianceId, warId, deaths)
-    setSeasonWars((prev) =>
-      prev.map((w) => (w.war_id === warId ? { ...w, opponent_deaths: deaths } : w))
-    )
-  }
 
   const displayedSeasonNumber = useMemo(() => {
     const id = selectedSeasonId ?? seasons[0]?.id
@@ -479,7 +442,7 @@ export default function AllianceStatisticsTab({
         allianceTag={selectedAlliance?.tag ?? ''}
         seasonNumber={displayedSeasonNumber}
         canEdit={selectedAlliance !== undefined && canPlace(selectedAlliance)}
-        onSaveOpponentDeaths={handleSaveOpponentDeaths}
+        onSaveOpponentDeaths={saveOpponentDeaths}
       />
     </div>
   )

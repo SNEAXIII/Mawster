@@ -3,13 +3,28 @@ import { setupKnowledgeBaseFast } from '../../support/e2e';
 // Read the Node cell by selector, never by column index: a reorder would keep
 // reading a neighbouring cell, and Number('') === 0 would make the sort
 // assertions pass on every row silently.
-function nodeNumbers($rows: JQuery<HTMLElement>): number[] {
+function cellNumbers($rows: JQuery<HTMLElement>, cellCy: string): number[] {
   return [...$rows].map(($row) => {
-    const cell = $row.querySelector('[data-cy="fight-record-node"]');
-    assert.isNotNull(cell, 'node cell');
+    const cell = $row.querySelector(`[data-cy="${cellCy}"]`);
+    assert.isNotNull(cell, cellCy);
     return Number(cell?.textContent?.trim());
   });
 }
+
+// Rows stay on screen while the table refetches, so the order is read inside a
+// retried should(): a one-shot then() would read the previous sort.
+function expectSorted(cellCy: string, direction: 'desc' | 'asc') {
+  cy.get('[data-cy="fight-records-table"] tbody tr').should(($rows) => {
+    const [first, second] = cellNumbers($rows, cellCy);
+    if (direction === 'desc') expect(first).to.be.at.least(second);
+    else expect(first).to.be.at.most(second);
+  });
+}
+
+const SORTS = [
+  { label: 'KO count', header: 'KO', cellCy: 'fight-record-ko', prefix: 'kb-sort' },
+  { label: 'node number', header: 'Node', cellCy: 'fight-record-node', prefix: 'kb-sortnode' },
+] as const;
 
 // Dev endpoint alternates champions per node:
 //   odd  nodes: attacker=Iron Man,       defender=Captain America
@@ -20,53 +35,18 @@ describe('Knowledge Base', () => {
     cy.truncateDb();
   });
 
-  it('sorts by KO count descending then ascending', () => {
-    setupKnowledgeBaseFast('kb-sort').then(({ userData }) => {
-      cy.apiLogin(userData.user_id, 'knowledge-base');
+  SORTS.forEach(({ label, header, cellCy, prefix }) => {
+    it(`sorts by ${label} descending then ascending`, () => {
+      setupKnowledgeBaseFast(prefix).then(({ userData }) => {
+        cy.apiLogin(userData.user_id, 'knowledge-base');
+        cy.get('[data-cy="fight-records-table"] tbody tr').should('have.length', 2);
 
-      cy.getByCy('fight-records-table').find('tbody tr').should('have.length', 2);
+        cy.contains('th', header).click();
+        expectSorted(cellCy, 'desc');
 
-      cy.contains('th', 'KO').click();
-      cy.getByCy('fight-records-table')
-        .find('tbody tr')
-        .then(($rows) => {
-          const kos = [...$rows].map((r) =>
-            Number(r.querySelector('[data-cy="fight-record-ko"]')?.textContent?.trim() ?? '0'),
-          );
-          expect(kos[0]).to.be.at.least(kos[1]);
-        });
-
-      cy.contains('th', 'KO').click();
-      cy.getByCy('fight-records-table')
-        .find('tbody tr')
-        .then(($rows) => {
-          const kos = [...$rows].map((r) =>
-            Number(r.querySelector('[data-cy="fight-record-ko"]')?.textContent?.trim() ?? '0'),
-          );
-          expect(kos[0]).to.be.at.most(kos[1]);
-        });
-    });
-  });
-
-  it('sorts by node number descending then ascending', () => {
-    setupKnowledgeBaseFast('kb-sortnode').then(({ userData }) => {
-      cy.apiLogin(userData.user_id, 'knowledge-base');
-
-      cy.contains('th', 'Node').click();
-      cy.getByCy('fight-records-table')
-        .find('tbody tr')
-        .then(($rows) => {
-          const nodes = nodeNumbers($rows);
-          expect(nodes[0]).to.be.at.least(nodes[1]);
-        });
-
-      cy.contains('th', 'Node').click();
-      cy.getByCy('fight-records-table')
-        .find('tbody tr')
-        .then(($rows) => {
-          const nodes = nodeNumbers($rows);
-          expect(nodes[0]).to.be.at.most(nodes[1]);
-        });
+        cy.contains('th', header).click();
+        expectSorted(cellCy, 'asc');
+      });
     });
   });
 });

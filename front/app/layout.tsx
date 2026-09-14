@@ -75,7 +75,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
               <SideNavBar />
             </div>
             <Toaster />
-            <div className='grow p-3 md:overflow-y-auto'>
+            {/* `relative` keeps absolute descendants (sr-only, hidden inputs) inside the scroll box —
+                without it they escape to the document and add a second scrollbar. */}
+            <div className='grow p-3 md:relative md:overflow-y-auto'>
               <MyModerationProvider>{children}</MyModerationProvider>
             </div>
           </div>

@@ -13,6 +13,7 @@ interface Props {
   readonly sortBy: string
   readonly sortOrder: 'asc' | 'desc'
   readonly onSort: (col: string) => void
+  readonly onReportNote: (noteId: string) => Promise<boolean>
   /** True while the table is being captured as a PNG — see `useImageExport`. */
   readonly exporting?: boolean
   readonly exportRef?: RefObject<HTMLDivElement | null>
@@ -24,6 +25,7 @@ export default function KnowledgeBaseTable({
   sortBy,
   sortOrder,
   onSort,
+  onReportNote,
   exporting = false,
   exportRef,
 }: Props) {
@@ -60,7 +62,8 @@ export default function KnowledgeBaseTable({
           exporting={exporting}
         />
         <tbody>
-          {!loading && records.length === 0 && (
+          {/* Previous rows stay up while refetching — `opacity-50` marks them stale. */}
+          {records.length === 0 && (
             <tr>
               <td
                 colSpan={columns.length}
@@ -70,14 +73,14 @@ export default function KnowledgeBaseTable({
               </td>
             </tr>
           )}
-          {!loading &&
-            records.map((r) => (
-              <KnowledgeBaseTableRow
-                key={r.id}
-                record={r}
-                exporting={exporting}
-              />
-            ))}
+          {records.map((r) => (
+            <KnowledgeBaseTableRow
+              key={r.id}
+              record={r}
+              exporting={exporting}
+              onReportNote={onReportNote}
+            />
+          ))}
         </tbody>
       </table>
     </div>

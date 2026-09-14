@@ -84,6 +84,7 @@ export default function HistoryTab() {
             sortBy={vm.sortBy}
             sortOrder={vm.sortOrder}
             onSort={vm.handleSort}
+            onReportNote={vm.handleReportNote}
             exporting={exporting}
             exportRef={exportRef}
           />

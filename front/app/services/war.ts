@@ -591,10 +591,11 @@ export async function removeWarPrefight(
   allianceId: string,
   warId: string,
   battlegroup: number,
-  championUserId: string
+  championUserId: string,
+  targetNodeNumber: number
 ): Promise<void> {
   const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}`,
+    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}/node/${targetNodeNumber}`,
     { method: 'DELETE', headers: jsonHeaders }
   )
   await throwOnError(response, 'Failed to remove pre-fight attacker')

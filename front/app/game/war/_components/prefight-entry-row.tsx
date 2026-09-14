@@ -97,7 +97,9 @@ export default function PrefightEntryRow({
             'rounded-full bg-orange-500/80 hover:bg-orange-500 text-white flex items-center justify-center flex-shrink-0',
             btnSize
           )}
-          onClick={() => handleRemovePrefight(prefight.champion_user_id)}
+          onClick={() =>
+            handleRemovePrefight(prefight.champion_user_id, prefight.target_node_number)
+          }
           title={t.game.war.prefight.revoke}
           data-cy={`remove-prefight-node-${prefight.target_node_number}`}
         >

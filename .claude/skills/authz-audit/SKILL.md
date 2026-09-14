@@ -78,7 +78,7 @@ les helpers `setup*` / `push_*` existants (cf. CLAUDE.md).
 - Toute doc d'audit intermédiaire = **markdown non gité** (préfixe `_audit_…md`),
   jamais committée (convention projet).
 - Tests backend : cibler le fichier du lot (`cd api && uv run pytest <fichier> --tb=line -q`)
-  via `ctx_execute`, jamais la suite complète. Lint final `uvx ruff check`.
+  via `ctx_execute`, jamais la suite complète.
 - Un changement de code d'autorisation touche la sécurité : proposer de router vers
   l'agent `security-reviewer` avant merge.
 - Pour un audit approfondi multi-lots, déléguer l'écriture des tests à `test-python`.

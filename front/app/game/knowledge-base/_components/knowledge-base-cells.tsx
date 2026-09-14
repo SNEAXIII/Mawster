@@ -1,12 +1,10 @@
 'use client'
 import { useState } from 'react'
-import { toast } from 'sonner'
 import { FiFlag } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
 import { getChampionImageUrl } from '@/app/services/champions'
 import { shortenChampionName } from '@/app/services/roster'
 import type { FightRecord, SynergyRecord, PrefightRecord } from '@/app/services/fight-records'
-import { reportNote } from '@/app/services/moderation'
 import ChampionPortrait from '@/components/champion-portrait'
 import { useExportMode } from '@/app/contexts/export-mode-context'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -117,23 +115,20 @@ export function ChampionIconList({ champions, dataCy }: ChampionIconListProps) {
   )
 }
 
-type NoteCellProps = Readonly<{ record: FightRecord }>
+type NoteCellProps = Readonly<{
+  record: FightRecord
+  onReport: (noteId: string) => Promise<boolean>
+}>
 
 /** Note cell — truncated inline, full text in a popover, plus the report flag. */
-export function NoteCell({ record }: NoteCellProps) {
+export function NoteCell({ record, onReport: reportRecordNote }: NoteCellProps) {
   const { t } = useI18n()
   const [reported, setReported] = useState(false)
   const hasNote = !record.note_blocked && !!record.note
 
   const onReport = async () => {
     if (!record.note_id) return
-    try {
-      await reportNote(record.note_id)
-      setReported(true)
-      toast.success(t.moderation.reportSuccess)
-    } catch (err) {
-      toast.error((err as Error).message || t.moderation.reportError)
-    }
+    if (await reportRecordNote(record.note_id)) setReported(true)
   }
 
   return (

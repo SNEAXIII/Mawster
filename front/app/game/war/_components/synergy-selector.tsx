@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import ChampionPortrait from '@/components/champion-portrait'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
-import { type AvailableAttacker, getAvailableAttackers } from '@/app/services/war'
+import type { AvailableAttacker } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import { cn } from '@/app/lib/utils'
 import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
@@ -27,7 +27,14 @@ export default function SynergySelectorDialog({
   targetChampionName,
 }: Readonly<SynergySelectorDialogProps>) {
   const { t } = useI18n()
-  const { selectedAllianceId, activeWarId, selectedBg, handleAddSynergy, synergies } = useWar()
+  const {
+    selectedAllianceId,
+    activeWarId,
+    selectedBg,
+    handleAddSynergy,
+    synergies,
+    loadAvailableAttackers,
+  } = useWar()
   const [attackers, setAttackers] = useState<AvailableAttacker[]>([])
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
@@ -38,10 +45,11 @@ export default function SynergySelectorDialog({
     }
     if (!selectedAllianceId || !activeWarId) return
     setLoading(true)
-    getAvailableAttackers(selectedAllianceId, activeWarId, selectedBg, targetGameAccountId)
+    loadAvailableAttackers(targetGameAccountId)
       .then(setAttackers)
       .catch(() => {})
       .finally(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, selectedAllianceId, activeWarId, selectedBg, targetGameAccountId])
 
   const usedSynergyIds = new Set(synergies.map((s) => s.champion_user_id))

@@ -10,7 +10,7 @@ from src.services.alliance.war.WarService import WarService
 from src.services.auth.AuthService import AuthService
 from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
-from src.utils.path_params import BattlegroupPath
+from src.utils.path_params import BattlegroupPath, NodeNumberPath
 
 war_prefight_controller = APIRouter(
     prefix="/alliances/{alliance_id}/wars",
@@ -63,7 +63,7 @@ async def add_war_prefight(
 
 
 @war_prefight_controller.delete(
-    "/{war_id}/bg/{battlegroup}/prefight/{champion_user_id}",
+    "/{war_id}/bg/{battlegroup}/prefight/{champion_user_id}/node/{target_node_number}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def remove_war_prefight(
@@ -71,10 +71,13 @@ async def remove_war_prefight(
     war_id: uuid.UUID,
     battlegroup: BattlegroupPath,
     champion_user_id: uuid.UUID,
+    target_node_number: NodeNumberPath,
     session: SessionDep,
     current_user: CurrentUser,
     war: WarDep,
 ):
-    """Remove a pre-fight champion. Any alliance member can remove."""
+    """Remove a champion's pre-fight on one node. Any alliance member can remove."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
-    await WarService.remove_prefight_attacker(session, war_id, battlegroup, champion_user_id)
+    await WarService.remove_prefight_attacker(
+        session, war_id, battlegroup, champion_user_id, target_node_number
+    )

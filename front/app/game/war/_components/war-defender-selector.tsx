@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -9,7 +9,8 @@ import ChampionPortrait from '@/components/champion-portrait'
 import { cn } from '@/app/lib/utils'
 import { shortenChampionName } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
-import { type Champion, getChampions } from '@/app/services/champions'
+import type { Champion } from '@/app/services/champions'
+import { useChampionPages } from '@/hooks/use-champion-catalog'
 import type { WarPlacement } from '@/app/services/war'
 import { Separator } from '@/components/ui/separator'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
@@ -19,9 +20,6 @@ interface SelectedRarity {
   stars: number
   rank: number
 }
-
-/** Champions fetched per page by the grid's "load more". */
-const PAGE_SIZE = 60
 
 const WAR_RARITIES: { label: string; stars: number; rank: number }[] = [
   { label: '6R4', stars: 6, rank: 4 },
@@ -56,11 +54,8 @@ export default function WarDefenderSelector({
   onSelect,
 }: Readonly<WarDefenderSelectorProps>) {
   const { t } = useI18n()
-  const [champions, setChampions] = useState<Champion[]>([])
   const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [loading, setLoading] = useState(false)
+  const { champions, page, totalPages, loading, loadMore } = useChampionPages(open, search)
 
   // Selection state
   const [selected, setSelected] = useState<Champion | null>(null)
@@ -69,31 +64,10 @@ export default function WarDefenderSelector({
   const [showReplaceConfirm, setShowReplaceConfirm] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  const fetchChampions = useCallback(async (q: string, p: number) => {
-    setLoading(true)
-    try {
-      const data = await getChampions({ page: p, size: PAGE_SIZE, search: q })
-      setChampions(p === 1 ? data.champions : (prev) => [...prev, ...data.champions])
-      setTotalPages(data.total_pages)
-      setPage(p)
-    } catch {
-      // Keep whatever is already listed; reopening the dialog retries.
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (open) {
-      fetchChampions(search, 1)
-    }
-  }, [open, search, fetchChampions])
-
   useEffect(() => {
     if (!open) {
       setSelected(null)
       setSearch('')
-      setPage(1)
     }
   }, [open])
 
@@ -244,7 +218,8 @@ export default function WarDefenderSelector({
                         <Button
                           variant='outline'
                           size='sm'
-                          onClick={() => fetchChampions(search, page + 1)}
+                          onClick={() => void loadMore()}
+                          data-cy='war-champion-load-more'
                           disabled={loading}
                         >
                           {t.game.war.loadMore}

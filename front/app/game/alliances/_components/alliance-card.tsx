@@ -7,22 +7,17 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Shield, UserPlus, Users, X, Pencil, Check, Eye } from 'lucide-react'
 import InviteMemberCombo from './alliance-invite-member-combo'
-import {
-  type GameAccount,
-  type AllianceInvitation,
-  patchAllianceElo,
-  patchAllianceTier,
-} from '@/app/services/game'
+import type { GameAccount, AllianceInvitation } from '@/app/services/game'
 import { formatDateMedium } from '@/app/lib/utils'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
 import { CollapsibleSection } from '@/components/collapsible-section'
 import AllianceMemberRow from './alliance-member-row'
 import UsernameEnriched from '@/components/username-enriched'
-import { toast } from 'sonner'
 import AllianceVisitorsSection from './alliance-visitors-section'
 import AllianceDeleteButton from './alliance-delete-button'
 import AllianceLeaveVisitButton from './alliance-leave-visit-button'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
+import type { AllianceActions } from '../_viewmodels/use-alliance-actions'
 
 interface AllianceCardProps {
   alliance: AllianceWithVisitorFlag
@@ -38,7 +33,7 @@ interface AllianceCardProps {
   onOpenInviteMember: (allianceId: string) => void
   onCloseInviteMember: () => void
   onInviteMember: (allianceId: string) => void
-  onRefresh: () => Promise<void>
+  actions: AllianceActions
   onViewRoster: (gameAccountId: string, pseudo: string, canRequestUpgrade: boolean) => void
   pendingInvitations?: AllianceInvitation[]
   onCancelInvitation?: (allianceId: string, invitationId: string) => void
@@ -57,7 +52,7 @@ export default function AllianceCard({
   onOpenInviteMember,
   onCloseInviteMember,
   onInviteMember,
-  onRefresh,
+  actions,
   onViewRoster,
   pendingInvitations = [],
   onCancelInvitation,
@@ -78,15 +73,7 @@ export default function AllianceCard({
 
   async function saveElo() {
     const val = Number(eloDraft)
-    if (!Number.isNaN(val) && val >= 0 && val <= 4500) {
-      try {
-        await patchAllianceElo(alliance.id, val)
-        await onRefresh()
-        toast.success(t.game.war.eloUpdateSuccess)
-      } catch (err: unknown) {
-        toast.error((err as Error).message || t.game.war.eloUpdateError)
-      }
-    }
+    if (!Number.isNaN(val) && val >= 0 && val <= 4500) await actions.updateElo(alliance.id, val)
     setEditingElo(false)
   }
 
@@ -97,15 +84,7 @@ export default function AllianceCard({
 
   async function saveTier() {
     const val = Number(tierDraft)
-    if (!Number.isNaN(val) && val >= 1 && val <= 20) {
-      try {
-        await patchAllianceTier(alliance.id, val)
-        await onRefresh()
-        toast.success(t.game.war.tierUpdateSuccess)
-      } catch (err: unknown) {
-        toast.error((err as Error).message || t.game.war.tierUpdateError)
-      }
-    }
+    if (!Number.isNaN(val) && val >= 1 && val <= 20) await actions.updateTier(alliance.id, val)
     setEditingTier(false)
   }
 
@@ -279,12 +258,12 @@ export default function AllianceCard({
             {alliance.isVisitor && (
               <AllianceLeaveVisitButton
                 allianceId={alliance.id}
-                onRefresh={onRefresh}
+                actions={actions}
               />
             )}
             <AllianceDeleteButton
               alliance={alliance}
-              onDeleted={onRefresh}
+              actions={actions}
             />
           </div>
         </div>
@@ -437,7 +416,7 @@ export default function AllianceCard({
                           key={member.id}
                           member={member}
                           alliance={alliance}
-                          onRefresh={onRefresh}
+                          actions={actions}
                           onViewRoster={(gameAccountId, pseudo) =>
                             onViewRoster(gameAccountId, pseudo, userCanManage)
                           }
@@ -457,7 +436,7 @@ export default function AllianceCard({
           onViewRoster={(gameAccountId, pseudo) =>
             onViewRoster(gameAccountId, pseudo, userCanManage)
           }
-          onRefresh={onRefresh}
+          actions={actions}
         />
       </CardContent>
     </Card>
