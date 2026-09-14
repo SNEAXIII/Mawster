@@ -320,9 +320,6 @@ declare global {
         content: string,
       ): Chainable<any>;
 
-      /** Insert N fought placements and their records into a war (dev endpoint, bypasses the war flow). */
-      apiDevBulkCreateFightRecords(warId: string, gameAccountId: string, count: number): Chainable<any>;
-
       /** Fill N war nodes with dummy attackers for a given account (dev endpoint, bypasses validations). */
       apiBulkFillWarAttackers(warId: string, battlegroup: number, gameAccountId: string, count: number): Chainable<any>;
 

@@ -611,16 +611,15 @@ async def bulk_fill_war_attackers(body: BulkFillWarAttackersRequest, session: Se
     return {"assigned": created}
 
 
-class BulkCreateFightRecordsRequest(BaseModel):
-    war_id: uuid.UUID
-    game_account_id: uuid.UUID
-    count: int = Field(ge=1, le=MAX_FIGHTS_PER_WAR)
-
-
 async def _insert_fight_records(
     session: SessionDep, war: War, game_account_id: uuid.UUID, count: int
 ) -> int:
-    """Fill `war` with N fought placements and their records, bypassing the war flow."""
+    """Fill `war` with fought placements and their records, bypassing the war flow.
+
+    Clamps to MAX_FIGHTS_PER_WAR regardless of the caller's count. Returns the
+    number of records actually inserted.
+    """
+    row_count = min(count, MAX_FIGHTS_PER_WAR)
     champions = (await session.exec(select(Champion).limit(2))).all()
     if len(champions) < 2:
         raise HTTPException(
@@ -634,7 +633,7 @@ async def _insert_fight_records(
     await session.flush()
 
     placements = []
-    for index in range(count):
+    for index in range(row_count):
         # Alternate attacker/defender so champion filters return subsets
         attacker, defender = (
             (attackers[0], champions[1]) if index % 2 == 0 else (attackers[1], champions[0])
@@ -657,17 +656,7 @@ async def _insert_fight_records(
         WarFightRecord(war_defense_placement_id=p.id, rank=3, ascension=0) for p in placements
     )
     await session.commit()
-    return count
-
-
-@dev_controller.post("/bulk-create-fight-records", status_code=201)
-async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session: SessionDep):
-    """Insert N fought placements and their records into an existing war. Testing only."""
-    war = await session.get(War, body.war_id)
-    if war is None:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="War not found")
-    created = await _insert_fight_records(session, war, body.game_account_id, body.count)
-    return {"created": created}
+    return row_count
 
 
 # scripts/e2e/e2e_parallel.py slices backend.log on these markers, so a newline in a title
