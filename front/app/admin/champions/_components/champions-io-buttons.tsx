@@ -76,6 +76,7 @@ export default function ChampionsIoButtons({
         accept='.json'
         className='hidden'
         onChange={handleImport}
+        data-cy='import-champions-input'
       />
     </div>
   )
