@@ -13,6 +13,7 @@ interface Props {
   readonly sortBy: string
   readonly sortOrder: 'asc' | 'desc'
   readonly onSort: (col: string) => void
+  readonly onReportNote: (noteId: string) => Promise<boolean>
   /** True while the table is being captured as a PNG — see `useImageExport`. */
   readonly exporting?: boolean
   readonly exportRef?: RefObject<HTMLDivElement | null>
@@ -24,6 +25,7 @@ export default function KnowledgeBaseTable({
   sortBy,
   sortOrder,
   onSort,
+  onReportNote,
   exporting = false,
   exportRef,
 }: Props) {
@@ -76,6 +78,7 @@ export default function KnowledgeBaseTable({
                 key={r.id}
                 record={r}
                 exporting={exporting}
+                onReportNote={onReportNote}
               />
             ))}
         </tbody>
