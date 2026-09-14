@@ -92,7 +92,7 @@ export default function AllianceContent() {
             onOpenInviteMember={vm.handleOpenInviteMember}
             onCloseInviteMember={vm.handleCloseInviteMember}
             onInviteMember={vm.handleInviteMember}
-            onRefresh={vm.handleMemberRefresh}
+            actions={vm.allianceActions}
             onViewRoster={(gameAccountId, pseudo, canReq) =>
               vm.setRosterTarget({ gameAccountId, pseudo, canRequestUpgrade: canReq })
             }
