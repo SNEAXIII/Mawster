@@ -33,10 +33,12 @@ Mawster — MCOC (Marvel Contest of Champions) alliance management tool.
 **Backend** (`api/`) — always via `/make` skill first, never raw `pytest`/`alembic`/`uvicorn`. Before any backend command, invoke `/make` to check available targets.
 
 Single test file: `uv run pytest tests/unit/dto/dto_from_model_test.py -v`
-Lint: `uvx ruff check` (run at end of every backend session)
-Format: `uvx ruff format`
 
 **Frontend** (`front/`): `npm run dev` / `npm run build` (run build to catch TS errors)
+
+**Never run by hand what `.pre-commit-config.yaml` already runs** — ruff (check + format),
+raises-arity, zizmor, oxlint, prettier, cypress `tsc`. The commit applies them; the app `tsc` is not
+in there and still needs a manual run.
 
 **E2E**: Always use the `/test-e2e` skill — **never** call `npx cypress run` directly. It wraps `scripts/e2e/e2e_parallel.py` (the CI runner); targeted runs via `--spec "roster/foo.cy.ts"`. Requires Docker (mariadb-test on port 3307).
 
