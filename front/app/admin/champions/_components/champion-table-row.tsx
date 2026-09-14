@@ -43,7 +43,7 @@ export default function ChampionTableRow({
       className='border-b hover:bg-accent/50'
       data-cy={`champion-row-${champion.name}`}
     >
-      <td className='p-3'>
+      <td className='p-2'>
         {champion.image_url ? (
           <img
             src={getChampionImageUrl(champion.image_url, 40) ?? ''}
@@ -60,16 +60,16 @@ export default function ChampionTableRow({
         )}
       </td>
 
-      <td className='p-3 font-medium'>{champion.name}</td>
+      <td className='p-2 font-medium'>{champion.name}</td>
 
-      <td className='p-3'>
+      <td className='p-2'>
         <ClassChip
           championClass={champion.champion_class}
           variant='pill'
         />
       </td>
 
-      <td className='p-3'>
+      <td className='p-2'>
         {isEditing ? (
           <div className='flex items-center gap-1'>
             <Input
@@ -104,7 +104,7 @@ export default function ChampionTableRow({
         )}
       </td>
 
-      <td className='p-3'>
+      <td className='p-2'>
         <ChampionAttributeToggles
           champion={champion}
           sagaDisabled={sagaDisabled}
@@ -112,7 +112,7 @@ export default function ChampionTableRow({
         />
       </td>
 
-      <td className='p-3'>
+      <td className='p-2'>
         <div className='flex items-center gap-1'>
           <ActionIconButton
             icon={<Pencil className='size-3.5' />}

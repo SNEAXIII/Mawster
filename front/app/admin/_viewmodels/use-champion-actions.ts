@@ -9,10 +9,22 @@ import {
   toggleChampionAscendable,
   toggleChampionPrefight,
   setChampionSagaRole,
+  exportAllChampions,
+  loadChampions,
   type Champion,
 } from '@/app/services/champions'
 import { useI18n } from '@/app/i18n'
 import { requiresSeason, type ChampionAttribute } from './champion-attributes'
+
+export interface ChampionImportEntry {
+  name: string
+  champion_class: string
+  image_url?: string | null
+  alias?: string | null
+  is_7_stars_available?: boolean
+  is_ascendable?: boolean
+  has_prefight?: boolean
+}
 
 const TOGGLE_CALLS = {
   is_7_stars_available: toggleChampionSevenStars,
@@ -35,13 +47,19 @@ export function useChampionActions({
 }: UseChampionActionsArgs) {
   const { t } = useI18n()
 
-  /** Applies the change locally, then puts the previous list back if the API refuses. */
+  /** Applies the change locally, settles on the API's flags, or restores the list on refusal. */
   const applyOptimistic = useCallback(
-    async (championId: string, patch: Partial<Champion>, call: () => Promise<unknown>) => {
+    async (
+      championId: string,
+      patch: Partial<Champion>,
+      call: () => Promise<Partial<Champion>>
+    ) => {
       const previous = champions
-      setChampions((prev) => prev.map((c) => (c.id === championId ? { ...c, ...patch } : c)))
+      const patchChampion = (values: Partial<Champion>) =>
+        setChampions((prev) => prev.map((c) => (c.id === championId ? { ...c, ...values } : c)))
+      patchChampion(patch)
       try {
-        await call()
+        patchChampion(await call())
       } catch {
         setChampions(previous)
         toast.error(t.champions.errors.toggleError)
@@ -90,5 +108,22 @@ export function useChampionActions({
     }
   }
 
-  return { toggleAttribute, saveAlias, removeChampion }
+  const exportChampions = () => exportAllChampions()
+
+  async function importChampions(entries: ChampionImportEntry[]) {
+    await loadChampions(
+      entries.map((c) => ({
+        name: c.name,
+        champion_class: c.champion_class,
+        image_url: c.image_url ?? null,
+        alias: c.alias ?? null,
+        is_7_stars_available: c.is_7_stars_available,
+        is_ascendable: c.is_ascendable,
+        has_prefight: c.has_prefight,
+      }))
+    )
+    await reload()
+  }
+
+  return { toggleAttribute, saveAlias, removeChampion, exportChampions, importChampions }
 }

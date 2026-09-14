@@ -4,25 +4,17 @@ import { type ChangeEvent, useRef, useState } from 'react'
 import { Download, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/app/i18n'
-import { exportAllChampions, loadChampions } from '@/app/services/champions'
+import type { ChampionImportEntry } from '../../_viewmodels/use-champion-actions'
 
 interface ChampionsIoButtonsProps {
-  onImported: () => void
+  onExport: () => Promise<unknown>
+  onImport: (entries: ChampionImportEntry[]) => Promise<void>
   onError: (message: string) => void
 }
 
-interface ChampionImportEntry {
-  name: string
-  champion_class: string
-  image_url?: string | null
-  alias?: string | null
-  is_7_stars_available?: boolean
-  is_ascendable?: boolean
-  has_prefight?: boolean
-}
-
 export default function ChampionsIoButtons({
-  onImported,
+  onExport,
+  onImport,
   onError,
 }: Readonly<ChampionsIoButtonsProps>) {
   const { t } = useI18n()
@@ -31,7 +23,7 @@ export default function ChampionsIoButtons({
 
   async function handleExport() {
     try {
-      const data = await exportAllChampions()
+      const data = await onExport()
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -51,18 +43,7 @@ export default function ChampionsIoButtons({
     try {
       const data = JSON.parse(await file.text()) as ChampionImportEntry[]
       if (!Array.isArray(data)) throw new Error('Invalid JSON: expected an array')
-      await loadChampions(
-        data.map((c) => ({
-          name: c.name,
-          champion_class: c.champion_class,
-          image_url: c.image_url ?? null,
-          alias: c.alias ?? null,
-          is_7_stars_available: c.is_7_stars_available,
-          is_ascendable: c.is_ascendable,
-          has_prefight: c.has_prefight,
-        }))
-      )
-      onImported()
+      await onImport(data)
     } catch {
       onError(t.champions.errors.importError)
     } finally {

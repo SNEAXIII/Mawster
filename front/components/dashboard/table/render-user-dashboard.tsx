@@ -1,5 +1,6 @@
 import React from 'react'
 import type { User } from '@/app/services/users'
+import type { UserAction } from '@/app/admin/_viewmodels/use-users-viewmodel'
 import { Table, TableBody } from '@/components/ui/table'
 import { UserRow } from '@/components/dashboard/table/user-row'
 import TableHeaderUsers, { type AllSelectorProps } from '@/components/dashboard/table/table-header'
@@ -7,7 +8,7 @@ import TableHeaderUsers, { type AllSelectorProps } from '@/components/dashboard/
 interface RenderUserDashboardProps {
   users: User[]
   fetchUsersError: string
-  loadUsers: () => void
+  onUserAction: (action: UserAction, userId: string) => Promise<void>
   currentUserRole?: string
 }
 
@@ -18,7 +19,7 @@ export default function RenderUserDashboard({
   fetchUsersError,
   onStatusChange,
   onRoleChange,
-  loadUsers,
+  onUserAction,
   currentUserRole,
 }: RenderUserDashboardProps & AllSelectorProps) {
   return (
@@ -35,7 +36,7 @@ export default function RenderUserDashboard({
             <UserRow
               key={user.id}
               user={user}
-              loadUsers={loadUsers}
+              onUserAction={onUserAction}
               currentUserRole={currentUserRole}
             />
           ))}
