@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Command,
@@ -11,7 +11,8 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Button } from '@/components/ui/button'
-import { getChampions, getChampionImageUrl, type Champion } from '@/app/services/champions'
+import { getChampionImageUrl } from '@/app/services/champions'
+import { useChampionCatalog } from '@/hooks/use-champion-catalog'
 import { useI18n } from '@/app/i18n'
 import { ChevronsUpDown, X } from 'lucide-react'
 
@@ -30,21 +31,7 @@ export default function ChampionFilterSelect({
 }: Readonly<ChampionFilterSelectProps>) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
-  const [champions, setChampions] = useState<Champion[]>([])
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    if (open && !loaded) {
-      getChampions({ page: 1, size: 500 })
-        .then((res) => {
-          setChampions(res.champions)
-          setLoaded(true)
-        })
-        .catch(() => {
-          // loaded stays false → popover re-open will retry
-        })
-    }
-  }, [open, loaded])
+  const { champions } = useChampionCatalog(open)
 
   const selectedChampion = champions.find((c) => c.id === value)
   const displayLabel = selectedChampion ? selectedChampion.name : placeholder

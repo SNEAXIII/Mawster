@@ -14,13 +14,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { FiX } from 'react-icons/fi'
-import { type Champion, getChampions } from '@/app/services/champions'
+import { useChampionCatalog } from '@/hooks/use-champion-catalog'
 import ChampionPortrait from '@/components/champion-portrait'
 
 // todo max ban automatique
 const MAX_BANS = 7
-
-let championsCache: Champion[] | null = null
 
 interface WarFormDialogProps {
   open: boolean
@@ -42,26 +40,16 @@ export default function WarFormDialog({
   const { t } = useI18n()
   const [opponentName, setOpponentName] = useState(initialOpponentName)
   const [loading, setLoading] = useState(false)
-  const [champions, setChampions] = useState<Champion[]>([])
   const [search, setSearch] = useState('')
   const [bannedIds, setBannedIds] = useState<string[]>(initialBannedIds)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const { champions } = useChampionCatalog(open, true)
 
   useEffect(() => {
     if (!open) return
     setOpponentName(initialOpponentName)
     setBannedIds(initialBannedIds)
-    if (championsCache) {
-      setChampions(championsCache)
-    } else {
-      getChampions({ page: 1, size: 9999 })
-        .then((res) => {
-          championsCache = res.champions
-          setChampions(res.champions)
-        })
-        .catch(() => {})
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [open])
 
   const bannedSet = useMemo(() => new Set(bannedIds), [bannedIds])
