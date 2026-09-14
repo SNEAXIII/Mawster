@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import { useTabParam } from '@/hooks/use-tab-param'
-import { getMyGameAccounts, type GameAccount } from '@/app/services/game'
+import { useGameAccounts } from '@/app/contexts/game-accounts-context'
 import {
   getRoster,
   deleteRosterEntry,
@@ -43,9 +43,8 @@ export function useRosterViewModel() {
   const { status: authStatus } = useSession()
   const { t } = useI18n()
 
-  const [accounts, setAccounts] = useState<GameAccount[]>([])
+  const { accounts, loading: loadingAccounts, loadError: accountsLoadError } = useGameAccounts()
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
-  const [loadingAccounts, setLoadingAccounts] = useState(true)
 
   const [activeTab, setActiveTab] = useTabParam(ROSTER_TABS, RosterTab.Roster)
 
@@ -69,31 +68,20 @@ export function useRosterViewModel() {
     if (authStatus === 'unauthenticated') redirect('/login')
   }, [authStatus])
 
-  const fetchAccounts = useCallback(() => {
-    setLoadingAccounts(true)
-    getMyGameAccounts()
-      .then((accs) => {
-        setAccounts(accs)
-        setSelectedAccountId((current) => {
-          if (current && accs.some((a) => a.id === current)) return current
-          return accs.find((a) => a.is_primary)?.id ?? accs[0]?.id ?? null
-        })
-        if (accs.length === 0) setActiveTab(RosterTab.Accounts)
-      })
-      .catch(() => setError(t.roster.errors.loadAccounts))
-      .finally(() => setLoadingAccounts(false))
-  }, [t, setActiveTab])
+  // Keeps the selection valid as the shared account list changes under it.
+  useEffect(() => {
+    if (loadingAccounts) return
+    setSelectedAccountId((current) => {
+      if (current && accounts.some((a) => a.id === current)) return current
+      return accounts.find((a) => a.is_primary)?.id ?? accounts[0]?.id ?? null
+    })
+    if (accounts.length === 0) setActiveTab(RosterTab.Accounts)
+    // oxlint-disable-next-line react/exhaustive-deps
+  }, [accounts, loadingAccounts])
 
   useEffect(() => {
-    if (authStatus !== 'authenticated') return
-    fetchAccounts()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authStatus])
-
-  useEffect(() => {
-    if (activeTab === RosterTab.Roster && authStatus === 'authenticated') fetchAccounts()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab])
+    if (accountsLoadError) setError(t.roster.errors.loadAccounts)
+  }, [accountsLoadError, t])
 
   useEffect(() => {
     setFilters(EMPTY_FILTERS)
@@ -106,7 +94,7 @@ export function useRosterViewModel() {
       .then(setRoster)
       .catch(() => setError(t.roster.errors.loadRoster))
       .finally(() => setLoadingRoster(false))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [selectedAccountId])
 
   const updateMasteryField = useCallback(
@@ -156,7 +144,7 @@ export function useRosterViewModel() {
     } finally {
       setLoadingMasteries(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [])
 
   const handleSaveMasteries = useCallback(async () => {
@@ -171,7 +159,7 @@ export function useRosterViewModel() {
     } finally {
       setSavingMasteries(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [selectedAccountId, masteryForm])
 
   const handleFormSuccess = useCallback((updated: RosterEntry[]) => {
@@ -193,7 +181,7 @@ export function useRosterViewModel() {
     } finally {
       setDeleteTarget(null)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [deleteTarget, selectedAccountId])
 
   const startEditEntry = useCallback((entry: RosterEntry) => {
@@ -219,7 +207,7 @@ export function useRosterViewModel() {
     } finally {
       setUpgradeTarget(null)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [upgradeTarget, selectedAccountId])
 
   const handleTogglePreferredAttacker = useCallback(
@@ -245,7 +233,7 @@ export function useRosterViewModel() {
     } finally {
       setAscendTarget(null)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [ascendTarget, selectedAccountId])
 
   const filteredRoster = useMemo(() => applyRosterFilters(roster, filters), [roster, filters])
@@ -275,7 +263,7 @@ export function useRosterViewModel() {
     if (activeTab === RosterTab.Mastery && selectedAccountId) {
       fetchMasteries(selectedAccountId)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [activeTab, selectedAccountId])
 
   const clearError = useCallback(() => setError(null), [])
@@ -309,7 +297,6 @@ export function useRosterViewModel() {
     handleFormSuccess,
     handleTogglePreferredAttacker,
     clearError,
-    fetchAccounts,
     filters,
     setFilterPatch,
     resetFilters,
