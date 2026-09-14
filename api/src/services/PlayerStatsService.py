@@ -16,20 +16,18 @@ from src.dto.player.dto_player_stats import (
 from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarStatus import WarStatus
 from src.models.alliance.Alliance import Alliance
-from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
 from src.models.user.User import User
 from src.models.war.Season import Season
 from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
-from src.models.war.WarFightRecord import WarFightRecord
 from src.services.alliance.war._stat_expressions import (
     total_fights,
     total_kos,
     total_not_fought,
 )
-from src.services.knowledge._fight_context import join_fight_context
+from src.services.knowledge._fight_context import champion_usage_statement
 from src.utils.db import SessionDep
 
 
@@ -289,27 +287,6 @@ class PlayerStatsService:
         if deathless is True:
             conditions.append(WarDefensePlacement.ko_count == 0)
 
-        if perspective == "defender":
-            champion_id_col = WarDefensePlacement.champion_id.label("champion_id")
-            group_by_col = WarDefensePlacement.champion_id
-        else:
-            champion_id_col = ChampionUser.champion_id.label("champion_id")
-            group_by_col = ChampionUser.champion_id
-
-        stmt = (
-            join_fight_context(
-                select(
-                    champion_id_col,
-                    Champion.name.label("champion_name"),
-                    Champion.image_url,
-                    cast(func.count(WarFightRecord.id), Integer).label("fight_count"),
-                    cast(func.sum(WarDefensePlacement.ko_count), Integer).label("total_kos"),
-                )
-            )
-            .join(Champion, Champion.id == group_by_col)
-            .where(and_(*conditions))
-            .group_by(group_by_col, Champion.name, Champion.image_url)
-            .order_by(func.count(WarFightRecord.id).desc())
-        )
+        stmt = champion_usage_statement(perspective, conditions)
         rows = (await session.exec(stmt)).mappings().all()
         return [ChampionUsageResponse.model_validate(dict(r)) for r in rows]
