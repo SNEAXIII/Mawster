@@ -17,10 +17,13 @@ from src.dto.admin.dto_champion import ChampionLoadRequest
 from src.dto.auth.dto_token import LoginResponse, TokenBody
 from src.dto.auth.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
+from src.enums.WarStatus import WarStatus
 from src.models import GameAccount, User
+from src.models.Base import utcnow
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.Mastery import Mastery
+from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightRecord import WarFightRecord
 from src.security.secrets import SECRET
@@ -28,7 +31,6 @@ from src.services.account.game.ChampionUserService import ChampionUserService
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.account.UserService import UserService
 from src.services.admin.ChampionService import ChampionService
-from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 from src.services.alliance.AllianceService import AllianceService
 from src.services.alliance.war.WarService import WarService
@@ -120,10 +122,13 @@ class SetupSeasonSpec(BaseModel):
     status: Literal["upcoming", "active", "ended"] = "upcoming"
 
 
+MAX_FIGHTS_PER_WAR = 150  # 3 battlegroups x 50 nodes
+
+
 class SetupFightRecordsSpec(BaseModel):
     """Fight records to insert for the war this spec declares."""
 
-    count: int = Field(ge=1)
+    count: int = Field(ge=1, le=MAX_FIGHTS_PER_WAR)
     season_number: int | None = None
     tier: int = 1
 
@@ -466,19 +471,22 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
         if spec.create_war and alliance_id and account_id:
             war_id = await _create_batch_war(session, spec.create_war, alliance_id, acc.id)
 
-        # 9. Fight records hang off that war, so they come last
-        if spec.fight_records and war_id and alliance_id:
+        # 9. Season and Tier live on the war, so each fight batch gets its own finished war
+        if spec.fight_records and alliance_id and account_id:
             for records in spec.fight_records:
                 season_id = season_ids.get(str(records.season_number))
-                await _insert_fight_records(
-                    session,
-                    war_id=uuid.UUID(war_id),
+                war = War(
                     alliance_id=uuid.UUID(alliance_id),
-                    game_account_id=acc.id,
-                    count=records.count,
-                    tier=records.tier,
+                    opponent_name="Seeded fights",
+                    created_by_id=acc.id,
                     season_id=uuid.UUID(season_id) if season_id else None,
+                    tier=records.tier,
+                    status=WarStatus.ended,
+                    snapshotted_at=utcnow(),
                 )
+                session.add(war)
+                await session.flush()
+                await _insert_fight_records(session, war, acc.id, records.count)
 
         results[spec.discord_token] = SetupUserResult(
             access_token=access_token,
@@ -605,79 +613,60 @@ async def bulk_fill_war_attackers(body: BulkFillWarAttackersRequest, session: Se
 
 class BulkCreateFightRecordsRequest(BaseModel):
     war_id: uuid.UUID
-    alliance_id: uuid.UUID
     game_account_id: uuid.UUID
-    count: int = Field(ge=1, le=MAX_BULK_ROWS)
-    tier: int = 1
-    season_id: uuid.UUID | None = None
+    count: int = Field(ge=1, le=MAX_FIGHTS_PER_WAR)
 
 
 async def _insert_fight_records(
-    session: SessionDep,
-    war_id: uuid.UUID,
-    alliance_id: uuid.UUID,
-    game_account_id: uuid.UUID,
-    count: int,
-    tier: int = 1,
-    season_id: uuid.UUID | None = None,
+    session: SessionDep, war: War, game_account_id: uuid.UUID, count: int
 ) -> int:
-    """Insert N WarFightRecord rows directly, bypassing the war placement flow."""
+    """Fill `war` with N fought placements and their records, bypassing the war flow."""
     champions = (await session.exec(select(Champion).limit(2))).all()
     if len(champions) < 2:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail="Need at least 2 champions"
         )
+    attackers = [
+        ChampionUser(game_account_id=game_account_id, champion_id=champion.id, stars=7, rank=3)
+        for champion in champions
+    ]
+    session.add_all(attackers)
+    await session.flush()
 
-    attacker_champ = champions[0]
-    defender_champ = champions[1]
-
-    saga = await SagaService.get_roles_for_season(session, season_id) if season_id else {}
-
-    row_count = min(count, MAX_BULK_ROWS)
-    for node in range(1, row_count + 1):
+    placements = []
+    for index in range(count):
         # Alternate attacker/defender so champion filters return subsets
-        if node % 2 == 1:
-            atk, dfn = attacker_champ, defender_champ
-        else:
-            atk, dfn = defender_champ, attacker_champ
-        record = WarFightRecord(
-            war_id=war_id,
-            alliance_id=alliance_id,
-            season_id=season_id,
-            game_account_id=game_account_id,
-            battlegroup=1,
-            node_number=((node - 1) % 50) + 1,
-            tier=tier,
-            champion_id=atk.id,
-            stars=7,
-            rank=3,
-            ascension=0,
-            is_saga_attacker=saga.get(atk.id, (False, False))[0],
-            defender_champion_id=dfn.id,
-            defender_stars=7,
-            defender_rank=3,
-            defender_ascension=0,
-            defender_is_saga_defender=saga.get(dfn.id, (False, False))[1],
-            ko_count=node % 4,
+        attacker, defender = (
+            (attackers[0], champions[1]) if index % 2 == 0 else (attackers[1], champions[0])
         )
-        session.add(record)
-
+        placements.append(
+            WarDefensePlacement(
+                war_id=war.id,
+                battlegroup=index // 50 + 1,
+                node_number=index % 50 + 1,
+                champion_id=defender.id,
+                stars=7,
+                rank=3,
+                attacker_champion_user_id=attacker.id,
+                ko_count=(index + 1) % 4,
+            )
+        )
+    session.add_all(placements)
+    await session.flush()
+    session.add_all(
+        WarFightRecord(war_defense_placement_id=p.id, rank=3, ascension=0) for p in placements
+    )
     await session.commit()
     return count
 
 
 @dev_controller.post("/bulk-create-fight-records", status_code=201)
 async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session: SessionDep):
-    """Insert N WarFightRecord rows for an existing war. Testing only."""
-    created = await _insert_fight_records(
-        session,
-        war_id=body.war_id,
-        alliance_id=body.alliance_id,
-        game_account_id=body.game_account_id,
-        count=body.count,
-        tier=body.tier,
-        season_id=body.season_id,
-    )
+    """Insert N fought placements and their records into an existing war. Testing only."""
+    war = await session.get(War, body.war_id)
+    if war is None:
+        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="War not found")
+    created = await _insert_fight_records(session, war, body.game_account_id, body.count)
     return {"created": created}
 
 

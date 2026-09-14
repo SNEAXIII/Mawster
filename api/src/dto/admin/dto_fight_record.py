@@ -6,9 +6,6 @@ from pydantic import BaseModel, Field, model_validator
 
 from src.dto.mixins import ChampionRef
 from src.enums.WarBoost import WarBoost
-from src.models.war.WarFightRecordImport import (
-    WarFightRecordImport as _WarFightRecordImport,
-)
 
 
 class ChampionUserSnapshotResponse(ChampionRef):
@@ -77,100 +74,6 @@ class WarFightRecordResponse(ChampionRef):
     note_id: uuid.UUID | None = None
     note_blocked: bool = False
     note_author: str | None = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def flatten_relations(cls, data: Any) -> Any:
-        if isinstance(data, dict):
-            return data
-
-        is_import = isinstance(data, _WarFightRecordImport)
-        if is_import:
-            return {
-                "id": data.id,
-                "is_imported": True,
-                "war_id": None,
-                "alliance_id": data.alliance_id,
-                "alliance_name": data.alliance.name,
-                "alliance_tag": data.alliance.tag,
-                "season_id": data.season_id,
-                "season_number": data.season.number if data.season_id and data.season else None,
-                "game_account_pseudo": None,
-                "battlegroup": None,
-                "node_number": data.node_number,
-                "tier": None,
-                "champion_id": data.champion_id,
-                "champion_name": data.champion.name,
-                "champion_class": data.champion.champion_class,
-                "image_url": data.champion.image_url,
-                "stars": None,
-                "rank": None,
-                "ascension": None,
-                "is_saga_attacker": None,
-                "defender_champion_id": data.defender_champion_id,
-                "defender_champion_name": data.defender_champion.name,
-                "defender_champion_class": data.defender_champion.champion_class,
-                "defender_image_url": data.defender_champion.image_url,
-                "defender_stars": None,
-                "defender_rank": None,
-                "defender_ascension": None,
-                "defender_is_saga_defender": None,
-                "ko_count": data.ko_count,
-                "is_planning_error": False,
-                "assisted": False,
-                "war_boost": None,
-                "has_defense_boost": False,
-                "has_power_boost": False,
-                "has_specials_boost": False,
-                "synergies": [],
-                "prefights": [],
-                "created_at": data.created_at,
-                "note": None,
-                "note_id": None,
-                "note_blocked": False,
-                "note_author": None,
-            }
-        return {
-            "id": data.id,
-            "is_imported": False,
-            "war_id": data.war_id,
-            "alliance_id": data.alliance_id,
-            "alliance_name": data.alliance.name,
-            "alliance_tag": data.alliance.tag,
-            "season_id": data.season_id,
-            "season_number": data.season.number if data.season_id and data.season else None,
-            "game_account_pseudo": data.game_account.game_pseudo if data.game_account else None,
-            "battlegroup": data.battlegroup,
-            "node_number": data.node_number,
-            "tier": data.tier,
-            "champion_id": data.champion_id,
-            "champion_name": data.champion.name,
-            "champion_class": data.champion.champion_class,
-            "image_url": data.champion.image_url,
-            "stars": data.stars,
-            "rank": data.rank,
-            "ascension": data.ascension,
-            "is_saga_attacker": data.is_saga_attacker,
-            "defender_champion_id": data.defender_champion_id,
-            "defender_champion_name": data.defender_champion.name,
-            "defender_champion_class": data.defender_champion.champion_class,
-            "defender_image_url": data.defender_champion.image_url,
-            "defender_stars": data.defender_stars,
-            "defender_rank": data.defender_rank,
-            "defender_ascension": data.defender_ascension,
-            "defender_is_saga_defender": data.defender_is_saga_defender,
-            "ko_count": data.ko_count,
-            "is_planning_error": data.is_planning_error,
-            "assisted": data.assisted,
-            "war_boost": data.war_boost,
-            "has_defense_boost": data.has_defense_boost,
-            "has_power_boost": data.has_power_boost,
-            "has_specials_boost": data.has_specials_boost,
-            "synergies": data.synergies,
-            "prefights": data.prefights,
-            "created_at": data.created_at,
-            "note": None,
-        }
 
 
 class PaginatedFightRecordsResponse(BaseModel):

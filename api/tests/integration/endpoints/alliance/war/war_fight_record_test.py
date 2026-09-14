@@ -3,7 +3,7 @@
 import uuid
 
 import pytest
-from sqlmodel import and_, select
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
@@ -18,9 +18,7 @@ from src.models.war.Season import Season
 from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightNote import WarFightNote
-from src.models.war.WarFightPrefight import WarFightPrefight
 from src.models.war.WarFightRecord import WarFightRecord
-from src.models.war.WarFightSynergy import WarFightSynergy
 from src.models.war.WarPrefightAttacker import WarPrefightAttacker
 from src.models.war.WarSynergyAttacker import WarSynergyAttacker
 from src.services.admin.SagaService import SagaService
@@ -229,76 +227,6 @@ class TestWarFightRecordSnapshot:
         assert r.ascension == 0
 
     @pytest.mark.asyncio
-    async def test_end_war_creates_fight_record(self, session):
-        data = await _setup_war_with_fight()
-        headers = create_auth_headers(user_id=str(USER_ID))
-
-        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
-
-        r = await _fetch_single_record(session, data["war"].id)
-        assert r.node_number == 10
-        assert r.battlegroup == 1
-        assert r.champion_id == data["attacker_champ"].id
-        assert r.stars == 7
-        assert r.rank == 4
-        assert r.is_saga_attacker is False
-        assert r.defender_champion_id == data["defender_champ"].id
-        assert r.defender_stars == 6
-        assert r.ko_count == 1
-        assert r.alliance_id == data["alliance"].id
-
-    @pytest.mark.asyncio
-    async def test_end_war_freezes_boosts_on_fight_record(self, session):
-        """Boosts are copied onto the record like stars and rank: clearing them on the node
-        afterwards must not rewrite what the fight was fought with."""
-        data = await _setup_war_with_fight()
-        headers = create_auth_headers(user_id=str(USER_ID))
-
-        await execute_put_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/boosts",
-            payload={"war_boost": "power_start", "has_specials_boost": True},
-            headers=headers,
-        )
-        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
-
-        r = await _fetch_single_record(session, data["war"].id)
-        assert r.war_boost == WarBoost.POWER_START
-        assert r.has_specials_boost is True
-        assert r.has_defense_boost is False
-        assert r.has_power_boost is False
-
-    @pytest.mark.asyncio
-    async def test_end_war_snapshot_uses_war_season_saga_role(self, session):
-        """WarFightRecord.is_saga_attacker/defender_is_saga_defender must be sourced from the
-        ChampionSagaRole set for the WAR'S OWN season — not any other season, and not a
-        champion-level attribute."""
-
-        data = await _setup_war_with_fight()
-
-        season = Season(number=901)
-        other_season = Season(number=902)
-        await load_objects([season, other_season])
-
-        war = await session.get(War, data["war"].id)
-        war.season_id = season.id
-        session.add(war)
-        await session.commit()
-
-        # Role set for the war's own season -> must be picked up.
-        await SagaService.upsert_role(session, season.id, data["attacker_champ"].id, True, False)
-        # Role set for a DIFFERENT season -> must NOT leak into this snapshot.
-        await SagaService.upsert_role(
-            session, other_season.id, data["defender_champ"].id, False, True
-        )
-
-        headers = create_auth_headers(user_id=str(USER_ID))
-        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
-
-        r = await _fetch_single_record(session, data["war"].id)
-        assert r.is_saga_attacker is True
-        assert r.defender_is_saga_defender is False
-
-    @pytest.mark.asyncio
     async def test_end_war_skips_node_without_attacker(self, session):
         """Nodes without an attacker assigned must not produce a fight record."""
         await load_objects([get_generic_user(is_base_id=True)])
@@ -341,17 +269,7 @@ class TestWarFightRecordSnapshot:
 
         await _snapshot_war_with_note(data)
 
-        record = (
-            await session.exec(
-                select(WarFightRecord).where(
-                    and_(
-                        WarFightRecord.war_id == data["war"].id,
-                        WarFightRecord.node_number == 10,
-                    )
-                )
-            )
-        ).first()
-        assert record is not None
+        record = await _fetch_single_record(session, data["war"].id)
 
         note = (
             await session.exec(select(WarFightNote).where(WarFightNote.war_id == data["war"].id))
@@ -844,88 +762,6 @@ class TestListFightRecords:
         assert resp.status_code == 200
         assert len(resp.json()["items"]) == 1
         assert resp.json()["items"][0]["alliance_name"] == ALLIANCE_NAME
-
-
-class TestSnapshotWithPrefightsAndSynergies:
-    @pytest.mark.asyncio
-    async def test_snapshot_records_prefight_attackers(self, session):
-        """WarPrefightAttacker rows linked to the placement must be snapshotted as WarFightPrefight (lines 96-97)."""
-        data = await _setup_war_with_fight()
-        headers = create_auth_headers(user_id=str(USER_ID))
-
-        # Add a prefight attacker for node 10 BG1
-        prefight_cu_champ = Champion(name="Iron Man", champion_class="Tech")
-        prefight_cu = ChampionUser(
-            game_account_id=data["member"].id,
-            champion_id=prefight_cu_champ.id,
-            stars=6,
-            rank=3,
-            ascension=0,
-        )
-        await load_objects([prefight_cu_champ, prefight_cu])
-
-        prefight = WarPrefightAttacker(
-            war_id=data["war"].id,
-            battlegroup=1,
-            game_account_id=data["member"].id,
-            champion_user_id=prefight_cu.id,
-            target_node_number=10,
-        )
-        await load_objects([prefight])
-
-        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
-
-        records = await _fetch_records(session, data["war"].id)
-        assert len(records) == 1
-
-        prefights = (
-            await session.exec(
-                select(WarFightPrefight).where(
-                    WarFightPrefight.war_fight_record_id == records[0].id
-                )
-            )
-        ).all()
-        assert len(prefights) == 1
-        assert prefights[0].champion_id == prefight_cu_champ.id
-
-    @pytest.mark.asyncio
-    async def test_snapshot_records_synergy_attackers(self, session):
-        """WarSynergyAttacker rows linked to the attacker must be snapshotted as WarFightSynergy (lines 120-121)."""
-        data = await _setup_war_with_fight()
-        headers = create_auth_headers(user_id=str(USER_ID))
-
-        # Add a synergy attacker targeting the main attacker_cu
-        synergy_cu_champ = Champion(name="Thor", champion_class="Cosmic")
-        synergy_cu = ChampionUser(
-            game_account_id=data["member"].id,
-            champion_id=synergy_cu_champ.id,
-            stars=6,
-            rank=3,
-            ascension=0,
-        )
-        await load_objects([synergy_cu_champ, synergy_cu])
-
-        synergy = WarSynergyAttacker(
-            war_id=data["war"].id,
-            battlegroup=1,
-            game_account_id=data["member"].id,
-            champion_user_id=synergy_cu.id,
-            target_champion_user_id=data["attacker_cu"].id,
-        )
-        await load_objects([synergy])
-
-        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
-
-        records = await _fetch_records(session, data["war"].id)
-        assert len(records) == 1
-
-        synergies = (
-            await session.exec(
-                select(WarFightSynergy).where(WarFightSynergy.war_fight_record_id == records[0].id)
-            )
-        ).all()
-        assert len(synergies) == 1
-        assert synergies[0].champion_id == synergy_cu_champ.id
 
 
 class TestFightRecordReadsTheWar:

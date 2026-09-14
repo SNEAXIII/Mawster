@@ -79,24 +79,6 @@ async def push_fight_record(
         war_defense_placement_id=placement.id,
         rank=attacker_cu.rank,
         ascension=attacker_cu.ascension,
-        # Copied columns, removed with them in Task 4.
-        war_id=war.id,
-        alliance_id=war.alliance_id,
-        season_id=war.season_id,
-        game_account_id=attacker_cu.game_account_id,
-        battlegroup=battlegroup,
-        node_number=node_number,
-        tier=war.tier or 1,
-        champion_id=attacker_cu.champion_id,
-        stars=attacker_cu.stars,
-        is_saga_attacker=False,
-        defender_champion_id=defender_champion.id,
-        defender_stars=6,
-        defender_rank=3,
-        defender_ascension=0,
-        defender_is_saga_defender=False,
-        ko_count=ko_count,
-        is_planning_error=is_planning_error,
     )
     await load_objects([placement])
     await load_objects([record])
