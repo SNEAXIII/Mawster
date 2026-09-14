@@ -81,7 +81,6 @@ apply before you touch code.
 - A pure mixin extraction that preserves identical column definitions needs **no
   migration**. But aligning a *drifted* field (section 2) can change a column's
   constraints — if so, route the schema change through the `/db-migrate` skill.
-- After any backend edit, run `uvx ruff check` / `uvx ruff format`, and run the
-  affected tests via the `/make` skill. Update tests alongside the change.
+- After any backend edit, run the affected tests via the `/make` skill. Update tests alongside the change.
 - Keep the report and suggestions concise; write nothing to the repo until the
   user has chosen what to refactor.
