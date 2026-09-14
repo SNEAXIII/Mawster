@@ -178,8 +178,8 @@ An Alliance's war rating. It moves only on Wars fought inside a Season
 **Tier**:
 The difficulty bracket an Alliance wars in, derived from its Elo — 1 is the top, 20
 the bottom and the starting point. It sets how hard the nodes hit, so two fights are
-only comparable at equal Tier; that is why every War carries the Tier it was fought at, and every Fight Record
-reads it from there.
+only comparable at equal Tier; that is why every War carries the Tier it was fought
+at, and every Fight Record reads it from there.
 
 A running War carries no Tier yet: it is stamped when the War is closed, on purpose,
 so an Alliance Tier corrected late — after someone noticed it was stale mid-war — still
