@@ -1,4 +1,4 @@
-import { setupAttackerScenario, confirmAction, openWarNode } from '../../support/e2e';
+import { setupAttackerScenario, confirmAction, openWarNode, BACKEND } from '../../support/e2e';
 function goToAttackersMode(userId: string) {
   cy.apiLogin(userId, 'war');
   cy.getByCy('war-mode-attackers').click();
@@ -178,6 +178,39 @@ describe('War – Attackers mode', () => {
       cy.apiLogin(memberData.user_id, 'war');
 
       cy.getByCy('attacker-entry-node-10').scrollIntoView().should('be.visible');
+    });
+  });
+
+  // ── Cross-alliance leak guard ──────────────────────────────────────────────
+
+  it('available-attackers scoped to alliance and battlegroup — outsider yields empty list', () => {
+    cy.apiBatchSetup([
+      {
+        discord_token: 'wpa-owner-a',
+        game_pseudo: 'wpaOwnerA',
+        create_alliance: { name: 'Wpa Alliance A', tag: 'WPA' },
+        battlegroup: 1,
+        champions: [{ name: 'Wpa Roster Champ', champion_class: 'Tech' }],
+        create_war: { opponent_name: 'Wpa Opponent' },
+      },
+      {
+        discord_token: 'wpa-owner-b',
+        game_pseudo: 'wpaOwnerB',
+        create_alliance: { name: 'Wpa Alliance B', tag: 'WPB' },
+        battlegroup: 1,
+        roster: [{ champion: 'Wpa Roster Champ', rarity: '7r3' }],
+      },
+    ]).then((users) => {
+      const ownerA = users['wpa-owner-a'];
+      const ownerB = users['wpa-owner-b'];
+
+      cy.request({
+        method: 'GET',
+        url: `${BACKEND}/alliances/${ownerA.alliance_id}/wars/${ownerA.war_id}/bg/1/available-attackers?attacker_id=${ownerB.account_id}`,
+        headers: { Authorization: `Bearer ${ownerA.access_token}` },
+      })
+        .its('body')
+        .should('have.length', 0);
     });
   });
 });

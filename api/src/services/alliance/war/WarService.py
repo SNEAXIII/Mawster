@@ -708,7 +708,7 @@ class WarService:
             GameAccount.alliance_group == battlegroup,
         )
         if attacker_id is not None:
-            member_conditions = and_(GameAccount.id == attacker_id)
+            member_conditions = and_(member_conditions, GameAccount.id == attacker_id)
         members_result = await session.exec(
             select(GameAccount)
             .where(member_conditions)
@@ -724,7 +724,9 @@ class WarService:
             GameAccount.alliance_group == battlegroup,
         )
         if attacker_id is not None:
-            defense_conditions = and_(DefensePlacement.game_account_id == attacker_id)
+            defense_conditions = and_(
+                defense_conditions, DefensePlacement.game_account_id == attacker_id
+            )
         request_sql = (
             select(DefensePlacement.champion_user_id)
             .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
