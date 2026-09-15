@@ -8,12 +8,14 @@ from main import app
 from src.enums.Roles import Roles
 from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarStatus import WarStatus
+from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
 from src.models.war.Season import Season
 from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightRecord import WarFightRecord
 from src.utils.db import get_session
+from tests.integration.endpoints.setup.fight_record_setup import push_fight_record
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -383,34 +385,14 @@ class TestGetCurrentSeasonStatistics:
 
 async def _push_fight_record(
     war: War,
-    alliance_id,
     game_account_id,
     champion,
     defender_champion,
     ko_count: int = 0,
 ) -> WarFightRecord:
-    record = WarFightRecord(
-        war_id=war.id,
-        alliance_id=alliance_id,
-        season_id=war.season_id,
-        game_account_id=game_account_id,
-        battlegroup=1,
-        node_number=1,
-        tier=7,
-        champion_id=champion.id,
-        stars=7,
-        rank=3,
-        ascension=0,
-        is_saga_attacker=False,
-        defender_champion_id=defender_champion.id,
-        defender_stars=7,
-        defender_rank=3,
-        defender_ascension=0,
-        defender_is_saga_defender=False,
-        ko_count=ko_count,
-    )
-    await load_objects([record])
-    return record
+    attacker_cu = ChampionUser(game_account_id=game_account_id, champion_id=champion.id)
+    await load_objects([attacker_cu])
+    return await push_fight_record(war, attacker_cu, defender_champion, ko_count=ko_count)
 
 
 class TestGetChampionUsage:
@@ -429,7 +411,6 @@ class TestGetChampionUsage:
         defender = await push_champion(name="Wolverine", champion_class="Mutant")
         await _push_fight_record(
             data["war"],
-            data["alliance"].id,
             data["owner"].id,
             data["champ"],
             defender,
@@ -437,7 +418,6 @@ class TestGetChampionUsage:
         )
         await _push_fight_record(
             data["war"],
-            data["alliance"].id,
             data["owner"].id,
             data["champ"],
             defender,
@@ -467,14 +447,12 @@ class TestGetChampionUsage:
         await load_objects([ga2])
         await _push_fight_record(
             data["war"],
-            data["alliance"].id,
             data["owner"].id,
             data["champ"],
             defender,
         )
         await _push_fight_record(
             data["war"],
-            data["alliance"].id,
             ga2.id,
             other_champ,
             defender,
@@ -504,14 +482,12 @@ class TestGetChampionUsage:
         await load_objects([war2])
         await _push_fight_record(
             data["war"],
-            data["alliance"].id,
             data["owner"].id,
             data["champ"],
             defender,
         )
         await _push_fight_record(
             war2,
-            data["alliance"].id,
             data["owner"].id,
             other_champ,
             defender,
@@ -548,7 +524,6 @@ class TestGetChampionUsage:
         defender = await push_champion(name="Wolverine", champion_class="Mutant")
         await _push_fight_record(
             data["war"],
-            data["alliance"].id,
             data["owner"].id,
             data["champ"],
             defender,
@@ -577,10 +552,8 @@ class TestGetChampionUsage:
         )
         await load_objects([ga2])
 
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
-        )
-        await _push_fight_record(data["war"], data["alliance"].id, ga2.id, other_champ, defender)
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender)
+        await _push_fight_record(data["war"], ga2.id, other_champ, defender)
 
         response_g1 = await execute_get_request(
             f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?alliance_group=1", USER_HEADERS
@@ -605,13 +578,9 @@ class TestGetChampionUsage:
         defender = await push_champion(name="Wolverine", champion_class="Mutant")
 
         # Spider-Man: 1 deathless fight (ko_count=0)
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=0
-        )
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender, ko_count=0)
         # Iron Man: 1 fight with a KO (ko_count=1)
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, other_champ, defender, ko_count=1
-        )
+        await _push_fight_record(data["war"], data["owner"].id, other_champ, defender, ko_count=1)
 
         response = await execute_get_request(
             f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?deathless=true", USER_HEADERS
@@ -628,9 +597,7 @@ class TestGetChampionUsage:
         data = await _setup_with_active_season()
         defender = await push_champion(name="Wolverine", champion_class="Mutant")
 
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=2
-        )
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender, ko_count=2)
 
         response = await execute_get_request(
             f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?deathless=true", USER_HEADERS
@@ -642,12 +609,8 @@ class TestGetChampionUsage:
     async def test_defender_perspective_groups_by_defender_champion(self):
         data = await _setup_with_active_season()
         defender = await push_champion(name="Iron Man", champion_class="Tech")
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
-        )
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
-        )
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender)
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender)
         response = await execute_get_request(
             f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?perspective=defender", USER_HEADERS
         )
@@ -664,14 +627,14 @@ class TestGetChampionUsage:
         defender2 = await push_champion(name="Wolverine", champion_class="Mutant")
         # Iron Man defended twice: once deathless, once with KO
         await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender1, ko_count=0
+            data["war"], data["owner"].id, data["champ"], defender1, ko_count=0
         )
         await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender1, ko_count=1
+            data["war"], data["owner"].id, data["champ"], defender1, ko_count=1
         )
         # Wolverine defended once with KO only
         await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender2, ko_count=2
+            data["war"], data["owner"].id, data["champ"], defender2, ko_count=2
         )
         response = await execute_get_request(
             f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?perspective=defender&deathless=true",
@@ -691,19 +654,11 @@ class TestGetChampionUsage:
         other_champ = await push_champion(name="Iron Man", champion_class="Tech")
 
         # Spider-Man: 2 deathless fights, 1 fight with KO → deathless=true returns 2
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=0
-        )
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=0
-        )
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=1
-        )
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender, ko_count=0)
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender, ko_count=0)
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender, ko_count=1)
         # Iron Man: only fights with KOs → excluded
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, other_champ, defender, ko_count=3
-        )
+        await _push_fight_record(data["war"], data["owner"].id, other_champ, defender, ko_count=3)
 
         response = await execute_get_request(
             f"{CHAMPION_USAGE_URL}/{data['alliance'].id}?deathless=true", USER_HEADERS

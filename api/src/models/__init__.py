@@ -35,9 +35,7 @@ from src.models.war.WarBan import WarBan  # noqa: F401
 from src.models.war.WarDefensePlacement import WarDefensePlacement  # noqa: F401
 from src.models.war.WarFightNote import WarFightNote  # noqa: F401
 from src.models.war.WarFightNoteRevision import WarFightNoteRevision  # noqa: F401
-from src.models.war.WarFightPrefight import WarFightPrefight  # noqa: F401
 from src.models.war.WarFightRecord import WarFightRecord  # noqa: F401
 from src.models.war.WarFightRecordImport import WarFightRecordImport  # noqa: F401
-from src.models.war.WarFightSynergy import WarFightSynergy  # noqa: F401
 from src.models.war.WarPrefightAttacker import WarPrefightAttacker  # noqa: F401
 from src.models.war.WarSynergyAttacker import WarSynergyAttacker  # noqa: F401

@@ -93,25 +93,16 @@ Cypress.Commands.add('apiBatchSetup', (specs: BatchSetupSpec[]) =>
   cy.apiBatchSetupFull(specs).then((body) => body.users),
 );
 
-Cypress.Commands.add(
-  'apiDevBulkCreateFightRecords',
-  (warId: string, allianceId: string, gameAccountId: string, count: number, seasonId?: string | null) => {
-    cy.request({
-      method: 'POST',
-      url: `${BACKEND}/dev/bulk-create-fight-records`,
-      body: {
-        war_id: warId,
-        alliance_id: allianceId,
-        game_account_id: gameAccountId,
-        count,
-        season_id: seasonId ?? null,
-      },
-    }).then((res) => {
-      expect(res.status).to.eq(201);
-      return res.body;
-    });
-  },
-);
+Cypress.Commands.add('apiDevBulkCreateFightRecords', (warId: string, gameAccountId: string, count: number) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/dev/bulk-create-fight-records`,
+    body: { war_id: warId, game_account_id: gameAccountId, count },
+  }).then((res) => {
+    expect(res.status).to.eq(201);
+    return res.body;
+  });
+});
 
 Cypress.Commands.add(
   'apiBulkFillWarAttackers',

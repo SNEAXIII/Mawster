@@ -16,14 +16,13 @@ from src.dto.player.dto_player_stats import (
 from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarStatus import WarStatus
 from src.models.alliance.Alliance import Alliance
-from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
 from src.models.user.User import User
 from src.models.war.Season import Season
 from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
-from src.models.war.WarFightRecord import WarFightRecord
+from src.services.alliance.war._champion_usage import champion_usage_statement
 from src.services.alliance.war._stat_expressions import (
     total_fights,
     total_kos,
@@ -280,35 +279,12 @@ class PlayerStatsService:
         await cls.assert_can_view_account(session, current_user, game_account_id)
 
         conditions = [
-            WarFightRecord.game_account_id == game_account_id,
-            WarFightRecord.is_planning_error.is_(False),
+            ChampionUser.game_account_id == game_account_id,
+            WarDefensePlacement.is_planning_error.is_(False),
         ]
         if season_id is not None:
-            conditions.append(WarFightRecord.season_id == season_id)
-        if deathless is True:
-            conditions.append(WarFightRecord.ko_count == 0)
+            conditions.append(War.season_id == season_id)
 
-        if perspective == "defender":
-            champion_id_col = WarFightRecord.defender_champion_id.label("champion_id")
-            champion_join = Champion.id == WarFightRecord.defender_champion_id
-            group_by_col = WarFightRecord.defender_champion_id
-        else:
-            champion_id_col = WarFightRecord.champion_id
-            champion_join = Champion.id == WarFightRecord.champion_id
-            group_by_col = WarFightRecord.champion_id
-
-        stmt = (
-            select(
-                champion_id_col,
-                Champion.name.label("champion_name"),
-                Champion.image_url,
-                cast(func.count(WarFightRecord.id), Integer).label("fight_count"),
-                cast(func.sum(WarFightRecord.ko_count), Integer).label("total_kos"),
-            )
-            .join(Champion, champion_join)
-            .where(and_(*conditions))
-            .group_by(group_by_col, Champion.name, Champion.image_url)
-            .order_by(func.count(WarFightRecord.id).desc())
-        )
+        stmt = champion_usage_statement(conditions, deathless, perspective)
         rows = (await session.exec(stmt)).mappings().all()
         return [ChampionUsageResponse.model_validate(dict(r)) for r in rows]

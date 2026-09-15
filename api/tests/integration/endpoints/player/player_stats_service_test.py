@@ -9,12 +9,13 @@ from fastapi import HTTPException
 from main import app
 from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarStatus import WarStatus
+from src.models.champion.ChampionUser import ChampionUser
 from src.models.war.Season import Season
 from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
-from src.models.war.WarFightRecord import WarFightRecord as _WFR
 from src.services.PlayerStatsService import PlayerStatsService
 from src.utils.db import get_session
+from tests.integration.endpoints.setup.fight_record_setup import push_fight_record
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -363,37 +364,21 @@ class TestGetPlayerStats:
 
 async def _push_fight_record(
     war,
-    alliance_id,
     game_account_id,
     champion,
     defender_champion,
     ko_count=0,
     is_planning_error=False,
 ):
-
-    record = _WFR(
-        war_id=war.id,
-        alliance_id=alliance_id,
-        season_id=war.season_id,
-        game_account_id=game_account_id,
-        battlegroup=1,
-        node_number=1,
-        tier=7,
-        champion_id=champion.id,
-        stars=7,
-        rank=3,
-        ascension=0,
-        is_saga_attacker=False,
-        defender_champion_id=defender_champion.id,
-        defender_stars=7,
-        defender_rank=3,
-        defender_ascension=0,
-        defender_is_saga_defender=False,
+    attacker_cu = ChampionUser(game_account_id=game_account_id, champion_id=champion.id)
+    await load_objects([attacker_cu])
+    return await push_fight_record(
+        war,
+        attacker_cu,
+        defender_champion,
         ko_count=ko_count,
         is_planning_error=is_planning_error,
     )
-    await load_objects([record])
-    return record
 
 
 class TestGetPlayerChampionUsage:
@@ -401,9 +386,7 @@ class TestGetPlayerChampionUsage:
     async def test_attacker_usage(self):
         data = await _setup_with_ended_season_war()
         defender = await push_champion(name="Venom", champion_class="Cosmic")
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
-        )
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender)
         owner_user = get_generic_user(is_base_id=True)
 
         async for session in get_test_session():
@@ -418,9 +401,7 @@ class TestGetPlayerChampionUsage:
     async def test_defender_perspective(self):
         data = await _setup_with_ended_season_war()
         defender = await push_champion(name="Venom", champion_class="Cosmic")
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
-        )
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender)
         owner_user = get_generic_user(is_base_id=True)
 
         async for session in get_test_session():
@@ -438,9 +419,7 @@ class TestGetPlayerChampionUsage:
     async def test_season_filter_excludes_other_season(self):
         data = await _setup_with_ended_season_war()
         defender = await push_champion(name="Venom", champion_class="Cosmic")
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender
-        )
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender)
         # a second season + war with a different attacker champion
         iron = await push_champion(name="IronMan", champion_class="Tech")
         season2 = Season(number=60, status=SeasonStatus.ended)
@@ -453,7 +432,7 @@ class TestGetPlayerChampionUsage:
             status=WarStatus.ended,
         )
         await load_objects([season2, war2])
-        await _push_fight_record(war2, data["alliance"].id, data["owner"].id, iron, defender)
+        await _push_fight_record(war2, data["owner"].id, iron, defender)
         owner_user = get_generic_user(is_base_id=True)
 
         async for session in get_test_session():
@@ -471,12 +450,9 @@ class TestGetPlayerChampionUsage:
     async def test_planning_error_fights_are_excluded(self):
         data = await _setup_with_ended_season_war()
         defender = await push_champion(name="Venom", champion_class="Cosmic")
-        await _push_fight_record(
-            data["war"], data["alliance"].id, data["owner"].id, data["champ"], defender, ko_count=1
-        )
+        await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender, ko_count=1)
         await _push_fight_record(
             data["war"],
-            data["alliance"].id,
             data["owner"].id,
             data["champ"],
             defender,
@@ -499,7 +475,6 @@ class TestGetPlayerChampionUsage:
         defender = await push_champion(name="Venom", champion_class="Cosmic")
         await _push_fight_record(
             data["war"],
-            data["alliance"].id,
             data["owner"].id,
             data["champ"],
             defender,
