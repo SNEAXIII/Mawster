@@ -16,6 +16,7 @@ import {
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
 import AllianceSelect from '@/app/game/_components/alliance-select'
+import WarSelect from '@/app/game/_components/war-select'
 import { AllianceStatsTable, type SortField, type SortDir } from './alliance-stats-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CollapsibleSection } from '@/components/collapsible-section'
@@ -278,34 +279,14 @@ export default function AllianceStatisticsTab({
               </SelectContent>
             </Select>
 
-            <Select
-              value={selectedWarId ?? 'all'}
-              onValueChange={(v) => onWarChange(v === 'all' ? null : v)}
-            >
-              <SelectTrigger
-                className='w-44'
-                data-cy='statistics-war-filter'
-              >
-                <SelectValue placeholder={stat.allWars} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  value='all'
-                  data-cy='statistics-war-all'
-                >
-                  {stat.allWars}
-                </SelectItem>
-                {wars.map((w) => (
-                  <SelectItem
-                    key={w.id}
-                    value={w.id}
-                    data-cy={`statistics-war-${w.id}`}
-                  >
-                    {w.opponent_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <WarSelect
+              wars={wars}
+              value={selectedWarId}
+              onChange={onWarChange}
+              allLabel={stat.allWars}
+              dataCy='statistics-war-filter'
+              itemDataCy='statistics-war'
+            />
 
             {availableGroups.length > 1 && (
               <Select
