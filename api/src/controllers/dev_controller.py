@@ -634,7 +634,7 @@ async def _insert_fight_records(
     await session.flush()
 
     placements = []
-    for index in range(count):
+    for index in range(min(count, MAX_FIGHTS_PER_WAR)):
         # Alternate attacker/defender so champion filters return subsets
         attacker, defender = (
             (attackers[0], champions[1]) if index % 2 == 0 else (attackers[1], champions[0])
@@ -657,7 +657,7 @@ async def _insert_fight_records(
         WarFightRecord(war_defense_placement_id=p.id, rank=3, ascension=0) for p in placements
     )
     await session.commit()
-    return count
+    return len(placements)
 
 
 @dev_controller.post("/bulk-create-fight-records", status_code=201)
