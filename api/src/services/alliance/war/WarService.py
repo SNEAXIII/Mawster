@@ -75,6 +75,7 @@ from src.models.war.WarSynergyAttacker import WarSynergyAttacker
 from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
+from src.services.alliance.war.ClosedWarPolicy import ClosedWarPolicy
 from src.services.alliance.war.WarFormatConfig import for_format
 from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.db import SessionDep
@@ -630,6 +631,7 @@ class WarService:
     ) -> WarResponse:
 
         war = await cls.get_war(session, war_id, alliance_id)
+        ClosedWarPolicy.assert_open(war)
         alliance = await session.get(Alliance, alliance_id)
 
         if war.season_id is not None:

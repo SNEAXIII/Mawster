@@ -294,14 +294,14 @@ class TestWarFightRecordSnapshot:
         assert row.note_author == data["owner"].game_pseudo
 
     @pytest.mark.asyncio
-    async def test_end_war_idempotent_snapshot(self, session):
-        """Calling end_war twice must not create duplicate fight records."""
+    async def test_end_war_twice_does_not_duplicate_snapshot(self, session):
+        """Ending an already-ended war is refused, so it cannot re-snapshot fight records."""
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
         await _end_war(data["alliance"].id, data["war"].id, headers=headers)
 
-        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, expected_status=409)
 
         records = await _fetch_records(session, data["war"].id)
         assert len(records) == 1
