@@ -4,9 +4,14 @@ from fastapi import HTTPException
 from starlette import status
 
 from src.enums.WarStatus import WarStatus
-from src.Messages.war_messages import WAR_CLOSED, WAR_MAP_SEALED
+from src.Messages.war_messages import (
+    ATTACKER_LEFT_BATTLEGROUP_LOCKED,
+    WAR_CLOSED,
+    WAR_MAP_SEALED,
+)
 from src.models.war.Season import Season
 from src.models.war.War import War
+from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.services.alliance.AllianceService import AllianceService
 from src.services.SeasonService import SeasonService
 from src.utils.db import SessionDep
@@ -34,3 +39,20 @@ class ClosedWarPolicy:
         await AllianceService.require_strategist(session, war.alliance_id, user_id)
         if not cls.is_map_correctable(war, await SeasonService.get_display_season(session)):
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=WAR_MAP_SEALED)
+
+    @staticmethod
+    def is_attacker_locked(war: War, placement: WarDefensePlacement) -> bool:
+        if war.status != WarStatus.ended or placement.attacker_champion_user is None:
+            return False
+        account = placement.attacker_champion_user.game_account
+        return (
+            account.alliance_id != war.alliance_id
+            or account.alliance_group != placement.battlegroup
+        )
+
+    @classmethod
+    def assert_attacker_unlocked(cls, war: War, placement: WarDefensePlacement) -> None:
+        if cls.is_attacker_locked(war, placement):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail=ATTACKER_LEFT_BATTLEGROUP_LOCKED
+            )

@@ -402,19 +402,26 @@ class WarService:
         cls, session: SessionDep, placement: WarDefensePlacement
     ) -> WarPlacementResponse:
         saga = await SagaService.resolve_current(session)
-        return cls._apply_placement_saga(
+        dto = cls._apply_placement_saga(
             WarPlacementResponse.model_validate(placement), placement, saga
         )
+        war = await session.get(War, placement.war_id)
+        dto.is_attacker_locked = ClosedWarPolicy.is_attacker_locked(war, placement)
+        return dto
 
     @classmethod
     async def _placement_dtos(
         cls, session: SessionDep, placements: list[WarDefensePlacement]
     ) -> list[WarPlacementResponse]:
         saga = await SagaService.resolve_current(session)
-        return [
+        war = await session.get(War, placements[0].war_id) if placements else None
+        dtos = [
             cls._apply_placement_saga(WarPlacementResponse.model_validate(p), p, saga)
             for p in placements
         ]
+        for dto, placement in zip(dtos, placements, strict=True):
+            dto.is_attacker_locked = ClosedWarPolicy.is_attacker_locked(war, placement)
+        return dtos
 
     @staticmethod
     def _apply_placement_saga(
@@ -475,6 +482,10 @@ class WarService:
         )
         old_placement = existing_node.first()
         if old_placement:
+            war = await session.get(War, war_id)
+            ClosedWarPolicy.assert_attacker_unlocked(
+                war, await cls._load_placement(session, old_placement.id)
+            )
             await FightRecordService.drop_node_record(session, old_placement.id)
             await session.delete(old_placement)
             await session.flush()
@@ -592,6 +603,10 @@ class WarService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=NO_DEFENDER_ON_NODE,
             )
+        war = await session.get(War, war_id)
+        ClosedWarPolicy.assert_attacker_unlocked(
+            war, await cls._load_placement(session, placement.id)
+        )
         # Removing the defender tears down the node's whole attack plan: detach the
         # attacker and drop its synergy/prefight rows (they don't FK the placement, so
         # they would otherwise be orphaned). The note survives via its SET NULL FK.
@@ -923,6 +938,12 @@ class WarService:
                 detail=COMBAT_COMPLETED_LOCKED,
             )
 
+        if placement.attacker_champion_user_id is not None:
+            war = await session.get(War, war_id)
+            ClosedWarPolicy.assert_attacker_unlocked(
+                war, await cls._load_placement(session, placement.id)
+            )
+
         # 2. Load the champion user
         champion_user_stmt = (
             select(ChampionUser)
@@ -1049,6 +1070,11 @@ class WarService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail=COMBAT_COMPLETED_LOCKED,
             )
+
+        war = await session.get(War, war_id)
+        ClosedWarPolicy.assert_attacker_unlocked(
+            war, await cls._load_placement(session, placement.id)
+        )
 
         removed_champion_user_id = placement.attacker_champion_user_id
         placement.attacker_champion_user_id = None

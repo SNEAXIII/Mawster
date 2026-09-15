@@ -123,6 +123,7 @@ class WarPlacementResponse(WarCoords, ChampionRef, SagaRoles):
     attacker_ascension: int | None = None
     attacker_is_saga_attacker: bool | None = None
     attacker_is_saga_defender: bool | None = None
+    is_attacker_locked: bool = False
     is_assisted: bool = False
     assistor_champion_user_id: uuid.UUID | None = None
     assistor_game_account_id: uuid.UUID | None = None

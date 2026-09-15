@@ -251,3 +251,70 @@ class TestClosedWarFightRecordSync:
         )
         assert response.status_code == 200
         assert await _record_of_node(data["war"].id, 1, 10) is None
+
+
+class TestDepartedAttackerLock:
+    async def _move_member_out(self, data) -> None:
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/members/{data['member'].id}/group",
+            payload={"group": 2},
+            headers=OWNER,
+        )
+
+    @pytest.mark.asyncio
+    async def test_remove_attacker_locked(self):
+        data = await _setup_closed_war_scenario()
+        await self._move_member_out(data)
+        response = await execute_delete_request(
+            f"{data['base']}/bg/1/node/10/attacker", headers=OWNER
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_remove_defender_locked(self):
+        data = await _setup_closed_war_scenario()
+        await self._move_member_out(data)
+        placement_id = await _placement_id_of_node(data["war"].id, 1, 10)
+        response = await execute_delete_request(f"{data['base']}/bg/1/node/10", headers=OWNER)
+        assert response.status_code == 409
+        assert await _record_by_placement_id(placement_id) is not None
+
+    @pytest.mark.asyncio
+    async def test_replace_defender_locked(self):
+        data = await _setup_closed_war_scenario()
+        await self._move_member_out(data)
+        response = await execute_post_request(
+            f"{data['base']}/bg/1/place",
+            payload={
+                "node_number": 10,
+                "champion_id": str(data["champ2"].id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=OWNER,
+        )
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_ko_still_editable_and_flag_exposed(self):
+        data = await _setup_closed_war_scenario()
+        await self._move_member_out(data)
+        response = await execute_patch_request(
+            f"{data['base']}/bg/1/node/10/ko", payload={"ko_count": 1}, headers=OWNER
+        )
+        assert response.status_code == 200
+        assert response.json()["is_attacker_locked"] is True
+
+    @pytest.mark.asyncio
+    async def test_running_war_player_moved_is_not_locked(self):
+        data = await _setup_attacker_scenario()
+        base = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}"
+        await execute_post_request(
+            f"{base}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=OWNER,
+        )
+        await self._move_member_out(data)
+        response = await execute_delete_request(f"{base}/bg/1/node/10/attacker", headers=OWNER)
+        assert response.status_code == 200
