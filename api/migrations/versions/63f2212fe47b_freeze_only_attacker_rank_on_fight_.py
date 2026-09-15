@@ -6,6 +6,7 @@ Create Date: 2026-09-15 01:00:31.715671
 
 """
 
+import logging
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -25,15 +26,32 @@ def upgrade() -> None:
         "war_fight_record", sa.Column("war_defense_placement_id", sa.Uuid(), nullable=True)
     )
     bind = op.get_bind()
-    mismatched = (
+    orphans = (
         bind.execute(
             sa.text(
                 """
                 SELECT r.id FROM war_fight_record r
                 LEFT JOIN war_defense_placement p ON p.war_id = r.war_id
                     AND p.battlegroup = r.battlegroup AND p.node_number = r.node_number
+                WHERE p.id IS NULL
+                """
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if orphans:
+        message = f"{len(orphans)} fight records match no placement: {orphans}"
+        raise RuntimeError(message)
+    mismatched = (
+        bind.execute(
+            sa.text(
+                """
+                SELECT r.id FROM war_fight_record r
+                JOIN war_defense_placement p ON p.war_id = r.war_id
+                    AND p.battlegroup = r.battlegroup AND p.node_number = r.node_number
                 LEFT JOIN champion_user cu ON cu.id = p.attacker_champion_user_id
-                WHERE p.id IS NULL OR cu.id IS NULL
+                WHERE cu.id IS NULL
                     OR cu.champion_id <> r.champion_id OR cu.game_account_id <> r.game_account_id
                 """
             )
@@ -42,8 +60,11 @@ def upgrade() -> None:
         .all()
     )
     if mismatched:
-        message = f"{len(mismatched)} fight records match no placement: {mismatched}"
-        raise RuntimeError(message)
+        logging.getLogger("alembic.runtime.migration").warning(
+            "%d fight records keep their placement's attacker over their own copy: %s",
+            len(mismatched),
+            mismatched,
+        )
     op.execute(
         """
         UPDATE war_fight_record r
