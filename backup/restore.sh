@@ -25,9 +25,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$FILENAME" ]]; then
-  echo "Usage: restore.sh [--remote] <filename>"
-  echo "Example: restore.sh mawster_2026-03-30_08-00.sql.gz"
-  echo "Example: restore.sh --remote mawster_2026-03-30_08-00.sql.gz"
+  echo "Usage: restore.sh [--remote] <filename>" >&2
+  echo "Example: restore.sh mawster_2026-03-30_08-00.sql.gz" >&2
+  echo "Example: restore.sh --remote mawster_2026-03-30_08-00.sql.gz" >&2
   exit 1
 fi
 
@@ -41,9 +41,9 @@ fi
 FILEPATH="${BACKUP_DIR}/${FILENAME}"
 
 if [[ ! -f "$FILEPATH" ]]; then
-  echo "[restore] ERROR: File not found: $FILEPATH"
-  echo "[restore] Available local backups:"
-  ls -lh "${BACKUP_DIR}"/mawster_*.sql.gz 2>/dev/null || echo "  (none)"
+  echo "[restore] ERROR: File not found: $FILEPATH" >&2
+  echo "[restore] Available local backups:" >&2
+  ls -lh "${BACKUP_DIR}"/mawster_*.sql.gz >&2 2>/dev/null || echo "  (none)" >&2
   exit 1
 fi
 
