@@ -407,30 +407,29 @@ export function WarProvider({
     (nodeNumber: number) => {
       if (!activeWarId) return
       const placement = placements.find((p) => p.node_number === nodeNumber)
-      if (placement?.is_attacker_locked && warMode !== WarMode.Export) {
-        toast.info(t.game.war.attackerLocked)
-        return
-      }
       switch (warMode) {
         case WarMode.Attackers: {
           if (!placement) {
             toast.warning(t.game.war.defenderRequired)
             return
           }
-          // The attacker selector only assigns; on a closed War that needs Strategist+.
-          if (isWarClosed && isMapReadOnly) return
+          // Read-only viewers still open it for the node's detail; the selector hides assignment.
           setAttackerSelectorNode(nodeNumber)
           break
         }
         case WarMode.Defenders:
           if (!selectedAlliance || !canPlace(selectedAlliance)) return
+          if (placement?.is_attacker_locked) {
+            toast.info(t.game.war.attackerLocked)
+            return
+          }
           setSelectorNode(nodeNumber)
           break
         case WarMode.Export:
           break
       }
     },
-    [activeWarId, warMode, placements, t, selectedAlliance, canPlace, isWarClosed, isMapReadOnly]
+    [activeWarId, warMode, placements, t, selectedAlliance, canPlace]
   )
 
   const handleCreateWar = async (opponentName: string, bannedChampionIds: string[]) => {

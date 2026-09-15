@@ -1,4 +1,5 @@
 import type { BatchSetupUserResult } from '../../support/index';
+import { openWarNode } from '../../support/e2e';
 
 interface ClosedWarScenario {
   adminAT: string;
@@ -134,6 +135,13 @@ describe('War – closed war correction', () => {
       cy.getByCy('ko-inc-node-1').should('not.exist');
       cy.getByCy('ko-dec-node-1').should('not.exist');
       cy.getByCy('remove-attacker-node-1').should('not.exist');
+
+      // Clicking the node still opens its detail, without the attacker picker.
+      openWarNode(1);
+      cy.getByCy('war-attacker-search').within(() => {
+        cy.getByCy('attacker-entry-node-1').should('be.visible');
+        cy.getByCy('war-attacker-search-champion').should('not.exist');
+      });
     });
   });
 

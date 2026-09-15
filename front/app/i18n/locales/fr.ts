@@ -606,6 +606,7 @@ const fr: Translations = {
       placeOnNode: 'Placer sur le nœud #{node}',
       // Attackers
       selectAttacker: 'Assigner un attaquant au nœud #{node}',
+      nodeDetail: 'Nœud #{node}',
       searchAttacker: 'Rechercher champion ou joueur...',
       searchPlayer: 'Rechercher joueur...',
       assignAttacker: 'Assigner Attaquant',
