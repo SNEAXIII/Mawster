@@ -233,28 +233,26 @@ export async function getWarDefense(
   return response.json()
 }
 
+export interface WarPlacementCreateRequest {
+  node_number: number
+  champion_id: string
+  stars: number
+  rank: number
+  ascension: number
+}
+
 export async function placeWarDefender(
   allianceId: string,
   warId: string,
   battlegroup: number,
-  nodeNumber: number,
-  championId: string,
-  stars: number,
-  rank: number,
-  ascension: number
+  request: WarPlacementCreateRequest
 ): Promise<WarPlacement> {
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/place`,
     {
       method: 'POST',
       headers: jsonHeaders,
-      body: JSON.stringify({
-        node_number: nodeNumber,
-        champion_id: championId,
-        stars,
-        rank,
-        ascension,
-      }),
+      body: JSON.stringify(request),
     }
   )
   await throwOnError(response, 'Failed to place defender')

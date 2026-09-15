@@ -478,16 +478,13 @@ export function WarProvider({
     const replaced = placements.some((p) => p.node_number === node)
     try {
       const placement = await write(() =>
-        placeWarDefender(
-          selectedAllianceId,
-          activeWarId,
-          selectedBg,
-          node,
-          championId,
+        placeWarDefender(selectedAllianceId, activeWarId, selectedBg, {
+          node_number: node,
+          champion_id: championId,
           stars,
           rank,
-          ascension
-        )
+          ascension,
+        })
       )
       toast.success(
         t.game.war.placeSuccess.replace('{name}', championName).replace('{node}', String(node))
