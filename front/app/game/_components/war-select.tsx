@@ -37,7 +37,7 @@ export default function WarSelect({
   const hasAll = allLabel !== undefined
   return (
     <Select
-      value={value ?? (hasAll ? ALL : undefined)}
+      value={value ?? (hasAll ? ALL : '')}
       onValueChange={(v) => onChange(hasAll && v === ALL ? null : v)}
     >
       <SelectTrigger
