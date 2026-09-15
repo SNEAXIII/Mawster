@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -174,6 +175,7 @@ export function useWar(): WarContextValue {
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 const KO_FLUSH_DELAY_MS = 400
+const koKey = (warId: string, nodeNumber: number) => `${warId}:${nodeNumber}`
 
 export function WarProvider({
   children,
@@ -244,6 +246,12 @@ export function WarProvider({
 
   // ─── Derived values ────────────────────────────────────────────────────────
   const activeWarId = currentWar?.id ?? ''
+  // A response requested for a War that is no longer on screen is dropped.
+  const shownWarId = useRef(activeWarId)
+  useLayoutEffect(() => {
+    shownWarId.current = activeWarId
+  }, [activeWarId])
+  const isShown = (warId: string) => shownWarId.current === warId
   const placements = useMemo<WarPlacement[]>(() => warSummary?.placements ?? [], [warSummary])
 
   // The battlegroup on screen is recounted from the placements we hold, so a KO
@@ -310,33 +318,40 @@ export function WarProvider({
   // ─── Fetch war defense ─────────────────────────────────────────────────────
   const fetchWarDefense = useCallback(
     async (silent = false) => {
-      if (!selectedAllianceId || !activeWarId) return
+      const warId = activeWarId
+      if (!selectedAllianceId || !warId) return
       if (!silent) setWarLoading(true)
       const seq = writeSeq.current
       try {
         const [summary, synergyList, prefightList] = await Promise.all([
-          getWarDefense(selectedAllianceId, activeWarId, selectedBg),
-          getWarSynergies(selectedAllianceId, activeWarId, selectedBg),
-          getWarPrefights(selectedAllianceId, activeWarId, selectedBg),
+          getWarDefense(selectedAllianceId, warId, selectedBg),
+          getWarSynergies(selectedAllianceId, warId, selectedBg),
+          getWarPrefights(selectedAllianceId, warId, selectedBg),
         ])
-        if (seq !== writeSeq.current) return
+        if (seq !== writeSeq.current || shownWarId.current !== warId) return
         const pending = koPending.current
         setWarSummary({
           ...summary,
-          placements: summary.placements.map((p) =>
-            pending[p.node_number] ? { ...p, ko_count: pending[p.node_number].value } : p
-          ),
+          placements: summary.placements.map((p) => {
+            const koInFlight = pending[koKey(warId, p.node_number)]
+            return koInFlight ? { ...p, ko_count: koInFlight.value } : p
+          }),
         })
         setSynergies(synergyList)
         setPrefights(prefightList)
       } catch {
         if (!silent) toast.error(tRef.current.game.war.loadError)
       } finally {
-        if (!silent) setWarLoading(false)
+        if (!silent && shownWarId.current === warId) setWarLoading(false)
       }
     },
     [selectedAllianceId, activeWarId, selectedBg]
   )
+
+  useEffect(() => {
+    setSynergies([])
+    setPrefights([])
+  }, [activeWarId])
 
   useEffect(() => {
     setWarSummary(null)
@@ -350,17 +365,19 @@ export function WarProvider({
     if (!selectedAllianceId || !activeWarId) return
     const seq = writeSeq.current
     const list = await getWarSynergies(selectedAllianceId, activeWarId, selectedBg)
-    if (seq === writeSeq.current) setSynergies(list)
+    if (seq === writeSeq.current && isShown(activeWarId)) setSynergies(list)
   }
 
   const reloadPrefights = async () => {
     if (!selectedAllianceId || !activeWarId) return
     const seq = writeSeq.current
     const list = await getWarPrefights(selectedAllianceId, activeWarId, selectedBg)
-    if (seq === writeSeq.current) setPrefights(list)
+    if (seq === writeSeq.current && isShown(activeWarId)) setPrefights(list)
   }
 
-  const setPlacement = (updated: WarPlacement) =>
+  // Handlers are rebuilt per render, so `activeWarId` here is the War the write targeted.
+  const setPlacement = (updated: WarPlacement) => {
+    if (!isShown(activeWarId)) return
     setWarSummary((prev) =>
       prev
         ? {
@@ -371,6 +388,7 @@ export function WarProvider({
           }
         : prev
     )
+  }
 
   const loadAvailableAttackers = useCallback(
     (gameAccountId?: string, nodeNumber?: number) =>
@@ -567,7 +585,7 @@ export function WarProvider({
 
   // Nodes whose KO write has not landed yet. The poll must not roll them back,
   // and the next click must count from here rather than from the screen.
-  const koPending = useRef<Record<number, { value: number; timer: ReturnType<typeof setTimeout> }>>(
+  const koPending = useRef<Record<string, { value: number; timer: ReturnType<typeof setTimeout> }>>(
     {}
   )
 
@@ -576,7 +594,8 @@ export function WarProvider({
     return () => Object.values(pending).forEach(({ timer }) => clearTimeout(timer))
   }, [])
 
-  const patchPlacement = (nodeNumber: number, patch: Partial<WarPlacement>) =>
+  const patchPlacement = (nodeNumber: number, patch: Partial<WarPlacement>) => {
+    if (!isShown(activeWarId)) return
     setWarSummary((prev) =>
       prev
         ? {
@@ -587,30 +606,30 @@ export function WarProvider({
           }
         : prev
     )
+  }
 
   const handleAdjustKo = (nodeNumber: number, delta: number) => {
     if (!selectedAllianceId || !activeWarId) return
 
     const pending = koPending.current
+    const key = koKey(activeWarId, nodeNumber)
     const base =
-      pending[nodeNumber]?.value ??
-      placements.find((p) => p.node_number === nodeNumber)?.ko_count ??
-      0
+      pending[key]?.value ?? placements.find((p) => p.node_number === nodeNumber)?.ko_count ?? 0
     const koCount = Math.min(Math.max(base + delta, 0), MAX_KO_COUNT)
     if (koCount === base) return
 
     patchPlacement(nodeNumber, { ko_count: koCount })
-    if (pending[nodeNumber]) clearTimeout(pending[nodeNumber].timer)
-    pending[nodeNumber] = {
+    if (pending[key]) clearTimeout(pending[key].timer)
+    pending[key] = {
       value: koCount,
       timer: setTimeout(() => {
         updateWarKo(selectedAllianceId, activeWarId, selectedBg, nodeNumber, koCount)
           .then((updated) => {
-            if (pending[nodeNumber]?.value === koCount) delete pending[nodeNumber]
+            if (pending[key]?.value === koCount) delete pending[key]
             patchPlacement(nodeNumber, updated)
           })
           .catch((err: unknown) => {
-            if (pending[nodeNumber]?.value === koCount) delete pending[nodeNumber]
+            if (pending[key]?.value === koCount) delete pending[key]
             toast.error((err as Error).message || t.game.war.loadError)
             void fetchWarDefense(true)
           })
@@ -646,10 +665,11 @@ export function WarProvider({
         )
       )
       toast.success(t.game.war.synergy.addSuccess.replace('{target}', synergy.target_champion_name))
-      setSynergies((prev) => [
-        ...prev.filter((s) => s.champion_user_id !== synergy.champion_user_id),
-        synergy,
-      ])
+      if (isShown(activeWarId))
+        setSynergies((prev) => [
+          ...prev.filter((s) => s.champion_user_id !== synergy.champion_user_id),
+          synergy,
+        ])
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.synergy.addError)
     }
@@ -683,7 +703,7 @@ export function WarProvider({
       toast.success(
         t.game.war.prefight.addSuccess.replace('#{node}', String(prefight.target_node_number))
       )
-      setPrefights((prev) => [...prev, prefight])
+      if (isShown(activeWarId)) setPrefights((prev) => [...prev, prefight])
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.prefight.addError)
     }
