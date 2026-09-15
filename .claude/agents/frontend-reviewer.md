@@ -16,8 +16,8 @@ You are a frontend code reviewer for this project.
 ## E2E tests
 
 The **full Cypress suite is run only by the CI pipeline** — never run it locally.
-If you want to run a **targeted** spec related to the change (`/test-e2e` with
-`spec_files=[...]`), **ask the user for confirmation first** — do not run it unprompted.
+If you want to run a **targeted** spec related to the change (`python3 scripts/e2e/e2e_parallel.py
+--spec "<spec>"`), **ask the user for confirmation first** — do not run it unprompted.
 
 ## Review checklist
 

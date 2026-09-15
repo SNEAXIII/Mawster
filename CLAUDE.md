@@ -45,8 +45,10 @@ oxlint directives, and convert any `eslint-disable` you meet.
 raises-arity, zizmor, oxlint, prettier, cypress `tsc`. The commit applies them; the app `tsc` is not
 in there and still needs a manual run.
 
-**E2E**: Always use the `/test-e2e` skill — **never** call `npx cypress run` directly. It wraps `scripts/e2e/e2e_parallel.py` (the CI runner); targeted runs via `--spec "roster/foo.cy.ts"`. Requires Docker (mariadb-test on port 3307).
-Run it only when asked: the user validates E2E in CI, so a fix ends on its explanation.
+**E2E** runs in CI: launch it only when asked, so a fix ends on its explanation. **Never** call
+`npx cypress run` — the CI runner is `scripts/e2e/e2e_parallel.py`, targeted via
+`--spec "roster/foo.cy.ts"`, and needs Docker (mariadb-test on port 3307). Never pass
+`--include-vision` from `/root/Mawster`: `fake-vision-worker` would consume the prod worker's `vision.jobs` queue.
 
 **Migrations**: use `/db-migrate` skill — never touch dev DB directly.
 
