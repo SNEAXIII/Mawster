@@ -22,7 +22,7 @@ export default function PrefightEntryRow({
   readonly = false,
 }: Readonly<PrefightEntryRowProps>) {
   const { t } = useI18n()
-  const { handleRemovePrefight } = useWar()
+  const { handleRemovePrefight, isMapReadOnly } = useWar()
 
   const label = t.game.war.prefight.for.replace('#{node}', String(prefight.target_node_number))
 
@@ -90,7 +90,7 @@ export default function PrefightEntryRow({
         <div className='text-[10px] font-medium truncate'>{prefight.champion_name}</div>
       </div>
 
-      {!readonly && (
+      {!readonly && !isMapReadOnly && (
         <button
           type='button'
           className={cn(

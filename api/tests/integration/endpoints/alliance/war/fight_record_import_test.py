@@ -5,10 +5,10 @@ import uuid
 import pytest
 
 from src.models.champion.Champion import Champion
+from src.models.champion.ChampionUser import ChampionUser
 from src.models.war.Season import Season
-from src.models.war.War import War
-from src.models.war.WarFightRecord import WarFightRecord
 from src.models.war.WarFightRecordImport import WarFightRecordImport
+from tests.integration.endpoints.setup.fight_record_setup import push_ended_war, push_fight_record
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_member,
@@ -323,34 +323,12 @@ async def owner_with_mixed_records():
     )
     await load_objects([season, attacker, defender])
 
-    war = War(
-        id=uuid.uuid4(),
-        alliance_id=alliance.id,
-        opponent_name="Enemy",
-        created_by_id=owner_acc.id,
+    war = await push_ended_war(alliance.id, owner_acc.id, season_id=season.id, tier=5)
+    attacker_cu = ChampionUser(
+        game_account_id=owner_acc.id, champion_id=attacker.id, stars=7, rank=4
     )
-    await load_objects([war])
-
-    regular = WarFightRecord(
-        war_id=war.id,
-        alliance_id=alliance.id,
-        season_id=season.id,
-        game_account_id=owner_acc.id,
-        battlegroup=1,
-        node_number=10,
-        tier=5,
-        champion_id=attacker.id,
-        stars=7,
-        rank=4,
-        ascension=0,
-        is_saga_attacker=False,
-        defender_champion_id=defender.id,
-        defender_stars=6,
-        defender_rank=3,
-        defender_ascension=0,
-        defender_is_saga_defender=False,
-        ko_count=1,
-    )
+    await load_objects([attacker_cu])
+    await push_fight_record(war, attacker_cu, defender, node_number=10, ko_count=1)
     imported = WarFightRecordImport(
         alliance_id=alliance.id,
         season_id=season.id,
@@ -360,7 +338,7 @@ async def owner_with_mixed_records():
         ko_count=0,
         imported_by_id=owner_acc.id,
     )
-    await load_objects([regular, imported])
+    await load_objects([imported])
     return alliance.id
 
 

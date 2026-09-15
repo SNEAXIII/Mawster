@@ -11,8 +11,8 @@ from src.enums.WarStatus import WarStatus
 from src.models.war.Season import Season
 from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
-from src.models.war.WarFightRecord import WarFightRecord
 from src.utils.db import get_session
+from tests.integration.endpoints.setup.fight_record_setup import push_fight_record
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -57,27 +57,8 @@ async def _setup_with_fight():
         attacker_champion_user_id=cu.id,
         ko_count=1,
     )
-    record = WarFightRecord(
-        war_id=war.id,
-        alliance_id=alliance.id,
-        season_id=season.id,
-        game_account_id=owner.id,
-        battlegroup=1,
-        node_number=1,
-        tier=7,
-        champion_id=champ.id,
-        stars=7,
-        rank=3,
-        ascension=0,
-        is_saga_attacker=False,
-        defender_champion_id=defender.id,
-        defender_stars=7,
-        defender_rank=3,
-        defender_ascension=0,
-        defender_is_saga_defender=False,
-        ko_count=0,
-    )
-    await load_objects([placement, record])
+    await load_objects([placement])
+    await push_fight_record(war, cu, defender, node_number=1)
     return {"alliance": alliance, "owner": owner, "season": season, "war": war}
 
 

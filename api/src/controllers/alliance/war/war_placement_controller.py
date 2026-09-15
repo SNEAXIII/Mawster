@@ -10,6 +10,7 @@ from src.dto.alliance.war.dto_war import (
     WarPlacementResponse,
 )
 from src.services.alliance.AllianceService import AllianceService
+from src.services.alliance.war.ClosedWarPolicy import ClosedWarPolicy
 from src.services.alliance.war.WarService import WarService
 from src.services.auth.AuthService import AuthService
 from src.utils.auth_deps import CurrentUser
@@ -58,6 +59,7 @@ async def place_war_defender(
     account = await AllianceService.require_strategist_account(
         session, alliance_id, current_user.id
     )
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.place_defender(session, war_id, battlegroup, body, account.id)
 
 
@@ -76,6 +78,7 @@ async def remove_war_defender(
 ):
     """Remove a defender from a war node. Officers/owner/strategist only."""
     await AllianceService.require_strategist(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     await WarService.remove_defender(session, war_id, battlegroup, node_number)
 
 

@@ -43,9 +43,10 @@ export default function WarAttackerSelector({
   onSelect,
 }: Readonly<WarAttackerSelectorProps>) {
   const { t } = useI18n()
-  const { canManageWar, loadAvailableAttackers } = useWar()
+  const { canManageWar, isWarClosed, isMapReadOnly, loadAvailableAttackers, currentWar } = useWar()
   const currentSeason = useCurrentSeason()
-  const maxAttackers = currentSeason?.max_attackers_per_member ?? 3
+  const maxAttackers =
+    currentWar?.max_attackers_per_member ?? currentSeason?.max_attackers_per_member ?? 3
   const searchRef = useRef<HTMLInputElement>(null)
   const [showNote, setShowNote] = useState(false)
   const [available, setAvailable] = useState<AvailableAttacker[]>([])
@@ -77,10 +78,12 @@ export default function WarAttackerSelector({
 
   const currentPlacement = placements.find((p) => p.node_number === nodeNumber)
   const existingNote = currentPlacement?.note
+  // Read-only viewers and locked nodes get the node's detail without the attacker picker.
+  const canAssign = !isMapReadOnly && !currentPlacement?.is_attacker_locked
 
   useEffect(() => {
     if (open) {
-      fetchAvailable()
+      if (canAssign) fetchAvailable()
       setPlayerFilter('')
       setChampionSearch('')
       setClassFilter('')
@@ -261,7 +264,10 @@ export default function WarAttackerSelector({
       >
         <DialogHeader className='px-6 py-4'>
           <DialogTitle>
-            {t.game.war.selectAttacker.replace('{node}', String(nodeNumber))}
+            {(canAssign ? t.game.war.selectAttacker : t.game.war.nodeDetail).replace(
+              '{node}',
+              String(nodeNumber)
+            )}
           </DialogTitle>
         </DialogHeader>
         {currentPlacement ? (
@@ -298,54 +304,58 @@ export default function WarAttackerSelector({
                   note={currentPlacement.note ?? null}
                   noteId={currentPlacement.note_id ?? null}
                   noteBlocked={currentPlacement.note_blocked ?? false}
-                  canManage={canManageWar}
+                  canManage={canManageWar && !isWarClosed}
                 />
               )}
             </div>
           </>
         ) : null}
-        <Separator />
-        <div className='px-4 py-3 flex flex-col gap-2'>
-          <SearchInput
-            ref={searchRef}
-            value={championSearch}
-            onChange={setChampionSearch}
-            placeholder={t.game.war.searchChampion}
-            data-cy='war-attacker-search-champion'
-          />
-          <SelectorFilterBar
-            classes={availableClasses}
-            classFilter={classFilter}
-            onClassChange={setClassFilter}
-            players={availablePlayers}
-            playerFilter={playerFilter}
-            onPlayerChange={setPlayerFilter}
-            toggles={[
-              {
-                key: 'saga',
-                label: t.game.war.sagaAttackerFilter,
-                active: sagaFilter,
-                onToggle: setSagaFilter,
-              },
-              {
-                key: 'preferred',
-                label: t.game.war.preferredAttackerFilter,
-                active: preferredFilter,
-                onToggle: setPreferredFilter,
-              },
-            ]}
-            canReset={canReset}
-            onReset={handleReset}
-          />
-          <RarityFilterToggles
-            activeTiers={activeTiers}
-            onToggle={toggleTier}
-            label={t.game.war.rankFilter}
-            cyPrefix='war-attacker-rarity'
-          />
-        </div>
-        <Separator />
-        <div className='overflow-y-auto flex-1 min-h-0 p-3 flex flex-col gap-4'>{content}</div>
+        {canAssign && (
+          <>
+            <Separator />
+            <div className='px-4 py-3 flex flex-col gap-2'>
+              <SearchInput
+                ref={searchRef}
+                value={championSearch}
+                onChange={setChampionSearch}
+                placeholder={t.game.war.searchChampion}
+                data-cy='war-attacker-search-champion'
+              />
+              <SelectorFilterBar
+                classes={availableClasses}
+                classFilter={classFilter}
+                onClassChange={setClassFilter}
+                players={availablePlayers}
+                playerFilter={playerFilter}
+                onPlayerChange={setPlayerFilter}
+                toggles={[
+                  {
+                    key: 'saga',
+                    label: t.game.war.sagaAttackerFilter,
+                    active: sagaFilter,
+                    onToggle: setSagaFilter,
+                  },
+                  {
+                    key: 'preferred',
+                    label: t.game.war.preferredAttackerFilter,
+                    active: preferredFilter,
+                    onToggle: setPreferredFilter,
+                  },
+                ]}
+                canReset={canReset}
+                onReset={handleReset}
+              />
+              <RarityFilterToggles
+                activeTiers={activeTiers}
+                onToggle={toggleTier}
+                label={t.game.war.rankFilter}
+                cyPrefix='war-attacker-rarity'
+              />
+            </div>
+            <Separator />
+            <div className='overflow-y-auto flex-1 min-h-0 p-3 flex flex-col gap-4'>{content}</div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )

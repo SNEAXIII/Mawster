@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { getMyModeration } from '@/app/services/moderation'
@@ -33,5 +33,7 @@ export default function MyModerationProvider({
       .catch(() => setMute(null))
   }, [pathname, status])
 
-  return <MyModerationContext.Provider value={{ mute }}>{children}</MyModerationContext.Provider>
+  const value = useMemo(() => ({ mute }), [mute])
+
+  return <MyModerationContext.Provider value={value}>{children}</MyModerationContext.Provider>
 }

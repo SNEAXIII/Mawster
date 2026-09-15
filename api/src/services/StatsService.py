@@ -4,8 +4,9 @@ from sqlalchemy import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.dto.dto_stats import PublicStatsResponse
-from src.models import War, WarFightRecord
+from src.models import ChampionUser, War, WarFightRecord
 from src.models.Base import utcnow
+from src.services.knowledge._fight_context import join_fight_context
 
 
 class StatsService:
@@ -18,10 +19,12 @@ class StatsService:
             )
         ).scalar_one()
         participating_players = (
-            await session.exec(select(func.count(func.distinct(WarFightRecord.game_account_id))))
+            await session.exec(
+                join_fight_context(select(func.count(func.distinct(ChampionUser.game_account_id))))
+            )
         ).scalar_one()
         knowledge_base_fights = (
-            await session.exec(select(func.count(WarFightRecord.id)))
+            await session.exec(join_fight_context(select(func.count(WarFightRecord.id))))
         ).scalar_one()
         wars_recorded = (await session.exec(select(func.count(War.id)))).scalar_one()
         return PublicStatsResponse(

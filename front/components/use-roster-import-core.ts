@@ -46,10 +46,10 @@ export async function fetchChampionLookup(
   const championLookup = new Map<string, { champion_class: string; image_url: string | null }>()
   const unknownNames = new Set<string>()
   for (const entry of uniqueEntries) {
-    const found = roster.find(
+    const known = roster.some(
       (r) => r.champion_name.toLowerCase() === entry.champion_name.toLowerCase()
     )
-    if (!found) unknownNames.add(entry.champion_name)
+    if (!known) unknownNames.add(entry.champion_name)
   }
 
   if (unknownNames.size > 0) {

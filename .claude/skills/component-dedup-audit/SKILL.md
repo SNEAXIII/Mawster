@@ -101,6 +101,6 @@ code.
 - **Never modify or re-implement `front/components/ui/`.**
 - After edits: run `npm run build` from `front/` to catch TS/import errors. Do **not**
   run the Cypress suite locally — the CI pipeline validates E2E; a targeted spec run
-  (`/test-e2e` with `spec_files=[...]`) only on explicit user request.
+  (`python3 scripts/e2e/e2e_parallel.py --spec "<spec>"`) only on explicit user request.
 - If the change is broad or spans several pages, consider routing the actual
   refactor to the `frontend-dev` agent and the review to `frontend-reviewer`.

@@ -3,12 +3,14 @@
 import uuid
 
 import pytest
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.enums.Roles import Roles
 from src.enums.SeasonStatus import SeasonStatus
 from src.models import User
 from src.models.champion.Champion import Champion
 from src.models.war.Season import Season
+from src.models.war.War import War
 from tests.integration.endpoints.setup.game_setup import (
     get_game_account,
     push_strategist,
@@ -29,7 +31,17 @@ from tests.utils.utils_constant import (
     USER2_ID,
     USER_ID,
 )
-from tests.utils.utils_db import load_objects
+from tests.utils.utils_db import load_objects, sqlite_async_engine
+
+
+async def _attach_season(war_id: uuid.UUID, season_id: uuid.UUID) -> None:
+    """Simulate a war declared before the season went active."""
+    async with AsyncSession(sqlite_async_engine) as session:
+        war = await session.get(War, war_id)
+        war.season_id = season_id
+        session.add(war)
+        await session.commit()
+
 
 # ─── TestCreateWar ────────────────────────────────────────
 
@@ -410,8 +422,8 @@ class TestEndWar:
         assert len(defense_response.json()["placements"]) == 1
 
     @pytest.mark.asyncio
-    async def test_end_war_idempotent(self):
-        """Ending an already-ended war returns 200 and keeps status 'ended'."""
+    async def test_end_war_twice_conflicts(self):
+        """Ending an already-ended war is refused — closing is final."""
         data = await _setup_war()
         headers = create_auth_headers(user_id=str(USER_ID))
         url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/end"
@@ -419,8 +431,34 @@ class TestEndWar:
         await execute_post_request(url, payload={"win": True}, headers=headers)
         response = await execute_post_request(url, payload={"win": True}, headers=headers)
 
-        assert response.status_code == 200
-        assert response.json()["status"] == "ended"
+        assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_end_war_twice_conflicts_and_keeps_elo(self):
+        data = await _setup_war()
+        season = Season(number=1, status=SeasonStatus.active)
+        await load_objects([season])
+        headers = create_auth_headers(user_id=str(USER_ID))
+        url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}"
+        # the war was created before the season: attach it so elo_change applies
+        await _attach_season(data["war"].id, season.id)
+
+        first = await execute_post_request(
+            f"{url}/end", payload={"win": True, "elo_change": 20}, headers=headers
+        )
+        assert first.status_code == 200
+        elo_after_first = (
+            await execute_get_request(f"/alliances/{data['alliance'].id}", headers=headers)
+        ).json()["elo"]
+
+        second = await execute_post_request(
+            f"{url}/end", payload={"win": True, "elo_change": 20}, headers=headers
+        )
+        assert second.status_code == 409
+        elo_after_second = (
+            await execute_get_request(f"/alliances/{data['alliance'].id}", headers=headers)
+        ).json()["elo"]
+        assert elo_after_second == elo_after_first
 
     @pytest.mark.asyncio
     async def test_end_war_captures_win_and_tier_no_season(self):

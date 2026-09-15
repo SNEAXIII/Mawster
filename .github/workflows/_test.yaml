@@ -160,6 +160,8 @@ jobs:
           NEXT_E2E_BUILD: 'true'
           API_PORT: '8000'
           API_SERVER_HOST: localhost
+          STATIC_SERVER_HOST: 127.0.0.1 # rewrites are baked at build; e2e_parallel.py serves static-assets there
+          STATIC_PORT: '8009'
         run: npm run build
       - name: Archive frontend build
         run: tar -czf /tmp/next-e2e-build.tar.gz -C front .next-e2e

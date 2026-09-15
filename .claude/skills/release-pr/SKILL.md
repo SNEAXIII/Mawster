@@ -179,4 +179,8 @@ nommer le job rouge et donner l'URL. **Ne pas diagnostiquer ni corriger** — la
 - Jamais de push direct sur `release` ou `staging` : toujours par PR.
 - Jamais de `--force`.
 - Jamais de squash sur la PR de promotion.
+- Retoucher le CHANGELOG de la PR release-please **juste avant** son merge : release-please
+  force-push sa branche à chaque commit sur `main` et efface toute retouche antérieure.
+- Jamais d'édition manuelle de `.release-please-manifest.json`, `version.txt` ni de la version
+  dans `api/main.py` : release-please les possède.
 - Une PR de feature ne passe pas par ici : `/main-pr`.
