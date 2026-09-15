@@ -14,7 +14,6 @@ import WarManagementBar from './war-management-bar'
 import WarFormDialog from './war-form-dialog'
 import AttackerEntryRow from './attacker-entry-row'
 import EndWarDialog from './end-war-dialog'
-import ClosedWarBanner from './closed-war-banner'
 
 const WarDefenderSelector = dynamic(() => import('./war-defender-selector'), {
   loading: () => <FullPageSpinner />,
@@ -60,7 +59,6 @@ function WarLayout() {
     selectedWarId,
     setSelectedWarId,
     hasActiveWar,
-    isWarClosed,
     currentWar,
     activeWarId,
     managementLoading,
@@ -119,8 +117,6 @@ function WarLayout() {
               onClickDeclare={() => setShowCreateDialog(true)}
             />
           )}
-
-          {isWarClosed && <ClosedWarBanner />}
 
           {/* ── War map ──────────────────────────────────── */}
           {activeWarId ? (

@@ -90,7 +90,7 @@ describe('War – closed war correction', () => {
       cy.apiLogin(ownerData.user_id, 'war');
 
       cy.getByCy('war-select').should('be.visible').and('contain', 'cwc1Enemy');
-      cy.getByCy('war-closed-banner').should('be.visible');
+      cy.getByCy('war-status-ended').should('be.visible');
       cy.getByCy('end-war-btn').should('not.exist');
 
       cy.intercept('PATCH', '**/node/1/ko').as('updateKo');
@@ -114,12 +114,12 @@ describe('War – closed war correction', () => {
         cy.apiLogin(ownerData.user_id, 'war');
 
         cy.getByCy('war-select').should('be.visible').and('contain', 'cwc2Running');
-        cy.getByCy('war-closed-banner').should('not.exist');
+        cy.getByCy('war-status-active').should('be.visible');
 
         selectWar(warId);
 
         cy.getByCy('war-select').should('contain', 'cwc2Enemy');
-        cy.getByCy('war-closed-banner').should('be.visible');
+        cy.getByCy('war-status-ended').should('be.visible');
       });
     });
   });
@@ -128,7 +128,7 @@ describe('War – closed war correction', () => {
     setupClosedWar('cwc3').then(({ memberData }) => {
       cy.apiLogin(memberData.user_id, 'war');
 
-      cy.getByCy('war-closed-banner').should('be.visible');
+      cy.getByCy('war-status-ended').should('be.visible');
       // The read-only KO label proves the row rendered before checking the controls are absent.
       cy.getByCy('attacker-entry-node-1').scrollIntoView().should('contain', '0 KO');
       cy.getByCy('ko-inc-node-1').should('not.exist');
@@ -143,7 +143,7 @@ describe('War – closed war correction', () => {
         cy.intercept('PATCH', '**/node/1/ko').as('updateKo');
         cy.apiLogin(memberData.user_id, 'war');
 
-        cy.getByCy('war-closed-banner').should('be.visible');
+        cy.getByCy('war-status-ended').should('be.visible');
         cy.getByCy('attacker-entry-node-1').scrollIntoView().should('be.visible');
         cy.getByCy('ko-value-node-1').should('have.text', '0');
         cy.getByCy('ko-inc-node-1').click();

@@ -13,6 +13,7 @@ import { WarMode } from './war-types'
 import { useWar } from '@/app/contexts/war-context'
 import { useCurrentSeason } from '@/hooks/use-current-season'
 import SeasonBanner from './season-banner'
+import WarStatusBadge from './war-status-badge'
 import WarProgressBadge from './war-progress-badge'
 import ExportHeader from '@/app/game/_components/export-header'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
@@ -147,6 +148,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
       <div className='flex flex-col gap-4'>
         {/* Controls row: opponent name + BG picker + mode toggle + clear */}
         <div className='flex flex-wrap items-center gap-3'>
+          {currentWar && <WarStatusBadge status={currentWar.status} />}
           <SeasonBanner season={currentWar ? currentSeason : undefined} />
 
           {/* ELO badge — read-only, edit from the alliances page */}
