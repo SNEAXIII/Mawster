@@ -1,16 +1,27 @@
 """A closed War: its terms are sealed, its map stays correctable during the Latest Season."""
 
 import pytest
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.enums.SeasonStatus import SeasonStatus
 from src.models.war.Season import Season
-from tests.integration.endpoints.setup.game_setup import push_strategist
-from tests.integration.endpoints.setup.war_setup import _setup_closed_war_scenario
+from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.models.war.WarFightRecord import WarFightRecord
+from tests.integration.endpoints.setup.game_setup import (
+    push_champion,
+    push_champion_user,
+    push_strategist,
+)
+from tests.integration.endpoints.setup.war_setup import (
+    _setup_attacker_scenario,
+    _setup_closed_war_scenario,
+)
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_delete_request,
     execute_patch_request,
+    execute_post_request,
 )
 from tests.utils.utils_constant import USER2_ID, USER_ID
 from tests.utils.utils_db import load_objects, sqlite_async_engine
@@ -103,3 +114,75 @@ class TestClosedWarMapAccess:
             f"{data['base']}/bg/1/node/10/ko", payload={"ko_count": 1}, headers=OWNER
         )
         assert response.status_code == 200
+
+
+async def _record_of_node(war_id, battlegroup: int, node: int) -> WarFightRecord | None:
+    async with AsyncSession(sqlite_async_engine) as session:
+        return (
+            await session.exec(
+                select(WarFightRecord)
+                .join(
+                    WarDefensePlacement,
+                    WarFightRecord.war_defense_placement_id == WarDefensePlacement.id,
+                )
+                .where(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    WarDefensePlacement.node_number == node,
+                )
+            )
+        ).first()
+
+
+class TestClosedWarFightRecordSync:
+    @pytest.mark.asyncio
+    async def test_changing_attacker_refreezes_current_stats(self):
+        data = await _setup_closed_war_scenario()
+        other = await push_champion(name="Hulk", champion_class="Science")
+        cu = await push_champion_user(data["member"], other, stars=7, rank=5)
+        response = await execute_post_request(
+            f"{data['base']}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(cu.id)},
+            headers=OWNER,
+        )
+        assert response.status_code == 200
+        record = await _record_of_node(data["war"].id, 1, 10)
+        assert record is not None
+        assert record.rank == 5
+
+    @pytest.mark.asyncio
+    async def test_removing_attacker_drops_record(self):
+        data = await _setup_closed_war_scenario()
+        response = await execute_delete_request(
+            f"{data['base']}/bg/1/node/10/attacker", headers=OWNER
+        )
+        assert response.status_code == 200
+        assert await _record_of_node(data["war"].id, 1, 10) is None
+
+    @pytest.mark.asyncio
+    async def test_fight_not_done_toggles_record(self):
+        data = await _setup_closed_war_scenario()
+        url = f"{data['base']}/bg/1/node/10/fight-not-done"
+        assert (await execute_patch_request(url, {}, headers=OWNER)).status_code == 200
+        assert await _record_of_node(data["war"].id, 1, 10) is None
+        assert (await execute_patch_request(url, {}, headers=OWNER)).status_code == 200
+        assert await _record_of_node(data["war"].id, 1, 10) is not None
+
+    @pytest.mark.asyncio
+    async def test_removing_defender_drops_record(self):
+        data = await _setup_closed_war_scenario()
+        response = await execute_delete_request(f"{data['base']}/bg/1/node/10", headers=OWNER)
+        assert response.status_code == 204
+        assert await _record_of_node(data["war"].id, 1, 10) is None
+
+    @pytest.mark.asyncio
+    async def test_assigning_attacker_on_running_war_creates_no_record(self):
+        data = await _setup_attacker_scenario()
+        base = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}"
+        response = await execute_post_request(
+            f"{base}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=OWNER,
+        )
+        assert response.status_code == 200
+        assert await _record_of_node(data["war"].id, 1, 10) is None

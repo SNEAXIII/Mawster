@@ -74,27 +74,95 @@ class FightRecordService:
             )
             session.add(record)
             await session.flush()
-
-            note = (
-                await session.exec(
-                    select(WarFightNote).where(
-                        and_(
-                            WarFightNote.war_id == war.id,
-                            WarFightNote.battlegroup == placement.battlegroup,
-                            WarFightNote.node_number == placement.node_number,
-                        )
-                    )
-                )
-            ).first()
-            if note is not None:
-                note.war_fight_record_id = record.id
-                session.add(note)
+            await cls._link_note(session, placement, record)
 
         await session.commit()
 
         await session.refresh(war)
         war.snapshotted_at = utcnow()
         session.add(war)
+        await session.commit()
+
+    @classmethod
+    async def _link_note(
+        cls, session: SessionDep, placement: WarDefensePlacement, record: WarFightRecord
+    ) -> None:
+        note = (
+            await session.exec(
+                select(WarFightNote).where(
+                    and_(
+                        WarFightNote.war_id == placement.war_id,
+                        WarFightNote.battlegroup == placement.battlegroup,
+                        WarFightNote.node_number == placement.node_number,
+                    )
+                )
+            )
+        ).first()
+        if note is not None:
+            note.war_fight_record_id = record.id
+            session.add(note)
+
+    @classmethod
+    async def drop_node_record(cls, session: SessionDep, placement_id: uuid.UUID) -> None:
+        """Delete a node's Fight Record, unlinking its Fight Note first — call before deleting a placement."""
+        record = (
+            await session.exec(
+                select(WarFightRecord).where(
+                    WarFightRecord.war_defense_placement_id == placement_id
+                )
+            )
+        ).first()
+        if record is None:
+            return
+        notes = await session.exec(
+            select(WarFightNote).where(WarFightNote.war_fight_record_id == record.id)
+        )
+        for note in notes.all():
+            note.war_fight_record_id = None
+            session.add(note)
+        await session.flush()
+        await session.delete(record)
+        await session.commit()
+
+    @classmethod
+    async def sync_node(
+        cls, session: SessionDep, placement_id: uuid.UUID, *, refreeze: bool = False
+    ) -> None:
+        """Keep a closed War's Fight Record in step with its corrected node — ADR 0017."""
+        placement = (
+            await session.exec(
+                select(WarDefensePlacement)
+                .where(WarDefensePlacement.id == placement_id)
+                .options(selectinload(WarDefensePlacement.attacker_champion_user))
+            )
+        ).one()
+        war = await session.get(War, placement.war_id)
+        if war is None or war.snapshotted_at is None:
+            return
+        if placement.attacker_champion_user_id is None or placement.is_fight_not_done:
+            await cls.drop_node_record(session, placement_id)
+            return
+        attacker = placement.attacker_champion_user
+        record = (
+            await session.exec(
+                select(WarFightRecord).where(
+                    WarFightRecord.war_defense_placement_id == placement_id
+                )
+            )
+        ).first()
+        if record is None:
+            record = WarFightRecord(
+                war_defense_placement_id=placement.id,
+                rank=attacker.rank,
+                ascension=attacker.ascension,
+            )
+            session.add(record)
+            await session.flush()
+            await cls._link_note(session, placement, record)
+        elif refreeze:
+            record.rank = attacker.rank
+            record.ascension = attacker.ascension
+            session.add(record)
         await session.commit()
 
     @classmethod

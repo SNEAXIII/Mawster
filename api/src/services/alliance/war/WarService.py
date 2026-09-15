@@ -475,6 +475,7 @@ class WarService:
         )
         old_placement = existing_node.first()
         if old_placement:
+            await FightRecordService.drop_node_record(session, old_placement.id)
             await session.delete(old_placement)
             await session.flush()
 
@@ -595,6 +596,7 @@ class WarService:
         # attacker and drop its synergy/prefight rows (they don't FK the placement, so
         # they would otherwise be orphaned). The note survives via its SET NULL FK.
         attacker_champion_user_id = placement.attacker_champion_user_id
+        await FightRecordService.drop_node_record(session, placement.id)
         await session.delete(placement)
         await session.commit()
         await cls._cleanup_attacker_associations(
@@ -1022,6 +1024,7 @@ class WarService:
         session.add(placement)
         await session.commit()
         session.expire(placement)
+        await FightRecordService.sync_node(session, placement_id, refreeze=True)
 
         return await cls._placement_dto(session, await cls._load_placement(session, placement_id))
 
@@ -1052,6 +1055,7 @@ class WarService:
         cls._clear_boosts(placement)
         session.add(placement)
         await session.commit()
+        await FightRecordService.sync_node(session, placement.id)
 
         await cls._cleanup_attacker_associations(
             session, war_id, battlegroup, node_number, removed_champion_user_id
@@ -1178,6 +1182,7 @@ class WarService:
         placement.is_fight_not_done = not placement.is_fight_not_done
         session.add(placement)
         await session.commit()
+        await FightRecordService.sync_node(session, placement.id)
         return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 
     @classmethod
