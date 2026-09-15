@@ -5,7 +5,6 @@ import {
   getFightRecords,
   getSeasons,
   getAccessibleAlliances,
-  type FightRecord,
   type PaginatedFightRecords,
   type FightRecordFilters,
   type FightRecordSource,
@@ -307,5 +306,3 @@ export function useKnowledgeBaseViewModel() {
     setSize,
   }
 }
-
-export type { FightRecord }

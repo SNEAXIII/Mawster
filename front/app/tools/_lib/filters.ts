@@ -1,5 +1,6 @@
 import { tagsOf } from './board'
-import type { BoardState, CatalogChampion, ChampionClass, TagKey } from './types'
+import type { ChampionClass } from '@/app/lib/champion-class'
+import type { BoardState, CatalogChampion, TagKey } from './types'
 
 /** Which star rarity the pool shows: every champion, or one of the two. */
 export type RarityFilter = 'all' | '7' | '6'
