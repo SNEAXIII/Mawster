@@ -3,6 +3,19 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.16.0](https://github.com/SNEAXIII/Mawster/compare/v1.15.1...v1.16.0) (2026-09-15)
+
+
+### Ajouté
+
+* let strategists correct a closed war's map during its season ([100dc3e](https://github.com/SNEAXIII/Mawster/commit/100dc3e83ddb9bd9b6f208bee53a92c51fab242b))
+
+
+### Modifié
+
+* fix Sonar issues ([eab26bb](https://github.com/SNEAXIII/Mawster/commit/eab26bbaa415a3f4a0290fe7be9d72f71a01100c))
+* freeze only the attacker's rank and ascension on fight records ([2f988a0](https://github.com/SNEAXIII/Mawster/commit/2f988a0895534f69f7482f02dc88403dd2e4dc3c))
+
 ## [1.15.1](https://github.com/SNEAXIII/Mawster/compare/v1.15.0...v1.15.1) (2026-09-14)
 
 
