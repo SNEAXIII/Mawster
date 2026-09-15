@@ -50,7 +50,7 @@ Run it only when asked: the user validates E2E in CI, so a fix ends on its expla
 
 **Migrations**: use `/db-migrate` skill — never touch dev DB directly.
 
-**Servers**: use the `/server-dev` / `/server-stop` / `/server-status` skills (Docker compose + `make run-dev` + `npm run dev`).
+**Servers**: `docker compose -f compose-dev.yaml up -d`, then `make run-dev` (`api/`) and `npm run dev` (`front/`).
 
 ---
 

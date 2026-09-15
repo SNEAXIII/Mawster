@@ -11,8 +11,6 @@ Next.js 16 App Router, React 19, Tailwind CSS 4, shadcn/ui (Radix), TypeScript s
 ## Skills to use
 
 - `/i18n-check` — after adding any new strings, verify both `en.ts` and `fr.ts` are in sync
-- `/server-dev` — start dev servers if needed
-- `/server-status` — check running servers
 - `/component-dedup-audit` — before creating a new component or hook, check whether an equivalent already exists; mutualise instead of copy-pasting
 - `/shadcn` — when adding, composing, or debugging a shadcn/ui component (never hand-roll one that exists in the registry)
 - `/split-e2e-tests` — when a Cypress spec has grown too big (many `it()` mixing concerns), split it into purpose-focused files
