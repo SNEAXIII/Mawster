@@ -45,7 +45,7 @@ Long — préférer les specs ciblées en local et laisser la CI faire la passe 
 | `--workers N` | 1 à 8 workers parallèles (défaut 2 ; `--spec` force le nombre de specs) |
 | `--quiet` | Masque les logs backend/front, garde la sortie Cypress |
 | `--skip-build` | Réutilise le `.next-e2e` existant — seulement si le front n'a pas bougé |
-| `--include-vision` | Inclut les specs vision (exclues par défaut : elles exigent RabbitMQ + RustFS + un worker vision) |
+| `--include-vision` | Inclut les specs vision (exclues par défaut : elles exigent RabbitMQ + RustFS + un worker vision). **Jamais depuis `/root/Mawster`** : `fake-vision-worker` y consommerait la queue `vision.jobs` du worker de prod |
 
 ## Si des tests échouent
 

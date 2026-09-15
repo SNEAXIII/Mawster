@@ -7,6 +7,9 @@ Mawster — MCOC (Marvel Contest of Champions) alliance management tool.
 - **Auth**: Discord OAuth2 → NextAuth 5 → Backend JWT (HS256)
 - **i18n**: `useI18n()` hook — `front/app/i18n/locales/en.ts` & `fr.ts`
 
+**Domain vocabulary lives in `CONTEXT.md`** — each term, its table, the synonyms to avoid. Read it
+before naming or modelling anything.
+
 ---
 
 ## Scope Discipline
@@ -34,13 +37,16 @@ Mawster — MCOC (Marvel Contest of Champions) alliance management tool.
 
 Single test file: `uv run pytest tests/unit/dto/dto_from_model_test.py -v`
 
-**Frontend** (`front/`): `npm run dev` / `npm run build` (run build to catch TS errors)
+**Frontend** (`front/`): `npm run dev`. The build runs in CI — check a change with
+`npx oxlint --type-aware <files>`. Lint is oxlint alone (`front/.oxlintrc.json`): suppress with
+oxlint directives, and convert any `eslint-disable` you meet.
 
 **Never run by hand what `.pre-commit-config.yaml` already runs** — ruff (check + format),
 raises-arity, zizmor, oxlint, prettier, cypress `tsc`. The commit applies them; the app `tsc` is not
 in there and still needs a manual run.
 
 **E2E**: Always use the `/test-e2e` skill — **never** call `npx cypress run` directly. It wraps `scripts/e2e/e2e_parallel.py` (the CI runner); targeted runs via `--spec "roster/foo.cy.ts"`. Requires Docker (mariadb-test on port 3307).
+Run it only when asked: the user validates E2E in CI, so a fix ends on its explanation.
 
 **Migrations**: use `/db-migrate` skill — never touch dev DB directly.
 
@@ -55,6 +61,7 @@ in there and still needs a manual run.
 - `controllers/` → thin routers, delegate to `services/`
 - `services/` → business logic
 - `models/` → SQLModel tables: User, Alliance, GameAccount, Champion, ChampionUser, DefensePlacement, AllianceOfficer, AllianceInvitation, RequestedUpgrade, LoginLog
+  (`LoginLog.date_connexion` and `connexions` are accepted naming debt — leave them out of naming reviews)
 - `dto/` → Pydantic request/response schemas
 - `security/` → settings from `api.env`
 
@@ -69,6 +76,10 @@ Pages: `game/roster/`, `game/defense/`, `game/alliances/`, `admin/`, `profile/`,
 - `services/` — API wrappers; `lib/apiClient` — auto-attaches JWT
 - `components/ui/` — shadcn/ui (Radix) — **never modify directly**
 - Pages use `_components/` for page-scoped components (keep files ≤150 lines)
+- Reuse house components before adding a shadcn primitive — tabs are `@/components/tab-bar`
+  (`TabBar`), never shadcn `Tabs`
+- `@radix-ui/react-slot` ≥1.3 ships no `"use client"`: a Server Component importing `Button` fails
+  prerender with `createContext is not a function`. Add `'use client'` to that file.
 
 Auth: NextAuth Discord OAuth2 → backend `POST /auth/discord` → JWT stored in session, attached as `Authorization: Bearer`.
 
@@ -100,6 +111,10 @@ Project agents live in `.claude/agents/`. They are **not auto-dispatched** — c
 - `beforeEach(() => { cy.truncateDb(); })` in every `describe`
 - `data-cy` attributes + `cy.getByCy('...')` — never CSS classes or text
 - `ConfirmationDialog` confirm: `data-cy='confirmation-dialog-confirm'`
+- A list that reloads (refetch, sort, filter) is asserted with `should(($els) => ...)` on
+  `cy.get('[data-cy^="..."]')`: `.then()` runs once and a `getByCy` subject stays on detached nodes.
+- Specs named `*vision*` run nowhere (excluded from CI). A bug only a vision spec would cover
+  deserves a backend fix under pytest — say so before settling on a front-only fix.
 
 **Setup helpers** (import from `'../../support/e2e'`):
 
@@ -130,6 +145,8 @@ Project agents live in `.claude/agents/`. They are **not auto-dispatched** — c
 - **Icons**: `lucide-react` general / `react-icons/fi` action buttons
 - **Styling**: Tailwind semantic tokens (`bg-card`, `text-muted-foreground`), dark mode first
 - **Explain changes**: After every Edit/Write, briefly explain what changed, why, and the expected effect
+- **Ruff**: fix the sites first; an exception that must stay goes in `[lint.per-file-ignores]` or a
+  `# noqa: RULE` on the line — the global `ignore` list is a last resort
 
 ### Comments — keep them rare
 
@@ -176,6 +193,9 @@ release-please then counts a second time alongside the real commits, duplicating
   partially-staged work, or revert already-pushed commits without asking first.
 - Before switching branches, check `git status` and warn about uncommitted changes rather than
   stashing them silently.
+- Check the branch before the first commit: on `main`, branch first, whatever the size of the change.
+- `git push` belongs to the user: end on the exact command in a code block. `/main-pr`,
+  `/commit push`, or an explicit go in reply to that command authorise you to push.
 
 ### Worktrees
 
@@ -251,6 +271,11 @@ GitHub operations (PRs, issues, reviews) go through the `gh` CLI. Backend tests,
   - `mariadb-test` → host **3307** (container 3306), phpMyAdmin **8081**
   - DB `mawster`, user `user`/`password`, root `rootpassword`
 - Prod: Docker Swarm + Traefik (TLS 80/443), stack définie dans `stack-app.yaml`
+
+**This checkout runs on the production swarm manager**: every `docker` command here and
+`make deploy` act on the live `mawster` stack. Inspect freely (`service ls`, `service logs`, `exec`
+for a probe); confirm with the user before anything that mutates it (`stack deploy`,
+`service update`, `service rm`, secrets).
 
 ### Backup / Restore
 
