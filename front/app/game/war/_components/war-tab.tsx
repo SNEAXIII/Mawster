@@ -13,6 +13,7 @@ import { WarMode } from './war-types'
 import { useWar } from '@/app/contexts/war-context'
 import { useCurrentSeason } from '@/hooks/use-current-season'
 import SeasonBanner from './season-banner'
+import WarStatusBadge from './war-status-badge'
 import WarProgressBadge from './war-progress-badge'
 import ExportHeader from '@/app/game/_components/export-header'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
@@ -58,6 +59,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
     handleBgChange,
     canManageWar,
     canPlaceWar,
+    isWarClosed,
     warMode,
     setWarMode,
     warLoading,
@@ -146,6 +148,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
       <div className='flex flex-col gap-4'>
         {/* Controls row: opponent name + BG picker + mode toggle + clear */}
         <div className='flex flex-wrap items-center gap-3'>
+          {currentWar && <WarStatusBadge status={currentWar.status} />}
           <SeasonBanner season={currentWar ? currentSeason : undefined} />
 
           {/* ELO badge — read-only, edit from the alliances page */}
@@ -238,7 +241,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
             </div>
           )}
           {/* Clear BG button */}
-          {canPlaceWar && placements.length > 0 && (
+          {canPlaceWar && !isWarClosed && placements.length > 0 && (
             <Button
               variant='outline'
               onClick={() => setShowClearConfirm(true)}
@@ -305,7 +308,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
                 </div>
               ))
             )}
-            {canManageWar && (
+            {canManageWar && !isWarClosed && (
               <Button
                 variant='outline'
                 onClick={onEditClick}
@@ -316,7 +319,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
             )}
           </div>
           {/* End war button */}
-          {canManageWar && (
+          {canManageWar && !isWarClosed && (
             <Button
               variant='destructive'
               onClick={() => setShowEndConfirm(true)}
@@ -354,7 +357,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
                   dimmedNodes={exporting ? undefined : dimmedNodes}
                   prefightNodes={prefightNodes}
                   noteNodes={noteNodes}
-                  format={currentSeason?.format ?? 'regular'}
+                  format={currentWar?.format ?? currentSeason?.format ?? 'regular'}
                 />
               </div>
             </div>
@@ -373,8 +376,12 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
                 onCombatFilterChange={setCombatFilter}
                 exporting={exporting}
                 exportRef={exportAttackersRef}
-                nodeCount={currentSeason?.node_count ?? 50}
-                maxAttackers={currentSeason?.max_attackers_per_member ?? 3}
+                nodeCount={currentWar?.node_count ?? currentSeason?.node_count ?? 50}
+                maxAttackers={
+                  currentWar?.max_attackers_per_member ??
+                  currentSeason?.max_attackers_per_member ??
+                  3
+                }
               />
             </div>
           </div>

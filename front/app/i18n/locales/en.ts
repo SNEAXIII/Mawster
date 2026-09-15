@@ -561,6 +561,9 @@ const en = {
       opponentName: 'Opponent Name',
       noWar: 'No war declared yet.',
       selectWar: 'Select a war',
+      statusActive: 'War in progress',
+      statusEnded: 'War ended',
+      attackerLocked: 'This player left the battlegroup: their fight is locked',
       placeSuccess: '{name} placed on node #{node}',
       placeError: 'Failed to place defender',
       removeSuccess: 'Defender removed',
@@ -596,6 +599,7 @@ const en = {
       placeOnNode: 'Place on node #{node}',
       // Attackers
       selectAttacker: 'Assign attacker to node #{node}',
+      nodeDetail: 'Node #{node}',
       searchAttacker: 'Search champion or player...',
       searchPlayer: 'Search player...',
       assignAttacker: 'Assign Attacker',

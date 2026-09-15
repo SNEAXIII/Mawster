@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -24,7 +25,6 @@ import {
   type AvailableAttacker,
   type WarSynergy,
   type WarPrefight,
-  getCurrentWar,
   createWar,
   updateWar,
   endWar,
@@ -54,6 +54,7 @@ import {
 import { upsertWarFightNote, deleteWarFightNote } from '@/app/services/war-notes'
 import { reportNote } from '@/app/services/moderation'
 import { WarMode } from '@/app/game/war/_components/war-types'
+import { useWarSelection } from './use-war-selection'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,13 @@ interface WarContextValue {
   isVisitor: boolean
   isMine: (gameAccountId: string) => boolean
 
-  // War
+  // War — `currentWar` is the War on screen, running or closed
+  wars: War[]
+  selectedWarId: string | null
+  setSelectedWarId: (id: string) => void
+  hasActiveWar: boolean
+  isWarClosed: boolean
+  isMapReadOnly: boolean
   currentWar: War | null
   activeWarId: string
   managementLoading: boolean
@@ -168,6 +175,7 @@ export function useWar(): WarContextValue {
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 const KO_FLUSH_DELAY_MS = 400
+const koKey = (warId: string, nodeNumber: number) => `${warId}:${nodeNumber}`
 
 export function WarProvider({
   children,
@@ -194,8 +202,16 @@ export function WarProvider({
   } = useAllianceSelector({ initialAllianceId, initialBg })
 
   // ─── War state ─────────────────────────────────────────────────────────────
-  const [currentWar, setCurrentWar] = useState<War | null>(null)
-  const [managementLoading, setManagementLoading] = useState(false)
+  const {
+    wars,
+    selectedWarId,
+    setSelectedWarId,
+    currentWar,
+    hasActiveWar,
+    loading: managementLoading,
+    fetchWars,
+    showWar,
+  } = useWarSelection(selectedAllianceId)
   const [warMode, setWarMode] = useState<WarMode>(WarMode.Attackers)
 
   // ─── Dialog / selector state ───────────────────────────────────────────────
@@ -230,6 +246,12 @@ export function WarProvider({
 
   // ─── Derived values ────────────────────────────────────────────────────────
   const activeWarId = currentWar?.id ?? ''
+  // A response requested for a War that is no longer on screen is dropped.
+  const shownWarId = useRef(activeWarId)
+  useLayoutEffect(() => {
+    shownWarId.current = activeWarId
+  }, [activeWarId])
+  const isShown = (warId: string) => shownWarId.current === warId
   const placements = useMemo<WarPlacement[]>(() => warSummary?.placements ?? [], [warSummary])
 
   // The battlegroup on screen is recounted from the placements we hold, so a KO
@@ -262,6 +284,8 @@ export function WarProvider({
     () => alliances.find((a) => a.id === selectedAllianceId)?.isVisitor ?? false,
     [alliances, selectedAllianceId]
   )
+  const isWarClosed = currentWar?.status === 'ended'
+  const isMapReadOnly = isVisitor || (isWarClosed && !canPlaceWar)
 
   const handleAllianceChange = useCallback(
     (allianceId: string) => {
@@ -291,65 +315,43 @@ export function WarProvider({
     // oxlint-disable-next-line react/exhaustive-deps
   }, [alliances, selectedAllianceId, setSelectedAllianceId])
 
-  // ─── Fetch current war ─────────────────────────────────────────────────────
-  const fetchCurrentWar = useCallback(async () => {
-    if (!selectedAllianceId) return
-    setManagementLoading(true)
-    try {
-      const war = await getCurrentWar(selectedAllianceId)
-      setCurrentWar(war)
-    } catch (err: unknown) {
-      const status = (err as { status?: number }).status
-      if (status === 404) {
-        setCurrentWar(null)
-      } else if (status === 403) {
-        // 403 means selectedAllianceId is a foreign alliance from a shared
-        // link the user doesn't belong to; the auto-select effect is about
-        // to correct it, so treat this like "no war" and stay silent.
-        setCurrentWar(null)
-      } else {
-        toast.error(tRef.current.game.war.loadError)
-      }
-    } finally {
-      setManagementLoading(false)
-    }
-  }, [selectedAllianceId])
-
-  useEffect(() => {
-    setCurrentWar(null)
-    fetchCurrentWar()
-  }, [selectedAllianceId, fetchCurrentWar])
-
   // ─── Fetch war defense ─────────────────────────────────────────────────────
   const fetchWarDefense = useCallback(
     async (silent = false) => {
-      if (!selectedAllianceId || !activeWarId) return
+      const warId = activeWarId
+      if (!selectedAllianceId || !warId) return
       if (!silent) setWarLoading(true)
       const seq = writeSeq.current
       try {
         const [summary, synergyList, prefightList] = await Promise.all([
-          getWarDefense(selectedAllianceId, activeWarId, selectedBg),
-          getWarSynergies(selectedAllianceId, activeWarId, selectedBg),
-          getWarPrefights(selectedAllianceId, activeWarId, selectedBg),
+          getWarDefense(selectedAllianceId, warId, selectedBg),
+          getWarSynergies(selectedAllianceId, warId, selectedBg),
+          getWarPrefights(selectedAllianceId, warId, selectedBg),
         ])
-        if (seq !== writeSeq.current) return
+        if (seq !== writeSeq.current || shownWarId.current !== warId) return
         const pending = koPending.current
         setWarSummary({
           ...summary,
-          placements: summary.placements.map((p) =>
-            pending[p.node_number] ? { ...p, ko_count: pending[p.node_number].value } : p
-          ),
+          placements: summary.placements.map((p) => {
+            const koInFlight = pending[koKey(warId, p.node_number)]
+            return koInFlight ? { ...p, ko_count: koInFlight.value } : p
+          }),
         })
         setSynergies(synergyList)
         setPrefights(prefightList)
       } catch {
         if (!silent) toast.error(tRef.current.game.war.loadError)
       } finally {
-        if (!silent) setWarLoading(false)
+        if (!silent && shownWarId.current === warId) setWarLoading(false)
       }
     },
     [selectedAllianceId, activeWarId, selectedBg]
   )
+
+  useEffect(() => {
+    setSynergies([])
+    setPrefights([])
+  }, [activeWarId])
 
   useEffect(() => {
     setWarSummary(null)
@@ -363,17 +365,19 @@ export function WarProvider({
     if (!selectedAllianceId || !activeWarId) return
     const seq = writeSeq.current
     const list = await getWarSynergies(selectedAllianceId, activeWarId, selectedBg)
-    if (seq === writeSeq.current) setSynergies(list)
+    if (seq === writeSeq.current && isShown(activeWarId)) setSynergies(list)
   }
 
   const reloadPrefights = async () => {
     if (!selectedAllianceId || !activeWarId) return
     const seq = writeSeq.current
     const list = await getWarPrefights(selectedAllianceId, activeWarId, selectedBg)
-    if (seq === writeSeq.current) setPrefights(list)
+    if (seq === writeSeq.current && isShown(activeWarId)) setPrefights(list)
   }
 
-  const setPlacement = (updated: WarPlacement) =>
+  // Handlers are rebuilt per render, so `activeWarId` here is the War the write targeted.
+  const setPlacement = (updated: WarPlacement) => {
+    if (!isShown(activeWarId)) return
     setWarSummary((prev) =>
       prev
         ? {
@@ -384,6 +388,7 @@ export function WarProvider({
           }
         : prev
     )
+  }
 
   const loadAvailableAttackers = useCallback(
     (gameAccountId?: string, nodeNumber?: number) =>
@@ -401,18 +406,23 @@ export function WarProvider({
   const handleNodeClick = useCallback(
     (nodeNumber: number) => {
       if (!activeWarId) return
+      const placement = placements.find((p) => p.node_number === nodeNumber)
       switch (warMode) {
         case WarMode.Attackers: {
-          const hasDefender = placements.some((p) => p.node_number === nodeNumber)
-          if (!hasDefender) {
+          if (!placement) {
             toast.warning(t.game.war.defenderRequired)
             return
           }
+          // Read-only viewers still open it for the node's detail; the selector hides assignment.
           setAttackerSelectorNode(nodeNumber)
           break
         }
         case WarMode.Defenders:
           if (!selectedAlliance || !canPlace(selectedAlliance)) return
+          if (placement?.is_attacker_locked) {
+            toast.info(t.game.war.attackerLocked)
+            return
+          }
           setSelectorNode(nodeNumber)
           break
         case WarMode.Export:
@@ -426,7 +436,7 @@ export function WarProvider({
     try {
       const war = await createWar(selectedAllianceId, opponentName, bannedChampionIds)
       toast.success(t.game.war.createSuccess.replace('{name}', opponentName))
-      setCurrentWar(war)
+      showWar(war)
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.createError)
       throw err
@@ -442,7 +452,7 @@ export function WarProvider({
         opponentName,
         bannedChampionIds
       )
-      setCurrentWar(war)
+      showWar(war)
       toast.success(t.game.war.editWarSuccess)
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.editWarError)
@@ -458,9 +468,8 @@ export function WarProvider({
     if (!currentWar) return
     try {
       await endWar(selectedAllianceId, currentWar.id, win, eloChange, opponentDeaths)
-      await refresh()
+      await Promise.all([refresh(), fetchWars(currentWar.id)])
       toast.success(t.game.war.endWarSuccess)
-      setCurrentWar(null)
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.endWarError)
     }
@@ -575,7 +584,7 @@ export function WarProvider({
 
   // Nodes whose KO write has not landed yet. The poll must not roll them back,
   // and the next click must count from here rather than from the screen.
-  const koPending = useRef<Record<number, { value: number; timer: ReturnType<typeof setTimeout> }>>(
+  const koPending = useRef<Record<string, { value: number; timer: ReturnType<typeof setTimeout> }>>(
     {}
   )
 
@@ -584,7 +593,8 @@ export function WarProvider({
     return () => Object.values(pending).forEach(({ timer }) => clearTimeout(timer))
   }, [])
 
-  const patchPlacement = (nodeNumber: number, patch: Partial<WarPlacement>) =>
+  const patchPlacement = (nodeNumber: number, patch: Partial<WarPlacement>) => {
+    if (!isShown(activeWarId)) return
     setWarSummary((prev) =>
       prev
         ? {
@@ -595,30 +605,30 @@ export function WarProvider({
           }
         : prev
     )
+  }
 
   const handleAdjustKo = (nodeNumber: number, delta: number) => {
     if (!selectedAllianceId || !activeWarId) return
 
     const pending = koPending.current
+    const key = koKey(activeWarId, nodeNumber)
     const base =
-      pending[nodeNumber]?.value ??
-      placements.find((p) => p.node_number === nodeNumber)?.ko_count ??
-      0
+      pending[key]?.value ?? placements.find((p) => p.node_number === nodeNumber)?.ko_count ?? 0
     const koCount = Math.min(Math.max(base + delta, 0), MAX_KO_COUNT)
     if (koCount === base) return
 
     patchPlacement(nodeNumber, { ko_count: koCount })
-    if (pending[nodeNumber]) clearTimeout(pending[nodeNumber].timer)
-    pending[nodeNumber] = {
+    if (pending[key]) clearTimeout(pending[key].timer)
+    pending[key] = {
       value: koCount,
       timer: setTimeout(() => {
         updateWarKo(selectedAllianceId, activeWarId, selectedBg, nodeNumber, koCount)
           .then((updated) => {
-            if (pending[nodeNumber]?.value === koCount) delete pending[nodeNumber]
+            if (pending[key]?.value === koCount) delete pending[key]
             patchPlacement(nodeNumber, updated)
           })
           .catch((err: unknown) => {
-            if (pending[nodeNumber]?.value === koCount) delete pending[nodeNumber]
+            if (pending[key]?.value === koCount) delete pending[key]
             toast.error((err as Error).message || t.game.war.loadError)
             void fetchWarDefense(true)
           })
@@ -654,10 +664,11 @@ export function WarProvider({
         )
       )
       toast.success(t.game.war.synergy.addSuccess.replace('{target}', synergy.target_champion_name))
-      setSynergies((prev) => [
-        ...prev.filter((s) => s.champion_user_id !== synergy.champion_user_id),
-        synergy,
-      ])
+      if (isShown(activeWarId))
+        setSynergies((prev) => [
+          ...prev.filter((s) => s.champion_user_id !== synergy.champion_user_id),
+          synergy,
+        ])
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.synergy.addError)
     }
@@ -691,7 +702,7 @@ export function WarProvider({
       toast.success(
         t.game.war.prefight.addSuccess.replace('#{node}', String(prefight.target_node_number))
       )
-      setPrefights((prev) => [...prev, prefight])
+      if (isShown(activeWarId)) setPrefights((prev) => [...prev, prefight])
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.prefight.addError)
     }
@@ -817,6 +828,12 @@ export function WarProvider({
       canPlaceWar,
       isVisitor,
       isMine,
+      wars,
+      selectedWarId,
+      setSelectedWarId,
+      hasActiveWar,
+      isWarClosed,
+      isMapReadOnly,
       currentWar,
       activeWarId,
       managementLoading,
@@ -878,6 +895,11 @@ export function WarProvider({
       canManageWar,
       canPlaceWar,
       isVisitor,
+      wars,
+      selectedWarId,
+      hasActiveWar,
+      isWarClosed,
+      isMapReadOnly,
       currentWar,
       activeWarId,
       managementLoading,

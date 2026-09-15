@@ -294,14 +294,14 @@ class TestWarFightRecordSnapshot:
         assert row.note_author == data["owner"].game_pseudo
 
     @pytest.mark.asyncio
-    async def test_end_war_idempotent_snapshot(self, session):
-        """Calling end_war twice must not create duplicate fight records."""
+    async def test_end_war_twice_does_not_duplicate_snapshot(self, session):
+        """Ending an already-ended war is refused, so it cannot re-snapshot fight records."""
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
         await _end_war(data["alliance"].id, data["war"].id, headers=headers)
 
-        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, expected_status=409)
 
         records = await _fetch_records(session, data["war"].id)
         assert len(records) == 1
@@ -767,9 +767,18 @@ class TestListFightRecords:
 class TestFightRecordReadsTheWar:
     @pytest.mark.asyncio
     async def test_boost_corrected_after_snapshot_shows_in_listing(self):
+        """The map correction requires the war to still be within the Latest Season."""
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
-        await _end_war(data["alliance"].id, data["war"].id, headers=headers)
+        season = Season(number=80, status=SeasonStatus.active)
+        await load_objects([season])
+        async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
+            war = await session.get(War, data["war"].id)
+            war.season_id = season.id
+            session.add(war)
+            await session.commit()
+
+        await _end_war(data["alliance"].id, data["war"].id, headers=headers, elo_change=10)
 
         await execute_put_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/boosts",

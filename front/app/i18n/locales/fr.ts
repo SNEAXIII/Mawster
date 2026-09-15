@@ -568,6 +568,9 @@ const fr: Translations = {
       opponentName: "Nom de l'adversaire",
       noWar: 'Aucune guerre déclarée.',
       selectWar: 'Sélectionner une guerre',
+      statusActive: 'Guerre en cours',
+      statusEnded: 'Guerre terminée',
+      attackerLocked: 'Ce joueur a quitté le battlegroup : son combat est verrouillé',
       placeSuccess: '{name} placé sur le nœud #{node}',
       placeError: 'Erreur lors du placement du défenseur',
       removeSuccess: 'Défenseur retiré',
@@ -603,6 +606,7 @@ const fr: Translations = {
       placeOnNode: 'Placer sur le nœud #{node}',
       // Attackers
       selectAttacker: 'Assigner un attaquant au nœud #{node}',
+      nodeDetail: 'Nœud #{node}',
       searchAttacker: 'Rechercher champion ou joueur...',
       searchPlayer: 'Rechercher joueur...',
       assignAttacker: 'Assigner Attaquant',

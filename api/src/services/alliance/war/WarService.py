@@ -21,6 +21,7 @@ from src.dto.alliance.war.dto_war import (
     WarResponse,
     WarSynergyResponse,
 )
+from src.enums.SeasonFormat import SeasonFormat
 from src.enums.WarStatus import WarStatus
 from src.game_types import KoCount
 from src.Messages.war_messages import (
@@ -66,6 +67,7 @@ from src.models.alliance.DefensePlacement import DefensePlacement
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
+from src.models.war.Season import Season
 from src.models.war.War import War
 from src.models.war.WarBan import WarBan
 from src.models.war.WarDefensePlacement import WarDefensePlacement
@@ -75,8 +77,10 @@ from src.models.war.WarSynergyAttacker import WarSynergyAttacker
 from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
+from src.services.alliance.war.ClosedWarPolicy import ClosedWarPolicy
 from src.services.alliance.war.WarFormatConfig import for_format
 from src.services.knowledge.FightRecordService import FightRecordService
+from src.services.SeasonService import SeasonService as DisplaySeasonService
 from src.utils.db import SessionDep
 
 BATTLEGROUPS = (1, 2, 3)
@@ -135,7 +139,7 @@ class WarService:
             session.add(WarBan(war_id=war.id, champion_id=champion_id))
 
         await session.commit()
-        return WarResponse.model_validate(await cls._load_war(session, war.id))
+        return await cls._war_dto(session, await cls._load_war(session, war.id))
 
     @classmethod
     async def update_war(
@@ -149,6 +153,7 @@ class WarService:
         war = await session.get(War, war_id)
         if war is None or war.alliance_id != alliance_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=WAR_NOT_FOUND)
+        ClosedWarPolicy.assert_open(war)
 
         if len(banned_champion_ids) > MAX_BANNED_CHAMPIONS:
             raise HTTPException(
@@ -181,7 +186,7 @@ class WarService:
             session.add(WarBan(war_id=war_id, champion_id=champion_id))
 
         await session.commit()
-        return WarResponse.model_validate(await cls._load_war(session, war_id))
+        return await cls._war_dto(session, await cls._load_war(session, war_id))
 
     @classmethod
     async def get_wars(
@@ -201,7 +206,14 @@ class WarService:
         )
         result = await session.exec(stmt)
         wars = result.all()
-        return [WarResponse.model_validate(w) for w in wars]
+        latest_season = await DisplaySeasonService.get_display_season(session)
+        current_format = await SeasonService.get_current_format(session)
+        return [
+            await cls._war_dto(
+                session, w, latest_season=latest_season, current_format=current_format
+            )
+            for w in wars
+        ]
 
     @classmethod
     async def get_current_war(
@@ -218,7 +230,7 @@ class WarService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=NO_ACTIVE_WAR_FOR_ALLIANCE,
             )
-        return WarResponse.model_validate(await cls._load_war(session, war.id))
+        return await cls._war_dto(session, await cls._load_war(session, war.id))
 
     @classmethod
     async def get_war(
@@ -245,6 +257,38 @@ class WarService:
         )
         result = await session.exec(stmt)
         return result.first()
+
+    @classmethod
+    async def _war_format(cls, session: SessionDep, war: War | None) -> SeasonFormat:
+        """A closed War keeps its Season's format; a running one follows the Season being played or prepared."""
+        if war is not None and war.status == WarStatus.ended and war.season is not None:
+            return war.season.format
+        return await SeasonService.get_current_format(session)
+
+    @classmethod
+    async def _war_dto(
+        cls,
+        session: SessionDep,
+        war: War,
+        *,
+        latest_season: Season | None = None,
+        current_format: SeasonFormat | None = None,
+    ) -> WarResponse:
+        if latest_season is None:
+            latest_season = await DisplaySeasonService.get_display_season(session)
+        if war.status == WarStatus.ended and war.season is not None:
+            war_format = war.season.format
+        else:
+            war_format = current_format or await SeasonService.get_current_format(session)
+        params = for_format(war_format)
+        return WarResponse.model_validate(war).model_copy(
+            update={
+                "is_map_correctable": ClosedWarPolicy.is_map_correctable(war, latest_season),
+                "format": war_format,
+                "node_count": params.node_count,
+                "max_attackers_per_member": params.max_attackers_per_member,
+            }
+        )
 
     @classmethod
     async def get_war_defense(
@@ -292,7 +336,8 @@ class WarService:
         One grouped query, so the two battlegroups the caller is not looking at
         cost no extra round-trip and no placement rows.
         """
-        node_count = for_format(await SeasonService.get_current_format(session)).node_count
+        war = await cls._load_war(session, war_id)
+        node_count = for_format(await cls._war_format(session, war)).node_count
         handled = cast(
             case(
                 (
@@ -400,19 +445,26 @@ class WarService:
         cls, session: SessionDep, placement: WarDefensePlacement
     ) -> WarPlacementResponse:
         saga = await SagaService.resolve_current(session)
-        return cls._apply_placement_saga(
+        dto = cls._apply_placement_saga(
             WarPlacementResponse.model_validate(placement), placement, saga
         )
+        war = await session.get(War, placement.war_id)
+        dto.is_attacker_locked = ClosedWarPolicy.is_attacker_locked(war, placement)
+        return dto
 
     @classmethod
     async def _placement_dtos(
         cls, session: SessionDep, placements: list[WarDefensePlacement]
     ) -> list[WarPlacementResponse]:
         saga = await SagaService.resolve_current(session)
-        return [
+        war = await session.get(War, placements[0].war_id) if placements else None
+        dtos = [
             cls._apply_placement_saga(WarPlacementResponse.model_validate(p), p, saga)
             for p in placements
         ]
+        for dto, placement in zip(dtos, placements, strict=True):
+            dto.is_attacker_locked = ClosedWarPolicy.is_attacker_locked(war, placement)
+        return dtos
 
     @staticmethod
     def _apply_placement_saga(
@@ -473,6 +525,11 @@ class WarService:
         )
         old_placement = existing_node.first()
         if old_placement:
+            war = await session.get(War, war_id)
+            ClosedWarPolicy.assert_attacker_unlocked(
+                war, await cls._load_placement(session, old_placement.id)
+            )
+            await FightRecordService.drop_node_record(session, old_placement.id)
             await session.delete(old_placement)
             await session.flush()
 
@@ -589,10 +646,15 @@ class WarService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=NO_DEFENDER_ON_NODE,
             )
+        war = await session.get(War, war_id)
+        ClosedWarPolicy.assert_attacker_unlocked(
+            war, await cls._load_placement(session, placement.id)
+        )
         # Removing the defender tears down the node's whole attack plan: detach the
         # attacker and drop its synergy/prefight rows (they don't FK the placement, so
         # they would otherwise be orphaned). The note survives via its SET NULL FK.
         attacker_champion_user_id = placement.attacker_champion_user_id
+        await FightRecordService.drop_node_record(session, placement.id)
         await session.delete(placement)
         await session.commit()
         await cls._cleanup_attacker_associations(
@@ -616,7 +678,7 @@ class WarService:
         war.opponent_deaths = opponent_deaths
         session.add(war)
         await session.commit()
-        return WarResponse.model_validate(await cls._load_war(session, war.id))
+        return await cls._war_dto(session, await cls._load_war(session, war.id))
 
     @classmethod
     async def end_war(
@@ -630,6 +692,7 @@ class WarService:
     ) -> WarResponse:
 
         war = await cls.get_war(session, war_id, alliance_id)
+        ClosedWarPolicy.assert_open(war)
         alliance = await session.get(Alliance, alliance_id)
 
         if war.season_id is not None:
@@ -661,7 +724,7 @@ class WarService:
         await session.refresh(war)
 
         await FightRecordService.snapshot_war(session, war)
-        return WarResponse.model_validate(await cls._load_war(session, war.id))
+        return await cls._war_dto(session, await cls._load_war(session, war.id))
 
     @classmethod
     async def clear_bg(
@@ -670,6 +733,8 @@ class WarService:
         war_id: uuid.UUID,
         battlegroup: int,
     ) -> int:
+        war = await session.get(War, war_id)
+        ClosedWarPolicy.assert_open(war)
         result = await session.exec(
             select(WarDefensePlacement).where(
                 and_(
@@ -697,16 +762,14 @@ class WarService:
         war: War | None = None,
         node_number: int | None = None,
     ) -> list[AvailableAttackerResponse]:
-        max_attackers = for_format(
-            await SeasonService.get_current_format(session)
-        ).max_attackers_per_member
+        max_attackers = for_format(await cls._war_format(session, war)).max_attackers_per_member
         # Get members assigned to this battlegroup (or just the specific attacker)
         member_conditions = and_(
             GameAccount.alliance_id == alliance_id,
             GameAccount.alliance_group == battlegroup,
         )
         if attacker_id is not None:
-            member_conditions = and_(GameAccount.id == attacker_id)
+            member_conditions = and_(member_conditions, GameAccount.id == attacker_id)
         members_result = await session.exec(
             select(GameAccount)
             .where(member_conditions)
@@ -722,7 +785,9 @@ class WarService:
             GameAccount.alliance_group == battlegroup,
         )
         if attacker_id is not None:
-            defense_conditions = and_(DefensePlacement.game_account_id == attacker_id)
+            defense_conditions = and_(
+                defense_conditions, DefensePlacement.game_account_id == attacker_id
+            )
         request_sql = (
             select(DefensePlacement.champion_user_id)
             .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
@@ -892,7 +957,8 @@ class WarService:
         champion_user_id: uuid.UUID,
     ) -> WarPlacementResponse:
         # 0. Resolve format caps for this season
-        _params = for_format(await SeasonService.get_current_format(session))
+        war = await cls._load_war(session, war_id)
+        _params = for_format(await cls._war_format(session, war))
         if node_number < 1 or node_number > _params.node_count:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -912,6 +978,11 @@ class WarService:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=COMBAT_COMPLETED_LOCKED,
+            )
+
+        if placement.attacker_champion_user_id is not None:
+            ClosedWarPolicy.assert_attacker_unlocked(
+                war, await cls._load_placement(session, placement.id)
             )
 
         # 2. Load the champion user
@@ -1011,10 +1082,12 @@ class WarService:
 
         # 6. Assign
         placement_id = placement.id
+        attacker_changed = placement.attacker_champion_user_id != champion_user_id
         placement.attacker_champion_user_id = champion_user_id
         session.add(placement)
         await session.commit()
         session.expire(placement)
+        await FightRecordService.sync_node(session, placement_id, refreeze=attacker_changed)
 
         return await cls._placement_dto(session, await cls._load_placement(session, placement_id))
 
@@ -1039,12 +1112,18 @@ class WarService:
                 detail=COMBAT_COMPLETED_LOCKED,
             )
 
+        war = await session.get(War, war_id)
+        ClosedWarPolicy.assert_attacker_unlocked(
+            war, await cls._load_placement(session, placement.id)
+        )
+
         removed_champion_user_id = placement.attacker_champion_user_id
         placement.attacker_champion_user_id = None
         placement.ko_count = 0
         cls._clear_boosts(placement)
         session.add(placement)
         await session.commit()
+        await FightRecordService.sync_node(session, placement.id)
 
         await cls._cleanup_attacker_associations(
             session, war_id, battlegroup, node_number, removed_champion_user_id
@@ -1171,6 +1250,7 @@ class WarService:
         placement.is_fight_not_done = not placement.is_fight_not_done
         session.add(placement)
         await session.commit()
+        await FightRecordService.sync_node(session, placement.id)
         return await cls._placement_dto(session, await cls._load_placement(session, placement.id))
 
     @classmethod
@@ -1348,9 +1428,8 @@ class WarService:
         target_champion_user_id: uuid.UUID,
         current_user_id: uuid.UUID,
     ) -> WarSynergyResponse:
-        max_attackers = for_format(
-            await SeasonService.get_current_format(session)
-        ).max_attackers_per_member
+        war = await cls._load_war(session, war_id)
+        max_attackers = for_format(await cls._war_format(session, war)).max_attackers_per_member
         # 1. Load champion_user and validate it belongs to this alliance + BG
         cu_stmt = (
             select(ChampionUser)
@@ -1599,7 +1678,8 @@ class WarService:
         target_node_number: int,
     ) -> WarPrefightResponse:
         # 0. Resolve format caps for this season
-        _params = for_format(await SeasonService.get_current_format(session))
+        war = await cls._load_war(session, war_id)
+        _params = for_format(await cls._war_format(session, war))
         if target_node_number < 1 or target_node_number > _params.node_count:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,

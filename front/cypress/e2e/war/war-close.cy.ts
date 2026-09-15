@@ -1,3 +1,5 @@
+import { BACKEND } from '../../support/e2e';
+
 describe('War close', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -39,6 +41,34 @@ describe('War close', () => {
           });
         }),
       );
+    });
+  });
+
+  it('closing an already closed war is refused', () => {
+    const ownerToken = 'wc2-owner';
+    cy.apiBatchSetup([
+      {
+        discord_token: ownerToken,
+        game_pseudo: 'wc2Owner',
+        create_alliance: { name: 'wc2Alliance', tag: 'WC2' },
+        battlegroup: 1,
+      },
+    ]).then((users) => {
+      const ownerAT = users[ownerToken].access_token;
+      const allianceId = users[ownerToken].alliance_id!;
+      cy.apiCreateWar(ownerAT, allianceId, 'OpponentTwice').then((war) => {
+        cy.apiEndWar(ownerAT, allianceId, war.id, true, 10).then(() => {
+          cy.request({
+            method: 'POST',
+            url: `${BACKEND}/alliances/${allianceId}/wars/${war.id}/end`,
+            headers: { Authorization: `Bearer ${ownerAT}` },
+            body: { win: false, elo_change: null },
+            failOnStatusCode: false,
+          })
+            .its('status')
+            .should('eq', 409);
+        });
+      });
     });
   });
 });

@@ -6,6 +6,7 @@ from starlette import status
 from src.controllers.alliance.war.war_deps import WarDep
 from src.dto.alliance.war.dto_war import WarSynergyCreateRequest, WarSynergyResponse
 from src.services.alliance.AllianceService import AllianceService
+from src.services.alliance.war.ClosedWarPolicy import ClosedWarPolicy
 from src.services.alliance.war.WarService import WarService
 from src.services.auth.AuthService import AuthService
 from src.utils.auth_deps import CurrentUser
@@ -52,6 +53,7 @@ async def add_war_synergy(
 ):
     """Add a synergy champion for a battlegroup. All members can add."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.add_synergy_attacker(
         session,
         war_id,
@@ -78,4 +80,5 @@ async def remove_war_synergy(
 ):
     """Remove a synergy champion from a battlegroup. All members can remove."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     await WarService.remove_synergy_attacker(session, war_id, battlegroup, champion_user_id)
