@@ -129,7 +129,8 @@ describe('War – closed war correction', () => {
       cy.apiLogin(memberData.user_id, 'war');
 
       cy.getByCy('war-closed-banner').should('be.visible');
-      cy.getByCy('attacker-entry-node-1').scrollIntoView().should('be.visible');
+      // The read-only KO label proves the row rendered before checking the controls are absent.
+      cy.getByCy('attacker-entry-node-1').scrollIntoView().should('contain', '0 KO');
       cy.getByCy('ko-inc-node-1').should('not.exist');
       cy.getByCy('ko-dec-node-1').should('not.exist');
       cy.getByCy('remove-attacker-node-1').should('not.exist');
@@ -159,8 +160,8 @@ describe('War – closed war correction', () => {
 
         cy.getByCy('node-attacker-locked-1').should('be.visible');
         cy.getByCy('attacker-entry-node-1').scrollIntoView().should('be.visible');
-        cy.getByCy('remove-attacker-node-1').should('not.exist');
         cy.getByCy('ko-inc-node-1').should('exist');
+        cy.getByCy('remove-attacker-node-1').should('not.exist');
       });
     });
   });
