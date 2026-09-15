@@ -76,7 +76,9 @@ export function WarMapNode({
   return (
     <div
       className={cn(
-        'group relative transition-opacity',
+        'group relative rounded-md transition-opacity',
+        hasPrefight && 'ring-2 ring-foreground',
+        !hasPrefight && !dimmed && placement && 'ring-1 ring-white/30',
         // Empty nodes recede so the eye lands on what is actually placed.
         !placement && 'opacity-45 hover:opacity-80',
         dimmed && 'opacity-25'
@@ -98,8 +100,6 @@ export function WarMapNode({
           'relative block size-full cursor-pointer rounded-md border-2 text-left transition-all',
           colorClasses,
           hoverClasses,
-          hasPrefight && 'ring-2 ring-foreground',
-          !hasPrefight && !dimmed && placement && 'ring-1 ring-white/30',
           !placement && 'border-dashed'
         )}
         onClick={() => onNodeClick(nodeNumber)}
