@@ -150,6 +150,7 @@ class WarService:
         war = await session.get(War, war_id)
         if war is None or war.alliance_id != alliance_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=WAR_NOT_FOUND)
+        ClosedWarPolicy.assert_open(war)
 
         if len(banned_champion_ids) > MAX_BANNED_CHAMPIONS:
             raise HTTPException(
@@ -672,6 +673,8 @@ class WarService:
         war_id: uuid.UUID,
         battlegroup: int,
     ) -> int:
+        war = await session.get(War, war_id)
+        ClosedWarPolicy.assert_open(war)
         result = await session.exec(
             select(WarDefensePlacement).where(
                 and_(

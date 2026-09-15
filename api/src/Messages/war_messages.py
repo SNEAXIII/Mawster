@@ -49,6 +49,7 @@ ASSIST_NO_ATTACKER_ASSIGNED = "Cannot assign assist: no attacker assigned to thi
 ASSIST_SAME_ACCOUNT = "Assistor must be a different player than the attacker"
 ASSIST_NOT_FOUND = "No assist assigned to this node"
 WAR_CLOSED = "This war is closed — its opponent, bans and result can no longer change"
+WAR_MAP_SEALED = "This war's season is over — its map can no longer be corrected"
 
 
 def champion_with_id_not_found(champion_id) -> str:

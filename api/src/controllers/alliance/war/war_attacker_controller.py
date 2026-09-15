@@ -12,6 +12,7 @@ from src.dto.alliance.war.dto_war import (
     WarPlacementResponse,
 )
 from src.services.alliance.AllianceService import AllianceService
+from src.services.alliance.war.ClosedWarPolicy import ClosedWarPolicy
 from src.services.alliance.war.WarService import WarService
 from src.services.auth.AuthService import AuthService
 from src.utils.auth_deps import CurrentUser
@@ -79,6 +80,7 @@ async def assign_war_attacker(
 ):
     """Assign an attacker to a war node. All members can assign."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.assign_attacker(
         session, war_id, alliance_id, battlegroup, node_number, body.champion_user_id
     )
@@ -99,6 +101,7 @@ async def remove_war_attacker(
 ):
     """Remove the attacker from a war node. All members can remove."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.remove_attacker(session, war_id, battlegroup, node_number)
 
 
@@ -118,6 +121,7 @@ async def update_war_ko(
 ):
     """Update the KO count for a war node. All members can update."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.update_ko(session, war_id, battlegroup, node_number, body.ko_count)
 
 
@@ -137,6 +141,7 @@ async def update_war_boosts(
 ):
     """Replace the boosts planned for a war node's attacker. All members can update."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.update_boosts(session, war_id, battlegroup, node_number, body)
 
 
@@ -155,6 +160,7 @@ async def toggle_combat_completed(
 ):
     """Toggle combat completion for a war node. All members can toggle."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.toggle_combat_completed(session, war_id, battlegroup, node_number)
 
 
@@ -173,6 +179,7 @@ async def toggle_fight_not_done(
 ):
     """Mark a node's fight as not done. Officers/owner only."""
     await AllianceService.require_officer(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.toggle_fight_not_done(session, war_id, battlegroup, node_number)
 
 
@@ -191,6 +198,7 @@ async def toggle_planning_error(
 ):
     """Mark a node as a planning error. Officers/owner only."""
     await AllianceService.require_officer(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.toggle_planning_error(session, war_id, battlegroup, node_number)
 
 
@@ -210,6 +218,7 @@ async def assign_war_assist(
 ):
     """Assign an assistor to a war node. All members can assign."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.assign_assist(
         session, war_id, alliance_id, battlegroup, node_number, body.champion_user_id
     )
@@ -230,4 +239,5 @@ async def remove_war_assist(
 ):
     """Remove the assistor from a war node. All members can remove."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.remove_assist(session, war_id, battlegroup, node_number)

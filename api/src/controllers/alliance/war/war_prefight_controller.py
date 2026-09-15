@@ -6,6 +6,7 @@ from starlette import status
 from src.controllers.alliance.war.war_deps import WarDep
 from src.dto.alliance.war.dto_war import WarPrefightCreateRequest, WarPrefightResponse
 from src.services.alliance.AllianceService import AllianceService
+from src.services.alliance.war.ClosedWarPolicy import ClosedWarPolicy
 from src.services.alliance.war.WarService import WarService
 from src.services.auth.AuthService import AuthService
 from src.utils.auth_deps import CurrentUser
@@ -52,6 +53,7 @@ async def add_war_prefight(
 ):
     """Add a pre-fight champion for a battlegroup. All members can add."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.add_prefight_attacker(
         session,
         war_id,
@@ -78,6 +80,7 @@ async def remove_war_prefight(
 ):
     """Remove a champion's pre-fight on one node. Any alliance member can remove."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
+    await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     await WarService.remove_prefight_attacker(
         session, war_id, battlegroup, champion_user_id, target_node_number
     )

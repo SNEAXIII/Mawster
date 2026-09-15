@@ -1,5 +1,7 @@
 import uuid
 
+from src.enums.SeasonStatus import SeasonStatus
+from src.models.war.Season import Season
 from src.models.war.War import War
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
@@ -75,7 +77,7 @@ async def _setup_war(
     return {**data, "war": war}
 
 
-async def _setup_attacker_scenario():
+async def _setup_attacker_scenario(season_id: uuid.UUID | None = None):
     """
     Create alliance + owner (officer, BG1) + member (BG1) + champion + war + defender on node 10.
     Returns dict with all objects needed for attacker tests.
@@ -105,6 +107,7 @@ async def _setup_attacker_scenario():
         alliance_id=alliance.id,
         opponent_name=OPPONENT,
         created_by_id=owner.id,
+        season_id=season_id,
     )
     await load_objects([war])
 
@@ -131,3 +134,22 @@ async def _setup_attacker_scenario():
         "champ2": champ2,
         "champion_user": cu,
     }
+
+
+async def _setup_closed_war_scenario():
+    """Attacker scenario in active Season 1: the member fought node 10, then the War was closed."""
+    season = Season(number=1, status=SeasonStatus.active)
+    await load_objects([season])
+    data = await _setup_attacker_scenario(season_id=season.id)
+    base = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}"
+    headers_owner = create_auth_headers(user_id=str(USER_ID))
+    await execute_post_request(
+        f"{base}/bg/1/node/10/attacker",
+        payload={"champion_user_id": str(data["champion_user"].id)},
+        headers=headers_owner,
+    )
+    closed = await execute_post_request(
+        f"{base}/end", payload={"win": True, "elo_change": 10}, headers=headers_owner
+    )
+    assert closed.status_code == 200
+    return {**data, "season": season, "base": base}
