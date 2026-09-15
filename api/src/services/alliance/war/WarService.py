@@ -1020,11 +1020,12 @@ class WarService:
 
         # 6. Assign
         placement_id = placement.id
+        attacker_changed = placement.attacker_champion_user_id != champion_user_id
         placement.attacker_champion_user_id = champion_user_id
         session.add(placement)
         await session.commit()
         session.expire(placement)
-        await FightRecordService.sync_node(session, placement_id, refreeze=True)
+        await FightRecordService.sync_node(session, placement_id, refreeze=attacker_changed)
 
         return await cls._placement_dto(session, await cls._load_placement(session, placement_id))
 

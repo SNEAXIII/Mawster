@@ -5,6 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.enums.SeasonStatus import SeasonStatus
+from src.models.champion.ChampionUser import ChampionUser
 from src.models.war.Season import Season
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightRecord import WarFightRecord
@@ -134,6 +135,32 @@ async def _record_of_node(war_id, battlegroup: int, node: int) -> WarFightRecord
         ).first()
 
 
+async def _placement_id_of_node(war_id, battlegroup: int, node: int):
+    async with AsyncSession(sqlite_async_engine) as session:
+        return (
+            await session.exec(
+                select(WarDefensePlacement.id).where(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    WarDefensePlacement.node_number == node,
+                )
+            )
+        ).first()
+
+
+async def _record_by_placement_id(placement_id) -> WarFightRecord | None:
+    """No join through the placement: SQLite in tests never enables foreign_keys,
+    so a deleted placement would otherwise leave an orphaned record invisible."""
+    async with AsyncSession(sqlite_async_engine) as session:
+        return (
+            await session.exec(
+                select(WarFightRecord).where(
+                    WarFightRecord.war_defense_placement_id == placement_id
+                )
+            )
+        ).first()
+
+
 class TestClosedWarFightRecordSync:
     @pytest.mark.asyncio
     async def test_changing_attacker_refreezes_current_stats(self):
@@ -171,9 +198,47 @@ class TestClosedWarFightRecordSync:
     @pytest.mark.asyncio
     async def test_removing_defender_drops_record(self):
         data = await _setup_closed_war_scenario()
+        placement_id = await _placement_id_of_node(data["war"].id, 1, 10)
         response = await execute_delete_request(f"{data['base']}/bg/1/node/10", headers=OWNER)
         assert response.status_code == 204
-        assert await _record_of_node(data["war"].id, 1, 10) is None
+        assert await _record_by_placement_id(placement_id) is None
+
+    @pytest.mark.asyncio
+    async def test_replacing_defender_drops_old_record(self):
+        data = await _setup_closed_war_scenario()
+        old_placement_id = await _placement_id_of_node(data["war"].id, 1, 10)
+        champ = await push_champion(name="Iron Man", champion_class="Tech")
+        response = await execute_post_request(
+            f"{data['base']}/bg/1/place",
+            payload={
+                "node_number": 10,
+                "champion_id": str(champ.id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=OWNER,
+        )
+        assert response.status_code == 201
+        assert await _record_by_placement_id(old_placement_id) is None
+
+    @pytest.mark.asyncio
+    async def test_reassigning_same_attacker_keeps_old_rank(self):
+        data = await _setup_closed_war_scenario()
+        async with AsyncSession(sqlite_async_engine) as session:
+            cu = await session.get(ChampionUser, data["champion_user"].id)
+            cu.rank = 6
+            session.add(cu)
+            await session.commit()
+        response = await execute_post_request(
+            f"{data['base']}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=OWNER,
+        )
+        assert response.status_code == 200
+        record = await _record_of_node(data["war"].id, 1, 10)
+        assert record is not None
+        assert record.rank == 3
 
     @pytest.mark.asyncio
     async def test_assigning_attacker_on_running_war_creates_no_record(self):
