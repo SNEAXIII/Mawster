@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import en, { type Translations } from './locales/en'
 import fr from './locales/fr'
 
@@ -38,13 +38,12 @@ export function I18nProvider({ children }: Readonly<{ children: React.ReactNode 
     localStorage.setItem(STORAGE_KEY, newLocale)
   }, [])
 
-  const t = locales[locale]
-
-  return (
-    <I18nContext.Provider value={{ locale, setLocale: changeLocale, t }}>
-      {children}
-    </I18nContext.Provider>
+  const value = useMemo(
+    () => ({ locale, setLocale: changeLocale, t: locales[locale] }),
+    [locale, changeLocale]
   )
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }
 
 export function useI18n() {
