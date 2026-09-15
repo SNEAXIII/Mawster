@@ -58,6 +58,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
     handleBgChange,
     canManageWar,
     canPlaceWar,
+    isWarClosed,
     warMode,
     setWarMode,
     warLoading,
@@ -238,7 +239,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
             </div>
           )}
           {/* Clear BG button */}
-          {canPlaceWar && placements.length > 0 && (
+          {canPlaceWar && !isWarClosed && placements.length > 0 && (
             <Button
               variant='outline'
               onClick={() => setShowClearConfirm(true)}
@@ -305,7 +306,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
                 </div>
               ))
             )}
-            {canManageWar && (
+            {canManageWar && !isWarClosed && (
               <Button
                 variant='outline'
                 onClick={onEditClick}
@@ -316,7 +317,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
             )}
           </div>
           {/* End war button */}
-          {canManageWar && (
+          {canManageWar && !isWarClosed && (
             <Button
               variant='destructive'
               onClick={() => setShowEndConfirm(true)}
@@ -373,8 +374,12 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
                 onCombatFilterChange={setCombatFilter}
                 exporting={exporting}
                 exportRef={exportAttackersRef}
-                nodeCount={currentSeason?.node_count ?? 50}
-                maxAttackers={currentSeason?.max_attackers_per_member ?? 3}
+                nodeCount={currentWar?.node_count ?? currentSeason?.node_count ?? 50}
+                maxAttackers={
+                  currentWar?.max_attackers_per_member ??
+                  currentSeason?.max_attackers_per_member ??
+                  3
+                }
               />
             </div>
           </div>

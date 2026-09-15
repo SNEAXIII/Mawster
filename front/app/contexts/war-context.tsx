@@ -24,7 +24,6 @@ import {
   type AvailableAttacker,
   type WarSynergy,
   type WarPrefight,
-  getCurrentWar,
   createWar,
   updateWar,
   endWar,
@@ -54,6 +53,7 @@ import {
 import { upsertWarFightNote, deleteWarFightNote } from '@/app/services/war-notes'
 import { reportNote } from '@/app/services/moderation'
 import { WarMode } from '@/app/game/war/_components/war-types'
+import { useWarSelection } from './use-war-selection'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,7 +74,13 @@ interface WarContextValue {
   isVisitor: boolean
   isMine: (gameAccountId: string) => boolean
 
-  // War
+  // War — `currentWar` is the War on screen, running or closed
+  wars: War[]
+  selectedWarId: string | null
+  setSelectedWarId: (id: string) => void
+  hasActiveWar: boolean
+  isWarClosed: boolean
+  isMapReadOnly: boolean
   currentWar: War | null
   activeWarId: string
   managementLoading: boolean
@@ -194,8 +200,16 @@ export function WarProvider({
   } = useAllianceSelector({ initialAllianceId, initialBg })
 
   // ─── War state ─────────────────────────────────────────────────────────────
-  const [currentWar, setCurrentWar] = useState<War | null>(null)
-  const [managementLoading, setManagementLoading] = useState(false)
+  const {
+    wars,
+    selectedWarId,
+    setSelectedWarId,
+    currentWar,
+    hasActiveWar,
+    loading: managementLoading,
+    fetchWars,
+    showWar,
+  } = useWarSelection(selectedAllianceId)
   const [warMode, setWarMode] = useState<WarMode>(WarMode.Attackers)
 
   // ─── Dialog / selector state ───────────────────────────────────────────────
@@ -262,6 +276,8 @@ export function WarProvider({
     () => alliances.find((a) => a.id === selectedAllianceId)?.isVisitor ?? false,
     [alliances, selectedAllianceId]
   )
+  const isWarClosed = currentWar?.status === 'ended'
+  const isMapReadOnly = isVisitor || (isWarClosed && !canPlaceWar)
 
   const handleAllianceChange = useCallback(
     (allianceId: string) => {
@@ -290,35 +306,6 @@ export function WarProvider({
     }
     // oxlint-disable-next-line react/exhaustive-deps
   }, [alliances, selectedAllianceId, setSelectedAllianceId])
-
-  // ─── Fetch current war ─────────────────────────────────────────────────────
-  const fetchCurrentWar = useCallback(async () => {
-    if (!selectedAllianceId) return
-    setManagementLoading(true)
-    try {
-      const war = await getCurrentWar(selectedAllianceId)
-      setCurrentWar(war)
-    } catch (err: unknown) {
-      const status = (err as { status?: number }).status
-      if (status === 404) {
-        setCurrentWar(null)
-      } else if (status === 403) {
-        // 403 means selectedAllianceId is a foreign alliance from a shared
-        // link the user doesn't belong to; the auto-select effect is about
-        // to correct it, so treat this like "no war" and stay silent.
-        setCurrentWar(null)
-      } else {
-        toast.error(tRef.current.game.war.loadError)
-      }
-    } finally {
-      setManagementLoading(false)
-    }
-  }, [selectedAllianceId])
-
-  useEffect(() => {
-    setCurrentWar(null)
-    fetchCurrentWar()
-  }, [selectedAllianceId, fetchCurrentWar])
 
   // ─── Fetch war defense ─────────────────────────────────────────────────────
   const fetchWarDefense = useCallback(
@@ -401,13 +388,19 @@ export function WarProvider({
   const handleNodeClick = useCallback(
     (nodeNumber: number) => {
       if (!activeWarId) return
+      const placement = placements.find((p) => p.node_number === nodeNumber)
+      if (placement?.is_attacker_locked && warMode !== WarMode.Export) {
+        toast.info(t.game.war.attackerLocked)
+        return
+      }
       switch (warMode) {
         case WarMode.Attackers: {
-          const hasDefender = placements.some((p) => p.node_number === nodeNumber)
-          if (!hasDefender) {
+          if (!placement) {
             toast.warning(t.game.war.defenderRequired)
             return
           }
+          // The attacker selector only assigns; on a closed War that needs Strategist+.
+          if (isWarClosed && isMapReadOnly) return
           setAttackerSelectorNode(nodeNumber)
           break
         }
@@ -419,14 +412,14 @@ export function WarProvider({
           break
       }
     },
-    [activeWarId, warMode, placements, t, selectedAlliance, canPlace]
+    [activeWarId, warMode, placements, t, selectedAlliance, canPlace, isWarClosed, isMapReadOnly]
   )
 
   const handleCreateWar = async (opponentName: string, bannedChampionIds: string[]) => {
     try {
       const war = await createWar(selectedAllianceId, opponentName, bannedChampionIds)
       toast.success(t.game.war.createSuccess.replace('{name}', opponentName))
-      setCurrentWar(war)
+      showWar(war)
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.createError)
       throw err
@@ -442,7 +435,7 @@ export function WarProvider({
         opponentName,
         bannedChampionIds
       )
-      setCurrentWar(war)
+      showWar(war)
       toast.success(t.game.war.editWarSuccess)
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.editWarError)
@@ -458,9 +451,8 @@ export function WarProvider({
     if (!currentWar) return
     try {
       await endWar(selectedAllianceId, currentWar.id, win, eloChange, opponentDeaths)
-      await refresh()
+      await Promise.all([refresh(), fetchWars(currentWar.id)])
       toast.success(t.game.war.endWarSuccess)
-      setCurrentWar(null)
     } catch (err: unknown) {
       toast.error((err as Error).message || t.game.war.endWarError)
     }
@@ -817,6 +809,12 @@ export function WarProvider({
       canPlaceWar,
       isVisitor,
       isMine,
+      wars,
+      selectedWarId,
+      setSelectedWarId,
+      hasActiveWar,
+      isWarClosed,
+      isMapReadOnly,
       currentWar,
       activeWarId,
       managementLoading,
@@ -878,6 +876,11 @@ export function WarProvider({
       canManageWar,
       canPlaceWar,
       isVisitor,
+      wars,
+      selectedWarId,
+      hasActiveWar,
+      isWarClosed,
+      isMapReadOnly,
       currentWar,
       activeWarId,
       managementLoading,

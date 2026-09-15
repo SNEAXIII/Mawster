@@ -63,7 +63,7 @@ export default function AttackerEntryRow({
     handleToggleFightNotDone,
     handleTogglePlanningError,
     canManageWar,
-    isVisitor,
+    isMapReadOnly,
     isMine,
     prefights,
   } = useWar()
@@ -97,6 +97,7 @@ export default function AttackerEntryRow({
       <NodeSlot
         nodeNumber={placement.node_number}
         isFull={isFull}
+        title={placement.is_attacker_locked ? t.game.war.attackerLocked : undefined}
       />
 
       <div className='flex items-center gap-1 shrink-0'>
@@ -112,7 +113,7 @@ export default function AttackerEntryRow({
             ascension={placement.attacker_ascension ?? 0}
             is_saga_attacker={placement.attacker_is_saga_attacker ?? false}
             is_saga_defender={placement.attacker_is_saga_defender ?? false}
-            canManage={!isVisitor}
+            canManage={!isMapReadOnly}
           />
         )}
         {!showAttackerActions && placement.attacker_image_url && (
@@ -139,7 +140,7 @@ export default function AttackerEntryRow({
         {placement.attacker_champion_user_id && (
           <BoostPopover
             placement={placement}
-            canManage={!readonly && !isVisitor && !placement.is_combat_completed}
+            canManage={!readonly && !isMapReadOnly && !placement.is_combat_completed}
           />
         )}
         <Swords className={cn('text-muted-foreground shrink-0', swordsSize)} />
@@ -195,12 +196,12 @@ export default function AttackerEntryRow({
 
       {placement.attacker_champion_user_id && (
         <div className='flex items-center gap-2 ml-auto shrink-0'>
-          {(readonly || isVisitor) && (
+          {(readonly || isMapReadOnly) && (
             <span className={cn('font-mono text-muted-foreground', isFull ? 'text-sm' : 'text-xs')}>
               {placement.ko_count} KO
             </span>
           )}
-          {!readonly && !isVisitor && (
+          {!readonly && !isMapReadOnly && (
             <>
               {canToggleComplete && (
                 <button
@@ -335,7 +336,7 @@ export default function AttackerEntryRow({
                 </button>
               )}
 
-              {!placement.is_combat_completed && (
+              {!placement.is_combat_completed && !placement.is_attacker_locked && (
                 <>
                   <button
                     type='button'

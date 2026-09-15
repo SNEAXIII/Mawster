@@ -561,6 +561,8 @@ const en = {
       opponentName: 'Opponent Name',
       noWar: 'No war declared yet.',
       selectWar: 'Select a war',
+      closedBanner: 'War closed — only its map can still be corrected',
+      attackerLocked: 'This player left the battlegroup: their fight is locked',
       placeSuccess: '{name} placed on node #{node}',
       placeError: 'Failed to place defender',
       removeSuccess: 'Defender removed',

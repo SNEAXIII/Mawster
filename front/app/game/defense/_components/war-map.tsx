@@ -3,7 +3,7 @@
 import type { DefensePlacement } from '@/app/services/defense'
 import ChampionPortrait from '@/components/champion-portrait'
 import { cn } from '@/app/lib/utils'
-import { X, StickyNote } from 'lucide-react'
+import { X, StickyNote, Lock } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { rarityBadgeClass, rarityLabel, parseRarity } from './defense-utils'
 import { mapSectionsForFormat } from './war-format'
@@ -22,6 +22,8 @@ interface WarMapNodeProps {
   dimmed?: boolean
   hasPrefight?: boolean
   hasNote?: boolean
+  /** A closed War's fight whose Attacker left: the defender can't be replaced or removed. */
+  locked?: boolean
 }
 
 /**
@@ -63,6 +65,7 @@ export function WarMapNode({
   dimmed = false,
   hasPrefight = false,
   hasNote = false,
+  locked = false,
 }: Readonly<WarMapNodeProps>) {
   const { t } = useI18n()
   // The line is reserved for every node so rows keep one height, and an empty
@@ -149,6 +152,16 @@ export function WarMapNode({
               <StickyNote className='size-2' />
             </span>
           )}
+
+          {locked && (
+            <span
+              className='absolute top-0 right-0 z-40 flex items-center justify-center rounded-bl bg-black/70 p-0.5 text-white'
+              data-cy={`node-attacker-locked-${nodeNumber}`}
+              title={t.game.war.attackerLocked}
+            >
+              <Lock className='size-2.5' />
+            </span>
+          )}
         </div>
 
         {/* Empty node marker — centred on the whole cell (portrait + reserved
@@ -177,7 +190,7 @@ export function WarMapNode({
 
       {/* Remove — hover-revealed on desktop, always reachable on touch. It sits
           on the ascension badge, whose level is also in the rarity label. */}
-      {placement && canManage && (
+      {placement && canManage && !locked && (
         <button
           type='button'
           className='absolute top-0.5 right-0.5 z-40 flex size-4 items-center justify-center rounded-bl bg-red-600 text-white opacity-100 transition-opacity hover:bg-red-700 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100'
@@ -204,6 +217,7 @@ interface WarMapProps {
   dimmedNodes?: Set<number>
   prefightNodes?: Set<number>
   noteNodes?: Set<number>
+  lockedNodes?: Set<number>
   format?: SeasonFormat
 }
 
@@ -217,6 +231,7 @@ export default function WarMap({
   dimmedNodes,
   prefightNodes,
   noteNodes,
+  lockedNodes,
   format = 'regular',
 }: Readonly<WarMapProps>) {
   const sections = mapSectionsForFormat(format)
@@ -264,6 +279,7 @@ export default function WarMap({
                     dimmed={dimmedNodes?.has(nodeNumber) ?? false}
                     hasPrefight={prefightNodes?.has(nodeNumber) ?? false}
                     hasNote={noteNodes?.has(nodeNumber) ?? false}
+                    locked={lockedNodes?.has(nodeNumber) ?? false}
                   />
                 )
               )}

@@ -568,6 +568,8 @@ const fr: Translations = {
       opponentName: "Nom de l'adversaire",
       noWar: 'Aucune guerre déclarée.',
       selectWar: 'Sélectionner une guerre',
+      closedBanner: 'Guerre terminée — seule sa carte peut encore être corrigée',
+      attackerLocked: 'Ce joueur a quitté le battlegroup : son combat est verrouillé',
       placeSuccess: '{name} placé sur le nœud #{node}',
       placeError: 'Erreur lors du placement du défenseur',
       removeSuccess: 'Défenseur retiré',

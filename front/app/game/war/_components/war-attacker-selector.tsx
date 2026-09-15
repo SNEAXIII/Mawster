@@ -43,9 +43,10 @@ export default function WarAttackerSelector({
   onSelect,
 }: Readonly<WarAttackerSelectorProps>) {
   const { t } = useI18n()
-  const { canManageWar, loadAvailableAttackers } = useWar()
+  const { canManageWar, isWarClosed, loadAvailableAttackers, currentWar } = useWar()
   const currentSeason = useCurrentSeason()
-  const maxAttackers = currentSeason?.max_attackers_per_member ?? 3
+  const maxAttackers =
+    currentWar?.max_attackers_per_member ?? currentSeason?.max_attackers_per_member ?? 3
   const searchRef = useRef<HTMLInputElement>(null)
   const [showNote, setShowNote] = useState(false)
   const [available, setAvailable] = useState<AvailableAttacker[]>([])
@@ -298,7 +299,7 @@ export default function WarAttackerSelector({
                   note={currentPlacement.note ?? null}
                   noteId={currentPlacement.note_id ?? null}
                   noteBlocked={currentPlacement.note_blocked ?? false}
-                  canManage={canManageWar}
+                  canManage={canManageWar && !isWarClosed}
                 />
               )}
             </div>
