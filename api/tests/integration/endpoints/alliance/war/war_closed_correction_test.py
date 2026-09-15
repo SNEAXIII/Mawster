@@ -4,6 +4,7 @@ import pytest
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonStatus import SeasonStatus
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.war.Season import Season
@@ -21,6 +22,7 @@ from tests.integration.endpoints.setup.war_setup import (
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_delete_request,
+    execute_get_request,
     execute_patch_request,
     execute_post_request,
 )
@@ -318,3 +320,55 @@ class TestDepartedAttackerLock:
         await self._move_member_out(data)
         response = await execute_delete_request(f"{base}/bg/1/node/10/attacker", headers=OWNER)
         assert response.status_code == 200
+
+
+class TestClosedWarFormat:
+    @pytest.mark.asyncio
+    async def test_correction_uses_the_wars_own_season_format(self):
+        """Season 1 regular is over, Season 2 is prepared as Big Thing (10 nodes)."""
+        data = await _setup_closed_war_scenario()
+        await _end_season(data["season"])
+        await load_objects(
+            [Season(number=2, status=SeasonStatus.upcoming, format=SeasonFormat.big_thing)]
+        )
+        await execute_post_request(
+            f"{data['base']}/bg/1/place",
+            payload={
+                "node_number": 30,
+                "champion_id": str(data["champ2"].id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=OWNER,
+        )
+        other = await push_champion(name="Thor", champion_class="Cosmic")
+        cu = await push_champion_user(data["member"], other, stars=7, rank=3)
+        response = await execute_post_request(
+            f"{data['base']}/bg/1/node/30/attacker",
+            payload={"champion_user_id": str(cu.id)},
+            headers=OWNER,
+        )
+        assert response.status_code == 200
+
+
+class TestWarListExposesCorrectability:
+    @pytest.mark.asyncio
+    async def test_list_marks_closed_war_of_latest_season(self):
+        data = await _setup_closed_war_scenario()
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars", headers=MEMBER
+        )
+        war = next(w for w in response.json() if w["id"] == str(data["war"].id))
+        assert war["is_map_correctable"] is True
+        assert war["node_count"] == 50
+
+    @pytest.mark.asyncio
+    async def test_list_marks_war_of_older_season_sealed(self):
+        data = await _setup_closed_war_scenario()
+        await _replace_latest_season(data["season"])
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars", headers=MEMBER
+        )
+        war = next(w for w in response.json() if w["id"] == str(data["war"].id))
+        assert war["is_map_correctable"] is False

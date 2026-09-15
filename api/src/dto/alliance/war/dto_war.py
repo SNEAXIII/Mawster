@@ -63,6 +63,9 @@ class WarResponse(BaseModel):
     opponent_deaths: int | None = None
     elo_change: int | None = None
     tier: int | None = None
+    is_map_correctable: bool = False
+    node_count: int = 50
+    max_attackers_per_member: int = 3
 
     @model_validator(mode="before")
     @classmethod
