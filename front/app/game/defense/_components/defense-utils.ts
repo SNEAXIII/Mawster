@@ -3,14 +3,13 @@
  */
 
 import type { BgMember } from '@/app/services/defense'
+import { splitRarity } from '@/app/services/roster'
 
 // ─── Rarity ──────────────────────────────────────────────
 
 /** Parse a rarity string like "7r4" → { stars, rank }. */
 export function parseRarity(rarity: string): { stars: number; rank: number } {
-  const m = rarity.match(/^(\d+)r(\d+)$/i)
-  if (!m) return { stars: 0, rank: 0 }
-  return { stars: Number.parseInt(m[1], 10), rank: Number.parseInt(m[2], 10) }
+  return splitRarity(rarity) ?? { stars: 0, rank: 0 }
 }
 
 /**

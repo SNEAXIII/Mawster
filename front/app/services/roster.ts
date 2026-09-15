@@ -34,11 +34,17 @@ export function getStarFrameUrl(rarity: string): string {
   return `/static/frame/${stars}_stars.png`
 }
 
+export function splitRarity(rarity: string): { stars: number; rank: number } | null {
+  const parts = /^(\d+)r(\d+)$/i.exec(rarity)
+  if (!parts) return null
+  return { stars: Number.parseInt(parts[1], 10), rank: Number.parseInt(parts[2], 10) }
+}
+
 /** Extract the rank part from a rarity string, e.g. '7r5' → 'R5' */
 export function getRankLabel(rarity: string): string {
-  const parts = rarity.match(/^(\d+)r(\d+)$/)
-  if (!parts) return rarity.toUpperCase()
-  return `R${parts[2]}`
+  const parsed = splitRarity(rarity)
+  if (!parsed) return rarity.toUpperCase()
+  return `R${parsed.rank}`
 }
 
 /** Shorten a champion name for card display.
@@ -53,9 +59,9 @@ export function shortenChampionName(name: string): string {
 
 /** Numeric sort value for a rarity string (higher = better). Used for descending sort. */
 export function raritySortValue(rarity: string): number {
-  const parts = rarity.match(/^(\d+)r(\d+)$/)
-  if (!parts) return 0
-  return Number.parseInt(parts[1]) * 10 + Number.parseInt(parts[2])
+  const parsed = splitRarity(rarity)
+  if (!parsed) return 0
+  return parsed.stars * 10 + parsed.rank
 }
 
 export interface RosterEntry {
@@ -174,11 +180,9 @@ export const deleteRosterEntry = async (championUserId: string): Promise<void> =
  *  A 6 champion stays 6 — cannot jump to 7.
  *  Returns null if already at max rank for that star level. */
 export function getNextRarity(rarity: string): string | null {
-  const parts = rarity.match(/^(\d+)r(\d+)$/)
-  if (!parts) return null
-  const stars = parts[1]
-  const rank = Number.parseInt(parts[2])
-  const nextRarity = `${stars}r${rank + 1}` as ChampionRarity
+  const parsed = splitRarity(rarity)
+  if (!parsed) return null
+  const nextRarity = `${parsed.stars}r${parsed.rank + 1}` as ChampionRarity
   if (!RARITIES.includes(nextRarity)) return null
   return nextRarity
 }

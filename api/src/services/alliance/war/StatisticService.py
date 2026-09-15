@@ -13,6 +13,7 @@ from src.dto.alliance.war.dto_statistic import (
     WarBattlegroupDeaths,
 )
 from src.enums.WarStatus import WarStatus
+from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import ChampionUser, GameAccount, User, War, WarDefensePlacement
 from src.models.alliance.Alliance import Alliance
 from src.services.alliance.AllianceService import AllianceService
@@ -53,9 +54,9 @@ class StatisticService:
     ) -> list[PlayerSeasonStatsResponse]:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
 
         target_season_id = await cls._resolve_season_id(session, season_id)
         if target_season_id is None:
@@ -200,7 +201,7 @@ class StatisticService:
     ) -> None:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 

@@ -75,25 +75,17 @@ export function WarMapNode({
 
   return (
     <div
-      role='button'
-      tabIndex={0}
       className={cn(
-        'group relative rounded-md border-2 cursor-pointer transition-all',
-        colorClasses,
-        hoverClasses,
+        'group relative rounded-md transition-opacity',
         hasPrefight && 'ring-2 ring-foreground',
         !hasPrefight && !dimmed && placement && 'ring-1 ring-white/30',
         // Empty nodes recede so the eye lands on what is actually placed.
-        !placement && 'border-dashed opacity-45 hover:opacity-80',
+        !placement && 'opacity-45 hover:opacity-80',
         dimmed && 'opacity-25'
       )}
       style={{
         width: NODE_WIDTH,
         height: PORTRAIT_HEIGHT + BORDER * 2 + (showPseudo ? PSEUDO_HEIGHT : 0),
-      }}
-      onClick={() => onNodeClick(nodeNumber)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') onNodeClick(nodeNumber)
       }}
       title={
         placement
@@ -102,89 +94,99 @@ export function WarMapNode({
       }
       data-cy={`war-node-${nodeNumber}`}
     >
-      <div
-        className='relative w-full'
-        style={{ height: PORTRAIT_HEIGHT, paddingLeft: PAD_LEFT }}
+      <button
+        type='button'
+        className={cn(
+          'relative block size-full cursor-pointer rounded-md border-2 text-left transition-all',
+          colorClasses,
+          hoverClasses,
+          !placement && 'border-dashed'
+        )}
+        onClick={() => onNodeClick(nodeNumber)}
       >
-        {placement && (
-          <>
-            <ChampionPortrait
-              imageUrl={placement.champion_image_url}
-              name={placement.champion_name}
-              rarity={placement.rarity}
-              size={PORTRAIT}
-              box='frame'
-              isPreferred={placement.is_preferred_attacker}
-              ascension={placement.ascension}
-              is_saga_attacker={placement.is_saga_attacker}
-              is_saga_defender={placement.is_saga_defender}
-              sagaMode='defender'
-            />
-            {/* Rarity over the frame's bottom band */}
-            <span
-              className={cn(
-                'absolute inset-x-0 bottom-0 z-40 rounded-b bg-black/70 text-center text-[9px] font-semibold leading-[11px]',
-                rarityBadgeClass(placement.rarity)
-              )}
-            >
-              {nodeRarityLabel(placement, hideSig)}
-            </span>
-          </>
-        )}
+        <div
+          className='relative w-full'
+          style={{ height: PORTRAIT_HEIGHT, paddingLeft: PAD_LEFT }}
+        >
+          {placement && (
+            <>
+              <ChampionPortrait
+                imageUrl={placement.champion_image_url}
+                name={placement.champion_name}
+                rarity={placement.rarity}
+                size={PORTRAIT}
+                box='frame'
+                isPreferred={placement.is_preferred_attacker}
+                ascension={placement.ascension}
+                is_saga_attacker={placement.is_saga_attacker}
+                is_saga_defender={placement.is_saga_defender}
+                sagaMode='defender'
+              />
+              {/* Rarity over the frame's bottom band */}
+              <span
+                className={cn(
+                  'absolute inset-x-0 bottom-0 z-40 rounded-b bg-black/70 text-center text-[9px] font-semibold leading-[11px]',
+                  rarityBadgeClass(placement.rarity)
+                )}
+              >
+                {nodeRarityLabel(placement, hideSig)}
+              </span>
+            </>
+          )}
 
-        {/* Node number — inside the cell so it never collides with its neighbour,
+          {/* Node number — inside the cell so it never collides with its neighbour,
             and above the portrait badges (z-30) since it must always be readable */}
-        <span className='absolute top-0 left-0 z-40 rounded-br bg-black/70 px-1 text-[9px] font-bold leading-[13px] text-white'>
-          {nodeNumber}
-        </span>
+          <span className='absolute top-0 left-0 z-40 rounded-br bg-black/70 px-1 text-[9px] font-bold leading-[13px] text-white'>
+            {nodeNumber}
+          </span>
 
-        {/* Remove — hover-revealed on desktop, always reachable on touch. It sits
-            on the ascension badge, whose level is also in the rarity label. */}
-        {placement && canManage && (
-          <button
-            className='absolute top-0 right-0 z-40 flex size-4 items-center justify-center rounded-bl bg-red-600 text-white opacity-100 transition-opacity hover:bg-red-700 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100'
-            onClick={(e) => {
-              e.stopPropagation()
-              onRemove(nodeNumber)
-            }}
-            title={t.game.defense.removeDefender}
-          >
-            <X className='size-2.5' />
-          </button>
-        )}
+          {hasNote && (
+            <span
+              className='absolute right-0 bottom-2.75 z-40 flex items-center justify-center rounded-l bg-amber-500 p-0.5 text-white'
+              data-cy={`war-node-has-note-${nodeNumber}`}
+              title={t.game.war.noteLabel}
+            >
+              <StickyNote className='size-2' />
+            </span>
+          )}
+        </div>
 
-        {hasNote && (
-          <span
-            className='absolute right-0 bottom-2.75 z-40 flex items-center justify-center rounded-l bg-amber-500 p-0.5 text-white'
-            data-cy={`war-node-has-note-${nodeNumber}`}
-            title={t.game.war.noteLabel}
-          >
-            <StickyNote className='size-2' />
+        {/* Empty node marker — centred on the whole cell (portrait + reserved
+          pseudo line), otherwise it sits high in every node that reserves one. */}
+        {!placement && (
+          <span className='pointer-events-none absolute inset-0 flex items-center justify-center text-[10px] text-white/30'>
+            +
           </span>
         )}
-      </div>
 
-      {/* Empty node marker — centred on the whole cell (portrait + reserved
-          pseudo line), otherwise it sits high in every node that reserves one. */}
-      {!placement && (
-        <span className='pointer-events-none absolute inset-0 flex items-center justify-center text-[10px] text-white/30'>
-          +
-        </span>
-      )}
+        {showPseudo && (
+          <span
+            className={cn(
+              'block truncate px-0.5 text-center text-[9px] leading-[12px]',
+              unassigned && 'font-bold tracking-wider text-amber-400/70',
+              !unassigned && (placement ? 'text-white/80' : 'text-white/30')
+            )}
+            style={{ height: PSEUDO_HEIGHT }}
+            title={unassigned ? t.game.war.noAttackerAssigned : undefined}
+            data-cy={unassigned ? `war-node-unassigned-${nodeNumber}` : undefined}
+          >
+            {unassigned ? '???' : placement?.game_pseudo}
+          </span>
+        )}
+      </button>
 
-      {showPseudo && (
-        <span
-          className={cn(
-            'block truncate px-0.5 text-center text-[9px] leading-[12px]',
-            unassigned && 'font-bold tracking-wider text-amber-400/70',
-            !unassigned && (placement ? 'text-white/80' : 'text-white/30')
-          )}
-          style={{ height: PSEUDO_HEIGHT }}
-          title={unassigned ? t.game.war.noAttackerAssigned : undefined}
-          data-cy={unassigned ? `war-node-unassigned-${nodeNumber}` : undefined}
+      {/* Remove — hover-revealed on desktop, always reachable on touch. It sits
+          on the ascension badge, whose level is also in the rarity label. */}
+      {placement && canManage && (
+        <button
+          type='button'
+          className='absolute top-0.5 right-0.5 z-40 flex size-4 items-center justify-center rounded-bl bg-red-600 text-white opacity-100 transition-opacity hover:bg-red-700 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100'
+          onClick={() => onRemove(nodeNumber)}
+          title={t.game.defense.removeDefender}
+          data-cy={`war-node-remove-${nodeNumber}`}
         >
-          {unassigned ? '???' : placement?.game_pseudo}
-        </span>
+          <X className='size-2.5' />
+        </button>
       )}
     </div>
   )

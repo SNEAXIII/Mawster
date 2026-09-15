@@ -18,7 +18,7 @@ export default function SeasonBanner({ season }: Readonly<Props>) {
       className='flex items-center gap-2'
       data-cy='season-banner'
     >
-      {season && season.status === 'active' ? (
+      {season?.status === 'active' ? (
         <Badge
           className='bg-green-600 text-white hover:bg-green-600'
           data-cy='season-active-badge'

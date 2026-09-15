@@ -12,6 +12,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/app/lib/utils'
 import { ChevronsUpDown, X } from 'lucide-react'
 
 interface SearchablePlayerFilterSelectProps {
@@ -42,42 +43,31 @@ export default function SearchablePlayerFilterSelect({
       open={open}
       onOpenChange={setOpen}
     >
-      <PopoverTrigger asChild>
-        <Button
-          variant='outline'
-          role='combobox'
-          aria-expanded={open}
-          className='h-full w-36 justify-between text-xs'
-          data-cy={dataCy}
-        >
-          <span className='truncate'>{displayLabel}</span>
-          {value ? (
-            <span
-              role='button'
-              tabIndex={0}
-              aria-label={t.common.clearSelection}
-              data-cy={`${dataCy}-clear`}
-              onClick={(e) => {
-                e.stopPropagation()
-                onChange('')
-              }}
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter' && e.key !== ' ') return
-                // The popover trigger is an ancestor: without both calls, Enter/Space
-                // would clear the filter *and* open the popover.
-                e.preventDefault()
-                e.stopPropagation()
-                onChange('')
-              }}
-              className='ml-1 rounded-sm p-0.5 hover:bg-muted'
-            >
-              <X className='h-3 w-3' />
-            </span>
-          ) : (
-            <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-          )}
-        </Button>
-      </PopoverTrigger>
+      <div className='relative h-full w-36'>
+        <PopoverTrigger asChild>
+          <Button
+            variant='outline'
+            role='combobox'
+            aria-expanded={open}
+            className={cn('h-full w-full justify-between text-xs', value && 'pr-9')}
+            data-cy={dataCy}
+          >
+            <span className='truncate'>{displayLabel}</span>
+            {!value && <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />}
+          </Button>
+        </PopoverTrigger>
+        {value && (
+          <button
+            type='button'
+            aria-label={t.common.clearSelection}
+            data-cy={`${dataCy}-clear`}
+            onClick={() => onChange('')}
+            className='absolute top-1/2 right-4 -translate-y-1/2 rounded-sm p-0.5 hover:bg-muted'
+          >
+            <X className='h-3 w-3' />
+          </button>
+        )}
+      </div>
       <PopoverContent className='w-48 p-0'>
         <Command>
           <CommandInput placeholder={t.game.defense.searchPlayer} />
