@@ -12,6 +12,7 @@ from src.dto.mixins import (
     SagaRoles,
     WarCoords,
 )
+from src.enums.SeasonFormat import SeasonFormat
 from src.enums.WarBoost import WarBoost
 from src.game_types import Ascension, KoCount, NodeNumber, Rank, Stars
 from src.Messages.war_messages import BANNED_CHAMPION_LIST_TOO_LONG
@@ -64,6 +65,7 @@ class WarResponse(BaseModel):
     elo_change: int | None = None
     tier: int | None = None
     is_map_correctable: bool = False
+    format: SeasonFormat = SeasonFormat.regular
     node_count: int = 50
     max_attackers_per_member: int = 3
 

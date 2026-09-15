@@ -1,4 +1,5 @@
 import { PROXY, jsonHeaders } from '@/app/services/utils'
+import type { SeasonFormat } from '@/app/services/season'
 
 // ─── War Service ─────────────────────────────────────────
 
@@ -31,6 +32,7 @@ export interface War {
   elo_change: number | null
   tier: number | null
   is_map_correctable: boolean
+  format: SeasonFormat
   node_count: number
   max_attackers_per_member: number
 }

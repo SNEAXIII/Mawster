@@ -277,12 +277,14 @@ class WarService:
         if latest_season is None:
             latest_season = await DisplaySeasonService.get_display_season(session)
         if war.status == WarStatus.ended and war.season is not None:
-            params = for_format(war.season.format)
+            war_format = war.season.format
         else:
-            params = for_format(current_format or await SeasonService.get_current_format(session))
+            war_format = current_format or await SeasonService.get_current_format(session)
+        params = for_format(war_format)
         return WarResponse.model_validate(war).model_copy(
             update={
                 "is_map_correctable": ClosedWarPolicy.is_map_correctable(war, latest_season),
+                "format": war_format,
                 "node_count": params.node_count,
                 "max_attackers_per_member": params.max_attackers_per_member,
             }

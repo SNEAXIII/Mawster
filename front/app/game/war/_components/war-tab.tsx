@@ -355,7 +355,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
                   dimmedNodes={exporting ? undefined : dimmedNodes}
                   prefightNodes={prefightNodes}
                   noteNodes={noteNodes}
-                  format={currentSeason?.format ?? 'regular'}
+                  format={currentWar?.format ?? currentSeason?.format ?? 'regular'}
                 />
               </div>
             </div>

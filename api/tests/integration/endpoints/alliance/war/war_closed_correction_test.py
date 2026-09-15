@@ -351,6 +351,29 @@ class TestClosedWarFormat:
         )
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
+    async def test_list_gives_each_war_its_own_format(self):
+        """Closed regular War vs a running War prepared for the upcoming Big Thing Season."""
+        data = await _setup_closed_war_scenario()
+        await _end_season(data["season"])
+        await load_objects(
+            [Season(number=2, status=SeasonStatus.upcoming, format=SeasonFormat.big_thing)]
+        )
+        created = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars",
+            payload={"opponent_name": "PreSeason"},
+            headers=OWNER,
+        )
+        assert created.status_code == 201
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars", headers=MEMBER
+        )
+        wars = {w["id"]: w for w in response.json()}
+        closed = wars[str(data["war"].id)]
+        running = wars[created.json()["id"]]
+        assert (closed["format"], closed["node_count"]) == ("regular", 50)
+        assert (running["format"], running["node_count"]) == ("big_thing", 10)
+
 
 class TestWarListExposesCorrectability:
     @pytest.mark.asyncio
