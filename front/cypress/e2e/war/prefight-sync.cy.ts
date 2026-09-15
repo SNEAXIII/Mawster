@@ -6,7 +6,7 @@ const NODE_TEARDOWNS = [
     what: 'defender',
     mode: 'defenders',
     remove: () => {
-      cy.getByCy('war-node-10').scrollIntoView().find('button').focus().click();
+      cy.getByCy('war-node-remove-10').scrollIntoView().focus().click();
       cy.getByCy('confirmation-dialog-confirm').click();
       cy.getByCy('war-node-10').should('contain', '+');
     },
