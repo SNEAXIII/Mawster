@@ -63,6 +63,9 @@ Rien n'est corrigé ici. Un bloquant s'expose et arrête le skill.
    - Un `FAILURE` : nommer le check rouge et donner son `link`, puis s'arrêter. **Ne pas
      diagnostiquer.** Ça vaut aussi pour le gate `Sonar` : on rapporte le verdict, pas le détail
      des conditions (voir Dette connue).
+5. **Worktree local** — `git status --short` sur la branche de la PR, juste avant le merge.
+   Un fichier suivi modifié depuis le dernier push : s'arrêter et demander s'il fait partie de la
+   PR. L'utilisateur retouche souvent la branche entre le push et le merge.
 
 ## Récapitulatif — une seule confirmation
 

@@ -11,8 +11,6 @@ Next.js 16 App Router, React 19, Tailwind CSS 4, shadcn/ui (Radix), TypeScript s
 ## Skills to use
 
 - `/i18n-check` — after adding any new strings, verify both `en.ts` and `fr.ts` are in sync
-- `/server-dev` — start dev servers if needed
-- `/server-status` — check running servers
 - `/component-dedup-audit` — before creating a new component or hook, check whether an equivalent already exists; mutualise instead of copy-pasting
 - `/shadcn` — when adding, composing, or debugging a shadcn/ui component (never hand-roll one that exists in the registry)
 - `/split-e2e-tests` — when a Cypress spec has grown too big (many `it()` mixing concerns), split it into purpose-focused files
@@ -24,8 +22,8 @@ Next.js 16 App Router, React 19, Tailwind CSS 4, shadcn/ui (Radix), TypeScript s
 
 The **full Cypress suite is run only by the CI pipeline** — never run it locally.
 Still write or update the corresponding spec in `front/cypress/e2e/`. If you want to
-run a **targeted** spec locally to sanity-check your change (`/test-e2e` with
-`spec_files=[...]`), **ask the user for confirmation first** — do not run it unprompted.
+run a **targeted** spec locally to sanity-check your change (`python3 scripts/e2e/e2e_parallel.py
+--spec "<spec>"`), **ask the user for confirmation first** — do not run it unprompted.
 
 ## Implementation rules
 

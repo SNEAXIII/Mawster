@@ -15,7 +15,6 @@ FastAPI + SQLModel + MariaDB async, Python 3.14, uv.
 - `/db-migrate` — apply pending migrations
 - `/make test` — run the full pytest suite (10 xdist workers); wrap it in `ctx_execute` to keep the output out of context
 - Re-run a single file: `cd api && uv run pytest tests/integration/endpoints/<feature>_test.py --tb=line -q`
-- `/server-dev` — start dev servers if needed
 - `/model-dto-audit` — before adding a model or DTO, check for field drift/duplication; factor shared fields into a mixin (single source of truth)
 - `/raises-arity` — before adding a `pytest.raises` test: one throwing call per block, setup hoisted above it
 - `/resolve-local-imports` — when ruff reports PLC0415 (import nested in a function) instead of adding a `# noqa`

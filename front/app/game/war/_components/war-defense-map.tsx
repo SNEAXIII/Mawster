@@ -68,6 +68,9 @@ export default function WarDefenseMap({
       dimmedNodes={dimmedNodes}
       prefightNodes={prefightNodes}
       noteNodes={noteNodes}
+      lockedNodes={
+        new Set(placements.filter((p) => p.is_attacker_locked).map((p) => p.node_number))
+      }
       format={format}
     />
   )

@@ -123,7 +123,7 @@ npm run build
 ```
 
 Le build doit lister `ƒ /api/dev/open-editor` dans les routes. Puis relancer le serveur dev
-(`/server-dev`) et tester `Ctrl+Shift+X` sur un élément.
+(`npm run dev` dans `front/`) et tester `Ctrl+Shift+X` sur un élément.
 
 ## Retirer
 

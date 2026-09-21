@@ -9,6 +9,7 @@ FRONT_DIR = ROOT / "front"
 
 BASE_API_PORT = 8010
 BASE_FRONT_PORT = 3010
+STATIC_PORT = 8009
 DB_PREFIX = "mawster_test_"
 MARIADB_HOST = "127.0.0.1"
 MARIADB_PORT = int(os.environ.get("MARIADB_PORT", "3307"))

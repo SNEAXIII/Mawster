@@ -1,9 +1,6 @@
 import type { TierListSavePayload, TierListTag } from '@/app/services/tierlist'
-import { CLASS_ORDER, ChampionClass } from '@/app/lib/champion-class'
 
-export const CHAMPION_CLASSES = CLASS_ORDER
-
-export { ChampionClass }
+export { CLASS_ORDER as CHAMPION_CLASSES } from '@/app/lib/champion-class'
 
 /**
  * The tags a champion carries in one tier list, without the champion id the API

@@ -83,7 +83,7 @@ async function throwOnError(response: Response, fallback: string) {
 async function debugFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   if (IS_DEV) {
     const method = init?.method ?? 'GET'
-    const url = typeof input === 'string' ? input : input.toString()
+    const url = input instanceof Request ? input.url : String(input)
     const payload = init?.body ? JSON.parse(init.body as string) : undefined
     console.debug(`[API] ${method} ${url}`, payload ?? '')
   }

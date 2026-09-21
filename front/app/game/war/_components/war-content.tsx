@@ -55,6 +55,10 @@ function WarLayout() {
     handleAllianceChange,
     loading,
     canManageWar,
+    wars,
+    selectedWarId,
+    setSelectedWarId,
+    hasActiveWar,
     currentWar,
     activeWarId,
     managementLoading,
@@ -100,10 +104,13 @@ function WarLayout() {
             alliances={alliances}
             selectedAllianceId={selectedAllianceId}
             onAllianceChange={handleAllianceChange}
+            wars={wars}
+            selectedWarId={selectedWarId}
+            onWarChange={setSelectedWarId}
           />
 
           {/* ── Management bar (officers/owners only, no active war) ──── */}
-          {canManageWar && !currentWar && (
+          {canManageWar && !hasActiveWar && (
             <WarManagementBar
               currentWar={currentWar}
               loading={managementLoading}

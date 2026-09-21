@@ -38,7 +38,14 @@ export default function NodeActionsPopover({
   canManage = true,
 }: Readonly<NodeActionsPopoverProps>) {
   const { t } = useI18n()
-  const { prefights, handleRemovePrefight, placements, handleRemoveAssist, canManageWar } = useWar()
+  const {
+    prefights,
+    handleRemovePrefight,
+    placements,
+    handleRemoveAssist,
+    canManageWar,
+    isWarClosed,
+  } = useWar()
   const [open, setOpen] = useState(false)
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [assistSelectorOpen, setAssistSelectorOpen] = useState(false)
@@ -192,7 +199,7 @@ export default function NodeActionsPopover({
             note={placement?.note ?? null}
             noteId={placement?.note_id ?? null}
             noteBlocked={placement?.note_blocked ?? false}
-            canManage={canManageWar}
+            canManage={canManageWar && !isWarClosed}
           />
         </PopoverContent>
       </Popover>

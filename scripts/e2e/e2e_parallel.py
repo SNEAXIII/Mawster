@@ -45,6 +45,7 @@ from config import (  # pylint: disable=import-error,wrong-import-position
     HEALTH_TIMEOUT,
     MARIADB_PORT,
     ROOT,
+    STATIC_PORT,
     log,
 )
 from IOsModel import IOsModel  # pylint: disable=import-error,wrong-import-position
@@ -395,6 +396,8 @@ def build_frontend(base_env: dict) -> None:
         "PORT": "3000",
         "API_PORT": str(BASE_API_PORT),  # placeholder — rewrites are runtime-read anyway
         "API_SERVER_HOST": "localhost",
+        "STATIC_SERVER_HOST": "127.0.0.1",
+        "STATIC_PORT": str(STATIC_PORT),
         "NEXT_PUBLIC_DEV_MODE": "true",
         "NEXT_DIST_DIR": NEXT_E2E_DIST,
         "NEXT_E2E_BUILD": "true",
@@ -410,6 +413,19 @@ def build_frontend(base_env: dict) -> None:
         msg = "next build failed"
         raise RuntimeError(msg)
     log("Frontend build complete.")
+
+
+def start_static_server() -> subprocess.Popen:
+    """Serve static-assets/ locally: otherwise the /static rewrite targets the Docker-only
+    `static` host, and every image stalls `next start` on a DNS lookup that never succeeds."""
+    log(f"Starting static assets server — PORT={STATIC_PORT}")
+    return subprocess.Popen(
+        [sys.executable, "-m", "http.server", str(STATIC_PORT), "--bind", "127.0.0.1"],
+        cwd=str(ROOT / "static-assets"),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=OS.start_new_session,
+    )
 
 
 def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subprocess.Popen:
@@ -531,6 +547,7 @@ def kill_probably_used_ports(worker_number: int) -> None:
     ports_to_free = [
         *[BASE_API_PORT + i for i in range(worker_number)],
         *[BASE_FRONT_PORT + i for i in range(worker_number)],
+        STATIC_PORT,
     ]
     log(f"Freeing ports: {ports_to_free}")
     kill_ports(ports_to_free)
@@ -638,6 +655,7 @@ def main() -> None:
     #   - build the frontend once (shared across all workers), unless --skip-build
     #   - create DBs and start backends (don't need the build)
     # Frontends start after the build completes.
+    procs.append(start_static_server())
     errors: list[str] = []
     build_event = threading.Event()
     build_error: list[str] = []
@@ -703,9 +721,17 @@ def main() -> None:
             with lock:
                 health_errors.append(str(exc))
 
+    def health_check_static() -> None:
+        try:
+            wait_for_http(localhost_url(STATIC_PORT, "/static/"), "Static assets")
+        except TimeoutError as exc:
+            with lock:
+                health_errors.append(str(exc))
+
     health_threads = [
         threading.Thread(target=health_check_worker, args=(i,)) for i in range(worker_number)
     ]
+    health_threads.append(threading.Thread(target=health_check_static))
     run_parallel(health_threads)
 
     if health_errors:

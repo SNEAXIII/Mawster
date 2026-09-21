@@ -22,12 +22,12 @@ from src.models.user.User import User
 from src.models.war.Season import Season
 from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
+from src.services.alliance.war._champion_usage import champion_usage_statement
 from src.services.alliance.war._stat_expressions import (
     total_fights,
     total_kos,
     total_not_fought,
 )
-from src.services.knowledge._fight_context import champion_usage_statement
 from src.utils.db import SessionDep
 
 
@@ -284,9 +284,7 @@ class PlayerStatsService:
         ]
         if season_id is not None:
             conditions.append(War.season_id == season_id)
-        if deathless is True:
-            conditions.append(WarDefensePlacement.ko_count == 0)
 
-        stmt = champion_usage_statement(perspective, conditions)
+        stmt = champion_usage_statement(conditions, deathless, perspective)
         rows = (await session.exec(stmt)).mappings().all()
         return [ChampionUsageResponse.model_validate(dict(r)) for r in rows]

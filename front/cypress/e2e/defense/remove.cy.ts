@@ -47,7 +47,7 @@ describe('Defense – Remove defender', () => {
         cy.getByCy('defender-count-RmMapPlyr').should('contain', '1/5');
 
         // Remove via the war map X button (force because hidden until hover)
-        cy.getByCy('war-node-5').find('button').focus().click();
+        cy.getByCy('war-node-remove-5').focus().click();
 
         cy.getByCy('defender-count-RmMapPlyr').should('contain', '0/5');
         cy.getByCy('war-node-5').should('contain', '+');

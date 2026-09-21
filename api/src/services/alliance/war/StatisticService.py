@@ -13,9 +13,11 @@ from src.dto.alliance.war.dto_statistic import (
     WarBattlegroupDeaths,
 )
 from src.enums.WarStatus import WarStatus
+from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
 from src.models import ChampionUser, GameAccount, User, War, WarDefensePlacement
 from src.models.alliance.Alliance import Alliance
 from src.services.alliance.AllianceService import AllianceService
+from src.services.alliance.war._champion_usage import champion_usage_statement
 from src.services.alliance.war._stat_expressions import (
     boss_case,
     is_assisted,
@@ -26,7 +28,6 @@ from src.services.alliance.war._stat_expressions import (
     total_not_fought,
     total_weighted_fights,
 )
-from src.services.knowledge._fight_context import champion_usage_statement
 from src.services.SeasonService import SeasonService
 from src.utils.db import SessionDep
 
@@ -53,9 +54,9 @@ class StatisticService:
     ) -> list[PlayerSeasonStatsResponse]:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
 
         target_season_id = await cls._resolve_season_id(session, season_id)
         if target_season_id is None:
@@ -200,7 +201,7 @@ class StatisticService:
     ) -> None:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alliance not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
@@ -233,10 +234,8 @@ class StatisticService:
             conditions.append(War.id == war_id)
         if alliance_group is not None:
             conditions.append(GameAccount.alliance_group == alliance_group)
-        if deathless is True:
-            conditions.append(WarDefensePlacement.ko_count == 0)
 
-        stmt = champion_usage_statement(perspective, conditions).join(
+        stmt = champion_usage_statement(conditions, deathless, perspective).join(
             GameAccount, GameAccount.id == ChampionUser.game_account_id
         )
         rows = (await session.exec(stmt)).mappings().all()

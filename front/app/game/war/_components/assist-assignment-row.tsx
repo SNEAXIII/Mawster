@@ -20,7 +20,7 @@ export default function AssistAssignmentRow({
   readonly = false,
 }: Readonly<AssistAssignmentRowProps>) {
   const { t } = useI18n()
-  const { handleRemoveAssist, handleToggleCombatCompleted, isVisitor } = useWar()
+  const { handleRemoveAssist, handleToggleCombatCompleted, isMapReadOnly } = useWar()
 
   const label = t.game.war.assist.for.replace('#{node}', String(placement.node_number))
 
@@ -80,7 +80,7 @@ export default function AssistAssignmentRow({
         <div className='text-[10px] font-medium truncate'>{placement.attacker_pseudo}</div>
       </div>
 
-      {!readonly && !isVisitor && (
+      {!readonly && !isMapReadOnly && (
         <>
           <button
             type='button'

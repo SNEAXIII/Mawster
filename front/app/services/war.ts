@@ -1,4 +1,5 @@
 import { PROXY, jsonHeaders } from '@/app/services/utils'
+import type { SeasonFormat } from '@/app/services/season'
 
 // ─── War Service ─────────────────────────────────────────
 
@@ -30,6 +31,10 @@ export interface War {
   opponent_deaths: number | null
   elo_change: number | null
   tier: number | null
+  is_map_correctable: boolean
+  format: SeasonFormat
+  node_count: number
+  max_attackers_per_member: number
 }
 
 // The three are mutually exclusive in-game, hence one slot rather than three flags.
@@ -88,6 +93,7 @@ export interface WarPlacement {
   note?: string | null
   note_id?: string | null
   note_blocked?: boolean
+  is_attacker_locked: boolean
 }
 
 export interface WarBgProgress {
@@ -233,28 +239,26 @@ export async function getWarDefense(
   return response.json()
 }
 
+export interface WarPlacementCreateRequest {
+  node_number: number
+  champion_id: string
+  stars: number
+  rank: number
+  ascension: number
+}
+
 export async function placeWarDefender(
   allianceId: string,
   warId: string,
   battlegroup: number,
-  nodeNumber: number,
-  championId: string,
-  stars: number,
-  rank: number,
-  ascension: number
+  request: WarPlacementCreateRequest
 ): Promise<WarPlacement> {
   const response = await fetch(
     `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/place`,
     {
       method: 'POST',
       headers: jsonHeaders,
-      body: JSON.stringify({
-        node_number: nodeNumber,
-        champion_id: championId,
-        stars,
-        rank,
-        ascension,
-      }),
+      body: JSON.stringify(request),
     }
   )
   await throwOnError(response, 'Failed to place defender')

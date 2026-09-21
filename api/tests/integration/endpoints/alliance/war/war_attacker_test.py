@@ -96,6 +96,45 @@ class TestAvailableAttackers:
         assert "Iron Man" not in names  # owner's champion must not appear
 
     @pytest.mark.asyncio
+    async def test_available_attackers_for_player_of_another_alliance_is_empty(self):
+        """attacker_id outside the alliance leaks nothing — same answer as an unknown id."""
+        data = await _setup_attacker_scenario()
+        user3 = User(
+            id=USER3_ID,
+            login="user3leak",
+            email="user3leak@test.com",
+            role=Roles.USER,
+            discord_id="discord_user3_leak",
+        )
+        outsider = get_game_account(user_id=USER3_ID, game_pseudo="OutsiderLeak")
+        await load_objects([user3, outsider])
+        hidden = await push_champion(name="Hidden Champ", champion_class="Cosmic")
+        await push_champion_user(outsider, hidden, stars=7, rank=3)
+
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers?attacker_id={outsider.id}",
+            headers=create_auth_headers(user_id=str(USER2_ID)),
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.asyncio
+    async def test_available_attackers_for_player_of_another_battlegroup_is_empty(self):
+        data = await _setup_attacker_scenario()
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/members/{data['member'].id}/group",
+            payload={"group": 2},
+            headers=create_auth_headers(user_id=str(USER_ID)),
+        )
+
+        response = await execute_get_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers?attacker_id={data['member'].id}",
+            headers=create_auth_headers(user_id=str(USER_ID)),
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+    @pytest.mark.asyncio
     async def test_available_attackers_for_user_non_member_forbidden(self):
         """GET available-attackers/{attacker_id} returns 403 for non-members."""
         data = await _setup_attacker_scenario()

@@ -145,8 +145,21 @@ ever grows past that.
 One battle between an Alliance and an Opponent, fought across the three Battlegroups.
 May belong to a Season.
 
+Closing a War is final for what the War itself carries: its Opponent, its War Bans, its
+result and the Elo it moved. The whole War is there to get those right. Its map is not
+final: a Defender, an Attacker, a boost or a Synergy Carrier changed at the last
+minute is a slip that still gets corrected after the close. Enemy deaths are the
+lasting exception, correctable at any time on any War.
+
 **Season**:
 A numbered competitive period of 12 Wars. Sagas are scoped to a Season.
+
+**Latest Season**:
+The active Season or, between two Seasons, the last one that ended. Statistics show it,
+and a closed War's map stays correctable while its Season is the Latest Season. The
+next Season going live is what seals it.
+_Avoid_: current season (the code's current season is the one not yet ended, upcoming
+included, and sets the War format), displayed season, active season.
 
 **Big Thing**:
 A Season format that shrinks the War: every Player brings at most two attackers and
@@ -178,18 +191,18 @@ An Alliance's war rating. It moves only on Wars fought inside a Season
 **Tier**:
 The difficulty bracket an Alliance wars in, derived from its Elo — 1 is the top, 20
 the bottom and the starting point. It sets how hard the nodes hit, so two fights are
-only comparable at equal Tier; that is why every War carries the Tier it was fought
-at, and every Fight Record reads it from there.
+only comparable at equal Tier; that is why every War and every Fight Record carries
+the Tier it was fought at.
 
 A running War carries no Tier yet: it is stamped when the War is closed, on purpose,
 so an Alliance Tier corrected late — after someone noticed it was stale mid-war — still
 lands on the War and on the Elo it moves.
 
 **Fight Record**:
-A frozen record of one fight that actually happened. It points at the placement the
-fight was fought on and copies only the attacker's rank and ascension at the time, the
-two stats a later upgrade could rewrite. Everything else is read through the placement
-and its War.
+A record of one fight that actually happened. Freezes only what a later upgrade would
+rewrite, the Attacker's rank and ascension; everything else is read from the War Node.
+Re-frozen from the new Attacker's current stats when a closed War's Attacker is
+corrected, so a correction may show a fight as easier than it was, never harder.
 _Table_: `war_fight_record`.
 _Avoid_: fight, combat log.
 

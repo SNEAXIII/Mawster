@@ -56,7 +56,7 @@ export default function WarAttackerPanel({
     warMode,
     synergies,
     prefights,
-    isVisitor,
+    isMapReadOnly,
     selectedBg,
     alliances,
     selectedAllianceId,
@@ -259,7 +259,7 @@ export default function WarAttackerPanel({
                           ascension={placement.attacker_ascension ?? 0}
                           is_saga_attacker={placement.attacker_is_saga_attacker ?? false}
                           is_saga_defender={placement.attacker_is_saga_defender ?? false}
-                          canManage={!isVisitor}
+                          canManage={!isMapReadOnly}
                         />
                       ) : (
                         <ChampionPortrait

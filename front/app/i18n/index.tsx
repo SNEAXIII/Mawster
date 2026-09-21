@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
 import en, { type Translations } from './locales/en'
 import fr from './locales/fr'
 
@@ -24,23 +24,26 @@ const I18nContext = createContext<I18nContextType>({
 })
 
 export function I18nProvider({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE)
+  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE)
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Locale | null
     if (stored && locales[stored]) {
-      setLocaleState(stored)
+      setLocale(stored)
     }
   }, [])
 
-  const setLocale = useCallback((newLocale: Locale) => {
-    setLocaleState(newLocale)
+  const changeLocale = useCallback((newLocale: Locale) => {
+    setLocale(newLocale)
     localStorage.setItem(STORAGE_KEY, newLocale)
   }, [])
 
-  const t = locales[locale]
+  const value = useMemo(
+    () => ({ locale, setLocale: changeLocale, t: locales[locale] }),
+    [locale, changeLocale]
+  )
 
-  return <I18nContext.Provider value={{ locale, setLocale, t }}>{children}</I18nContext.Provider>
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }
 
 export function useI18n() {

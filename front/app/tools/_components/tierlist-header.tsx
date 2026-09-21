@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/select'
 import SelectorFilterBar, { type ToggleConfig } from '@/app/game/_components/selector-filter-bar'
 import TagChips from './tag-chips'
-import { CHAMPION_CLASSES, type BoardState, type ChampionClass } from '../_lib/types'
+import type { ChampionClass } from '@/app/lib/champion-class'
+import { CHAMPION_CLASSES, type BoardState } from '../_lib/types'
 import {
   EMPTY_FILTERS,
   hasActiveFilters,

@@ -11,6 +11,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/app/lib/utils'
 import { getChampionImageUrl } from '@/app/services/champions'
 import { useChampionCatalog } from '@/hooks/use-champion-catalog'
 import { useI18n } from '@/app/i18n'
@@ -46,42 +47,31 @@ export default function ChampionFilterSelect({
       open={open}
       onOpenChange={setOpen}
     >
-      <PopoverTrigger asChild>
-        <Button
-          variant='outline'
-          role='combobox'
-          aria-expanded={open}
-          className='w-48 justify-between'
-          data-cy={dataCy}
-        >
-          <span className='truncate'>{displayLabel}</span>
-          {value ? (
-            <span
-              role='button'
-              tabIndex={0}
-              aria-label={t.common.clearSelection}
-              data-cy={dataCy ? `${dataCy}-clear` : undefined}
-              onClick={(e) => {
-                e.stopPropagation()
-                onChange(null)
-              }}
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter' && e.key !== ' ') return
-                // The popover trigger is an ancestor: without both calls, Enter/Space
-                // would clear the filter *and* open the popover.
-                e.preventDefault()
-                e.stopPropagation()
-                onChange(null)
-              }}
-              className='ml-1 rounded-sm p-0.5 hover:bg-muted'
-            >
-              <X className='h-3 w-3' />
-            </span>
-          ) : (
-            <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-          )}
-        </Button>
-      </PopoverTrigger>
+      <div className='relative w-48'>
+        <PopoverTrigger asChild>
+          <Button
+            variant='outline'
+            role='combobox'
+            aria-expanded={open}
+            className={cn('w-full justify-between', value && 'pr-9')}
+            data-cy={dataCy}
+          >
+            <span className='truncate'>{displayLabel}</span>
+            {!value && <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />}
+          </Button>
+        </PopoverTrigger>
+        {value && (
+          <button
+            type='button'
+            aria-label={t.common.clearSelection}
+            data-cy={dataCy ? `${dataCy}-clear` : undefined}
+            onClick={() => onChange(null)}
+            className='absolute top-1/2 right-4 -translate-y-1/2 rounded-sm p-0.5 hover:bg-muted'
+          >
+            <X className='h-3 w-3' />
+          </button>
+        )}
+      </div>
       <PopoverContent className='w-64 p-0'>
         <Command>
           <CommandInput placeholder={t.game.knowledgeBase.searchChampion} />
