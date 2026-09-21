@@ -1,13 +1,6 @@
 name: Champion assets refresh
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - static-assets/scrape_champions.py
-      - static-assets/pyproject.toml
-      - static-assets/uv.lock
-      - .github/workflows/assets-refresh.yaml
   workflow_dispatch:
 
 jobs:
