@@ -43,7 +43,7 @@ describe('Knowledge Base – CSV Import combined records', () => {
     });
     cy.getByCy('import-confirm-btn').should('not.be.disabled').click();
     cy.contains('fight records').should('be.visible');
-    cy.visit('/game/knowledge-base');
+    cy.visit('/game/knowledge-base?source=all');
   }
 
   it('imports a CSV without header row and shows the record in the knowledge base', () => {
@@ -121,6 +121,8 @@ describe('Knowledge Base – CSV Import combined records', () => {
         cy.apiLogin(ownerData.user_id, 'knowledge-base');
 
         // Imported record is visible with no player filter
+        cy.getByCy('filter-source-trigger').click();
+        cy.getByCy('filter-source-all').click();
         cy.getByCy('fight-records-table').should('contain.text', 'Magik');
 
         // Imported records have no game account → a player filter must exclude them
