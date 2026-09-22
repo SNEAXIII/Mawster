@@ -1,10 +1,6 @@
 name: Champion assets refresh
 
 on:
-  schedule:
-    # Off the hour on purpose: GitHub's on-the-hour slots are congested and
-    # scheduled runs get delayed or dropped there.
-    - cron: '17 5 * * *'
   workflow_dispatch:
 
 jobs:
@@ -44,8 +40,8 @@ jobs:
             git status --porcelain
           fi
 
-      # Fixed branch, not a dated one: daily runs amend one PR instead of
-      # piling up seven a week.
+      # Fixed branch, not a dated one: successive runs amend one PR instead of
+      # piling up one per run.
       - name: Open or update the assets PR
         if: steps.diff.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
@@ -57,7 +53,7 @@ jobs:
           title: 'chore(assets): refresh champions from the wiki'
           labels: assets-bot
           body: |
-            Automated daily scrape of the champion wiki.
+            Automated scrape of the champion wiki.
 
             The vision gate posts a naming-regression report on this PR once it
             finishes. It is informational and never blocks the merge.
@@ -84,7 +80,7 @@ jobs:
           else
             gh issue create --label scraper-down \
               --title "Champion scraper is failing" \
-              --body "The daily wiki scrape failed: $RUN_URL
+              --body "The wiki scrape failed: $RUN_URL
 
           Fandom's bot protection is the usual cause - see commit 68a8e5a8, which
           added the impersonation-profile fallback in \`static-assets/scrape_champions.py\`."

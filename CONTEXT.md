@@ -36,8 +36,8 @@ wars, inviting.
 
 **Strategist**:
 A Player granted placement rights over an Alliance, and no authority over its people:
-they lay out the Defense Assignment for anyone and record the enemy defenders on the
-War map, across all three Battlegroups. They invite nobody, remove nobody, promote
+they lay out the Defense Assignment for anyone, record the enemy defenders on the
+War map and flag a fight as not done or a planning error, across all three Battlegroups. They invite nobody, remove nobody, promote
 nobody. Ranks between a plain member and an Officer — the two are exclusive, and an
 Officer demoted falls back to plain member, never to Strategist.
 _Table_: `alliance_strategist`.

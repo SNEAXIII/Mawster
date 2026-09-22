@@ -177,8 +177,8 @@ async def toggle_fight_not_done(
     current_user: CurrentUser,
     war: WarDep,
 ):
-    """Mark a node's fight as not done. Officers/owner only."""
-    await AllianceService.require_officer(session, alliance_id, current_user.id)
+    """Mark a node's fight as not done. Officers/owner/strategist only."""
+    await AllianceService.require_strategist(session, alliance_id, current_user.id)
     await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.toggle_fight_not_done(session, war_id, battlegroup, node_number)
 
@@ -196,8 +196,8 @@ async def toggle_planning_error(
     current_user: CurrentUser,
     war: WarDep,
 ):
-    """Mark a node as a planning error. Officers/owner only."""
-    await AllianceService.require_officer(session, alliance_id, current_user.id)
+    """Mark a node as a planning error. Officers/owner/strategist only."""
+    await AllianceService.require_strategist(session, alliance_id, current_user.id)
     await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
     return await WarService.toggle_planning_error(session, war_id, battlegroup, node_number)
 

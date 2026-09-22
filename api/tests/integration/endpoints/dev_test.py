@@ -3,10 +3,15 @@
 import uuid
 
 import pytest
+from sqlmodel import select
 
 from main import app
 from src.enums.Roles import Roles
+from src.enums.WarStatus import WarStatus
+from src.models.war.War import War
+from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.services.auth.JWTService import JWTService
+from src.services.knowledge._fight_context import join_fight_context
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
@@ -254,7 +259,7 @@ class TestDevBatchSetup:
         assert response.json()["users"]["fake_token_war"]["war_id"] is not None
 
     @pytest.mark.asyncio
-    async def test_creates_seasons_and_hangs_fight_records_off_the_war(self, session):
+    async def test_seeded_fight_records_are_visible_through_the_fight_context_join(self, session):
         response = await execute_post_request(
             "/dev/batch-setup",
             [
@@ -273,17 +278,27 @@ class TestDevBatchSetup:
                 self._owner_spec(
                     "fake_token_records",
                     create_war={"end": True, "win": True, "elo_change": 10},
-                    fight_records=[
-                        {"count": 2, "season_number": 2},
-                        {"count": 1},
-                    ],
+                    # 51 spills past the 50-node battlegroup into a second one.
+                    fight_records=[{"count": 51, "season_number": 2}],
                 ),
             ],
         )
         assert response.status_code == 200
         body = response.json()
         assert sorted(body["seasons"]) == ["1", "2"]
-        assert body["users"]["fake_token_records"]["war_id"] is not None
+        season_id = uuid.UUID(body["seasons"]["2"])
+
+        rows = (
+            await session.exec(
+                join_fight_context(
+                    select(War.id, War.snapshotted_at, WarDefensePlacement.battlegroup)
+                ).where(War.season_id == season_id, War.status == WarStatus.ended)
+            )
+        ).all()
+        assert len(rows) == 51
+        assert {row[0] for row in rows} == {rows[0][0]}
+        assert all(row[1] is not None for row in rows)
+        assert {row[2] for row in rows} == {1, 2}
 
     @pytest.mark.asyncio
     async def test_ends_the_war_when_the_spec_asks_for_it(self, session):

@@ -252,6 +252,7 @@ def download_champion_images(champions: list[dict], force: bool = False):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     final_data = []
+    failed = []
     for i, champ in enumerate(champions, 1):
         base_name = sanitize_filename(champ["name"])
         filename = base_name + ".png"
@@ -259,17 +260,27 @@ def download_champion_images(champions: list[dict], force: bool = False):
 
         print(f"  [{i}/{len(champions)}] {champ['name']} ({champ['champion_class']})")
 
-        success = download_image(champ["portrait_url"], filepath, force=force)
+        # A failed --force re-download still leaves the previous portrait usable.
+        if (
+            not download_image(champ["portrait_url"], filepath, force=force)
+            and not filepath.exists()
+        ):
+            failed.append(champ["name"])
 
         entry = {
             "name": champ["name"],
             "champion_class": champ["champion_class"],
-            "image_url": f"/static/champions/{filename}" if success else None,
+            "image_url": f"/static/champions/{filename}",
         }
         final_data.append(entry)
 
         if i % 10 == 0:
             time.sleep(0.1)
+
+    if failed:
+        sys.exit(
+            f"\n{len(failed)} portrait(s) missing, {JSON_OUTPUT.name} left untouched: {', '.join(failed)}"
+        )
 
     JSON_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     with JSON_OUTPUT.open("w", encoding="utf-8") as f:
