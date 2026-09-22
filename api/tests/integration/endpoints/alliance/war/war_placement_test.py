@@ -7,6 +7,7 @@ import pytest
 from tests.integration.endpoints.setup.game_setup import (
     push_champion,
     push_champion_user,
+    push_strategist,
 )
 from tests.integration.endpoints.setup.war_setup import (
     _setup_alliance,
@@ -592,7 +593,7 @@ class TestToggleCombatCompleted:
 
 
 class TestWarFightFlags:
-    """PATCH fight-not-done and planning-error flags — officers only."""
+    """PATCH fight-not-done and planning-error flags — officers and strategists only."""
 
     @pytest.mark.asyncio
     async def test_toggle_fight_not_done_officer_ok(self):
@@ -615,7 +616,7 @@ class TestWarFightFlags:
         assert resp.json()["is_fight_not_done"] is True
 
     @pytest.mark.asyncio
-    async def test_toggle_fight_not_done_requires_officer(self):
+    async def test_toggle_fight_not_done_forbidden_for_member(self):
         data = await _setup_attacker_scenario()
         headers_member = create_auth_headers(user_id=str(USER2_ID))
 
@@ -631,6 +632,26 @@ class TestWarFightFlags:
             headers=headers_member,
         )
         assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_toggle_fight_not_done_strategist_ok(self):
+        data = await _setup_attacker_scenario()
+        await push_strategist(data["alliance"], data["member"])
+        headers_strategist = create_auth_headers(user_id=str(USER2_ID))
+
+        await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(data["champion_user"].id)},
+            headers=headers_strategist,
+        )
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/fight-not-done",
+            payload={},
+            headers=headers_strategist,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["is_fight_not_done"] is True
 
     @pytest.mark.asyncio
     async def test_toggle_fight_not_done_no_attacker_returns_422(self):
@@ -731,7 +752,21 @@ class TestWarFightFlags:
         assert resp.json()["is_planning_error"] is True
 
     @pytest.mark.asyncio
-    async def test_toggle_planning_error_requires_officer(self):
+    async def test_toggle_planning_error_strategist_ok(self):
+        data = await _setup_attacker_scenario()
+        await push_strategist(data["alliance"], data["member"])
+        headers_strategist = create_auth_headers(user_id=str(USER2_ID))
+
+        resp = await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/planning-error",
+            payload={},
+            headers=headers_strategist,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["is_planning_error"] is True
+
+    @pytest.mark.asyncio
+    async def test_toggle_planning_error_forbidden_for_member(self):
         data = await _setup_attacker_scenario()
         headers_member = create_auth_headers(user_id=str(USER2_ID))
 

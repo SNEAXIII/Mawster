@@ -63,6 +63,7 @@ export default function AttackerEntryRow({
     handleToggleFightNotDone,
     handleTogglePlanningError,
     canManageWar,
+    canPlaceWar,
     isMapReadOnly,
     isMine,
     prefights,
@@ -286,7 +287,7 @@ export default function AttackerEntryRow({
                 </span>
               )}
 
-              {canManageWar && !placement.is_combat_completed && (
+              {canPlaceWar && !placement.is_combat_completed && (
                 <button
                   type='button'
                   className={cn(
@@ -311,7 +312,7 @@ export default function AttackerEntryRow({
                 </button>
               )}
 
-              {canManageWar && (
+              {canPlaceWar && (
                 <button
                   type='button'
                   className={cn(

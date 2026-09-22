@@ -13,6 +13,7 @@ describe('War – Planning Error', () => {
 
   it('planning-error button is hidden when no attacker is assigned', behaviour.hiddenWithoutAttacker);
   it('planning-error button appears for officer after attacker is assigned', behaviour.visibleForOfficer);
+  it('planning-error button appears for strategist after attacker is assigned', behaviour.visibleForStrategist);
   it('planning-error button is hidden for regular member', behaviour.hiddenForMember);
 
   // ── Planning Error: toggle ───────────────────────────────────────────────
