@@ -37,7 +37,7 @@
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/jsonwebtoken": "^9.0.10",
-    "@zumer/snapdom": "^2.24.18",
+    "@zumer/snapdom": "^3.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
