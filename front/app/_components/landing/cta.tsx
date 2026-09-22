@@ -4,13 +4,9 @@ import Link from 'next/link'
 import { FaDiscord, FaGoogle } from 'react-icons/fa6'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
-import { useAuthStatus } from '@/hooks/use-auth-status'
 
 export function Cta() {
   const { t } = useI18n()
-  const { isAuthenticated, isLoading } = useAuthStatus()
-
-  if (isLoading || isAuthenticated) return null
 
   return (
     <section className='px-6 py-24 md:px-12'>

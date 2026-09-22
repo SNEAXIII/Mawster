@@ -7,5 +7,6 @@ export function useAuthStatus() {
   return {
     isAuthenticated: Boolean(session && !session.error && session.user),
     isLoading: status === 'loading',
+    userName: session?.user?.name ?? null,
   }
 }

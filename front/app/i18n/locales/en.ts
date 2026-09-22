@@ -63,7 +63,10 @@ const en = {
     heroSubtitle:
       'Mawster turns Alliance War into one clear plan — roster management, fight history, defense, attack, synergies and stats in one place. No more screenshots or Excel sheets to manage your teammates rosters.',
     heroCtaPrimary: 'Create an account',
-    heroCtaApp: 'Go to my roster',
+    signedInTitle: 'Welcome, {name}',
+    signedInTitleAnonymous: 'Welcome back',
+    signedInSubtitle: 'Your dashboard is on its way.',
+    signedInCta: 'Go to my roster',
     heroCtaSecondary: 'See features',
     heroNote: 'Discord & Google login · Line and more coming soon',
     heroContactQuestion: 'Any concern? Reach me on',

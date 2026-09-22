@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import { FaDiscord, FaLine } from 'react-icons/fa6'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
@@ -7,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import AllianceRankingChart from '@/app/game/alliances/_components/alliance-ranking-chart'
 import { MOCK_RANKING_POINTS, MOCK_RANKING_SEASON } from './stats-mock-data'
 import { LANDING_LINKS } from './links'
-import { HeroPrimaryCta } from './hero-primary-cta'
 
 export function Hero() {
   const { t } = useI18n()
@@ -24,7 +25,18 @@ export function Hero() {
         </p>
 
         <div className='mt-8 flex flex-wrap items-center gap-3'>
-          <HeroPrimaryCta />
+          <Button
+            asChild
+            size='lg'
+          >
+            <Link
+              href='/login'
+              data-cy='hero-cta-primary'
+            >
+              {t.landing.heroCtaPrimary}
+              <ArrowRight className='h-4 w-4' />
+            </Link>
+          </Button>
           <Button
             asChild
             variant='outline'

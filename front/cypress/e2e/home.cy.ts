@@ -2,23 +2,24 @@ import { setupUser } from '../support/e2e';
 
 const SIGN_UP_CTAS = ['hero-cta-primary', 'cta-discord', 'cta-google'];
 
-describe('Home – calls to action', () => {
+describe('Home', () => {
   beforeEach(() => {
     cy.truncateDb();
   });
 
-  it('offers sign-up to signed-out visitors', () => {
+  it('shows the landing with sign-up to signed-out visitors', () => {
     cy.visit('/');
     SIGN_UP_CTAS.forEach((cyId) => {
       cy.getByCy(cyId).should('be.visible').and('have.attr', 'href', '/login');
     });
-    cy.getByCy('hero-cta-app').should('not.exist');
+    cy.getByCy('home-signed-in').should('not.exist');
   });
 
-  it('links signed-in players to their roster instead of sign-up', () => {
+  it('replaces the landing with a placeholder for signed-in players', () => {
     setupUser('home-signed-in').then(({ user_id }) => {
       cy.apiLogin(user_id);
-      cy.getByCy('hero-cta-app').should('be.visible').and('have.attr', 'href', '/game/account');
+      cy.getByCy('home-signed-in').should('be.visible');
+      cy.getByCy('home-signed-in-cta').should('have.attr', 'href', '/game/account');
       SIGN_UP_CTAS.forEach((cyId) => {
         cy.getByCy(cyId).should('not.exist');
       });
