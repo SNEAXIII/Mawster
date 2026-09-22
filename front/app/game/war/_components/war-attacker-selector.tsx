@@ -80,6 +80,9 @@ export default function WarAttackerSelector({
   const existingNote = currentPlacement?.note
   // Read-only viewers and locked nodes get the node's detail without the attacker picker.
   const canAssign = !isMapReadOnly && !currentPlacement?.is_attacker_locked
+  const canManageNote = canManageWar && !isWarClosed
+  const hasNoteSection =
+    canManageNote || !!currentPlacement?.note || !!currentPlacement?.note_blocked
 
   useEffect(() => {
     if (open) {
@@ -101,11 +104,13 @@ export default function WarAttackerSelector({
     if (open && existingNote) setShowNote(true)
   }, [open, existingNote])
 
-  // Count already-assigned attackers per pseudo from current placements
-  const assignedByPseudo = new Map<string, number>()
+  // The limit is on distinct attacker champions, not on placements: one champion covers several nodes.
+  const attackerIdsByPseudo = new Map<string, Set<string>>()
   for (const p of placements) {
-    if (p.attacker_pseudo) {
-      assignedByPseudo.set(p.attacker_pseudo, (assignedByPseudo.get(p.attacker_pseudo) ?? 0) + 1)
+    if (p.attacker_pseudo && p.attacker_champion_user_id) {
+      const ids = attackerIdsByPseudo.get(p.attacker_pseudo) ?? new Set<string>()
+      ids.add(p.attacker_champion_user_id)
+      attackerIdsByPseudo.set(p.attacker_pseudo, ids)
     }
   }
 
@@ -161,7 +166,7 @@ export default function WarAttackerSelector({
         pseudo: a.game_pseudo,
         gameAccountId: a.game_account_id,
         attackers: [],
-        assignedCount: assignedByPseudo.get(a.game_pseudo) ?? 0,
+        assignedCount: attackerIdsByPseudo.get(a.game_pseudo)?.size ?? 0,
       }
       groupMap.set(a.game_account_id, group)
     }
@@ -194,9 +199,15 @@ export default function WarAttackerSelector({
   } else {
     content = groups.map((group) => (
       <div key={group.gameAccountId}>
-        <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1'>
-          {group.pseudo}
-          <span className='text-primary font-bold'>
+        <div
+          className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1'
+          data-cy={`war-attacker-group-${group.pseudo}`}
+        >
+          {group.pseudo}{' '}
+          <span
+            className='text-primary font-bold'
+            data-cy={`war-attacker-group-count-${group.pseudo}`}
+          >
             {t.game.war.memberAttackers
               .replace('{count}', String(group.assignedCount))
               .replace('{max}', String(maxAttackers))}
@@ -279,35 +290,37 @@ export default function WarAttackerSelector({
                 mode='full'
               />
             </div>
-            <div
-              className='px-3 pb-1'
-              data-cy='war-attacker-selector-note'
-            >
-              <button
-                type='button'
-                onClick={() => setShowNote((v) => !v)}
-                className='flex w-full items-center gap-1.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground'
-                data-cy='war-attacker-selector-note-toggle'
-                aria-expanded={showNote}
+            {hasNoteSection && (
+              <div
+                className='px-3 pb-1'
+                data-cy='war-attacker-selector-note'
               >
-                <ChevronRight
-                  className={cn('h-3.5 w-3.5 transition-transform', showNote && 'rotate-90')}
-                />
-                {t.game.war.noteLabel}
-                {currentPlacement.note && !showNote && (
-                  <span className='h-1.5 w-1.5 rounded-full bg-primary' />
+                <button
+                  type='button'
+                  onClick={() => setShowNote((v) => !v)}
+                  className='flex w-full items-center gap-1.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground'
+                  data-cy='war-attacker-selector-note-toggle'
+                  aria-expanded={showNote}
+                >
+                  <ChevronRight
+                    className={cn('h-3.5 w-3.5 transition-transform', showNote && 'rotate-90')}
+                  />
+                  {t.game.war.noteLabel}
+                  {currentPlacement.note && !showNote && (
+                    <span className='h-1.5 w-1.5 rounded-full bg-primary' />
+                  )}
+                </button>
+                {showNote && (
+                  <WarNoteEditor
+                    nodeNumber={nodeNumber}
+                    note={currentPlacement.note ?? null}
+                    noteId={currentPlacement.note_id ?? null}
+                    noteBlocked={currentPlacement.note_blocked ?? false}
+                    canManage={canManageNote}
+                  />
                 )}
-              </button>
-              {showNote && (
-                <WarNoteEditor
-                  nodeNumber={nodeNumber}
-                  note={currentPlacement.note ?? null}
-                  noteId={currentPlacement.note_id ?? null}
-                  noteBlocked={currentPlacement.note_blocked ?? false}
-                  canManage={canManageWar && !isWarClosed}
-                />
-              )}
-            </div>
+              </div>
+            )}
           </>
         ) : null}
         {canAssign && (

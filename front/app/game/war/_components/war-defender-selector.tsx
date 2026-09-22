@@ -148,9 +148,14 @@ export default function WarDefenderSelector({
           }}
         >
           <DialogHeader className='px-4 py-4 border-b'>
-            <DialogTitle>
-              {t.game.defense.selectChampion} —
-              {t.game.defense.nodeEmpty.replace('{node}', String(nodeNumber))}
+            <DialogTitle data-cy='war-defender-selector-title'>
+              {(currentPlacement
+                ? t.game.war.selectDefenderPlaced.replace(
+                    '{champion}',
+                    currentPlacement.champion_name
+                  )
+                : t.game.war.selectDefenderEmpty
+              ).replace('{node}', String(nodeNumber))}
             </DialogTitle>
           </DialogHeader>
 
