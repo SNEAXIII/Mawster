@@ -65,6 +65,10 @@ const fr: Translations = {
     heroSubtitle:
       "Mawster transforme la Guerre d'Alliance en un plan clair — gestion des rosters, historique des combats, défense, attaque, synergies et stats au même endroit. Fini les screenshots et les fichiers Excel pour gérer les rosters de tes équipiers.",
     heroCtaPrimary: 'Créez un compte',
+    signedInTitle: 'Bienvenue, {name}',
+    signedInTitleAnonymous: 'Bon retour',
+    signedInSubtitle: 'Ton tableau de bord arrive bientôt.',
+    signedInCta: 'Accéder à mon roster',
     heroCtaSecondary: 'Voir les fonctionnalités',
     heroNote: 'Connexion Discord & Google · Line et plus à venir',
     heroContactQuestion: 'Une question ? Contacte-moi sur',
