@@ -13,7 +13,7 @@ export function ProfileStatsCard({ stats, alliances }: Readonly<Props>) {
   const { t } = useI18n()
   const s = t.profile.statistics
   const items = [
-    { label: s.ratio, value: `${stats.ratio}%` },
+    { label: s.ratio, value: `${stats.ratio.toFixed(1)}%` },
     { label: s.kos, value: stats.total_kos },
     { label: s.notFought, value: stats.total_not_fought },
     { label: s.fights, value: Math.round(stats.total_fights) },
