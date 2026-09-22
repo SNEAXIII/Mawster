@@ -156,6 +156,28 @@ describe('War – Attackers mode', () => {
     });
   });
 
+  it('selector counts a synergy champion toward the member limit', () => {
+    const prefix = 'atk-selsyn';
+    const pseudo = `${prefix}Member`.slice(0, 16);
+    setupAttackerScenario(prefix, { memberRoster: [{ champion: 'Iron Man', rarity: '6r4' }] }).then(
+      ({ memberData, ownerData, allianceId, warId, championUserId, memberChampionUserIds }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+        cy.apiAddWarSynergy(
+          memberData.access_token,
+          allianceId,
+          warId,
+          1,
+          memberChampionUserIds['Iron Man'],
+          championUserId,
+        );
+        goToAttackersMode(ownerData.user_id);
+
+        openWarNode(10);
+        cy.getByCy(`war-attacker-group-count-${pseudo}`).should('have.text', '2/3');
+      },
+    );
+  });
+
   // ── Attacker selector dialog: close without crash ────────────────────────
 
   it('closing the attacker selector dialog does not crash the page', () => {

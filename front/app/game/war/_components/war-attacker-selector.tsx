@@ -43,7 +43,15 @@ export default function WarAttackerSelector({
   onSelect,
 }: Readonly<WarAttackerSelectorProps>) {
   const { t } = useI18n()
-  const { canManageWar, isWarClosed, isMapReadOnly, loadAvailableAttackers, currentWar } = useWar()
+  const {
+    canManageWar,
+    isWarClosed,
+    isMapReadOnly,
+    loadAvailableAttackers,
+    currentWar,
+    synergies,
+    prefights,
+  } = useWar()
   const currentSeason = useCurrentSeason()
   const maxAttackers =
     currentWar?.max_attackers_per_member ?? currentSeason?.max_attackers_per_member ?? 3
@@ -104,15 +112,17 @@ export default function WarAttackerSelector({
     if (open && existingNote) setShowNote(true)
   }, [open, existingNote])
 
-  // The limit is on distinct attacker champions, not on placements: one champion covers several nodes.
-  const attackerIdsByPseudo = new Map<string, Set<string>>()
-  for (const p of placements) {
-    if (p.attacker_pseudo && p.attacker_champion_user_id) {
-      const ids = attackerIdsByPseudo.get(p.attacker_pseudo) ?? new Set<string>()
-      ids.add(p.attacker_champion_user_id)
-      attackerIdsByPseudo.set(p.attacker_pseudo, ids)
-    }
+  // Mirrors the backend limit: distinct champions across node, synergy and prefight attackers.
+  const attackerIdsByAccount = new Map<string, Set<string>>()
+  const countAttacker = (accountId: string | null, championUserId: string | null) => {
+    if (!accountId || !championUserId) return
+    const ids = attackerIdsByAccount.get(accountId) ?? new Set<string>()
+    ids.add(championUserId)
+    attackerIdsByAccount.set(accountId, ids)
   }
+  for (const p of placements) countAttacker(p.attacker_game_account_id, p.attacker_champion_user_id)
+  for (const s of synergies) countAttacker(s.game_account_id, s.champion_user_id)
+  for (const pf of prefights) countAttacker(pf.game_account_id, pf.champion_user_id)
 
   const availableClasses = useMemo(
     () =>
@@ -166,7 +176,7 @@ export default function WarAttackerSelector({
         pseudo: a.game_pseudo,
         gameAccountId: a.game_account_id,
         attackers: [],
-        assignedCount: attackerIdsByPseudo.get(a.game_pseudo)?.size ?? 0,
+        assignedCount: attackerIdsByAccount.get(a.game_account_id)?.size ?? 0,
       }
       groupMap.set(a.game_account_id, group)
     }
