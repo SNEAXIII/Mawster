@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 class PlayerStatsCardResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    ratio: float
+    ratio: int
     total_kos: int
     total_not_fought: int
     total_fights: float
@@ -16,7 +16,7 @@ class PlayerStatsCardResponse(BaseModel):
 class RatioEvolutionPoint(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     label: str
-    ratio: float
+    ratio: int
     fights: float
 
 

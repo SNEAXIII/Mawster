@@ -143,18 +143,6 @@ class TestGetCurrentSeasonStatistics:
         assert p["ratio"] == 50  # (1 - 1/2) * 100
 
     @pytest.mark.anyio
-    async def test_ratio_keeps_one_decimal(self):
-        data = await _setup_with_active_season()
-        for node_number, ko_count in ((10, 1), (11, 0), (12, 0)):
-            await _add_placement(
-                data["war"].id, data["cu"].id, data["champ"].id, node_number, ko_count=ko_count
-            )
-
-        response = await execute_get_request(f"{STATS_URL}/{data['alliance'].id}", USER_HEADERS)
-        assert response.status_code == 200
-        assert response.json()[0]["ratio"] == 66.7  # (1 - 1/3) * 100
-
-    @pytest.mark.anyio
     async def test_preseason_returns_previous_ended_season_stats(self):
         # No active season exists; the ended season should be used as a fallback.
         data = await _setup_with_active_season(status=SeasonStatus.ended)

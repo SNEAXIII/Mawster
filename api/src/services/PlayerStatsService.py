@@ -123,8 +123,8 @@ class PlayerStatsService:
         ratio_kos = total_kos + NOT_FOUGHT_KOS * total_not_fought
         ratio_fights = total_fights + total_not_fought
         ratio_expr = cast(
-            func.round(func.coalesce((1 - ratio_kos / func.nullif(ratio_fights, 0)) * 100, 100), 1),
-            Float,
+            func.coalesce((1 - ratio_kos / func.nullif(ratio_fights, 0)) * 100, 100),
+            Integer,
         )
 
         # --- card: attacker aggregates ---

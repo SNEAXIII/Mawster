@@ -262,7 +262,6 @@ export function AllianceStatsTable({
               </TableCell>
               <StatCell
                 value={row.ratio}
-                decimals={1}
                 suffix='%'
                 className={cellClass('ratio', row.ratio)}
               />

@@ -170,11 +170,8 @@ class StatisticService:
                     "total_not_fought"
                 ),
                 cast(
-                    func.round(
-                        func.coalesce((1 - _ratio_kos / func.nullif(_ratio_fights, 0)) * 100, 100),
-                        1,
-                    ),
-                    Float,
+                    func.coalesce((1 - _ratio_kos / func.nullif(_ratio_fights, 0)) * 100, 100),
+                    Integer,
                 ).label("ratio"),
                 cast(_wars, Integer).label("wars_participated"),
                 cast(_combined_fights / func.nullif(_wars, 0), Float).label("avg_fights_per_war"),
