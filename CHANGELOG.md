@@ -3,6 +3,18 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.17.0](https://github.com/SNEAXIII/Mawster/compare/v1.16.0...v1.17.0) (2026-09-22)
+
+
+### Ajouté
+
+* let strategists flag a war fight as not done or a planning error ([#582](https://github.com/SNEAXIII/Mawster/issues/582)) ([76a9211](https://github.com/SNEAXIII/Mawster/commit/76a9211dca4ebdbca08efcdfc6cc48f864ca4c05))
+
+
+### Corrigé
+
+* show the war ratio with one decimal so close players no longer tie ([#583](https://github.com/SNEAXIII/Mawster/issues/583)) ([1b3c2d9](https://github.com/SNEAXIII/Mawster/commit/1b3c2d9e96003778566bdb14cf2b078b625cc473))
+
 ## [1.16.0](https://github.com/SNEAXIII/Mawster/compare/v1.15.1...v1.16.0) (2026-09-15)
 
 
