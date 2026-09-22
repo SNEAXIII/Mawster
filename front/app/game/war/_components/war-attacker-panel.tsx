@@ -57,6 +57,7 @@ export default function WarAttackerPanel({
     synergies,
     prefights,
     isMapReadOnly,
+    isWarClosed,
     selectedBg,
     alliances,
     selectedAllianceId,
@@ -137,22 +138,24 @@ export default function WarAttackerPanel({
               .replace('{total}', String(nodeCount))}
           </span>
           <div className='flex items-center gap-1'>
-            <Select
-              value={combatFilter}
-              onValueChange={(v) => onCombatFilterChange(v as fightStateFilter)}
-            >
-              <SelectTrigger
-                className='h-7 w-20 text-xs'
-                data-cy='war-combat-filter'
+            {!isWarClosed && (
+              <Select
+                value={combatFilter}
+                onValueChange={(v) => onCombatFilterChange(v as fightStateFilter)}
               >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='todo'>{t.game.war.combatFilterTodo}</SelectItem>
-                <SelectItem value='done'>{t.game.war.combatFilterDone}</SelectItem>
-                <SelectItem value='all'>{t.game.war.combatFilterAll}</SelectItem>
-              </SelectContent>
-            </Select>
+                <SelectTrigger
+                  className='h-7 w-20 text-xs'
+                  data-cy='war-combat-filter'
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='todo'>{t.game.war.combatFilterTodo}</SelectItem>
+                  <SelectItem value='done'>{t.game.war.combatFilterDone}</SelectItem>
+                  <SelectItem value='all'>{t.game.war.combatFilterAll}</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
             <PlayerFilterSelect
               players={players}
               value={playerFilter}

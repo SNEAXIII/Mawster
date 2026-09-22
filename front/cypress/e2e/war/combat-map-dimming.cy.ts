@@ -7,9 +7,10 @@ describe('War – Combat filter map dimming', () => {
 
   // Node 10 carries the assigned attacker; `completed` decides which side of the
   // todo/done filter it falls on.
-  function openAttackersView(prefix: string, completed: boolean) {
+  function openAttackersView(prefix: string, completed: boolean, ended = false) {
     return setupAssignedAttacker(prefix).then(({ memberData, ownerData, allianceId, warId }) => {
       if (completed) cy.apiToggleCombatCompleted(memberData.access_token, allianceId, warId, 1, 10);
+      if (ended) cy.apiEndWar(ownerData.access_token, allianceId, warId, true, 10);
       cy.goToWarMode(ownerData.user_id, 'attackers');
     });
   }
@@ -45,6 +46,15 @@ describe('War – Combat filter map dimming', () => {
   it('filter "all" does not dim any node on map', () => {
     openAttackersView('map-all-no-dim', true).then(() => {
       selectCombatFilter('All');
+      cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
+    });
+  });
+
+  it('a closed war has no combat filter and dims no node', () => {
+    openAttackersView('map-closed-no-filter', true, true).then(() => {
+      cy.getByCy('war-status-ended').should('be.visible');
+      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      cy.getByCy('war-combat-filter').should('not.exist');
       cy.getByCy('war-node-10').should('not.have.class', 'opacity-25');
     });
   });
