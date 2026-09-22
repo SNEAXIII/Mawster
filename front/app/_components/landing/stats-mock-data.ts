@@ -233,7 +233,7 @@ function row(
   v: RowInput,
   isCurrent = true
 ): PlayerSeasonStats {
-  const ratio = v.fights > 0 ? Math.floor((1 - v.kos / v.fights) * 100) : 100
+  const ratio = v.fights > 0 ? Math.round((1 - v.kos / v.fights) * 1000) / 10 : 100
   return {
     id,
     game_pseudo: pseudo,
