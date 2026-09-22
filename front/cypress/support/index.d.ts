@@ -354,7 +354,7 @@ declare global {
         nodeNumber: number,
       ): Chainable<any>;
 
-      /** Toggle fight-not-done flag for a war node. Officers/owner only. */
+      /** Toggle fight-not-done flag for a war node. Officers/owner/strategist only. */
       apiToggleFightNotDone(
         token: string,
         allianceId: string,
@@ -363,7 +363,7 @@ declare global {
         nodeNumber: number,
       ): Chainable<any>;
 
-      /** Toggle planning-error flag for a war node. Officers/owner only. */
+      /** Toggle planning-error flag for a war node. Officers/owner/strategist only. */
       apiTogglePlanningError(
         token: string,
         allianceId: string,

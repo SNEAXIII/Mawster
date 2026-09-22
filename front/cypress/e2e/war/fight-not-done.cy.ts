@@ -14,6 +14,7 @@ describe('War – Fight Not Done', () => {
 
   it('fight-not-done button is hidden when no attacker is assigned', behaviour.hiddenWithoutAttacker);
   it('fight-not-done button appears for officer after attacker is assigned', behaviour.visibleForOfficer);
+  it('fight-not-done button appears for strategist after attacker is assigned', behaviour.visibleForStrategist);
   it('fight-not-done button is hidden for regular member', behaviour.hiddenForMember);
 
   // ── Fight Not Done: toggle ───────────────────────────────────────────────

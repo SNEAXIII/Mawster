@@ -3,7 +3,7 @@ import { setupAssignedAttacker, setupAttackerScenario, openWarNode } from '../..
 type ToggleViaApi = (token: string, allianceId: string, warId: string, battlegroup: number, nodeNumber: number) => void;
 
 // planning-error and fight-not-done are the same node button behind two flags:
-// officer-only, hidden until an attacker is assigned, toggling an amber highlight.
+// officer- and strategist-only, hidden until an attacker is assigned, toggling an amber highlight.
 // Only the bodies are shared — each spec still declares its own it() titles, so the
 // test list stays readable in the file it belongs to.
 export function nodeFlagButtonBehaviour(flag: string, prefix: string, toggleViaApi: ToggleViaApi) {
@@ -21,6 +21,14 @@ export function nodeFlagButtonBehaviour(flag: string, prefix: string, toggleViaA
     visibleForOfficer: () => {
       setupAssignedAttacker(`${prefix}-appears`).then(({ ownerData }) => {
         cy.goToWarMode(ownerData.user_id, 'attackers');
+        cy.getByCy(button).should('be.visible');
+      });
+    },
+
+    visibleForStrategist: () => {
+      setupAssignedAttacker(`${prefix}-strategist`).then(({ ownerData, memberData, allianceId, memberAccId }) => {
+        cy.apiAddStrategist(ownerData.access_token, allianceId, memberAccId);
+        cy.goToWarMode(memberData.user_id, 'attackers');
         cy.getByCy(button).should('be.visible');
       });
     },
