@@ -47,6 +47,17 @@ describe('War – attacker panel player filter', () => {
     });
   });
 
+  it("lists the signed-in user's own accounts first, then a separator", () => {
+    // Alphabetically "…Member" comes before "…Owner"; logged in as the owner, it must lead.
+    setupTwoAttackers('war-pflt-o').then(({ ownerGroup, memberGroup }) => {
+      cy.getByCy('war-player-filter').click();
+      cy.get('[data-cy="war-player-filter-item"]').should(($items) => {
+        expect($items.toArray().map((el) => el.dataset.cyPlayer)).to.deep.equal([ownerGroup, memberGroup]);
+      });
+      cy.getByCy('war-player-filter-separator').should('exist');
+    });
+  });
+
   it('player filter restores all member groups when reset to All', () => {
     setupTwoAttackers('war-pflt-r').then(({ ownerGroup, memberGroup }) => {
       cy.selectOption('war-player-filter', ownerGroup);

@@ -5,10 +5,12 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import SearchablePlayerFilterSelect from './searchable-player-filter-select'
+import { useOwnPlayersFirst } from './use-own-players-first'
 
 interface PlayerFilterSelectProps {
   players: string[]
@@ -26,19 +28,32 @@ export default function PlayerFilterSelect({
   searchable = false,
 }: Readonly<PlayerFilterSelectProps>) {
   const { t } = useI18n()
+  const { own, others } = useOwnPlayersFirst(players)
 
   if (players.length === 0) return null
 
   if (searchable) {
     return (
       <SearchablePlayerFilterSelect
-        players={players}
+        own={own}
+        others={others}
         value={value}
         onChange={onChange}
         dataCy={dataCy}
       />
     )
   }
+
+  const renderItem = (player: string) => (
+    <SelectItem
+      key={player}
+      value={player}
+      data-cy={`${dataCy}-item`}
+      data-cy-player={player}
+    >
+      {player}
+    </SelectItem>
+  )
 
   return (
     <Select
@@ -53,16 +68,9 @@ export default function PlayerFilterSelect({
       </SelectTrigger>
       <SelectContent>
         <SelectItem value='all'>{t.game.defense.allFilter}</SelectItem>
-        {players.map((player) => (
-          <SelectItem
-            key={player}
-            value={player}
-            data-cy={`${dataCy}-item`}
-            data-cy-player={player}
-          >
-            {player}
-          </SelectItem>
-        ))}
+        {own.map(renderItem)}
+        {own.length > 0 && others.length > 0 && <SelectSeparator data-cy={`${dataCy}-separator`} />}
+        {others.map(renderItem)}
       </SelectContent>
     </Select>
   )
