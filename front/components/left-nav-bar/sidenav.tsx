@@ -33,25 +33,18 @@ export default function SideNavBar() {
   return (
     <Sidebar collapsible='icon'>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              size='lg'
-            >
-              <Link
-                href='/'
-                aria-label={t.nav.home}
-                onClick={() => setOpenMobile(false)}
-              >
-                <div className='flex aspect-square size-8 items-center justify-center rounded-md bg-primary [&_img]:size-6'>
-                  <MawsterLogo />
-                </div>
-                <span className='text-base font-semibold'>Mawster</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        {/* Not a SidebarMenuButton: its lg size shrinks to size-8 when collapsed and shifts the whole nav. */}
+        <Link
+          href='/'
+          aria-label={t.nav.home}
+          onClick={() => setOpenMobile(false)}
+          className='flex h-8 items-center gap-2 overflow-hidden rounded-md outline-hidden ring-sidebar-ring focus-visible:ring-2'
+        >
+          <div className='flex size-8 shrink-0 items-center justify-center rounded-md bg-primary [&_img]:size-6'>
+            <MawsterLogo />
+          </div>
+          <span className='truncate text-base font-semibold'>Mawster</span>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>
