@@ -599,6 +599,8 @@ const fr: Translations = {
       shareLink: 'Copier le lien',
       shareLinkCopied: 'Lien copié dans le presse-papier',
       nodeEmpty: 'Nœud #{node} — Vide',
+      selectDefenderEmpty: 'Choisir un champion — Nœud #{node} — Vide',
+      selectDefenderPlaced: 'Choisir un champion — Nœud #{node} — {champion}',
       removeDefender: 'Retirer',
       loadMore: 'Charger plus',
       loadingChampions: 'Chargement...',

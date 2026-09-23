@@ -1,4 +1,4 @@
-import { setupAttackerScenario, openWarNode } from '../../support/e2e';
+import { setupAttackerScenario, setupClosedWar, openWarNode } from '../../support/e2e';
 
 const NOTE = 'Selector note content';
 
@@ -60,6 +60,19 @@ describe('War note – attacker selector', () => {
         // Toggling again collapses it back.
         cy.getByCy('war-attacker-selector-note-toggle').click();
         cy.getByCy('war-note-input').should('not.exist');
+      });
+    });
+  });
+
+  it('hides the note section on an ended war with no note', () => {
+    setupClosedWar('selended').then(({ ownerData }) => {
+      cy.apiLogin(ownerData.user_id, 'war');
+      cy.getByCy('war-status-ended').should('be.visible');
+
+      openWarNode(1);
+      cy.getByCy('war-attacker-search').within(() => {
+        cy.getByCy('attacker-entry-node-1').should('be.visible');
+        cy.getByCy('war-attacker-selector-note-toggle').should('not.exist');
       });
     });
   });

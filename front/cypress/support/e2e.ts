@@ -1511,6 +1511,79 @@ export function setupAttackerScenario(prefix: string, extras: SetupExtras = {}):
     });
 }
 
+export interface ClosedWarScenario {
+  adminAT: string;
+  ownerData: BatchSetupUserResult;
+  memberData: BatchSetupUserResult;
+  allianceId: string;
+  ownerAccId: string;
+  memberAccId: string;
+  warId: string;
+  seasonId: string;
+  championId: string;
+  championUserId: string;
+}
+
+/**
+ * Admin + owner (alliance, BG1) + member (BG1), an open season, one champion on the
+ * member's roster, a War with a defender on node 1 and the member's attacker on it,
+ * then the War is ended — the shared starting point for every closed-war scenario.
+ */
+export function setupClosedWar(prefix: string): Cypress.Chainable<ClosedWarScenario> {
+  const adminToken = `${prefix}-admin`;
+  const ownerToken = `${prefix}-owner`;
+  const memberToken = `${prefix}-member`;
+
+  return cy
+    .apiBatchSetup([
+      { discord_token: adminToken, role: 'admin' },
+      {
+        discord_token: ownerToken,
+        game_pseudo: `${prefix}Own`.slice(0, 16),
+        create_alliance: { name: `${prefix}All`.slice(0, 20), tag: prefix.slice(0, 3).toUpperCase() },
+        battlegroup: 1,
+      },
+      {
+        discord_token: memberToken,
+        game_pseudo: `${prefix}Mem`.slice(0, 16),
+        join_alliance_token: ownerToken,
+        battlegroup: 1,
+      },
+    ])
+    .then((users) => {
+      const adminAT = users[adminToken].access_token;
+      const ownerData = users[ownerToken];
+      const memberData = users[memberToken];
+      const allianceId = users[ownerToken].alliance_id!;
+      const memberAccId = users[memberToken].account_id!;
+
+      return cy.apiCreateOpenSeason(adminAT, 1).then((seasonId) =>
+        cy.apiLoadChampion(adminAT, 'Iron Man', 'Tech').then((champs) => {
+          const championId = champs[0].id as string;
+          return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, championId, '7r3').then((cu) => {
+            const championUserId = cu.id as string;
+            return cy.apiCreateWar(ownerData.access_token, allianceId, `${prefix}Enemy`).then((war) => {
+              cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 1, championId, 7, 3, 0);
+              cy.apiAssignWarAttacker(memberData.access_token, allianceId, war.id, 1, 1, championUserId);
+              return cy.apiEndWar(ownerData.access_token, allianceId, war.id, true, 10).then(() => ({
+                adminAT,
+                ownerData,
+                memberData,
+                allianceId,
+                ownerAccId: users[ownerToken].account_id!,
+                memberAccId,
+                warId: war.id as string,
+                seasonId: seasonId as string,
+                championId,
+                championUserId,
+              }));
+            });
+          });
+        }),
+      );
+    });
+}
+
 // setupAttackerScenario plus the attacker every node-level war spec assigns first:
 // the member's champion on BG1 node 10, which is where the defender is placed.
 export function setupAssignedAttacker(

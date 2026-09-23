@@ -592,6 +592,8 @@ const en = {
       shareLink: 'Copy link',
       shareLinkCopied: 'Link copied to clipboard',
       nodeEmpty: 'Node #{node} — Empty',
+      selectDefenderEmpty: 'Select Champion — Node #{node} — Empty',
+      selectDefenderPlaced: 'Select Champion — Node #{node} — {champion}',
       removeDefender: 'Remove',
       loadMore: 'Load more',
       loadingChampions: 'Loading...',
