@@ -29,6 +29,7 @@ export interface PlayerStatsCard {
   total_fights: number
   total_assists: number
   wars_participated: number
+  win_streak: number
 }
 
 export interface PlayerStats {

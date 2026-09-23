@@ -28,6 +28,7 @@ from src.services.alliance.war._stat_expressions import (
     total_kos,
     total_not_fought,
 )
+from src.services.alliance.war._win_streak import StreakFight, current_win_streak
 from src.utils.db import SessionDep
 
 
@@ -192,6 +193,7 @@ class PlayerStatsService:
             total_fights=(card_row["total_fights"] or 0.0) if card_row else 0.0,
             total_assists=total_assists or 0,
             wars_participated=wars_participated or 0,
+            win_streak=await cls._get_win_streak(session, game_account_id),
         )
 
         # --- evolution: attacker-based, by war (season given) or by season (all) ---
@@ -256,6 +258,30 @@ class PlayerStatsService:
         alliances = [PlayerSeasonAllianceResponse(name=r["name"], tag=r["tag"]) for r in alli_rows]
 
         return PlayerStatsResponse(card=card, evolution=evolution, alliances=alliances)
+
+    @classmethod
+    async def _get_win_streak(cls, session: SessionDep, game_account_id: uuid.UUID) -> int:
+        """Across all Seasons on purpose: the season filter never resets it."""
+        rows = await session.exec(
+            select(WarDefensePlacement.ko_count, WarDefensePlacement.is_fight_not_done)
+            .join(War, WarDefensePlacement.war_id == War.id)
+            .join(
+                ChampionUser,
+                ChampionUser.id == WarDefensePlacement.attacker_champion_user_id,
+            )
+            .where(
+                ChampionUser.game_account_id == game_account_id,
+                War.status == WarStatus.ended,
+                War.season_id.is_not(None),
+                WarDefensePlacement.is_planning_error.is_(False),
+            )
+            .order_by(
+                War.created_at.desc(),
+                War.id.desc(),
+                WarDefensePlacement.node_number.desc(),
+            )
+        )
+        return current_win_streak(StreakFight(*row) for row in rows)
 
     @classmethod
     async def get_player_champion_usage(

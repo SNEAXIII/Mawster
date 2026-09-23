@@ -3,6 +3,7 @@
 import { useI18n } from '@/app/i18n'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { PlayerStatsCard, PlayerSeasonAlliance } from '@/app/services/player-stats'
+import { WinStreakFlame } from './win-streak-flame'
 
 interface Props {
   stats: PlayerStatsCard
@@ -22,8 +23,9 @@ export function ProfileStatsCard({ stats, alliances }: Readonly<Props>) {
   ]
   return (
     <Card data-cy='profile-stats-card'>
-      <CardHeader className='pb-2'>
+      <CardHeader className='flex flex-row items-center gap-2 space-y-0 pb-2'>
         <CardTitle className='text-sm'>{s.title}</CardTitle>
+        <WinStreakFlame streak={stats.win_streak} />
       </CardHeader>
       <CardContent className='flex flex-col gap-3'>
         <div className='grid grid-cols-3 sm:grid-cols-6 gap-3'>

@@ -256,6 +256,7 @@ const fr: Translations = {
       assists: 'Assists',
       wars: 'Guerres',
       alliancesLabel: 'Alliance(s)',
+      winStreak: "{count} combats d'affilée sans KO (toutes saisons)",
       evolutionTitle: 'Évolution du ratio',
       evolutionFights: 'Combats',
       evolutionRatio: 'Ratio',
