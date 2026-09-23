@@ -109,6 +109,18 @@ describe('War – closed war correction', () => {
     });
   });
 
+  it('a closed war has no combat filter and dims no completed fight', () => {
+    setupClosedWar('cwcfil').then(({ ownerData, allianceId, warId }) => {
+      cy.apiToggleCombatCompleted(ownerData.access_token, allianceId, warId, 1, 1);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
+
+      cy.getByCy('war-status-ended').should('be.visible');
+      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      cy.getByCy('war-combat-filter').should('not.exist');
+      cy.getByCy('war-node-1').should('not.have.class', 'opacity-25');
+    });
+  });
+
   it('the running war is the default, not the closed one', () => {
     setupClosedWar('cwc2').then(({ ownerData, allianceId, warId }) => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'cwc2Running').then(() => {
