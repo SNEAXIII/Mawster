@@ -21,6 +21,13 @@ def test_player_stats_response_composes():
     assert resp.alliances[0].tag == "AVG"
 
 
+def test_card_win_streak_defaults_to_zero():
+    card = PlayerStatsCardResponse(
+        ratio=100, total_kos=0, total_not_fought=0, total_fights=0.0, wars_participated=0
+    )
+    assert card.win_streak == 0
+
+
 def test_player_season_option():
     opt = PlayerSeasonOption(season_id=__import__("uuid").uuid4(), number=64, status="active")
     assert opt.number == 64

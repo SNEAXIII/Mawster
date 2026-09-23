@@ -206,6 +206,14 @@ corrected, so a correction may show a fight as easier than it was, never harder.
 _Table_: `war_fight_record`.
 _Avoid_: fight, combat log.
 
+**Win Streak**:
+A Player's latest fights in a row without a KO, as an Attacker, across every Season —
+the season filter never resets it. Only closed Wars inside a Season count. Fights run
+in War date order, then by ascending node number. A KO or a fight flagged not done
+breaks it; a planning error is skipped; the done flag plays no part. Assists never count.
+Computed on the fly, never stored.
+_Avoid_: series, combo.
+
 **Matchup Builder** (experimental):
 The feature rating attackers against targets to suggest who to send. Everything under
 it is experimental — nothing here is settled domain yet.

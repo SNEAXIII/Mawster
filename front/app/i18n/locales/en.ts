@@ -252,6 +252,7 @@ const en = {
       assists: 'Assists',
       wars: 'Wars',
       alliancesLabel: 'Alliance(s)',
+      winStreak: '{count} fights in a row without a KO (all seasons)',
       evolutionTitle: 'Ratio evolution',
       evolutionFights: 'Fights',
       evolutionRatio: 'Ratio',
