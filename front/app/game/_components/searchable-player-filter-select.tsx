@@ -10,20 +10,23 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from '@/components/ui/command'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/app/lib/utils'
 import { ChevronsUpDown, X } from 'lucide-react'
 
 interface SearchablePlayerFilterSelectProps {
-  players: string[]
+  own: string[]
+  others: string[]
   value: string
   onChange: (v: string) => void
   dataCy: string
 }
 
 export default function SearchablePlayerFilterSelect({
-  players,
+  own,
+  others,
   value,
   onChange,
   dataCy,
@@ -37,6 +40,18 @@ export default function SearchablePlayerFilterSelect({
     onChange(player)
     setOpen(false)
   }
+
+  const renderItem = (player: string) => (
+    <CommandItem
+      key={player}
+      value={player}
+      onSelect={() => handleSelect(player)}
+      data-cy={`${dataCy}-item`}
+      data-cy-player={player}
+    >
+      <span className={player === value ? 'font-semibold' : ''}>{player}</span>
+    </CommandItem>
+  )
 
   return (
     <Popover
@@ -81,18 +96,12 @@ export default function SearchablePlayerFilterSelect({
               >
                 <span className='text-muted-foreground'>{t.game.defense.allFilter}</span>
               </CommandItem>
-              {players.map((player) => (
-                <CommandItem
-                  key={player}
-                  value={player}
-                  onSelect={() => handleSelect(player)}
-                  data-cy={`${dataCy}-item`}
-                  data-cy-player={player}
-                >
-                  <span className={player === value ? 'font-semibold' : ''}>{player}</span>
-                </CommandItem>
-              ))}
+              {own.map(renderItem)}
             </CommandGroup>
+            {own.length > 0 && others.length > 0 && (
+              <CommandSeparator data-cy={`${dataCy}-separator`} />
+            )}
+            <CommandGroup>{others.map(renderItem)}</CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>
