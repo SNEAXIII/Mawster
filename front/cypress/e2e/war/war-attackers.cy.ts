@@ -138,6 +138,46 @@ describe('War – Attackers mode', () => {
     });
   });
 
+  it('selector counts one attacker champion used on two nodes once', () => {
+    const prefix = 'atk-selcount';
+    const pseudo = `${prefix}Member`.slice(0, 16);
+    setupAttackerScenario(prefix).then(({ adminToken, memberData, ownerData, allianceId, warId, championUserId }) => {
+      cy.apiLoadChampion(adminToken, 'Captain Marvel', 'Cosmic').then((champs: { id: string }[]) => {
+        cy.apiPlaceWarDefender(ownerData.access_token, allianceId, warId, 1, 11, champs[0].id, 7, 3, 0);
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 11, championUserId);
+      });
+      goToAttackersMode(ownerData.user_id);
+
+      openWarNode(10);
+      cy.getByCy('war-attacker-search').should('be.visible');
+      cy.getByCy(`war-attacker-group-count-${pseudo}`).should('have.text', '1/3');
+      cy.getByCy(`war-attacker-group-${pseudo}`).should('have.text', `${pseudo} 1/3`);
+    });
+  });
+
+  it('selector counts a synergy champion toward the member limit', () => {
+    const prefix = 'atk-selsyn';
+    const pseudo = `${prefix}Member`.slice(0, 16);
+    setupAttackerScenario(prefix, { memberRoster: [{ champion: 'Iron Man', rarity: '6r4' }] }).then(
+      ({ memberData, ownerData, allianceId, warId, championUserId, memberChampionUserIds }) => {
+        cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
+        cy.apiAddWarSynergy(
+          memberData.access_token,
+          allianceId,
+          warId,
+          1,
+          memberChampionUserIds['Iron Man'],
+          championUserId,
+        );
+        goToAttackersMode(ownerData.user_id);
+
+        openWarNode(10);
+        cy.getByCy(`war-attacker-group-count-${pseudo}`).should('have.text', '2/3');
+      },
+    );
+  });
+
   // ── Attacker selector dialog: close without crash ────────────────────────
 
   it('closing the attacker selector dialog does not crash the page', () => {

@@ -78,6 +78,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
 
   const [playerFilter, setPlayerFilter] = useState('')
   const [combatFilter, setCombatFilter] = useState<fightStateFilter>('todo')
+  const effectiveFilter: fightStateFilter = isWarClosed ? 'all' : combatFilter
   const [exporting, setExporting] = useState(false)
 
   const exportMapRef = useRef<HTMLDivElement>(null)
@@ -134,9 +135,9 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
         )
         if (!isMyAttacker && !isMyPrefight) shouldDim = true
       }
-      if (!shouldDim && combatFilter !== 'all' && p.attacker_champion_user_id) {
-        if (combatFilter === 'todo' && p.is_combat_completed) shouldDim = true
-        if (combatFilter === 'done' && !p.is_combat_completed) shouldDim = true
+      if (!shouldDim && effectiveFilter !== 'all' && p.attacker_champion_user_id) {
+        if (effectiveFilter === 'todo' && p.is_combat_completed) shouldDim = true
+        if (effectiveFilter === 'done' && !p.is_combat_completed) shouldDim = true
       }
       if (shouldDim) dimmed.add(p.node_number)
     }
@@ -372,7 +373,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
               <WarAttackerPanel
                 playerFilter={playerFilter}
                 onPlayerChange={setPlayerFilter}
-                combatFilter={combatFilter}
+                combatFilter={effectiveFilter}
                 onCombatFilterChange={setCombatFilter}
                 exporting={exporting}
                 exportRef={exportAttackersRef}

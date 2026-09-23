@@ -32,6 +32,8 @@ const DEFAULT_FILTERS: Filters = {
   game_account_pseudo: '',
 }
 
+const DEFAULT_SOURCE: FightRecordSource = 'non_imported'
+
 function filtersFromParams(params: URLSearchParams): Filters {
   return {
     champion_id: params.get('champion_id'),
@@ -78,7 +80,7 @@ export function useKnowledgeBaseViewModel() {
     getInitialParams().get('alliance_id')
   )
   const [source, setSource] = useState<FightRecordSource>(
-    () => (getInitialParams().get('source') as FightRecordSource) ?? 'all'
+    () => (getInitialParams().get('source') as FightRecordSource) ?? DEFAULT_SOURCE
   )
   const [accessibleAlliances, setAccessibleAlliances] = useState<AccessibleAlliance[]>([])
   const { roles } = useAllianceContext()
@@ -123,7 +125,7 @@ export function useKnowledgeBaseViewModel() {
     if (seasonSelector !== 'all_seasons') params.set('season_selector', seasonSelector)
     if (seasonId) params.set('season_id', seasonId)
     if (allianceId) params.set('alliance_id', allianceId)
-    if (source !== 'all') params.set('source', source)
+    if (source !== DEFAULT_SOURCE) params.set('source', source)
     if (page !== 1) params.set('page', String(page))
     if (size !== 20) params.set('size', String(size))
     if (sortBy !== 'created_at') params.set('sort_by', sortBy)
@@ -239,7 +241,7 @@ export function useKnowledgeBaseViewModel() {
     setSeasonSelector('all_seasons')
     setSeasonId(null)
     setAllianceId(null)
-    setSource('non_imported')
+    setSource(DEFAULT_SOURCE)
     setPage(1)
   }
 
@@ -264,7 +266,7 @@ export function useKnowledgeBaseViewModel() {
   }
 
   const hasActiveFilters = Boolean(
-    source !== 'all' ||
+    source !== DEFAULT_SOURCE ||
     filters.champion_id ||
     filters.defender_champion_id ||
     filters.node_number ||

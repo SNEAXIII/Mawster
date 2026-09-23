@@ -43,7 +43,15 @@ export default function WarAttackerSelector({
   onSelect,
 }: Readonly<WarAttackerSelectorProps>) {
   const { t } = useI18n()
-  const { canManageWar, isWarClosed, isMapReadOnly, loadAvailableAttackers, currentWar } = useWar()
+  const {
+    canManageWar,
+    isWarClosed,
+    isMapReadOnly,
+    loadAvailableAttackers,
+    currentWar,
+    synergies,
+    prefights,
+  } = useWar()
   const currentSeason = useCurrentSeason()
   const maxAttackers =
     currentWar?.max_attackers_per_member ?? currentSeason?.max_attackers_per_member ?? 3
@@ -80,6 +88,9 @@ export default function WarAttackerSelector({
   const existingNote = currentPlacement?.note
   // Read-only viewers and locked nodes get the node's detail without the attacker picker.
   const canAssign = !isMapReadOnly && !currentPlacement?.is_attacker_locked
+  const canManageNote = canManageWar && !isWarClosed
+  const hasNoteSection =
+    canManageNote || !!currentPlacement?.note || !!currentPlacement?.note_blocked
 
   useEffect(() => {
     if (open) {
@@ -101,13 +112,17 @@ export default function WarAttackerSelector({
     if (open && existingNote) setShowNote(true)
   }, [open, existingNote])
 
-  // Count already-assigned attackers per pseudo from current placements
-  const assignedByPseudo = new Map<string, number>()
-  for (const p of placements) {
-    if (p.attacker_pseudo) {
-      assignedByPseudo.set(p.attacker_pseudo, (assignedByPseudo.get(p.attacker_pseudo) ?? 0) + 1)
-    }
+  // Mirrors the backend limit: distinct champions across node, synergy and prefight attackers.
+  const attackerIdsByAccount = new Map<string, Set<string>>()
+  const countAttacker = (accountId: string | null, championUserId: string | null) => {
+    if (!accountId || !championUserId) return
+    const ids = attackerIdsByAccount.get(accountId) ?? new Set<string>()
+    ids.add(championUserId)
+    attackerIdsByAccount.set(accountId, ids)
   }
+  for (const p of placements) countAttacker(p.attacker_game_account_id, p.attacker_champion_user_id)
+  for (const s of synergies) countAttacker(s.game_account_id, s.champion_user_id)
+  for (const pf of prefights) countAttacker(pf.game_account_id, pf.champion_user_id)
 
   const availableClasses = useMemo(
     () =>
@@ -161,7 +176,7 @@ export default function WarAttackerSelector({
         pseudo: a.game_pseudo,
         gameAccountId: a.game_account_id,
         attackers: [],
-        assignedCount: assignedByPseudo.get(a.game_pseudo) ?? 0,
+        assignedCount: attackerIdsByAccount.get(a.game_account_id)?.size ?? 0,
       }
       groupMap.set(a.game_account_id, group)
     }
@@ -194,9 +209,15 @@ export default function WarAttackerSelector({
   } else {
     content = groups.map((group) => (
       <div key={group.gameAccountId}>
-        <div className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1'>
-          {group.pseudo}
-          <span className='text-primary font-bold'>
+        <div
+          className='text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1'
+          data-cy={`war-attacker-group-${group.pseudo}`}
+        >
+          {group.pseudo}{' '}
+          <span
+            className='text-primary font-bold'
+            data-cy={`war-attacker-group-count-${group.pseudo}`}
+          >
             {t.game.war.memberAttackers
               .replace('{count}', String(group.assignedCount))
               .replace('{max}', String(maxAttackers))}
@@ -279,35 +300,37 @@ export default function WarAttackerSelector({
                 mode='full'
               />
             </div>
-            <div
-              className='px-3 pb-1'
-              data-cy='war-attacker-selector-note'
-            >
-              <button
-                type='button'
-                onClick={() => setShowNote((v) => !v)}
-                className='flex w-full items-center gap-1.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground'
-                data-cy='war-attacker-selector-note-toggle'
-                aria-expanded={showNote}
+            {hasNoteSection && (
+              <div
+                className='px-3 pb-1'
+                data-cy='war-attacker-selector-note'
               >
-                <ChevronRight
-                  className={cn('h-3.5 w-3.5 transition-transform', showNote && 'rotate-90')}
-                />
-                {t.game.war.noteLabel}
-                {currentPlacement.note && !showNote && (
-                  <span className='h-1.5 w-1.5 rounded-full bg-primary' />
+                <button
+                  type='button'
+                  onClick={() => setShowNote((v) => !v)}
+                  className='flex w-full items-center gap-1.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground'
+                  data-cy='war-attacker-selector-note-toggle'
+                  aria-expanded={showNote}
+                >
+                  <ChevronRight
+                    className={cn('h-3.5 w-3.5 transition-transform', showNote && 'rotate-90')}
+                  />
+                  {t.game.war.noteLabel}
+                  {currentPlacement.note && !showNote && (
+                    <span className='h-1.5 w-1.5 rounded-full bg-primary' />
+                  )}
+                </button>
+                {showNote && (
+                  <WarNoteEditor
+                    nodeNumber={nodeNumber}
+                    note={currentPlacement.note ?? null}
+                    noteId={currentPlacement.note_id ?? null}
+                    noteBlocked={currentPlacement.note_blocked ?? false}
+                    canManage={canManageNote}
+                  />
                 )}
-              </button>
-              {showNote && (
-                <WarNoteEditor
-                  nodeNumber={nodeNumber}
-                  note={currentPlacement.note ?? null}
-                  noteId={currentPlacement.note_id ?? null}
-                  noteBlocked={currentPlacement.note_blocked ?? false}
-                  canManage={canManageWar && !isWarClosed}
-                />
-              )}
-            </div>
+              </div>
+            )}
           </>
         ) : null}
         {canAssign && (

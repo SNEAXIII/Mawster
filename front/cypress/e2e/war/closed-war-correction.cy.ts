@@ -1,78 +1,4 @@
-import type { BatchSetupUserResult } from '../../support/index';
-import { openWarNode } from '../../support/e2e';
-
-interface ClosedWarScenario {
-  adminAT: string;
-  ownerData: BatchSetupUserResult;
-  memberData: BatchSetupUserResult;
-  allianceId: string;
-  ownerAccId: string;
-  memberAccId: string;
-  warId: string;
-  seasonId: string;
-  championId: string;
-  championUserId: string;
-}
-
-/**
- * Admin + owner (alliance, BG1) + member (BG1), an open season, one champion on the
- * member's roster, a War with a defender on node 1 and the member's attacker on it,
- * then the War is ended — the shared starting point for every correction scenario.
- */
-function setupClosedWar(prefix: string): Cypress.Chainable<ClosedWarScenario> {
-  const adminToken = `${prefix}-admin`;
-  const ownerToken = `${prefix}-owner`;
-  const memberToken = `${prefix}-member`;
-
-  return cy
-    .apiBatchSetup([
-      { discord_token: adminToken, role: 'admin' },
-      {
-        discord_token: ownerToken,
-        game_pseudo: `${prefix}Own`.slice(0, 16),
-        create_alliance: { name: `${prefix}All`.slice(0, 20), tag: prefix.slice(0, 3).toUpperCase() },
-        battlegroup: 1,
-      },
-      {
-        discord_token: memberToken,
-        game_pseudo: `${prefix}Mem`.slice(0, 16),
-        join_alliance_token: ownerToken,
-        battlegroup: 1,
-      },
-    ])
-    .then((users) => {
-      const adminAT = users[adminToken].access_token;
-      const ownerData = users[ownerToken];
-      const memberData = users[memberToken];
-      const allianceId = users[ownerToken].alliance_id!;
-      const memberAccId = users[memberToken].account_id!;
-
-      return cy.apiCreateOpenSeason(adminAT, 1).then((seasonId) =>
-        cy.apiLoadChampion(adminAT, 'Iron Man', 'Tech').then((champs) => {
-          const championId = champs[0].id as string;
-          return cy.apiAddChampionToRoster(memberData.access_token, memberAccId, championId, '7r3').then((cu) => {
-            const championUserId = cu.id as string;
-            return cy.apiCreateWar(ownerData.access_token, allianceId, `${prefix}Enemy`).then((war) => {
-              cy.apiPlaceWarDefender(ownerData.access_token, allianceId, war.id, 1, 1, championId, 7, 3, 0);
-              cy.apiAssignWarAttacker(memberData.access_token, allianceId, war.id, 1, 1, championUserId);
-              return cy.apiEndWar(ownerData.access_token, allianceId, war.id, true, 10).then(() => ({
-                adminAT,
-                ownerData,
-                memberData,
-                allianceId,
-                ownerAccId: users[ownerToken].account_id!,
-                memberAccId,
-                warId: war.id as string,
-                seasonId: seasonId as string,
-                championId,
-                championUserId,
-              }));
-            });
-          });
-        }),
-      );
-    });
-}
+import { openWarNode, setupClosedWar } from '../../support/e2e';
 
 /** Open the war dropdown and pick the war with this id. */
 function selectWar(warId: string): void {
@@ -106,6 +32,18 @@ describe('War – closed war correction', () => {
       cy.getByCy('war-select').should('contain', 'cwc1Enemy');
       cy.getByCy('attacker-entry-node-1').scrollIntoView().should('be.visible');
       cy.getByCy('ko-value-node-1').should('have.text', '1');
+    });
+  });
+
+  it('a closed war has no combat filter and dims no completed fight', () => {
+    setupClosedWar('cwcfil').then(({ ownerData, allianceId, warId }) => {
+      cy.apiToggleCombatCompleted(ownerData.access_token, allianceId, warId, 1, 1);
+      cy.goToWarMode(ownerData.user_id, 'attackers');
+
+      cy.getByCy('war-status-ended').should('be.visible');
+      cy.getByCy('war-attacker-panel').scrollIntoView().should('be.visible');
+      cy.getByCy('war-combat-filter').should('not.exist');
+      cy.getByCy('war-node-1').should('not.have.class', 'opacity-25');
     });
   });
 

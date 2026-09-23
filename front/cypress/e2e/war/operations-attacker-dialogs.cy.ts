@@ -109,6 +109,18 @@ describe('War – Operations (attacker-linked confirmations)', () => {
     });
   });
 
+  it('the defender dialog title of an occupied node names its defender', () => {
+    setupAttackerScenario('war-op-title').then(({ ownerData }) => {
+      cy.goToWarMode(ownerData.user_id, 'defenders');
+
+      openWarNode(10);
+      cy.getByCy('war-defender-selector-title')
+        .should('contain', 'Node #10')
+        .and('contain', 'Iron Man')
+        .and('not.contain', 'Empty');
+    });
+  });
+
   // ── Replace defender when attacker is assigned → confirmation dialog ─────
 
   it('replacing a defender with an assigned attacker shows a confirmation dialog', () => {

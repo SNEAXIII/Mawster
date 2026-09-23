@@ -8,20 +8,25 @@ import { Testimonials } from './_components/landing/testimonials'
 import { Faq } from './_components/landing/faq'
 import { Community } from './_components/landing/community'
 import { Cta } from './_components/landing/cta'
+import { HomeGate } from './_components/home-gate'
 
 export default function Page() {
   return (
-    <div className='-m-3 min-h-full bg-background text-foreground'>
-      <Hero />
-      <StatStrip />
-      <FeatureGrid />
-      <Testimonials />
-      <ComingSoon />
-      <FeatureRequest />
-      <StatsShowcase />
-      <Community />
-      <Faq />
-      <Cta />
-    </div>
+    <HomeGate
+      landing={
+        <div className='-m-3 min-h-full bg-background text-foreground'>
+          <Hero />
+          <StatStrip />
+          <FeatureGrid />
+          <Testimonials />
+          <ComingSoon />
+          <FeatureRequest />
+          <StatsShowcase />
+          <Community />
+          <Faq />
+          <Cta />
+        </div>
+      }
+    />
   )
 }
