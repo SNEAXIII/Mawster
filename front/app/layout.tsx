@@ -1,6 +1,8 @@
 import '@/app/ui/global.css'
 import { inter } from '@/app/ui/fonts'
 import SideNavBar from '@/components/left-nav-bar/sidenav'
+import MobileNav from '@/components/left-nav-bar/mobile-nav'
+import { SidebarProvider } from '@/components/ui/sidebar'
 import TestModeBanner from '@/components/test-mode-banner'
 import { Providers } from './providers'
 import { Toaster } from '@/components/ui/sonner'
@@ -70,17 +72,21 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body className={`${inter.className} antialiased`}>
         <TestModeBanner />
         <Providers>
-          <div className='flex min-h-dvh flex-col md:h-dvh md:flex-row md:overflow-hidden'>
-            <div className='w-full flex-none md:w-42'>
-              <SideNavBar />
-            </div>
+          <SidebarProvider
+            className='md:h-dvh md:overflow-hidden'
+            style={{ '--sidebar-width': '12rem' } as React.CSSProperties}
+          >
+            <SideNavBar />
             <Toaster />
             {/* `relative` keeps absolute descendants (sr-only, hidden inputs) inside the scroll box —
                 without it they escape to the document and add a second scrollbar. */}
-            <div className='grow p-3 md:relative md:overflow-y-auto'>
-              <MyModerationProvider>{children}</MyModerationProvider>
+            <div className='flex min-w-0 grow flex-col md:relative md:overflow-y-auto'>
+              <MobileNav />
+              <div className='grow p-3'>
+                <MyModerationProvider>{children}</MyModerationProvider>
+              </div>
             </div>
-          </div>
+          </SidebarProvider>
         </Providers>
       </body>
     </html>

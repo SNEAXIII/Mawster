@@ -2,8 +2,10 @@
 import { Home, User, Sword, Shield, Swords, UserStar, BookOpen, Wrench } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { useI18n } from '@/app/i18n'
-import { cn } from '@/app/lib/utils'
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
 
 export enum Role {
   all = 'all',
@@ -17,14 +19,18 @@ const roleHierarchy: Record<Role, Role[]> = {
   [Role.admin]: [Role.all, Role.user, Role.admin],
   [Role.superAdmin]: [Role.all, Role.user, Role.admin, Role.superAdmin],
 }
-interface NavLinksProps {
-  userRole: Role
-  hasAlliance: boolean
+export function useNavUser() {
+  const { data: session } = useSession()
+  const { hasAlliance } = useAllianceContext()
+  const isAuthenticated = Boolean(session && !session.error && session.user)
+  const userRole: Role = (isAuthenticated ? (session?.user.role as Role) : null) ?? Role.all
+  return { isAuthenticated, userRole, hasAlliance }
 }
 
-export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksProps>) {
+export function useNavLinks() {
   const pathname = usePathname()
   const { t } = useI18n()
+  const { userRole, hasAlliance } = useNavUser()
 
   const links = [
     { name: t.nav.home, href: '/', icon: Home, role: Role.all, cy: 'nav-home' },
@@ -69,33 +75,39 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
     },
   ]
 
+  return links
+    .filter(
+      (link) =>
+        roleHierarchy[userRole]?.includes(link.role) && !(link.requiresAlliance && !hasAlliance)
+    )
+    .map((link) => ({
+      ...link,
+      isActive: (pathname.startsWith(link.href) && link.href !== '/') || pathname === link.href,
+    }))
+}
+
+export default function NavLinks() {
+  const links = useNavLinks()
+
   return (
-    <>
-      {links.map((link) => {
-        const LinkIcon = link.icon
-        if (!roleHierarchy[userRole]?.includes(link.role)) {
-          return null
-        }
-        if (link.requiresAlliance && !hasAlliance) {
-          return null
-        }
-        const isActive =
-          (pathname.startsWith(link.href) && link.href !== '/') || pathname === link.href
-        return (
-          <Link
-            key={link.name}
-            href={link.href}
-            data-cy={link.cy}
-            className={cn(
-              'flex h-10 grow items-center justify-center gap-2 rounded-md bg-muted/50 p-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground md:h-12 md:flex-none md:justify-start md:p-2 md:px-3',
-              isActive && 'bg-accent text-accent-foreground font-semibold'
-            )}
+    <SidebarMenu>
+      {links.map((link) => (
+        <SidebarMenuItem key={link.name}>
+          <SidebarMenuButton
+            asChild
+            isActive={link.isActive}
+            tooltip={link.name}
           >
-            <LinkIcon className='size-4 shrink-0 md:size-5' />
-            <p className='hidden md:block'>{link.name}</p>
-          </Link>
-        )
-      })}
-    </>
+            <Link
+              href={link.href}
+              data-cy={link.cy}
+            >
+              <link.icon />
+              <span>{link.name}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
   )
 }

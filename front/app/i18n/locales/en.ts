@@ -50,6 +50,8 @@ const en = {
     language: 'Language',
     theme: 'Theme',
     signOut: 'Sign out',
+    collapseSidebar: 'Collapse',
+    expandSidebar: 'Expand',
   },
 
   // Landing page
