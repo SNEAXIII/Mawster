@@ -9,33 +9,47 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { SidebarMenuButton } from '@/components/ui/sidebar'
 import SettingsContent from './settings-content'
 import { useI18n } from '@/app/i18n'
-import { cn } from '@/app/lib/utils'
 
 interface ModalSettingsProps {
   isAuthenticated: boolean
+  variant: 'menu' | 'icon'
 }
 
-export default function ModalSettings({ isAuthenticated }: Readonly<ModalSettingsProps>) {
+export default function ModalSettings({ isAuthenticated, variant }: Readonly<ModalSettingsProps>) {
   const { t } = useI18n()
+
+  const trigger = (
+    <DialogTrigger
+      data-cy='modal-settings-trigger'
+      aria-label={t.nav.settings}
+    >
+      <Settings />
+      {variant === 'menu' && <span>{t.nav.settings}</span>}
+    </DialogTrigger>
+  )
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          data-cy='modal-settings-trigger'
-          variant='ghost'
-          className={cn(
-            'flex h-10 min-w-10 shrink-0 items-center justify-center rounded-md p-2 md:h-12 md:min-w-12 md:p-3',
-            // Signed in, the gear is alone on its row and can span the sidenav.
-            isAuthenticated && 'md:w-full'
-          )}
-          aria-label={t.nav.settings}
+      {/* Tooltip must wrap the trigger, not the reverse: Slot cannot forward to a Tooltip root. */}
+      {variant === 'menu' ? (
+        <SidebarMenuButton
+          asChild
+          tooltip={t.nav.settings}
         >
-          <Settings className='size-4 md:size-5' />
+          {trigger}
+        </SidebarMenuButton>
+      ) : (
+        <Button
+          asChild
+          variant='ghost'
+          className='h-10 min-w-10 shrink-0 p-2 text-muted-foreground hover:bg-transparent hover:text-foreground'
+        >
+          {trigger}
         </Button>
-      </DialogTrigger>
+      )}
       <DialogContent data-cy='modal-settings-content'>
         <DialogHeader>
           <DialogTitle>{t.nav.settings}</DialogTitle>

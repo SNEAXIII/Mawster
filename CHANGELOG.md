@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.20.0](https://github.com/SNEAXIII/Mawster/compare/v1.19.0...v1.20.0) (2026-09-23)
+
+
+### Ajouté
+
+* compact collapsible sidebar and pill tab bar ([7f0cad5](https://github.com/SNEAXIII/Mawster/commit/7f0cad58bbb4c4b364eb2c8817450db0b9ad60a7))
+
 ## [1.19.0](https://github.com/SNEAXIII/Mawster/compare/v1.18.0...v1.19.0) (2026-09-23)
 
 
