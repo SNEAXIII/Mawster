@@ -80,6 +80,7 @@ async def test_owner_gets_player_stats():
     body = resp.json()
     assert body["card"]["wars_participated"] == 1
     assert body["card"]["total_kos"] == 1
+    assert body["card"]["win_streak"] == 0
     assert len(body["evolution"]) == 1
 
 

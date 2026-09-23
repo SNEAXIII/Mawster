@@ -11,6 +11,7 @@ class PlayerStatsCardResponse(BaseModel):
     total_fights: float
     total_assists: int = 0
     wars_participated: int
+    win_streak: int = 0
 
 
 class RatioEvolutionPoint(BaseModel):
