@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.19.0](https://github.com/SNEAXIII/Mawster/compare/v1.18.0...v1.19.0) (2026-09-23)
+
+
+### Ajouté
+
+* list your own accounts first in the player filter ([#595](https://github.com/SNEAXIII/Mawster/issues/595)) ([c6d6c05](https://github.com/SNEAXIII/Mawster/commit/c6d6c051f44f9489d377b3f52fcebec6e392e32d))
+
 ## [1.18.0](https://github.com/SNEAXIII/Mawster/compare/v1.17.1...v1.18.0) (2026-09-23)
 
 
