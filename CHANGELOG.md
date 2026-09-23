@@ -3,6 +3,16 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.17.1](https://github.com/SNEAXIII/Mawster/compare/v1.17.0...v1.17.1) (2026-09-23)
+
+
+### Corrigé
+
+* default the knowledge base history to non-imported fights ([#586](https://github.com/SNEAXIII/Mawster/issues/586)) ([0373a01](https://github.com/SNEAXIII/Mawster/commit/0373a01b80e7a31eafeea007f8dee9c7a026c8a5))
+* drop the combat filter on a closed war so its map stays readable ([#588](https://github.com/SNEAXIII/Mawster/issues/588)) ([1c8d243](https://github.com/SNEAXIII/Mawster/commit/1c8d2433aa44095fa4734fb6aa5eeee556726f96))
+* show signed-in players a placeholder instead of the landing page ([c8c5888](https://github.com/SNEAXIII/Mawster/commit/c8c588829149f524e3f954660ba96986f6b7ef1e))
+* show the right node title and attacker count in war dialogs ([#587](https://github.com/SNEAXIII/Mawster/issues/587)) ([7d7948c](https://github.com/SNEAXIII/Mawster/commit/7d7948c5030806e5876dbb1ea0ed6924ce6f3159))
+
 ## [1.17.0](https://github.com/SNEAXIII/Mawster/compare/v1.16.0...v1.17.0) (2026-09-22)
 
 
