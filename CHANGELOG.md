@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.18.0](https://github.com/SNEAXIII/Mawster/compare/v1.17.1...v1.18.0) (2026-09-23)
+
+
+### Ajouté
+
+* show a win streak flame on the profile statistics card ([#592](https://github.com/SNEAXIII/Mawster/issues/592)) ([c27b884](https://github.com/SNEAXIII/Mawster/commit/c27b8841879eb58b31dc2357d1fcbabe8fffd59f))
+
 ## [1.17.1](https://github.com/SNEAXIII/Mawster/compare/v1.17.0...v1.17.1) (2026-09-23)
 
 
