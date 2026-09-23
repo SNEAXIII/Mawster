@@ -2,13 +2,10 @@
 import { Home, User, Sword, Shield, Swords, UserStar, BookOpen, Wrench } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { useI18n } from '@/app/i18n'
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar'
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
 
 export enum Role {
   all = 'all',
@@ -22,15 +19,18 @@ const roleHierarchy: Record<Role, Role[]> = {
   [Role.admin]: [Role.all, Role.user, Role.admin],
   [Role.superAdmin]: [Role.all, Role.user, Role.admin, Role.superAdmin],
 }
-interface NavLinksProps {
-  userRole: Role
-  hasAlliance: boolean
+export function useNavUser() {
+  const { data: session } = useSession()
+  const { hasAlliance } = useAllianceContext()
+  const isAuthenticated = Boolean(session && !session.error && session.user)
+  const userRole: Role = (isAuthenticated ? (session?.user.role as Role) : null) ?? Role.all
+  return { isAuthenticated, userRole, hasAlliance }
 }
 
-export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksProps>) {
+export function useNavLinks() {
   const pathname = usePathname()
   const { t } = useI18n()
-  const { setOpenMobile } = useSidebar()
+  const { userRole, hasAlliance } = useNavUser()
 
   const links = [
     { name: t.nav.home, href: '/', icon: Home, role: Role.all, cy: 'nav-home' },
@@ -75,37 +75,39 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
     },
   ]
 
+  return links
+    .filter(
+      (link) =>
+        roleHierarchy[userRole]?.includes(link.role) && !(link.requiresAlliance && !hasAlliance)
+    )
+    .map((link) => ({
+      ...link,
+      isActive: (pathname.startsWith(link.href) && link.href !== '/') || pathname === link.href,
+    }))
+}
+
+export default function NavLinks() {
+  const links = useNavLinks()
+
   return (
     <SidebarMenu>
-      {links.map((link) => {
-        const LinkIcon = link.icon
-        if (!roleHierarchy[userRole]?.includes(link.role)) {
-          return null
-        }
-        if (link.requiresAlliance && !hasAlliance) {
-          return null
-        }
-        const isActive =
-          (pathname.startsWith(link.href) && link.href !== '/') || pathname === link.href
-        return (
-          <SidebarMenuItem key={link.name}>
-            <SidebarMenuButton
-              asChild
-              isActive={isActive}
-              tooltip={link.name}
+      {links.map((link) => (
+        <SidebarMenuItem key={link.name}>
+          <SidebarMenuButton
+            asChild
+            isActive={link.isActive}
+            tooltip={link.name}
+          >
+            <Link
+              href={link.href}
+              data-cy={link.cy}
             >
-              <Link
-                href={link.href}
-                data-cy={link.cy}
-                onClick={() => setOpenMobile(false)}
-              >
-                <LinkIcon />
-                <span>{link.name}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        )
-      })}
+              <link.icon />
+              <span>{link.name}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
     </SidebarMenu>
   )
 }

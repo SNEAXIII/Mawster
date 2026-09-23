@@ -1,7 +1,7 @@
 import '@/app/ui/global.css'
 import { inter } from '@/app/ui/fonts'
 import SideNavBar from '@/components/left-nav-bar/sidenav'
-import MobileHeader from '@/components/left-nav-bar/mobile-header'
+import MobileNav from '@/components/left-nav-bar/mobile-nav'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import TestModeBanner from '@/components/test-mode-banner'
 import { Providers } from './providers'
@@ -81,7 +81,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             {/* `relative` keeps absolute descendants (sr-only, hidden inputs) inside the scroll box —
                 without it they escape to the document and add a second scrollbar. */}
             <div className='flex min-w-0 grow flex-col md:relative md:overflow-y-auto'>
-              <MobileHeader />
+              <MobileNav />
               <div className='grow p-3'>
                 <MyModerationProvider>{children}</MyModerationProvider>
               </div>

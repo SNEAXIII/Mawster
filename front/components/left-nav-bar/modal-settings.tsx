@@ -45,7 +45,7 @@ export default function ModalSettings({ isAuthenticated, variant }: Readonly<Mod
         <Button
           asChild
           variant='ghost'
-          size='icon'
+          className='h-10 min-w-10 shrink-0 p-2 text-muted-foreground hover:bg-transparent hover:text-foreground'
         >
           {trigger}
         </Button>

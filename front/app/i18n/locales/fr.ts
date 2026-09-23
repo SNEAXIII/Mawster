@@ -54,7 +54,6 @@ const fr: Translations = {
     signOut: 'Se déconnecter',
     collapseSidebar: 'Réduire',
     expandSidebar: 'Agrandir',
-    openMenu: 'Ouvrir le menu',
   },
 
   // Landing page

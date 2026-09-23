@@ -52,7 +52,6 @@ const en = {
     signOut: 'Sign out',
     collapseSidebar: 'Collapse',
     expandSidebar: 'Expand',
-    openMenu: 'Open menu',
   },
 
   // Landing page

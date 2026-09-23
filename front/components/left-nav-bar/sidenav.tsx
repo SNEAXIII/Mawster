@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
 import { LogIn, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { MawsterLogo } from '@/components/MawsterLogo'
 import {
@@ -16,19 +15,17 @@ import {
   SidebarRail,
   useSidebar,
 } from '@/components/ui/sidebar'
-import NavLinks, { Role } from './nav-links'
+import NavLinks, { useNavUser } from './nav-links'
 import ModalSettings from './modal-settings'
 import { useI18n } from '@/app/i18n'
-import { useAllianceContext } from '@/app/contexts/alliance-context'
 
 export default function SideNavBar() {
-  const { data: session } = useSession()
   const { t } = useI18n()
-  const { isMobile, state, toggleSidebar, setOpenMobile } = useSidebar()
-  const isAuthenticated = Boolean(session && !session.error && session.user)
-  const userRole: Role = (isAuthenticated ? (session?.user.role as Role) : null) ?? Role.all
-  const { hasAlliance } = useAllianceContext()
-  const isCollapsed = state === 'collapsed'
+  const { isMobile, state, toggleSidebar } = useSidebar()
+  const { isAuthenticated } = useNavUser()
+
+  // Mobile gets MobileNav instead of the sidebar's sheet.
+  if (isMobile) return null
 
   return (
     <Sidebar collapsible='icon'>
@@ -37,7 +34,6 @@ export default function SideNavBar() {
         <Link
           href='/'
           aria-label={t.nav.home}
-          onClick={() => setOpenMobile(false)}
           className='flex h-8 items-center gap-2 overflow-hidden rounded-md outline-hidden ring-sidebar-ring focus-visible:ring-2'
         >
           <div className='flex size-8 shrink-0 items-center justify-center rounded-md bg-primary [&_img]:size-6'>
@@ -49,10 +45,7 @@ export default function SideNavBar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <NavLinks
-            userRole={userRole}
-            hasAlliance={hasAlliance}
-          />
+          <NavLinks />
         </SidebarGroup>
       </SidebarContent>
 
@@ -68,7 +61,6 @@ export default function SideNavBar() {
                 <Link
                   href='/login'
                   data-cy='nav-sign-in'
-                  onClick={() => setOpenMobile(false)}
                 >
                   <LogIn />
                   <span>{t.nav.signIn}</span>
@@ -76,27 +68,22 @@ export default function SideNavBar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
-          {/* On mobile the settings trigger lives in MobileHeader, so it stays reachable with the sheet closed. */}
-          {!isMobile && (
-            <>
-              <SidebarMenuItem>
-                <ModalSettings
-                  isAuthenticated={isAuthenticated}
-                  variant='menu'
-                />
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={toggleSidebar}
-                  tooltip={t.nav.expandSidebar}
-                  className='text-muted-foreground'
-                >
-                  {isCollapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
-                  <span>{t.nav.collapseSidebar}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </>
-          )}
+          <SidebarMenuItem>
+            <ModalSettings
+              isAuthenticated={isAuthenticated}
+              variant='menu'
+            />
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={toggleSidebar}
+              tooltip={t.nav.expandSidebar}
+              className='text-muted-foreground'
+            >
+              {state === 'collapsed' ? <PanelLeftOpen /> : <PanelLeftClose />}
+              <span>{t.nav.collapseSidebar}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
