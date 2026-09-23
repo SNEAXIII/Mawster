@@ -3,7 +3,12 @@ import { Home, User, Sword, Shield, Swords, UserStar, BookOpen, Wrench } from 'l
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useI18n } from '@/app/i18n'
-import { cn } from '@/app/lib/utils'
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from '@/components/ui/sidebar'
 
 export enum Role {
   all = 'all',
@@ -25,6 +30,7 @@ interface NavLinksProps {
 export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksProps>) {
   const pathname = usePathname()
   const { t } = useI18n()
+  const { setOpenMobile } = useSidebar()
 
   const links = [
     { name: t.nav.home, href: '/', icon: Home, role: Role.all, cy: 'nav-home' },
@@ -70,7 +76,7 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
   ]
 
   return (
-    <>
+    <SidebarMenu>
       {links.map((link) => {
         const LinkIcon = link.icon
         if (!roleHierarchy[userRole]?.includes(link.role)) {
@@ -82,20 +88,24 @@ export default function NavLinks({ userRole, hasAlliance }: Readonly<NavLinksPro
         const isActive =
           (pathname.startsWith(link.href) && link.href !== '/') || pathname === link.href
         return (
-          <Link
-            key={link.name}
-            href={link.href}
-            data-cy={link.cy}
-            className={cn(
-              'flex h-10 grow items-center justify-center gap-2 rounded-md bg-muted/50 p-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground md:h-12 md:flex-none md:justify-start md:p-2 md:px-3',
-              isActive && 'bg-accent text-accent-foreground font-semibold'
-            )}
-          >
-            <LinkIcon className='size-4 shrink-0 md:size-5' />
-            <p className='hidden md:block'>{link.name}</p>
-          </Link>
+          <SidebarMenuItem key={link.name}>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive}
+              tooltip={link.name}
+            >
+              <Link
+                href={link.href}
+                data-cy={link.cy}
+                onClick={() => setOpenMobile(false)}
+              >
+                <LinkIcon />
+                <span>{link.name}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         )
       })}
-    </>
+    </SidebarMenu>
   )
 }

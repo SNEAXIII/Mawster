@@ -2,9 +2,20 @@
 
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import MainMawsterLogo from '@/components/MawsterLogo'
-import { Separator } from '@/components/ui/separator'
-import { LogIn } from 'lucide-react'
+import { LogIn, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { MawsterLogo } from '@/components/MawsterLogo'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+  useSidebar,
+} from '@/components/ui/sidebar'
 import NavLinks, { Role } from './nav-links'
 import ModalSettings from './modal-settings'
 import { useI18n } from '@/app/i18n'
@@ -13,53 +24,89 @@ import { useAllianceContext } from '@/app/contexts/alliance-context'
 export default function SideNavBar() {
   const { data: session } = useSession()
   const { t } = useI18n()
+  const { isMobile, state, toggleSidebar, setOpenMobile } = useSidebar()
   const isAuthenticated = Boolean(session && !session.error && session.user)
   const userRole: Role = (isAuthenticated ? (session?.user.role as Role) : null) ?? Role.all
   const { hasAlliance } = useAllianceContext()
+  const isCollapsed = state === 'collapsed'
 
   return (
-    <div className='flex h-full flex-col px-3 py-2 md:py-4 md:px-2'>
-      {/* Logo Section — hidden on mobile */}
-      <div className='hidden md:flex mb-2 items-center gap-2'>
-        <Link
-          href='/'
-          className='flex h-15 flex-1 items-center rounded-md bg-primary p-2 transition hover:bg-primary/90'
-          aria-label={t.nav.home}
-        >
-          <div className='w-full'>
-            <MainMawsterLogo />
-          </div>
-        </Link>
-      </div>
-
-      {/* Navigation Links Section */}
-      <div className='flex grow flex-row justify-between gap-1 md:flex-col md:gap-2 overflow-x-auto md:overflow-x-visible'>
-        <NavLinks
-          userRole={userRole}
-          hasAlliance={hasAlliance}
-        />
-        <div
-          className='hidden h-auto w-full grow rounded-md bg-muted/50 md:block'
-          aria-hidden='true'
-        />
-        <Separator className='hidden md:block' />
-        <div className='flex shrink-0 flex-row items-center gap-1 md:w-full md:gap-2'>
-          {!isAuthenticated && (
-            <Link
-              href='/login'
-              data-cy='nav-sign-in'
-              className='
-              flex grow items-center justify-center gap-2 rounded-md p-2 text-sm font-medium md:justify-start h-10 min-w-10 md:h-12 md:min-w-12
-              bg-primary text-primary-foreground transition hover:bg-primary/90 md:p-3 md:px-3'
-              aria-label={t.nav.signIn}
+    <Sidebar collapsible='icon'>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              size='lg'
             >
-              <LogIn className='size-4 md:size-5' />
-              <span className='hidden md:block'>{t.nav.signIn}</span>
-            </Link>
+              <Link
+                href='/'
+                aria-label={t.nav.home}
+                onClick={() => setOpenMobile(false)}
+              >
+                <div className='flex aspect-square size-8 items-center justify-center rounded-md bg-primary [&_img]:size-6'>
+                  <MawsterLogo />
+                </div>
+                <span className='text-base font-semibold'>Mawster</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <NavLinks
+            userRole={userRole}
+            hasAlliance={hasAlliance}
+          />
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          {!isAuthenticated && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip={t.nav.signIn}
+                className='bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground'
+              >
+                <Link
+                  href='/login'
+                  data-cy='nav-sign-in'
+                  onClick={() => setOpenMobile(false)}
+                >
+                  <LogIn />
+                  <span>{t.nav.signIn}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           )}
-          <ModalSettings isAuthenticated={isAuthenticated} />
-        </div>
-      </div>
-    </div>
+          {/* On mobile the settings trigger lives in MobileHeader, so it stays reachable with the sheet closed. */}
+          {!isMobile && (
+            <>
+              <SidebarMenuItem>
+                <ModalSettings
+                  isAuthenticated={isAuthenticated}
+                  variant='menu'
+                />
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={toggleSidebar}
+                  tooltip={t.nav.expandSidebar}
+                  className='text-muted-foreground'
+                >
+                  {isCollapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+                  <span>{t.nav.collapseSidebar}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
+          )}
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   )
 }

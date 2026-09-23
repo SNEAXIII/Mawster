@@ -52,6 +52,9 @@ const fr: Translations = {
     theme: 'Thème',
     signIn: 'Se connecter',
     signOut: 'Se déconnecter',
+    collapseSidebar: 'Réduire',
+    expandSidebar: 'Agrandir',
+    openMenu: 'Ouvrir le menu',
   },
 
   // Landing page
