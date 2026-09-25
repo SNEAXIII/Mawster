@@ -26,15 +26,13 @@ class FightRecordImportService:
         number = cls._parse_season_number(season_name)
         if number is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"Cannot parse season name: '{season_name}'",
+                status.HTTP_422_UNPROCESSABLE_CONTENT, f"Cannot parse season name: '{season_name}'"
             )
         result = await session.exec(select(Season).where(Season.number == number))
         season = result.first()
         if season is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail=f"Season not found: '{season_name}'",
+                status.HTTP_422_UNPROCESSABLE_CONTENT, f"Season not found: '{season_name}'"
             )
         return season.id
 
@@ -49,64 +47,45 @@ class FightRecordImportService:
         account = await AllianceService.require_officer_account(
             session, alliance_id, current_user_id
         )
-        officer_acc_id: uuid.UUID = account.id
-
-        unique_names = {row.season_name for row in rows}
-        season_map: dict[str, uuid.UUID] = {}
-        for name in unique_names:
-            season_map[name] = await cls.resolve_season(session, name)
-
-        # Build (champion_id, defender_champion_id, node_number, season_id) tuples for all rows
-        resolved = [
-            (
-                row.champion_id,
-                row.defender_champion_id,
-                row.node_number,
-                season_map[row.season_name],
-                row,
-            )
-            for row in rows
+        season_map = {
+            name: await cls.resolve_season(session, name) for name in {r.season_name for r in rows}
+        }
+        # A fight is identified by who fought whom, where, and in which season.
+        key_cols = (
+            WarFightRecordImport.champion_id,
+            WarFightRecordImport.defender_champion_id,
+            WarFightRecordImport.node_number,
+            WarFightRecordImport.season_id,
+        )
+        keys = [
+            (r.champion_id, r.defender_champion_id, r.node_number, season_map[r.season_name])
+            for r in rows
         ]
-
-        # Fetch existing records matching any of these combinations in one query
-        existing = (
-            await session.exec(
-                select(
-                    WarFightRecordImport.champion_id,
-                    WarFightRecordImport.defender_champion_id,
-                    WarFightRecordImport.node_number,
-                    WarFightRecordImport.season_id,
-                ).where(
-                    WarFightRecordImport.alliance_id == alliance_id,
-                    tuple_(
-                        WarFightRecordImport.champion_id,
-                        WarFightRecordImport.defender_champion_id,
-                        WarFightRecordImport.node_number,
-                        WarFightRecordImport.season_id,
-                    ).in_([(r[0], r[1], r[2], r[3]) for r in resolved]),
-                )
+        existing = await session.exec(
+            select(*key_cols).where(
+                WarFightRecordImport.alliance_id == alliance_id, tuple_(*key_cols).in_(keys)
             )
-        ).all()
-        existing_set = {(r[0], r[1], r[2], r[3]) for r in existing}
+        )
+        seen = {tuple(r) for r in existing.all()}
 
         imported = skipped = 0
-        for champ_id, def_id, node, season_id, row in resolved:
-            key = (champ_id, def_id, node, season_id)
-            if key in existing_set:
+        for key, row in zip(keys, rows, strict=True):
+            if key in seen:
                 skipped += 1
                 continue
+            champion_id, defender_champion_id, node_number, season_id = key
             session.add(
                 WarFightRecordImport(
                     alliance_id=alliance_id,
                     season_id=season_id,
-                    node_number=node,
-                    champion_id=champ_id,
-                    defender_champion_id=def_id,
+                    node_number=node_number,
+                    champion_id=champion_id,
+                    defender_champion_id=defender_champion_id,
                     ko_count=row.ko_count,
-                    imported_by_id=officer_acc_id,
+                    imported_by_id=account.id,
                 )
             )
-            existing_set.add(key)
+            seen.add(key)
             imported += 1
 
         await session.commit()

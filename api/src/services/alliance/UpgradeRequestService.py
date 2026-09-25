@@ -21,6 +21,14 @@ from src.utils.db import SessionDep
 VALID_RARITIES = {r.value for r in ChampionRarity}
 
 
+def _pending_for_account(game_account_id: uuid.UUID):
+    return (
+        select(RequestedUpgrade)
+        .join(ChampionUser, RequestedUpgrade.champion_user_id == ChampionUser.id)
+        .where(ChampionUser.game_account_id == game_account_id, RequestedUpgrade.done_at.is_(None))
+    )
+
+
 class UpgradeRequestService:
     @classmethod
     async def create_upgrade_request(
@@ -34,8 +42,8 @@ class UpgradeRequestService:
         rarity = ChampionRarity.from_code(requested_rarity)
         if rarity is None:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=invalid_requested_rarity(
+                status.HTTP_400_BAD_REQUEST,
+                invalid_requested_rarity(
                     requested_rarity,
                     ", ".join(sorted(VALID_RARITIES)),
                 ),
@@ -50,18 +58,15 @@ class UpgradeRequestService:
         result = await session.exec(stmt)
         champion_user = result.first()
         if champion_user is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=CHAMPION_USER_ENTRY_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_USER_ENTRY_NOT_FOUND)
 
         # The target must be higher than what the player already has, compared on the
         # (stars, rank) pair rather than on the code — ordering never depends on how a
         # rarity happens to be spelled.
         if rarity.order <= (champion_user.stars, champion_user.rank):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=requested_rarity_must_be_higher(rarity.value, champion_user.rarity),
+                status.HTTP_400_BAD_REQUEST,
+                requested_rarity_must_be_higher(rarity.value, champion_user.rarity),
             )
 
         # A champion should carry at most one pending upgrade request: the target
@@ -70,10 +75,8 @@ class UpgradeRequestService:
         existing_pending = (
             await session.exec(
                 select(RequestedUpgrade).where(
-                    and_(
-                        RequestedUpgrade.champion_user_id == champion_user_id,
-                        RequestedUpgrade.done_at.is_(None),  # type: ignore[union-attr]
-                    )
+                    RequestedUpgrade.champion_user_id == champion_user_id,
+                    RequestedUpgrade.done_at.is_(None),
                 )
             )
         ).all()
@@ -81,10 +84,7 @@ class UpgradeRequestService:
         if existing_pending:
             # Re-requesting the rarity that is already pending is a conflict.
             if any(req.requested_rarity == rarity.value for req in existing_pending):
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=UPGRADE_REQUEST_ALREADY_EXISTS,
-                )
+                raise HTTPException(status.HTTP_409_CONFLICT, UPGRADE_REQUEST_ALREADY_EXISTS)
             # Retarget the first pending request and drop any stale duplicates so the
             # invariant "one pending request per champion" holds even for legacy rows.
             primary, *duplicates = existing_pending
@@ -114,19 +114,9 @@ class UpgradeRequestService:
         cls, session: SessionDep, game_account_id: uuid.UUID
     ) -> list[RequestedUpgrade]:
         """Get all pending (not done) upgrade requests for a game account's roster."""
-        stmt = (
-            select(RequestedUpgrade)
-            .join(ChampionUser, RequestedUpgrade.champion_user_id == ChampionUser.id)
-            .where(
-                and_(
-                    ChampionUser.game_account_id == game_account_id,
-                    RequestedUpgrade.done_at.is_(None),  # type: ignore[union-attr]
-                )
-            )
-            .options(
-                selectinload(RequestedUpgrade.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
-                selectinload(RequestedUpgrade.requester),  # type: ignore[arg-type]
-            )
+        stmt = _pending_for_account(game_account_id).options(
+            selectinload(RequestedUpgrade.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+            selectinload(RequestedUpgrade.requester),  # type: ignore[arg-type]
         )
         result = await session.exec(stmt)
         return list(result.all())
@@ -136,10 +126,7 @@ class UpgradeRequestService:
         """Delete an upgrade request."""
         upgrade_request = await session.get(RequestedUpgrade, request_id)
         if upgrade_request is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=UPGRADE_REQUEST_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, UPGRADE_REQUEST_NOT_FOUND)
         await session.delete(upgrade_request)
         await session.commit()
 
@@ -156,18 +143,7 @@ class UpgradeRequestService:
         Requests already marked done are history and are kept.
         Flushes but does not commit — the caller owns the transaction.
         Returns the number of requests deleted."""
-        stmt = (
-            select(RequestedUpgrade)
-            .join(ChampionUser, RequestedUpgrade.champion_user_id == ChampionUser.id)
-            .where(
-                and_(
-                    ChampionUser.game_account_id == game_account_id,
-                    RequestedUpgrade.done_at.is_(None),  # type: ignore[union-attr]
-                )
-            )
-        )
-        result = await session.exec(stmt)
-        requests = result.all()
+        requests = (await session.exec(_pending_for_account(game_account_id))).all()
         for req in requests:
             await session.delete(req)
         await session.flush()
@@ -179,24 +155,18 @@ class UpgradeRequestService:
     ) -> None:
         """Mark pending upgrade requests as done if the champion has reached the requested rarity."""
         stmt = select(RequestedUpgrade).where(
-            and_(
-                RequestedUpgrade.champion_user_id == champion_user.id,
-                RequestedUpgrade.done_at.is_(None),  # type: ignore[union-attr]
-                # Reached: fewer stars than the champion now has, or the same stars
-                # and a rank the champion has caught up with.
-                or_(
-                    RequestedUpgrade.requested_stars < champion_user.stars,
-                    and_(
-                        RequestedUpgrade.requested_stars == champion_user.stars,
-                        RequestedUpgrade.requested_rank <= champion_user.rank,
-                    ),
+            RequestedUpgrade.champion_user_id == champion_user.id,
+            RequestedUpgrade.done_at.is_(None),
+            or_(
+                RequestedUpgrade.requested_stars < champion_user.stars,
+                and_(
+                    RequestedUpgrade.requested_stars == champion_user.stars,
+                    RequestedUpgrade.requested_rank <= champion_user.rank,
                 ),
-            )
+            ),
         )
-        result = await session.exec(stmt)
-        requests = result.all()
+        requests = (await session.exec(stmt)).all()
         for req in requests:
             req.done_at = utcnow()
-            session.add(req)
         if requests:
             await session.commit()

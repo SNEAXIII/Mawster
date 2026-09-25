@@ -14,6 +14,16 @@ from src.models.Base import utcnow
 from src.utils.db import SessionDep
 
 
+def _assert_usable(user: User | None) -> User:
+    if user is None:
+        raise USER_DOESNT_EXISTS
+    if user.deleted_at:
+        raise USER_IS_DELETED
+    if user.disabled_at:
+        raise USER_IS_DISABLED
+    return user
+
+
 class UserService:
     @classmethod
     async def get_user(cls, session: SessionDep, user_id: uuid.UUID) -> User | None:
@@ -29,14 +39,7 @@ class UserService:
     async def get_user_by_login_with_validity_check(
         cls, session: SessionDep, login: str
     ) -> User | None:
-        user = await UserService.get_user_by_login(session, login)
-        if user is None:
-            raise USER_DOESNT_EXISTS
-        if user.deleted_at:
-            raise USER_IS_DELETED
-        if user.disabled_at:
-            raise USER_IS_DISABLED
-        return user
+        return _assert_usable(await cls.get_user_by_login(session, login))
 
     @classmethod
     async def get_user_by_id_with_validity_check(
@@ -46,14 +49,7 @@ class UserService:
             uid = uuid.UUID(user_id)
         except ValueError, AttributeError:
             raise USER_DOESNT_EXISTS from None
-        user = await UserService.get_user(session, uid)
-        if user is None:
-            raise USER_DOESNT_EXISTS
-        if user.deleted_at:
-            raise USER_IS_DELETED
-        if user.disabled_at:
-            raise USER_IS_DISABLED
-        return user
+        return _assert_usable(await cls.get_user(session, uid))
 
     @classmethod
     async def update_login(cls, session: SessionDep, user: User, new_login: str) -> User:

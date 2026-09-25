@@ -142,7 +142,7 @@ class MatchupService:
 
         found = (await session.exec(select(Champion.id).where(Champion.id.in_(referenced)))).all()
         if len(set(found)) != len(referenced):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
 
     @classmethod
     async def list_ratings(
@@ -178,7 +178,7 @@ class MatchupService:
             )
         ).first()
         if rating is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=MATCHUP_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, MATCHUP_NOT_FOUND)
         await session.delete(rating)
         await session.commit()
 
@@ -250,9 +250,9 @@ class MatchupService:
         Player-awareness (`is_owned`, `instance_label`, `is_on_defense`) is reported for the
         attacker only — per-cell required-synergy greying is deliberately out of scope here.
         """
-        champion = (await session.exec(select(Champion).where(Champion.id == champion_id))).first()
+        champion = await session.get(Champion, champion_id)
         if champion is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
 
         if game_account_id is not None:
             await cls._assert_game_account_in_alliance(session, alliance_id, game_account_id)
@@ -270,9 +270,6 @@ class MatchupService:
 
         defender_ratings = [r for r in ratings if r.target_type is MatchupTargetType.DEFENDER]
         node_ratings = [r for r in ratings if r.target_type is MatchupTargetType.NODE]
-        # A champion carries zero ratings the first time it is opened from the grid — fall
-        # back to a direct fetch so the attacker ref still renders against empty axes.
-        attacker_champion = ratings[0].champion if ratings else champion
 
         cells: list[MatchupGridCell] = []
         for defender_rating in defender_ratings:
@@ -290,26 +287,12 @@ class MatchupService:
                 )
 
         owned, on_defense = await cls._roster_context(session, alliance_id, game_account_id)
-        is_owned: bool | None = None
-        instance_label: str | None = None
-        is_on_defense: bool | None = None
-        if game_account_id is not None:
-            is_owned = champion_id in owned
-            instance = owned.get(champion_id)
-            instance_label = (
-                format_instance_label(
-                    instance.stars, instance.rank, instance.ascension, instance.signature
-                )
-                if instance
-                else None
-            )
-            is_on_defense = champion_id in on_defense
-
+        aware = game_account_id is not None
         return MatchupGridResponse(
-            attacker=cls.champion_ref(attacker_champion),
-            is_owned=is_owned,
-            instance_label=instance_label,
-            is_on_defense=is_on_defense,
+            attacker=cls.champion_ref(champion),
+            is_owned=champion_id in owned if aware else None,
+            instance_label=cls._instance_label(owned.get(champion_id)),
+            is_on_defense=champion_id in on_defense if aware else None,
             defenders=[cls._grid_axis_entry(rating) for rating in defender_ratings],
             nodes=[cls._grid_axis_entry(rating) for rating in node_ratings],
             cells=cells,
@@ -355,11 +338,9 @@ class MatchupService:
         Node columns 1..50 are rendered by the frontend, and per-row ownership is out of scope
         for v1 — `game_account_id` is accepted and validated for signature symmetry only.
         """
-        defender_champion = (
-            await session.exec(select(Champion).where(Champion.id == defender_champion_id))
-        ).first()
+        defender_champion = await session.get(Champion, defender_champion_id)
         if defender_champion is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CHAMPION_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
 
         if game_account_id is not None:
             await cls._assert_game_account_in_alliance(session, alliance_id, game_account_id)
@@ -463,6 +444,14 @@ class MatchupService:
         return (entry.stars, entry.rank, entry.ascension, entry.signature)
 
     @staticmethod
+    def _instance_label(instance: ChampionUser | None) -> str | None:
+        if instance is None:
+            return None
+        return format_instance_label(
+            instance.stars, instance.rank, instance.ascension, instance.signature
+        )
+
+    @staticmethod
     async def _assert_game_account_in_alliance(
         session: SessionDep, alliance_id: uuid.UUID, game_account_id: uuid.UUID
     ) -> None:
@@ -478,13 +467,9 @@ class MatchupService:
 
         A uniform 404 keeps "no such account" and "not in this alliance" indistinguishable.
         """
-        account = (
-            await session.exec(select(GameAccount).where(GameAccount.id == game_account_id))
-        ).first()
+        account = await session.get(GameAccount, game_account_id)
         if account is None or account.alliance_id != alliance_id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=GAME_ACCOUNT_NOT_IN_ALLIANCE
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_IN_ALLIANCE)
 
     @classmethod
     async def _roster_context(
@@ -591,14 +576,7 @@ class MatchupService:
         row.missing_champions = [cls.champion_ref(by_id[cid]) for cid in missing_ids]
         row.is_playable = not missing_ids
         row.is_on_defense = champion_id in on_defense
-        instance = owned.get(champion_id)
-        row.instance_label = (
-            format_instance_label(
-                instance.stars, instance.rank, instance.ascension, instance.signature
-            )
-            if instance
-            else None
-        )
+        row.instance_label = cls._instance_label(owned.get(champion_id))
         return row
 
     @staticmethod

@@ -155,31 +155,25 @@ class ChampionService:
         return champion
 
     @classmethod
-    async def toggle_ascendable(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
+    async def _toggle(cls, session: SessionDep, champion_id: uuid.UUID, flag: str) -> Champion:
         champion = await cls.get_champion_by_id(session, champion_id)
-        champion.is_ascendable = not champion.is_ascendable
+        setattr(champion, flag, not getattr(champion, flag))
         session.add(champion)
         await session.commit()
         await session.refresh(champion)
         return champion
+
+    @classmethod
+    async def toggle_ascendable(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
+        return await cls._toggle(session, champion_id, "is_ascendable")
 
     @classmethod
     async def toggle_seven_stars(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
-        champion = await cls.get_champion_by_id(session, champion_id)
-        champion.is_7_stars_available = not champion.is_7_stars_available
-        session.add(champion)
-        await session.commit()
-        await session.refresh(champion)
-        return champion
+        return await cls._toggle(session, champion_id, "is_7_stars_available")
 
     @classmethod
     async def toggle_prefight(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
-        champion = await cls.get_champion_by_id(session, champion_id)
-        champion.has_prefight = not champion.has_prefight
-        session.add(champion)
-        await session.commit()
-        await session.refresh(champion)
-        return champion
+        return await cls._toggle(session, champion_id, "has_prefight")
 
     @classmethod
     async def load_champions(
@@ -201,15 +195,9 @@ class ChampionService:
                 existing.champion_class = data.champion_class
                 if data.image_url:
                     existing.image_url = data.image_url
-                if data.alias is not None:
-                    existing.alias = data.alias
-                if data.is_7_stars_available is not None:
-                    existing.is_7_stars_available = data.is_7_stars_available
-                if data.is_ascendable is not None:
-                    existing.is_ascendable = data.is_ascendable
-                if data.has_prefight is not None:
-                    existing.has_prefight = data.has_prefight
-                session.add(existing)
+                for field in ("alias", "is_7_stars_available", "is_ascendable", "has_prefight"):
+                    if getattr(data, field) is not None:
+                        setattr(existing, field, getattr(data, field))
                 updated += 1
             else:
                 new_champion = Champion(

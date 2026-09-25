@@ -114,9 +114,7 @@ class VisionResultService:
             job.error = JOB_NEVER_QUEUED
             await VisionProgressService.sync(session, vision_import)
             await session.commit()
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
-            ) from error
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, BROKER_UNAVAILABLE) from error
 
         logger.info("vision job %s relaunched by the user (attempt %s)", job.id, job.attempts)
 

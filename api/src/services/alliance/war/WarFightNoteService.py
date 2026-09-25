@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlmodel import and_, select
+from sqlmodel import select
 from starlette import status
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
@@ -15,28 +15,26 @@ from src.services.admin.ModerationService import ModerationService
 from src.utils.db import SessionDep
 
 WAR_ENDED_NOTE_LOCKED = HTTPException(
-    status_code=status.HTTP_409_CONFLICT,
-    detail="Cannot edit a note on a war that has ended",
+    status.HTTP_409_CONFLICT, "Cannot edit a note on a war that has ended"
 )
 NODE_HAS_NO_PLACEMENT = HTTPException(
-    status_code=status.HTTP_404_NOT_FOUND,
-    detail="No defender placement on this node",
+    status.HTTP_404_NOT_FOUND, "No defender placement on this node"
 )
-USER_MUTED = HTTPException(
-    status_code=status.HTTP_403_FORBIDDEN,
-    detail="You are muted and cannot edit notes",
-)
+USER_MUTED = HTTPException(status.HTTP_403_FORBIDDEN, "You are muted and cannot edit notes")
 NOTE_CONTENT_UNCHANGED = HTTPException(
-    status_code=status.HTTP_409_CONFLICT,
-    detail="Note content is identical to the current one",
+    status.HTTP_409_CONFLICT, "Note content is identical to the current one"
 )
-NOTE_NOT_FOUND = HTTPException(
-    status_code=status.HTTP_404_NOT_FOUND,
-    detail="No note on this node",
-)
+NOTE_NOT_FOUND = HTTPException(status.HTTP_404_NOT_FOUND, "No note on this node")
 
 
 class WarFightNoteService:
+    @staticmethod
+    async def _assert_can_edit(session: SessionDep, war: War, editor_user_id: uuid.UUID) -> None:
+        if await ModerationService.is_user_muted(session, editor_user_id):
+            raise USER_MUTED
+        if war.status == WarStatus.ended:
+            raise WAR_ENDED_NOTE_LOCKED
+
     @classmethod
     async def upsert_note(
         cls,
@@ -48,20 +46,13 @@ class WarFightNoteService:
         editor_account_id: uuid.UUID,
         editor_user_id: uuid.UUID,
     ) -> WarFightNote:
-        if await ModerationService.is_user_muted(session, editor_user_id):
-            raise USER_MUTED
-
-        if war.status == WarStatus.ended:
-            raise WAR_ENDED_NOTE_LOCKED
-
+        await cls._assert_can_edit(session, war, editor_user_id)
         placement = (
             await session.exec(
                 select(WarDefensePlacement).where(
-                    and_(
-                        WarDefensePlacement.war_id == war.id,
-                        WarDefensePlacement.battlegroup == battlegroup,
-                        WarDefensePlacement.node_number == node_number,
-                    )
+                    WarDefensePlacement.war_id == war.id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    WarDefensePlacement.node_number == node_number,
                 )
             )
         ).first()
@@ -71,11 +62,9 @@ class WarFightNoteService:
         note = (
             await session.exec(
                 select(WarFightNote).where(
-                    and_(
-                        WarFightNote.war_id == war.id,
-                        WarFightNote.battlegroup == battlegroup,
-                        WarFightNote.node_number == node_number,
-                    )
+                    WarFightNote.war_id == war.id,
+                    WarFightNote.battlegroup == battlegroup,
+                    WarFightNote.node_number == node_number,
                 )
             )
         ).first()
@@ -104,7 +93,6 @@ class WarFightNoteService:
             note.content = body.content
             note.updated_by_game_account_id = editor_account_id
             note.updated_at = now
-            session.add(note)
             # Editing a note no longer changes the state of its reports:
             # admins review the revision history and act manually.
             note.whitelisted_at = None
@@ -139,31 +127,14 @@ class WarFightNoteService:
         """Soft-delete the active note on a node (officer/owner action). The note row is kept
         and a deletion snapshot is appended to the revision history so it stays auditable —
         same persistence path as an admin moderation deletion."""
-        if await ModerationService.is_user_muted(session, editor_user_id):
-            raise USER_MUTED
-
-        if war.status == WarStatus.ended:
-            raise WAR_ENDED_NOTE_LOCKED
-
-        note = (
-            await session.exec(
-                select(WarFightNote).where(
-                    and_(
-                        WarFightNote.war_id == war.id,
-                        WarFightNote.battlegroup == battlegroup,
-                        WarFightNote.node_number == node_number,
-                        WarFightNote.deleted_at.is_(None),
-                    )
-                )
-            )
-        ).first()
+        await cls._assert_can_edit(session, war, editor_user_id)
+        note = await cls.get_note_for_node(session, war.id, battlegroup, node_number)
         if note is None:
             raise NOTE_NOT_FOUND
 
         now = utcnow()
         note.deleted_at = now
         note.deleted_by_id = editor_user_id
-        session.add(note)
         session.add(
             WarFightNoteRevision(
                 note_id=note.id,
@@ -182,12 +153,10 @@ class WarFightNoteService:
         return (
             await session.exec(
                 select(WarFightNote).where(
-                    and_(
-                        WarFightNote.war_id == war_id,
-                        WarFightNote.battlegroup == battlegroup,
-                        WarFightNote.node_number == node_number,
-                        WarFightNote.deleted_at.is_(None),
-                    )
+                    WarFightNote.war_id == war_id,
+                    WarFightNote.battlegroup == battlegroup,
+                    WarFightNote.node_number == node_number,
+                    WarFightNote.deleted_at.is_(None),
                 )
             )
         ).first()
