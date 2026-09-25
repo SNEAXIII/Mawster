@@ -6,7 +6,6 @@ from sqlmodel import select
 from starlette import status
 
 from src.dto.alliance.war.dto_statistic import (
-    NOT_FOUGHT_KOS,
     ChampionUsageResponse,
     PlayerSeasonStatsResponse,
     SeasonWarStatsResponse,
@@ -23,6 +22,7 @@ from src.services.alliance.war._stat_expressions import (
     is_assisted,
     is_normal,
     miniboss_case,
+    ratio_percent,
     total_fights,
     total_kos,
     total_not_fought,
@@ -54,9 +54,9 @@ class StatisticService:
     ) -> list[PlayerSeasonStatsResponse]:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
 
         target_season_id = await cls._resolve_season_id(session, season_id)
         if target_season_id is None:
@@ -144,10 +144,6 @@ class StatisticService:
         ) + func.coalesce(assist_sq.c.assist_fights, 0)
         _kos = func.coalesce(attacker_sq.c.total_kos, 0)
         _not_fought = func.coalesce(attacker_sq.c.total_not_fought, 0)
-        # Each not-done fight counts as a fight with NOT_FOUGHT_KOS KOs in the
-        # ratio, so skipping a node penalizes the player.
-        _ratio_kos = _kos + NOT_FOUGHT_KOS * _not_fought
-        _ratio_fights = _combined_fights + _not_fought
         _wars = wars_sq.c.wars_participated
 
         sql = (
@@ -169,13 +165,7 @@ class StatisticService:
                 cast(func.coalesce(attacker_sq.c.total_not_fought, 0), Integer).label(
                     "total_not_fought"
                 ),
-                cast(
-                    func.round(
-                        func.coalesce((1 - _ratio_kos / func.nullif(_ratio_fights, 0)) * 100, 100),
-                        1,
-                    ),
-                    Float,
-                ).label("ratio"),
+                ratio_percent(_kos, _combined_fights, _not_fought).label("ratio"),
                 cast(_wars, Integer).label("wars_participated"),
                 cast(_combined_fights / func.nullif(_wars, 0), Float).label("avg_fights_per_war"),
                 cast(
@@ -204,9 +194,9 @@ class StatisticService:
     ) -> None:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
 
     @classmethod
     async def get_champion_usage(

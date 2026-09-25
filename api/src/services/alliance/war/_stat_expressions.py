@@ -1,8 +1,9 @@
 """Shared SQL expressions for war stats. Single source of truth for the ratio
 formula so alliance and player stats never diverge."""
 
-from sqlalchemy import and_, case, func
+from sqlalchemy import Float, and_, case, cast, func
 
+from src.dto.alliance.war.dto_statistic import NOT_FOUGHT_KOS
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 
 is_normal = and_(
@@ -26,3 +27,13 @@ total_kos = func.sum(case((is_normal, WarDefensePlacement.ko_count), else_=0))
 total_fights = func.sum(fight_weight)
 total_weighted_fights = func.sum(weighted_fight_weight)
 total_not_fought = func.sum(case((is_not_done, 1), else_=0))
+
+
+def ratio_percent(kos, fights, not_fought):
+    """Survival ratio in %, 100 with no fight; a not-done fight counts as NOT_FOUGHT_KOS KOs."""
+    ratio_kos = kos + NOT_FOUGHT_KOS * not_fought
+    ratio_fights = fights + not_fought
+    return cast(
+        func.round(func.coalesce((1 - ratio_kos / func.nullif(ratio_fights, 0)) * 100, 100), 1),
+        Float,
+    )

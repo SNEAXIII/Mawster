@@ -18,26 +18,23 @@ from src.utils.db import SessionDep
 class RankingHistoryService:
     @staticmethod
     def _reconstruct_elo(wars: list[War], current_elo: int) -> list[RankingHistoryPoint]:
-        if not wars:
-            return []
-        points: list[RankingHistoryPoint] = []
+        # Walk back from today's ELO, undoing each war's change.
+        elo_after = []
         elo = current_elo
         for war in reversed(wars):
-            change = war.elo_change or 0
-            points.append(
-                RankingHistoryPoint(
-                    war_number=0,
-                    opponent_name=war.opponent_name,
-                    tier=war.tier,
-                    elo_after=elo,
-                    win=war.win,
-                )
+            elo_after.append(elo)
+            elo -= war.elo_change or 0
+        elo_after.reverse()
+        return [
+            RankingHistoryPoint(
+                war_number=number,
+                opponent_name=war.opponent_name,
+                tier=war.tier,
+                elo_after=after,
+                win=war.win,
             )
-            elo -= change
-        points.reverse()
-        for i, point in enumerate(points):
-            point.war_number = i + 1
-        return points
+            for number, (war, after) in enumerate(zip(wars, elo_after, strict=True), start=1)
+        ]
 
     @classmethod
     async def get_ranking_history(
@@ -48,9 +45,9 @@ class RankingHistoryService:
     ) -> RankingHistoryResponse:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
 
         display_season = await SeasonService.get_display_season(session)
 

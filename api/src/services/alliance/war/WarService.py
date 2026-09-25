@@ -113,30 +113,24 @@ _PREFIGHT_OPTIONS = (
 )
 
 
-def _conflict(detail: str) -> HTTPException:
-    return HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
-
-
-def _unprocessable(detail: str) -> HTTPException:
-    return HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=detail)
-
-
-def _not_found(detail: str) -> HTTPException:
-    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
-
-
 class WarService:
     # ─── War ──────────────────────────────────────────────────────────────────
 
     @staticmethod
     async def _check_bans(session: SessionDep, banned_champion_ids: list[uuid.UUID]) -> None:
         if len(banned_champion_ids) > MAX_BANNED_CHAMPIONS:
-            raise _unprocessable(BANNED_CHAMPION_LIST_TOO_LONG)
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, BANNED_CHAMPION_LIST_TOO_LONG
+            )
         if len(banned_champion_ids) != len(set(banned_champion_ids)):
-            raise _unprocessable(BANNED_CHAMPION_LIST_DUPLICATES)
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, BANNED_CHAMPION_LIST_DUPLICATES
+            )
         for champion_id in banned_champion_ids:
             if await session.get(Champion, champion_id) is None:
-                raise _not_found(champion_with_id_not_found(champion_id))
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND, champion_with_id_not_found(champion_id)
+                )
 
     @classmethod
     async def create_war(
@@ -152,7 +146,7 @@ class WarService:
             select(War).where(War.alliance_id == alliance_id, War.status == WarStatus.active)
         )
         if existing.first() is not None:
-            raise _conflict(ACTIVE_WAR_ALREADY_EXISTS)
+            raise HTTPException(status.HTTP_409_CONFLICT, ACTIVE_WAR_ALREADY_EXISTS)
 
         active_season = await SeasonService.get_active_season(session)
         war = War(
@@ -216,14 +210,14 @@ class WarService:
             )
         ).first()
         if war is None:
-            raise _not_found(NO_ACTIVE_WAR_FOR_ALLIANCE)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, NO_ACTIVE_WAR_FOR_ALLIANCE)
         return await cls._war_response(session, war.id)
 
     @classmethod
     async def get_war(cls, session: SessionDep, war_id: uuid.UUID, alliance_id: uuid.UUID) -> War:
         war = await cls._load_war(session, war_id)
         if war is None or war.alliance_id != alliance_id:
-            raise _not_found(WAR_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, WAR_NOT_FOUND)
         return war
 
     @staticmethod
@@ -301,11 +295,18 @@ class WarService:
 
         if war.season_id is not None:
             if elo_change is None:
-                raise _unprocessable(detail="elo_change is required during an active season")
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    "elo_change is required during an active season",
+                )
             if win and elo_change < 0:
-                raise _unprocessable(detail="elo_change must be positive on a win")
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_CONTENT, "elo_change must be positive on a win"
+                )
             if not win and elo_change > 0:
-                raise _unprocessable(detail="elo_change must be negative on a loss")
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_CONTENT, "elo_change must be negative on a loss"
+                )
             war.elo_change = elo_change
             alliance.elo = max(0, min(4500, alliance.elo + elo_change))
 
@@ -466,7 +467,7 @@ class WarService:
     ) -> WarDefensePlacement:
         placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
         if placement is None:
-            raise _not_found(NO_DEFENDER_ON_NODE)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, NO_DEFENDER_ON_NODE)
         return placement
 
     @classmethod
@@ -481,7 +482,7 @@ class WarService:
     @staticmethod
     def _assert_not_completed(placement: WarDefensePlacement) -> None:
         if placement.is_combat_completed:
-            raise _conflict(COMBAT_COMPLETED_LOCKED)
+            raise HTTPException(status.HTTP_409_CONFLICT, COMBAT_COMPLETED_LOCKED)
 
     @classmethod
     async def place_defender(
@@ -493,7 +494,7 @@ class WarService:
         placed_by_id: uuid.UUID,
     ) -> WarPlacementResponse:
         if await session.get(Champion, placement_request.champion_id) is None:
-            raise _not_found(CHAMPION_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
 
         old_placement = await cls._get_placement_by_node(
             session, war_id, battlegroup, placement_request.node_number
@@ -645,15 +646,13 @@ class WarService:
             )
         ).first()
         if champion_user is None:
-            raise _not_found(missing)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, missing)
         return champion_user
 
     @staticmethod
     def _assert_in_bg(game_account: GameAccount, alliance_id: uuid.UUID, battlegroup: int) -> None:
         if game_account.alliance_id != alliance_id or game_account.alliance_group != battlegroup:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail=CHAMPION_NOT_IN_ALLIANCE_BG
-            )
+            raise HTTPException(status.HTTP_403_FORBIDDEN, CHAMPION_NOT_IN_ALLIANCE_BG)
 
     @classmethod
     async def _assert_can_attack(
@@ -667,7 +666,7 @@ class WarService:
     ) -> None:
         """Not banned, not on alliance defense, and within the member's attacker cap."""
         if champion_user.champion_id in {ban.champion_id for ban in war.bans}:
-            raise _conflict(CHAMPION_BANNED_FOR_WAR)
+            raise HTTPException(status.HTTP_409_CONFLICT, CHAMPION_BANNED_FOR_WAR)
         on_defense = await session.exec(
             select(DefensePlacement).where(
                 DefensePlacement.champion_user_id == champion_user.id,
@@ -676,17 +675,19 @@ class WarService:
             )
         )
         if on_defense.first():
-            raise _conflict(CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE)
+            raise HTTPException(status.HTTP_409_CONFLICT, CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE)
         max_attackers = for_format(await cls._war_format(session, war)).max_attackers_per_member
         taken = await cls._taken_attackers(session, war.id, battlegroup, exclude_node)
         if len(taken[champion_user.game_account_id] | {champion_user.id}) > max_attackers:
-            raise _conflict(member_max_attackers_reached(max_attackers))
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, member_max_attackers_reached(max_attackers)
+            )
 
     @classmethod
     async def _assert_node_on_map(cls, session: SessionDep, war: War, node_number: int) -> None:
         node_count = for_format(await cls._war_format(session, war)).node_count
         if node_number < 1 or node_number > node_count:
-            raise _unprocessable(node_exceeds_map(node_count))
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, node_exceeds_map(node_count))
 
     @classmethod
     async def get_available_attackers(
@@ -819,7 +820,9 @@ class WarService:
         await cls._assert_node_on_map(session, war, node_number)
         placement = await cls._get_placement_by_node(session, war_id, battlegroup, node_number)
         if placement is None:
-            raise _unprocessable(NODE_HAS_NO_DEFENDER_PLACE_FIRST)
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, NODE_HAS_NO_DEFENDER_PLACE_FIRST
+            )
         cls._assert_not_completed(placement)
         if placement.attacker_champion_user_id is not None:
             await cls._assert_attacker_unlocked(session, placement)
@@ -843,7 +846,7 @@ class WarService:
     ) -> WarPlacementResponse:
         placement = await cls._require_placement(session, war_id, battlegroup, node_number)
         if placement.attacker_champion_user_id is None:
-            raise _not_found(NO_ATTACKER_ASSIGNED_ON_NODE)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, NO_ATTACKER_ASSIGNED_ON_NODE)
         cls._assert_not_completed(placement)
         await cls._assert_attacker_unlocked(session, placement)
 
@@ -873,7 +876,7 @@ class WarService:
         """Placement with an attacker and an unfinished fight; `missing` is the 400 detail."""
         placement = await cls._require_placement(session, war_id, battlegroup, node_number)
         if placement.attacker_champion_user_id is None:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=missing)
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, missing)
         cls._assert_not_completed(placement)
         return placement
 
@@ -918,7 +921,7 @@ class WarService:
     ) -> WarPlacementResponse:
         placement = await cls._require_placement(session, war_id, battlegroup, node_number)
         if placement.attacker_champion_user_id is None:
-            raise _unprocessable(NO_ATTACKER_ASSIGNED_ON_NODE)
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, NO_ATTACKER_ASSIGNED_ON_NODE)
         placement.is_combat_completed = not placement.is_combat_completed
         await session.commit()
         return await cls._placement_response(session, placement.id)
@@ -929,10 +932,12 @@ class WarService:
     ) -> WarPlacementResponse:
         placement = await cls._require_placement(session, war_id, battlegroup, node_number)
         if placement.attacker_champion_user_id is None:
-            raise _unprocessable(NO_ATTACKER_ASSIGNED_FOR_FLAG)
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, NO_ATTACKER_ASSIGNED_FOR_FLAG
+            )
         cls._assert_not_completed(placement)
         if not placement.is_fight_not_done and placement.is_planning_error:
-            raise _conflict(PLANNING_ERROR_CONFLICT)
+            raise HTTPException(status.HTTP_409_CONFLICT, PLANNING_ERROR_CONFLICT)
         placement.is_fight_not_done = not placement.is_fight_not_done
         await session.commit()
         await FightRecordService.sync_node(session, placement.id)
@@ -944,7 +949,7 @@ class WarService:
     ) -> WarPlacementResponse:
         placement = await cls._require_placement(session, war_id, battlegroup, node_number)
         if not placement.is_planning_error and placement.is_fight_not_done:
-            raise _conflict(FIGHT_NOT_DONE_CONFLICT)
+            raise HTTPException(status.HTTP_409_CONFLICT, FIGHT_NOT_DONE_CONFLICT)
         placement.is_planning_error = not placement.is_planning_error
         await session.commit()
         return await cls._placement_response(session, placement.id)
@@ -961,12 +966,12 @@ class WarService:
     ) -> WarPlacementResponse:
         placement = await cls._require_placement(session, war_id, battlegroup, node_number)
         if placement.attacker_champion_user_id is None:
-            raise _unprocessable(ASSIST_NO_ATTACKER_ASSIGNED)
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, ASSIST_NO_ATTACKER_ASSIGNED)
         assistor = await cls._load_champion_user(session, champion_user_id)
         cls._assert_in_bg(assistor.game_account, alliance_id, battlegroup)
         attacker = await session.get(ChampionUser, placement.attacker_champion_user_id)
         if attacker and attacker.game_account_id == assistor.game_account_id:
-            raise _conflict(ASSIST_SAME_ACCOUNT)
+            raise HTTPException(status.HTTP_409_CONFLICT, ASSIST_SAME_ACCOUNT)
 
         placement.assist_champion_user_id = champion_user_id
         await session.commit()
@@ -979,7 +984,7 @@ class WarService:
     ) -> WarPlacementResponse:
         placement = await cls._require_placement(session, war_id, battlegroup, node_number)
         if placement.assist_champion_user_id is None:
-            raise _not_found(ASSIST_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ASSIST_NOT_FOUND)
         placement.assist_champion_user_id = None
         await session.commit()
         session.expire(placement, ["assist_champion_user"])
@@ -1030,16 +1035,14 @@ class WarService:
         target_champion_user_id: uuid.UUID,
     ) -> WarSynergyResponse:
         if champion_user_id == target_champion_user_id:
-            raise _conflict(SYNERGY_PROVIDER_CANNOT_BE_TARGET)
+            raise HTTPException(status.HTTP_409_CONFLICT, SYNERGY_PROVIDER_CANNOT_BE_TARGET)
         champion_user = await cls._load_champion_user(session, champion_user_id)
         target = await cls._load_champion_user(
             session, target_champion_user_id, TARGET_CHAMPION_USER_NOT_FOUND
         )
         game_account = champion_user.game_account
         if game_account.user_id != target.game_account.user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail=ONLY_OWN_CHAMPIONS_SYNERGY
-            )
+            raise HTTPException(status.HTTP_403_FORBIDDEN, ONLY_OWN_CHAMPIONS_SYNERGY)
         cls._assert_in_bg(game_account, alliance_id, battlegroup)
 
         target_on_node = await session.exec(
@@ -1050,7 +1053,9 @@ class WarService:
             )
         )
         if target_on_node.first() is None:
-            raise _unprocessable(TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER)
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER
+            )
         war = await cls._load_war(session, war_id)
         await cls._assert_can_attack(session, war, alliance_id, battlegroup, champion_user)
 
@@ -1066,7 +1071,9 @@ class WarService:
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise _conflict(CHAMPION_ALREADY_SYNERGY_PROVIDER) from exc
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, CHAMPION_ALREADY_SYNERGY_PROVIDER
+            ) from exc
 
         loaded = (
             await session.exec(
@@ -1091,7 +1098,7 @@ class WarService:
             )
         ).first()
         if synergy is None:
-            raise _not_found(SYNERGY_ATTACKER_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, SYNERGY_ATTACKER_NOT_FOUND)
         await session.delete(synergy)
         await session.commit()
 
@@ -1125,14 +1132,18 @@ class WarService:
         await cls._assert_node_on_map(session, war, target_node_number)
         champion_user = await cls._load_champion_user(session, champion_user_id)
         if not champion_user.champion.has_prefight:
-            raise _unprocessable(CHAMPION_NO_PREFIGHT_ABILITY)
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, CHAMPION_NO_PREFIGHT_ABILITY)
         cls._assert_in_bg(champion_user.game_account, alliance_id, battlegroup)
 
         target = await cls._get_placement_by_node(session, war_id, battlegroup, target_node_number)
         if target is None:
-            raise _unprocessable(TARGET_NODE_NO_DEFENDER_IN_WAR_BG)
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, TARGET_NODE_NO_DEFENDER_IN_WAR_BG
+            )
         if target.attacker_champion_user_id is None:
-            raise _unprocessable(TARGET_NODE_NO_ATTACKER_ASSIGNED)
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, TARGET_NODE_NO_ATTACKER_ASSIGNED
+            )
         await cls._assert_can_attack(session, war, alliance_id, battlegroup, champion_user)
 
         prefight = WarPrefightAttacker(
@@ -1147,7 +1158,9 @@ class WarService:
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise _conflict(CHAMPION_ALREADY_PREFIGHT_ON_NODE) from exc
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, CHAMPION_ALREADY_PREFIGHT_ON_NODE
+            ) from exc
 
         loaded = (
             await session.exec(
@@ -1178,6 +1191,6 @@ class WarService:
             )
         ).first()
         if prefight is None:
-            raise _not_found(PREFIGHT_ENTRY_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, PREFIGHT_ENTRY_NOT_FOUND)
         await session.delete(prefight)
         await session.commit()
