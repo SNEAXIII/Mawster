@@ -118,9 +118,7 @@ class VisionResultService:
             vision_import.screens_done += 1
             vision_import.status = vision_import.status_for_progress()
             await session.commit()
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
-            ) from error
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, BROKER_UNAVAILABLE) from error
 
         logger.info("vision job %s relaunched by the user (attempt %s)", job.id, job.attempts)
 

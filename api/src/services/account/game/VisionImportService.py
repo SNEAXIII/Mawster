@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import or_
 from sqlalchemy.orm import selectinload
-from sqlmodel import func, select
+from sqlmodel import col, func, select
 from starlette import status
 
 from src.dto.account.game.dto_vision_predictions import (
@@ -43,7 +43,6 @@ from src.storage.base import Storage, import_prefix, screen_key
 from src.utils.db import SessionDep
 
 if TYPE_CHECKING:
-    from src.dto.account.game.dto_vision_predictions import VisionPredictionResponse
     from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 
 # A full roster fits in about 20 screenshots, so this leaves headroom without
@@ -68,37 +67,33 @@ MAGIC_PREFIX_BYTES = 12
 logger = logging.getLogger(__name__)
 
 
+def _check_count(count: int) -> None:
+    if not count:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, NO_SCREENS_PROVIDED)
+    if count > MAX_SCREENS_PER_IMPORT:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            TOO_MANY_SCREENS.format(count=count, maximum=MAX_SCREENS_PER_IMPORT),
+        )
+
+
+def _check_type(filename: str | None, content_type: str | None) -> None:
+    if content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            UNSUPPORTED_SCREEN_TYPE.format(filename=filename, content_type=content_type),
+        )
+
+
+def _check_size(filename: str | None, size: int) -> None:
+    if size > MAX_SCREEN_BYTES:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            SCREEN_TOO_LARGE.format(filename=filename, size=size, maximum=MAX_SCREEN_BYTES),
+        )
+
+
 class VisionImportService:
-    @classmethod
-    def _validate_files(cls, files: list[UploadFile]) -> None:
-        if not files:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=NO_SCREENS_PROVIDED)
-        if len(files) > MAX_SCREENS_PER_IMPORT:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=TOO_MANY_SCREENS.format(count=len(files), maximum=MAX_SCREENS_PER_IMPORT),
-            )
-
-    @classmethod
-    def _validate_content_type(cls, file: UploadFile) -> None:
-        if file.content_type not in ALLOWED_CONTENT_TYPES:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=UNSUPPORTED_SCREEN_TYPE.format(
-                    filename=file.filename, content_type=file.content_type
-                ),
-            )
-
-    @classmethod
-    def _validate_size(cls, file: UploadFile, data: bytes) -> None:
-        if len(data) > MAX_SCREEN_BYTES:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=SCREEN_TOO_LARGE.format(
-                    filename=file.filename, size=len(data), maximum=MAX_SCREEN_BYTES
-                ),
-            )
-
     @classmethod
     async def create_import(
         cls,
@@ -114,12 +109,10 @@ class VisionImportService:
         Order matters: the rows are committed before anything is published, so a
         worker can never receive a job_id that does not exist in the database yet.
         """
-        cls._validate_files(files)
-        # Content type is known from headers alone: check every file before reading
-        # or writing a single byte, so a bad file anywhere in the batch costs
-        # nothing in I/O or storage.
+        _check_count(len(files))
+        # Headers alone: a bad file anywhere in the batch costs no I/O or storage.
         for file in files:
-            cls._validate_content_type(file)
+            _check_type(file.filename, file.content_type)
 
         vision_import = VisionImport(
             game_account_id=game_account_id,
@@ -134,7 +127,7 @@ class VisionImportService:
                 # Bounded read: caps memory at ~MAX_SCREEN_BYTES per file instead of
                 # buffering an arbitrarily large upload before rejecting it.
                 data = await file.read(MAX_SCREEN_BYTES + 1)
-                cls._validate_size(file, data)
+                _check_size(file.filename, len(data))
                 job = VisionJob(import_id=vision_import.id, object_key="")
                 job.object_key = screen_key(vision_import.id, job.id)
                 await storage.put_bytes(
@@ -201,9 +194,7 @@ class VisionImportService:
                 unpublished_job.error = JOB_NEVER_QUEUED
                 session.add(unpublished_job)
             await session.commit()
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
-            ) from error
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, BROKER_UNAVAILABLE) from error
 
     @classmethod
     async def init_import(
@@ -283,28 +274,10 @@ class VisionImportService:
         `commit_import`. Its job is to fail fast, so a user does not upload
         40 files only to be told at commit that the second one was too big.
         """
-        if not screens:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=NO_SCREENS_PROVIDED)
-        if len(screens) > MAX_SCREENS_PER_IMPORT:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=TOO_MANY_SCREENS.format(count=len(screens), maximum=MAX_SCREENS_PER_IMPORT),
-            )
+        _check_count(len(screens))
         for screen in screens:
-            if screen.content_type not in ALLOWED_CONTENT_TYPES:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=UNSUPPORTED_SCREEN_TYPE.format(
-                        filename=screen.filename, content_type=screen.content_type
-                    ),
-                )
-            if screen.size > MAX_SCREEN_BYTES:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=SCREEN_TOO_LARGE.format(
-                        filename=screen.filename, size=screen.size, maximum=MAX_SCREEN_BYTES
-                    ),
-                )
+            _check_type(screen.filename, screen.content_type)
+            _check_size(screen.filename, screen.size)
 
     @classmethod
     async def commit_screen(
@@ -340,7 +313,7 @@ class VisionImportService:
         """
         job = await session.get(VisionJob, job_id)
         if job is None or job.import_id != vision_import.id:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=VISION_JOB_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, VISION_JOB_NOT_FOUND)
         if job.status != VisionJobStatus.AWAITING_UPLOAD:
             return job
 
@@ -389,9 +362,7 @@ class VisionImportService:
         except Exception as error:
             cls._fail_unqueued(session, vision_import, job)
             await session.commit()
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
-            ) from error
+            raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, BROKER_UNAVAILABLE) from error
 
     @classmethod
     def _fail_unqueued(
@@ -483,36 +454,22 @@ class VisionImportService:
         stat = await storage.stat_object(SECRET.RUSTFS_BUCKET_VISION, job.object_key)
         if stat is None:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=SCREEN_NOT_UPLOADED.format(filename=filename),
+                status.HTTP_400_BAD_REQUEST, SCREEN_NOT_UPLOADED.format(filename=filename)
             )
-        if stat.size > MAX_SCREEN_BYTES:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=SCREEN_TOO_LARGE.format(
-                    filename=filename, size=stat.size, maximum=MAX_SCREEN_BYTES
-                ),
-            )
-        if stat.content_type not in ALLOWED_CONTENT_TYPES:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=UNSUPPORTED_SCREEN_TYPE.format(
-                    filename=filename, content_type=stat.content_type
-                ),
-            )
+        _check_size(filename, stat.size)
+        _check_type(filename, stat.content_type)
         head = await storage.get_head_bytes(
             SECRET.RUSTFS_BUCKET_VISION, job.object_key, MAGIC_PREFIX_BYTES
         )
         sniffed = cls._sniff_image_type(head)
         if sniffed is None:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=SCREEN_NOT_AN_IMAGE.format(filename=filename),
+                status.HTTP_400_BAD_REQUEST, SCREEN_NOT_AN_IMAGE.format(filename=filename)
             )
         if sniffed != stat.content_type:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=SCREEN_TYPE_MISMATCH.format(
+                status.HTTP_400_BAD_REQUEST,
+                SCREEN_TYPE_MISMATCH.format(
                     filename=filename, actual=sniffed, declared=stat.content_type
                 ),
             )
@@ -655,42 +612,35 @@ class VisionImportService:
             )
         ).all()
         job_index = {job.id: i for i, job in enumerate(jobs)}
-
-        rows: list[VisionPredictionResponse] = []
-        for job in jobs:
-            preds = (
-                await session.exec(
-                    select(VisionPrediction)
-                    .where(VisionPrediction.job_id == job.id)
-                    # Without this, a 48-row review fires 48 extra queries — and
-                    # on AsyncSession lazy loading raises rather than merely
-                    # being slow, so the review would break outright.
-                    .options(selectinload(VisionPrediction.candidates))
-                    .order_by(VisionPrediction.id)
-                )
-            ).all()
-            rows.extend(
-                VisionPredictionResponse(
-                    id=pred.id,
-                    job_id=job.id,
-                    champion_name=pred.champion_name,
-                    champion_class=pred.champion_class,
-                    stars=pred.stars,
-                    rank=pred.rank,
-                    signature=pred.signature,
-                    ascension=pred.ascension,
-                    confidence=pred.confidence,
-                    crop_index=cls._crop_index(pred.crop_key),
-                    job_index=job_index[job.id],
-                    candidates=[
-                        VisionCandidateResponse(name=c.name, score=c.score) for c in pred.candidates
-                    ],
-                    margin=cls._margin(pred.candidates),
-                    reranked=pred.reranked,
-                )
-                for pred in preds
+        preds = (
+            await session.exec(
+                select(VisionPrediction)
+                .where(col(VisionPrediction.job_id).in_(job_index))
+                # AsyncSession raises on lazy loading: candidates must come eagerly.
+                .options(selectinload(VisionPrediction.candidates))
             )
-        return rows
+        ).all()
+        return [
+            VisionPredictionResponse(
+                id=pred.id,
+                job_id=pred.job_id,
+                champion_name=pred.champion_name,
+                champion_class=pred.champion_class,
+                stars=pred.stars,
+                rank=pred.rank,
+                signature=pred.signature,
+                ascension=pred.ascension,
+                confidence=pred.confidence,
+                crop_index=cls._crop_index(pred.crop_key),
+                job_index=job_index[pred.job_id],
+                candidates=[
+                    VisionCandidateResponse(name=c.name, score=c.score) for c in pred.candidates
+                ],
+                margin=cls._margin(pred.candidates),
+                reranked=pred.reranked,
+            )
+            for pred in sorted(preds, key=lambda p: (job_index[p.job_id], p.id))
+        ]
 
     @staticmethod
     def _margin(candidates: list[VisionPredictionCandidate]) -> float | None:
