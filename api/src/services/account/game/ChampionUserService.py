@@ -3,7 +3,7 @@ import uuid
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import and_, select
+from sqlmodel import select
 from starlette import status
 
 from src.enums.ChampionRarity import ChampionRarity
@@ -36,8 +36,8 @@ class ChampionUserService:
         """Validate that the rarity value is one of the allowed values."""
         if rarity not in VALID_RARITIES:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=invalid_rarity(rarity, ", ".join(sorted(VALID_RARITIES))),
+                status.HTTP_400_BAD_REQUEST,
+                invalid_rarity(rarity, ", ".join(sorted(VALID_RARITIES))),
             )
 
     @classmethod
@@ -50,10 +50,7 @@ class ChampionUserService:
         m = _RARITY_RE.match(rarity)
         # regex always matches for valid rarities, but guard anyway
         if m is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=invalid_rarity_format(rarity),
-            )
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, invalid_rarity_format(rarity))
         return int(m.group(1)), int(m.group(2))
 
     @classmethod
@@ -64,13 +61,37 @@ class ChampionUserService:
         - If ascension is not in {0, 1, 2}, raise 400.
         """
         if ascension not in (0, 1, 2):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=invalid_ascension_level(ascension),
-            )
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, invalid_ascension_level(ascension))
         if not champion.is_ascendable:
             return 0
         return ascension
+
+    @staticmethod
+    async def _upsert(
+        session: SessionDep,
+        game_account_id: uuid.UUID,
+        champion_id: uuid.UUID,
+        stars: int,
+        **fields: int | bool,
+    ) -> ChampionUser:
+        """One entry per champion and star level: update it if present, else add it. No commit."""
+        existing = await session.exec(
+            select(ChampionUser).where(
+                ChampionUser.game_account_id == game_account_id,
+                ChampionUser.champion_id == champion_id,
+                ChampionUser.stars == stars,
+            )
+        )
+        entry = existing.first()
+        if entry is None:
+            entry = ChampionUser(
+                game_account_id=game_account_id, champion_id=champion_id, stars=stars, **fields
+            )
+        else:
+            for name, value in fields.items():
+                setattr(entry, name, value)
+        session.add(entry)
+        return entry
 
     @classmethod
     async def create_champion_user(
@@ -84,58 +105,22 @@ class ChampionUserService:
         ascension: int = 0,
     ) -> ChampionUser:
         stars, rank = cls._parse_rarity(rarity)
-
-        # Verify the game account exists
-        game_account = await session.get(GameAccount, game_account_id)
-        if game_account is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=GAME_ACCOUNT_NOT_FOUND,
-            )
-
-        # Verify the champion exists
+        if await session.get(GameAccount, game_account_id) is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_FOUND)
         champion = await session.get(Champion, champion_id)
         if champion is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=CHAMPION_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
 
-        # Validate ascension
-        ascension = cls._validate_ascension(ascension, champion)
-
-        # Check if same champion + stars already exists → update rank & signature
-        existing = await session.exec(
-            select(ChampionUser).where(
-                and_(
-                    ChampionUser.game_account_id == game_account_id,
-                    ChampionUser.champion_id == champion_id,
-                    ChampionUser.stars == stars,
-                )
-            )
-        )
-        existing_entry = existing.first()
-        if existing_entry is not None:
-            existing_entry.rank = rank
-            existing_entry.signature = signature
-            existing_entry.is_preferred_attacker = is_preferred_attacker
-            existing_entry.ascension = ascension
-            session.add(existing_entry)
-            await session.commit()
-            await session.refresh(existing_entry)
-            await UpgradeRequestService.auto_complete_for_champion_user(session, existing_entry)
-            return existing_entry
-
-        champion_user = ChampionUser(
-            game_account_id=game_account_id,
-            champion_id=champion_id,
-            stars=stars,
+        champion_user = await cls._upsert(
+            session,
+            game_account_id,
+            champion_id,
+            stars,
             rank=rank,
             signature=signature,
             is_preferred_attacker=is_preferred_attacker,
-            ascension=ascension,
+            ascension=cls._validate_ascension(ascension, champion),
         )
-        session.add(champion_user)
         await session.commit()
         await session.refresh(champion_user)
         await UpgradeRequestService.auto_complete_for_champion_user(session, champion_user)
@@ -153,13 +138,8 @@ class ChampionUserService:
         - If a champion+rarity appears multiple times in the request, only the first occurrence is used.
         - If a champion+rarity already exists in DB, update the signature.
         """
-        # Verify the game account exists
-        game_account = await session.get(GameAccount, game_account_id)
-        if game_account is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=GAME_ACCOUNT_NOT_FOUND,
-            )
+        if await session.get(GameAccount, game_account_id) is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_FOUND)
 
         results = []
         seen = set()  # (champion_name_lower, stars) tuples already processed
@@ -181,54 +161,28 @@ class ChampionUserService:
             champion = await ChampionService.get_champion_by_name(session, champion_name)
             if champion is None:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=champion_name_not_found(champion_name),
+                    status.HTTP_404_NOT_FOUND, champion_name_not_found(champion_name)
                 )
 
-            is_preferred_attacker = entry.get("is_preferred_attacker", False)
-            ascension = cls._validate_ascension(entry.get("ascension", 0), champion)
-
-            # Check if exists in DB (unique per champion+stars)
-            existing = await session.exec(
-                select(ChampionUser).where(
-                    and_(
-                        ChampionUser.game_account_id == game_account_id,
-                        ChampionUser.champion_id == champion.id,
-                        ChampionUser.stars == stars,
-                    )
-                )
-            )
-            existing_entry = existing.first()
-
-            if existing_entry is not None:
-                existing_entry.rank = rank
-                existing_entry.signature = signature
-                existing_entry.is_preferred_attacker = is_preferred_attacker
-                existing_entry.ascension = ascension
-                session.add(existing_entry)
-                results.append(existing_entry)
-            else:
-                champion_user = ChampionUser(
-                    game_account_id=game_account_id,
-                    champion_id=champion.id,
-                    stars=stars,
+            results.append(
+                await cls._upsert(
+                    session,
+                    game_account_id,
+                    champion.id,
+                    stars,
                     rank=rank,
                     signature=signature,
-                    is_preferred_attacker=is_preferred_attacker,
-                    ascension=ascension,
+                    is_preferred_attacker=entry.get("is_preferred_attacker", False),
+                    ascension=cls._validate_ascension(entry.get("ascension", 0), champion),
                 )
-                session.add(champion_user)
-                results.append(champion_user)
+            )
 
         await session.commit()
         for r in results:
             await session.refresh(r)
-
-        # Auto-complete upgrade requests
-        for r in results:
             await UpgradeRequestService.auto_complete_for_champion_user(session, r)
 
-        # Eagerly load champion relationship for detail responses
+        # ponytail: one reload query per row; batch with `in_` once the mock test stops pinning it.
         refreshed = []
         for r in results:
             stmt = (
@@ -298,8 +252,7 @@ class ChampionUserService:
 
         if next_rarity not in VALID_RARITIES:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=champion_already_max_rank(current_rarity),
+                status.HTTP_400_BAD_REQUEST, champion_already_max_rank(current_rarity)
             )
 
         champion_user.rank = next_rank
@@ -320,21 +273,14 @@ class ChampionUserService:
         # Eagerly load champion if not already loaded
         champion = await session.get(Champion, champion_user.champion_id)
         if champion is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=CHAMPION_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
 
         if not champion.is_ascendable:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=CHAMPION_CANNOT_BE_ASCENDED,
-            )
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, CHAMPION_CANNOT_BE_ASCENDED)
 
         if champion_user.ascension >= 2:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=champion_already_max_ascension(champion_user.ascension),
+                status.HTTP_400_BAD_REQUEST, champion_already_max_ascension(champion_user.ascension)
             )
 
         champion_user.ascension += 1

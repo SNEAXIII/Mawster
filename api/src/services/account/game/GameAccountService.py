@@ -88,8 +88,7 @@ class GameAccountService:
         existing_accounts = existing.all()
         if len(existing_accounts) >= MAX_GAME_ACCOUNTS_PER_USER:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=max_game_accounts_reached(MAX_GAME_ACCOUNTS_PER_USER),
+                status.HTTP_400_BAD_REQUEST, max_game_accounts_reached(MAX_GAME_ACCOUNTS_PER_USER)
             )
         # First *live* account is always primary — a deleted one cannot be it.
         if not any(acc.deleted_at is None for acc in existing_accounts):
@@ -146,9 +145,7 @@ class GameAccountService:
     ) -> GameAccount | None:
         """Load a game account. Deleted accounts read as missing unless asked for."""
         game_account = await session.get(GameAccount, game_account_id)
-        if game_account is None:
-            return None
-        if game_account.deleted_at is not None and not include_deleted:
+        if game_account is None or (game_account.deleted_at is not None and not include_deleted):
             return None
         return game_account
 
@@ -204,32 +201,20 @@ class GameAccountService:
             .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
         )
         if owned.first() is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=GAME_ACCOUNT_IS_ALLIANCE_OWNER,
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_IS_ALLIANCE_OWNER)
         if game_account.alliance_id is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=GAME_ACCOUNT_IN_ALLIANCE,
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_IN_ALLIANCE)
         visits = await session.exec(
             select(AllianceVisitor).where(AllianceVisitor.game_account_id == game_account.id)
         )
         if visits.first() is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=GAME_ACCOUNT_IS_VISITOR,
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_IS_VISITOR)
 
     @classmethod
     async def delete_game_account(cls, session: SessionDep, game_account: GameAccount) -> None:
         """Logically delete a game account. It must be out of every alliance first."""
         if game_account.deleted_at is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=GAME_ACCOUNT_ALREADY_DELETED,
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_ALREADY_DELETED)
         await cls._assert_out_of_every_alliance(session, game_account)
         # Pending invitations die with the account: nobody could answer them
         # once it is hidden, and a stale one would block a later invite.
@@ -248,15 +233,9 @@ class GameAccountService:
     ) -> GameAccount:
         """Bring a deleted account back, as long as the restore window is open."""
         if game_account.deleted_at is None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=GAME_ACCOUNT_NOT_DELETED,
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_NOT_DELETED)
         if not cls.is_restorable(game_account):
-            raise HTTPException(
-                status_code=status.HTTP_410_GONE,
-                detail=GAME_ACCOUNT_RESTORE_EXPIRED,
-            )
+            raise HTTPException(status.HTTP_410_GONE, GAME_ACCOUNT_RESTORE_EXPIRED)
         # No quota check: the account never gave its slot back while deleted.
         game_account.deleted_at = None
         session.add(game_account)

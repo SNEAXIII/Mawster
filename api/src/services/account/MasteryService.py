@@ -27,16 +27,10 @@ class MasteryService:
         cls, session: SessionDep, game_account_id: uuid.UUID
     ) -> list[GameAccountMasteryResponse]:
         all_masteries = (await session.exec(select(Mastery))).all()
-        saved_rows = list(
-            (
-                await session.exec(
-                    select(GameAccountMastery).where(
-                        GameAccountMastery.game_account_id == game_account_id
-                    )
-                )
-            ).all()
+        saved = await session.exec(
+            select(GameAccountMastery).where(GameAccountMastery.game_account_id == game_account_id)
         )
-        saved_map = {row.mastery_id: row for row in saved_rows}
+        saved_map = {row.mastery_id: row for row in saved.all()}
         result = []
         for mastery in sorted(all_masteries, key=lambda m: m.order):
             row = saved_map.get(mastery.id)
@@ -64,21 +58,18 @@ class MasteryService:
         for item in items:
             mastery = await session.get(Mastery, item.mastery_id)
             if mastery is None:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=MASTERY_NOT_FOUND)
+                raise HTTPException(status.HTTP_404_NOT_FOUND, MASTERY_NOT_FOUND)
             if item.unlocked > mastery.max_value:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                    detail=MASTERY_VALUE_EXCEEDS_MAX,
+                    status.HTTP_422_UNPROCESSABLE_CONTENT, MASTERY_VALUE_EXCEEDS_MAX
                 )
             if item.attack > item.unlocked:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                    detail=MASTERY_ATTACK_EXCEEDS_UNLOCKED,
+                    status.HTTP_422_UNPROCESSABLE_CONTENT, MASTERY_ATTACK_EXCEEDS_UNLOCKED
                 )
             if item.defense > item.unlocked:
                 raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                    detail=MASTERY_DEFENSE_EXCEEDS_UNLOCKED,
+                    status.HTTP_422_UNPROCESSABLE_CONTENT, MASTERY_DEFENSE_EXCEEDS_UNLOCKED
                 )
 
             existing = await session.exec(

@@ -89,12 +89,7 @@ class UserAdminService:
     @classmethod
     async def admin_patch_demote_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
         user: User | None = await UserService.get_user(session, user_uuid)
-        if user is None:
-            raise TARGET_USER_DOESNT_EXISTS
-        if user.deleted_at:
-            raise TARGET_USER_IS_DELETED
-        if user.role == Roles.SUPER_ADMIN:
-            raise TARGET_USER_IS_SUPER_ADMIN
+        cls._validate_target_user_for_action(user, forbid_admin=False)
         if user.role != Roles.ADMIN:
             raise TARGET_USER_IS_NOT_ADMIN
         user.role = Roles.USER
@@ -125,6 +120,12 @@ class UserAdminService:
         return sql
 
     @classmethod
+    def _filtered(cls, sql, status: str | None, role: Roles | None, search: str | None):
+        sql = cls.build_status_filter(sql, status)
+        sql = cls.build_role_filter(sql, role)
+        return cls.build_search_filter(sql, search)
+
+    @classmethod
     async def get_users_paginated(
         cls,
         session: SessionDep,
@@ -134,16 +135,8 @@ class UserAdminService:
         role: Roles | None = None,
         search: str | None = None,
     ) -> list[User]:
-        offset = (page - 1) * size
-        sql = select(User)
-        if status:
-            sql = UserAdminService.build_status_filter(sql, status)
-        if role:
-            sql = UserAdminService.build_role_filter(sql, role)
-        if search:
-            sql = UserAdminService.build_search_filter(sql, search)
-        sql = sql.offset(offset).limit(size)
-        result = await session.exec(sql)
+        sql = cls._filtered(select(User), status, role, search)
+        result = await session.exec(sql.offset((page - 1) * size).limit(size))
         return result.all()
 
     @classmethod
@@ -154,14 +147,9 @@ class UserAdminService:
         role: Roles | None = None,
         search: str | None = None,
     ) -> int:
-        sql = select(func.count(User.id))
-        if status:
-            sql = UserAdminService.build_status_filter(sql, status)
-        if role:
-            sql = UserAdminService.build_role_filter(sql, role)
-        if search:
-            sql = UserAdminService.build_search_filter(sql, search)
-        result = await session.exec(sql)
+        result = await session.exec(
+            cls._filtered(select(func.count(User.id)), status, role, search)
+        )
         return result.one()
 
     @classmethod
