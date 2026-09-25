@@ -50,6 +50,12 @@ from src.utils.db import SessionDep
 
 MAX_MEMBERS_PER_GROUP = 10
 MAX_MEMBERS_PER_ALLIANCE = 30
+_ALLIANCE_OPTIONS = (
+    selectinload(Alliance.owner),  # type: ignore[arg-type]
+    selectinload(Alliance.members),  # type: ignore[arg-type]
+    selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
+    selectinload(Alliance.strategists),  # type: ignore[arg-type]
+)
 
 
 class AllianceService:
@@ -83,10 +89,7 @@ class AllianceService:
         )
         account = result.first()
         if account is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=NOT_ALLIANCE_MEMBER,
-            )
+            raise HTTPException(status.HTTP_403_FORBIDDEN, NOT_ALLIANCE_MEMBER)
         return account
 
     @classmethod
@@ -96,32 +99,14 @@ class AllianceService:
         """Load alliance and assert user is owner or officer. Raises 404/403."""
         alliance = await cls._load_alliance_with_relations(session, alliance_id)
         if alliance is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
         return await cls._assert_is_owner_or_officer(session, alliance, user_id)
-
-    @staticmethod
-    async def is_alliance_member(
-        session: SessionDep,
-        user_id: uuid.UUID,
-        alliance_id: uuid.UUID,
-    ) -> bool:
-        """Return True if the user has any game account in the given alliance."""
-        result = await session.exec(
-            select(GameAccount).where(
-                GameAccount.user_id == user_id,
-                GameAccount.alliance_id == alliance_id,
-            )
-        )
-        return result.first() is not None
 
     @staticmethod
     def _assert_not_in_alliance(game_account: GameAccount) -> None:
         """Raise 409 if the game account is already in an alliance."""
         if game_account.alliance_id is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=GAME_ACCOUNT_ALREADY_IN_ALLIANCE,
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_ALREADY_IN_ALLIANCE)
 
     @staticmethod
     async def assert_is_alliance_member(
@@ -133,10 +118,7 @@ class AllianceService:
                 await session.exec(select(GameAccount).where(GameAccount.user_id == account.id))
             ).first()
         if account is None or account.alliance_id != alliance_id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=GAME_ACCOUNT_NOT_MEMBER_OF_ALLIANCE,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_MEMBER_OF_ALLIANCE)
 
     @classmethod
     async def _load_alliance_with_relations(
@@ -147,18 +129,11 @@ class AllianceService:
         A soft-deleted alliance is never returned, so every caller that goes
         through this loader 404s on a disbanded alliance without its own check.
         """
-        sql = (
+        result = await session.exec(
             select(Alliance)
-            .where(Alliance.id == alliance_id)
-            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
-            .options(
-                selectinload(Alliance.owner),  # type: ignore[arg-type]
-                selectinload(Alliance.members),  # type: ignore[arg-type]
-                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
-                selectinload(Alliance.strategists),  # type: ignore[arg-type]
-            )
+            .where(Alliance.id == alliance_id, Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
+            .options(*_ALLIANCE_OPTIONS)
         )
-        result = await session.exec(sql)
         return result.first()
 
     # ---- Boolean permission checks (hierarchical) ----
@@ -249,14 +224,26 @@ class AllianceService:
         alliance_id: uuid.UUID,
     ) -> bool:
         """True if the user is a member, officer, owner, OR has a visitor account in the alliance."""
-        if await cls.is_member(session, user_id, alliance_id):
-            return True
+        return (
+            await cls.is_member(session, user_id, alliance_id)
+            or await cls._visitor_account(session, alliance_id, user_id) is not None
+        )
 
-        user_accounts = await cls._get_user_accounts(session, user_id)
-        for acc in user_accounts:
-            if await AllianceVisitorService.is_visitor(session, alliance_id, acc.id):
-                return True
-        return False
+    @staticmethod
+    async def _visitor_account(
+        session: SessionDep, alliance_id: uuid.UUID, user_id: uuid.UUID
+    ) -> GameAccount | None:
+        """The user's live game account that visits this alliance, if any."""
+        result = await session.exec(
+            select(GameAccount)
+            .join(AllianceVisitor, AllianceVisitor.game_account_id == GameAccount.id)
+            .where(
+                AllianceVisitor.alliance_id == alliance_id,
+                GameAccount.user_id == user_id,
+                GameAccount.deleted_at.is_(None),
+            )
+        )
+        return result.first()
 
     # ---- Require methods (raise HTTPException on failure) ----
 
@@ -276,8 +263,8 @@ class AllianceService:
         outsider learns nothing about an interior that is none of their business.
         """
         if await cls.is_visitor(session, user_id, alliance_id):
-            return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
-        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
+            return HTTPException(status.HTTP_403_FORBIDDEN, detail)
+        return HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
 
     @classmethod
     async def require_owner(
@@ -322,10 +309,7 @@ class AllianceService:
         """
         alliance = await cls._load_alliance_with_relations(session, alliance_id)
         if alliance is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ALLIANCE_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
         user_account_ids = await cls._get_user_account_ids(session, user_id)
 
         # Determine the privileged account id (owner first, then the extra set)
@@ -403,10 +387,7 @@ class AllianceService:
     ) -> None:
         """Raise 403 if user has no game account in the alliance."""
         if not await cls.is_member(session, user_id, alliance_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=NOT_ALLIANCE_MEMBER,
-            )
+            raise HTTPException(status.HTTP_403_FORBIDDEN, NOT_ALLIANCE_MEMBER)
 
     @classmethod
     async def require_visitor(
@@ -417,10 +398,7 @@ class AllianceService:
     ) -> None:
         """Raise 403 if user is neither a member nor a visitor of the alliance."""
         if not await cls.is_visitor(session, user_id, alliance_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=NOT_ALLIANCE_MEMBER,
-            )
+            raise HTTPException(status.HTTP_403_FORBIDDEN, NOT_ALLIANCE_MEMBER)
 
     @classmethod
     async def _assert_is_owner_or_officer(
@@ -444,15 +422,6 @@ class AllianceService:
         raise await cls._refuse_rank(
             session, alliance.id, current_user_id, OWNER_OR_OFFICER_REQUIRED
         )
-
-    @classmethod
-    async def _assert_is_owner(
-        cls, session: SessionDep, alliance: Alliance, current_user_id: uuid.UUID
-    ) -> None:
-        """Check that the current user owns a game account that is the alliance owner."""
-        user_account_ids = await cls._get_user_account_ids(session, current_user_id)
-        if alliance.owner_id not in user_account_ids:
-            raise await cls._refuse_rank(session, alliance.id, current_user_id, OWNER_REQUIRED)
 
     @classmethod
     async def _assert_can_remove_member(
@@ -487,10 +456,7 @@ class AllianceService:
 
         # Caller is officer — cannot remove another officer
         if target_game_account_id in officer_ids:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=OFFICER_CANNOT_REMOVE_OFFICER,
-            )
+            raise HTTPException(status.HTTP_403_FORBIDDEN, OFFICER_CANNOT_REMOVE_OFFICER)
 
     @classmethod
     async def create_alliance(
@@ -505,16 +471,10 @@ class AllianceService:
         and must not already be in an alliance."""
         owner = await session.get(GameAccount, owner_id)
         if owner is None or owner.deleted_at is not None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=OWNER_GAME_ACCOUNT_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, OWNER_GAME_ACCOUNT_NOT_FOUND)
         # Verify the game account belongs to the current user
         if owner.user_id != current_user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=GAME_ACCOUNT_NOT_YOURS,
-            )
+            raise HTTPException(status.HTTP_403_FORBIDDEN, GAME_ACCOUNT_NOT_YOURS)
         # A player can only belong to one alliance at a time
         cls._assert_not_in_alliance(owner)
         alliance = Alliance(
@@ -537,17 +497,9 @@ class AllianceService:
 
     @classmethod
     async def get_all_alliances(cls, session: SessionDep) -> list[Alliance]:
-        sql = (
-            select(Alliance)
-            .where(Alliance.deleted_at.is_(None))
-            .options(  # type: ignore[union-attr]
-                selectinload(Alliance.owner),  # type: ignore[arg-type]
-                selectinload(Alliance.members),  # type: ignore[arg-type]
-                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
-                selectinload(Alliance.strategists),  # type: ignore[arg-type]
-            )
+        result = await session.exec(
+            select(Alliance).where(Alliance.deleted_at.is_(None)).options(*_ALLIANCE_OPTIONS)  # type: ignore[union-attr]
         )
-        result = await session.exec(sql)
         return result.all()
 
     @classmethod
@@ -572,18 +524,11 @@ class AllianceService:
         """
         if not alliance_ids:
             return []
-        sql = (
+        result = await session.exec(
             select(Alliance)
-            .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
-            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
-            .options(
-                selectinload(Alliance.owner),  # type: ignore[arg-type]
-                selectinload(Alliance.members),  # type: ignore[arg-type]
-                selectinload(Alliance.officers).selectinload(AllianceOfficer.game_account),  # type: ignore[arg-type]
-                selectinload(Alliance.strategists),  # type: ignore[arg-type]
-            )
+            .where(Alliance.id.in_(alliance_ids), Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
+            .options(*_ALLIANCE_OPTIONS)
         )
-        result = await session.exec(sql)
         return list(result.all())
 
     @classmethod
@@ -601,124 +546,54 @@ class AllianceService:
           - roles: { alliance_id_str: { is_owner, is_officer, can_manage } }
           - my_account_ids: [ str(account_id), ... ]
         """
-        # 1. Get all game accounts for this user
-        accs_result = await session.exec(
-            select(GameAccount).where(
-                GameAccount.user_id == user_id,
-                GameAccount.deleted_at.is_(None),
-            )
-        )
-        user_accounts = accs_result.all()
+        user_accounts = await cls._get_user_accounts(session, user_id)
         user_account_ids = {acc.id for acc in user_accounts}
         my_account_ids = [str(aid) for aid in user_account_ids]
-
-        # 2. Get alliance IDs the user is a member of
         alliance_ids = {acc.alliance_id for acc in user_accounts if acc.alliance_id is not None}
         if not alliance_ids:
             return {"roles": {}, "my_account_ids": my_account_ids}
 
-        # 3. Load those alliances with officers
-        sql = (
+        result = await session.exec(
             select(Alliance)
-            .where(Alliance.id.in_(alliance_ids))  # type: ignore[union-attr]
-            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
+            .where(Alliance.id.in_(alliance_ids), Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
             .options(
                 selectinload(Alliance.officers),  # type: ignore[arg-type]
                 selectinload(Alliance.strategists),  # type: ignore[arg-type]
             )
         )
-        result = await session.exec(sql)
-        alliances = result.all()
+        alliance_map = {a.id: a for a in result.all()}
 
-        # 4. Build role maps
-        alliance_map = {a.id: a for a in alliances}
-        roles: dict[str, dict] = {}
-        roles_by_account: dict[str, dict] = {}
-
-        for alliance in alliances:
-            is_owner = alliance.owner_id in user_account_ids
-            officer_ids = {off.game_account_id for off in alliance.officers}
-            is_officer = bool(user_account_ids & officer_ids)
-            can_manage = is_owner or is_officer
-            strategist_ids = {s.game_account_id for s in alliance.strategists}
-            is_strategist = bool(user_account_ids & strategist_ids)
-            roles[str(alliance.id)] = {
+        def role(alliance: Alliance, account_ids: set[uuid.UUID]) -> dict:
+            is_owner = alliance.owner_id in account_ids
+            is_officer = any(off.game_account_id in account_ids for off in alliance.officers)
+            is_strategist = any(s.game_account_id in account_ids for s in alliance.strategists)
+            return {
                 "is_owner": is_owner,
                 "is_officer": is_officer,
-                "can_manage": can_manage,
+                "can_manage": is_owner or is_officer,
                 "is_strategist": is_strategist,
-                "can_place": can_manage or is_strategist,
-            }
-
-        for acc in user_accounts:
-            if acc.alliance_id is None or acc.alliance_id not in alliance_map:
-                continue
-            alliance = alliance_map[acc.alliance_id]
-            officer_ids = {off.game_account_id for off in alliance.officers}
-            acc_is_owner = alliance.owner_id == acc.id
-            acc_is_officer = acc.id in officer_ids
-            strategist_ids = {s.game_account_id for s in alliance.strategists}
-            acc_is_strategist = acc.id in strategist_ids
-            roles_by_account[str(acc.id)] = {
-                "is_owner": acc_is_owner,
-                "is_officer": acc_is_officer,
-                "can_manage": acc_is_owner or acc_is_officer,
-                "is_strategist": acc_is_strategist,
-                "can_place": acc_is_owner or acc_is_officer or acc_is_strategist,
+                "can_place": is_owner or is_officer or is_strategist,
             }
 
         return {
-            "roles": roles,
-            "roles_by_account": roles_by_account,
+            "roles": {str(a.id): role(a, user_account_ids) for a in alliance_map.values()},
+            "roles_by_account": {
+                str(acc.id): role(alliance_map[acc.alliance_id], {acc.id})
+                for acc in user_accounts
+                if acc.alliance_id in alliance_map
+            },
             "my_account_ids": my_account_ids,
         }
 
     @classmethod
     async def update_alliance(
-        cls,
-        session: SessionDep,
-        alliance: Alliance,
-        name: str,
-        tag: str,
+        cls, session: SessionDep, alliance: Alliance, **fields: str | int
     ) -> Alliance:
-        alliance.name = name
-        alliance.tag = tag
+        for name, value in fields.items():
+            setattr(alliance, name, value)
         session.add(alliance)
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance.id)
-
-    @classmethod
-    async def update_elo(
-        cls,
-        session: SessionDep,
-        alliance: Alliance,
-        elo: int,
-    ) -> Alliance:
-        alliance.elo = elo
-        session.add(alliance)
-        await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance.id)
-
-    @classmethod
-    async def update_tier(
-        cls,
-        session: SessionDep,
-        alliance: Alliance,
-        tier: int,
-    ) -> Alliance:
-        alliance.tier = tier
-        session.add(alliance)
-        await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance.id)
-
-    @classmethod
-    def _assert_delete_confirmation(cls, alliance: Alliance, confirmation_name: str) -> None:
-        """Raise 400 unless the caller retyped the alliance name exactly."""
-        if confirmation_name.strip() != alliance.name:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ALLIANCE_NAME_CONFIRMATION_MISMATCH,
-            )
 
     @classmethod
     async def _assert_owner_is_last_member(cls, session: SessionDep, alliance: Alliance) -> None:
@@ -730,10 +605,7 @@ class AllianceService:
             .where(GameAccount.id != alliance.owner_id)
         )
         if (others.one() or 0) > 0:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=ALLIANCE_NOT_EMPTY,
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, ALLIANCE_NOT_EMPTY)
 
     @classmethod
     async def delete_alliance(
@@ -747,41 +619,23 @@ class AllianceService:
         and the alliance disappears from every listing (see the ``deleted_at``
         filter in the loaders above).
         """
-        cls._assert_delete_confirmation(alliance, confirmation_name)
+        if confirmation_name.strip() != alliance.name:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, ALLIANCE_NAME_CONFIRMATION_MISMATCH)
         await cls._assert_owner_is_last_member(session, alliance)
 
-        # Free the owner: their game account must leave so it can create or join
-        # another alliance (see `_assert_not_in_alliance`).
+        # Free the owner so it can create or join another alliance.
         members_result = await session.exec(
             select(GameAccount).where(GameAccount.alliance_id == alliance.id)
         )
         for member in members_result.all():
             member.alliance_id = None
             member.alliance_group = None
-            session.add(member)
 
-        # Remove all officers
-        officers_result = await session.exec(
-            select(AllianceOfficer).where(AllianceOfficer.alliance_id == alliance.id)
-        )
-        for off in officers_result.all():
-            await session.delete(off)
-
-        # Strategists go the same way as officers — the alliance they ranked in
-        # is gone.
-        strategists_result = await session.exec(
-            select(AllianceStrategist).where(AllianceStrategist.alliance_id == alliance.id)
-        )
-        for strategist in strategists_result.all():
-            await session.delete(strategist)
-
-        # Visitors are not members, so an alliance can be "owner only" and still
-        # have spectators — drop their access along with the alliance.
-        visitors_result = await session.exec(
-            select(AllianceVisitor).where(AllianceVisitor.alliance_id == alliance.id)
-        )
-        for visitor in visitors_result.all():
-            await session.delete(visitor)
+        # Visitors are not members: an "owner only" alliance can still have some.
+        for model in (AllianceOfficer, AllianceStrategist, AllianceVisitor):
+            rows = await session.exec(select(model).where(model.alliance_id == alliance.id))
+            for row in rows.all():
+                await session.delete(row)
 
         # Pending invitations would otherwise point at an alliance nobody can see.
         invitations_result = await session.exec(
@@ -801,6 +655,17 @@ class AllianceService:
 
     # ---- Member management ----
 
+    @staticmethod
+    async def assert_room_for_member(session: SessionDep, alliance_id: uuid.UUID) -> None:
+        """Raise 409 once the alliance holds MAX_MEMBERS_PER_ALLIANCE members."""
+        count = await session.exec(
+            select(func.count(GameAccount.id)).where(GameAccount.alliance_id == alliance_id)
+        )
+        if count.one() >= MAX_MEMBERS_PER_ALLIANCE:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, alliance_max_members_reached(MAX_MEMBERS_PER_ALLIANCE)
+            )
+
     @classmethod
     async def add_member(
         cls,
@@ -813,21 +678,9 @@ class AllianceService:
         The alliance must not exceed MAX_MEMBERS_PER_ALLIANCE."""
         game_account = await session.get(GameAccount, game_account_id)
         if game_account is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=GAME_ACCOUNT_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_FOUND)
         cls._assert_not_in_alliance(game_account)
-        # Enforce member limit
-        count_result = await session.exec(
-            select(func.count(GameAccount.id)).where(GameAccount.alliance_id == alliance_id)
-        )
-        current_count = count_result.one()
-        if current_count >= MAX_MEMBERS_PER_ALLIANCE:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=alliance_max_members_reached(MAX_MEMBERS_PER_ALLIANCE),
-            )
+        await cls.assert_room_for_member(session, alliance_id)
         game_account.alliance_id = alliance_id
         session.add(game_account)
         await session.commit()
@@ -843,28 +696,13 @@ class AllianceService:
         """Remove a member from the alliance. Cannot remove the owner."""
         alliance = await cls._load_alliance_with_relations(session, alliance_id)
         if alliance is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ALLIANCE_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
         if alliance.owner_id == game_account_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=CANNOT_REMOVE_OWNER,
-            )
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, CANNOT_REMOVE_OWNER)
         game_account = await session.get(GameAccount, game_account_id)
         await cls.assert_is_alliance_member(session, game_account, alliance_id)
-        # Also remove officer status if applicable
-        officer_result = await session.exec(
-            select(AllianceOfficer).where(
-                AllianceOfficer.alliance_id == alliance_id,
-                AllianceOfficer.game_account_id == game_account_id,
-            )
-        )
-        officer = officer_result.first()
-        if officer:
-            await session.delete(officer)
-        await cls._delete_strategist_row(session, alliance_id, game_account_id)
+        await cls._delete_rank_row(session, AllianceOfficer, alliance_id, game_account_id)
+        await cls._delete_rank_row(session, AllianceStrategist, alliance_id, game_account_id)
 
         # Their champions leave with them: free the defense nodes they occupied
         await DefensePlacementService.remove_placements_for_member(
@@ -893,35 +731,17 @@ class AllianceService:
         The game account MUST already be a member of the alliance."""
         game_account = await session.get(GameAccount, game_account_id)
         if game_account is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=GAME_ACCOUNT_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_FOUND)
         # officer must be a member of the alliance
         if game_account.alliance_id != alliance_id:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=GAME_ACCOUNT_MUST_BE_MEMBER_TO_BECOME_OFFICER,
+                status.HTTP_400_BAD_REQUEST, GAME_ACCOUNT_MUST_BE_MEMBER_TO_BECOME_OFFICER
             )
-        # Check not already officer
-        existing = await session.exec(
-            select(AllianceOfficer).where(
-                AllianceOfficer.alliance_id == alliance_id,
-                AllianceOfficer.game_account_id == game_account_id,
-            )
-        )
-        if existing.first() is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=GAME_ACCOUNT_ALREADY_OFFICER,
-            )
+        if await cls._rank_row(session, AllianceOfficer, alliance_id, game_account_id):
+            raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_ALREADY_OFFICER)
         # The ranks are exclusive: an officer is never also a strategist.
-        await cls._delete_strategist_row(session, alliance_id, game_account_id)
-        officer = AllianceOfficer(
-            alliance_id=alliance_id,
-            game_account_id=game_account_id,
-        )
-        session.add(officer)
+        await cls._delete_rank_row(session, AllianceStrategist, alliance_id, game_account_id)
+        session.add(AllianceOfficer(alliance_id=alliance_id, game_account_id=game_account_id))
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance_id)
 
@@ -933,44 +753,40 @@ class AllianceService:
         game_account_id: uuid.UUID,
     ) -> Alliance:
         """Remove a game account from the alliance's officers."""
-        result = await session.exec(
-            select(AllianceOfficer).where(
-                AllianceOfficer.alliance_id == alliance_id,
-                AllianceOfficer.game_account_id == game_account_id,
-            )
-        )
-        officer = result.first()
+        officer = await cls._rank_row(session, AllianceOfficer, alliance_id, game_account_id)
         if officer is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=GAME_ACCOUNT_NOT_OFFICER,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_OFFICER)
         await session.delete(officer)
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance_id)
 
     # ---- Strategist management ----
 
+    @staticmethod
+    async def _rank_row[R: (AllianceOfficer, AllianceStrategist)](
+        session: SessionDep, model: type[R], alliance_id: uuid.UUID, game_account_id: uuid.UUID
+    ) -> R | None:
+        result = await session.exec(
+            select(model).where(
+                model.alliance_id == alliance_id, model.game_account_id == game_account_id
+            )
+        )
+        return result.first()
+
     @classmethod
-    async def _delete_strategist_row(
+    async def _delete_rank_row(
         cls,
         session: SessionDep,
+        model: type[AllianceOfficer] | type[AllianceStrategist],
         alliance_id: uuid.UUID,
         game_account_id: uuid.UUID,
     ) -> None:
-        """Drop the strategist row if there is one.
+        """Drop the rank row if there is one. Does not commit: the caller owns the transaction.
 
-        Called by every path that supersedes the rank — promotion to officer, kick,
-        leave — so the exclusivity the schema cannot enforce holds in practice.
-        Does not commit: the caller owns the transaction.
+        Every path that supersedes the strategist rank calls it, so the exclusivity
+        the schema cannot enforce holds in practice.
         """
-        result = await session.exec(
-            select(AllianceStrategist).where(
-                AllianceStrategist.alliance_id == alliance_id,
-                AllianceStrategist.game_account_id == game_account_id,
-            )
-        )
-        row = result.first()
+        row = await cls._rank_row(session, model, alliance_id, game_account_id)
         if row is not None:
             await session.delete(row)
 
@@ -988,37 +804,15 @@ class AllianceService:
         """
         game_account = await session.get(GameAccount, game_account_id)
         if game_account is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=GAME_ACCOUNT_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_FOUND)
         if game_account.alliance_id != alliance_id:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=GAME_ACCOUNT_MUST_BE_MEMBER_TO_BECOME_STRATEGIST,
+                status.HTTP_400_BAD_REQUEST, GAME_ACCOUNT_MUST_BE_MEMBER_TO_BECOME_STRATEGIST
             )
-        officer_result = await session.exec(
-            select(AllianceOfficer).where(
-                AllianceOfficer.alliance_id == alliance_id,
-                AllianceOfficer.game_account_id == game_account_id,
-            )
-        )
-        if officer_result.first() is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=OFFICER_CANNOT_BE_STRATEGIST,
-            )
-        existing = await session.exec(
-            select(AllianceStrategist).where(
-                AllianceStrategist.alliance_id == alliance_id,
-                AllianceStrategist.game_account_id == game_account_id,
-            )
-        )
-        if existing.first() is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=GAME_ACCOUNT_ALREADY_STRATEGIST,
-            )
+        if await cls._rank_row(session, AllianceOfficer, alliance_id, game_account_id):
+            raise HTTPException(status.HTTP_409_CONFLICT, OFFICER_CANNOT_BE_STRATEGIST)
+        if await cls._rank_row(session, AllianceStrategist, alliance_id, game_account_id):
+            raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_ALREADY_STRATEGIST)
         session.add(AllianceStrategist(alliance_id=alliance_id, game_account_id=game_account_id))
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance_id)
@@ -1031,18 +825,9 @@ class AllianceService:
         game_account_id: uuid.UUID,
     ) -> Alliance:
         """Demote a strategist back to plain member."""
-        result = await session.exec(
-            select(AllianceStrategist).where(
-                AllianceStrategist.alliance_id == alliance_id,
-                AllianceStrategist.game_account_id == game_account_id,
-            )
-        )
-        row = result.first()
+        row = await cls._rank_row(session, AllianceStrategist, alliance_id, game_account_id)
         if row is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=GAME_ACCOUNT_NOT_STRATEGIST,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_STRATEGIST)
         await session.delete(row)
         await session.commit()
         return await cls._load_alliance_with_relations(session, alliance_id)
@@ -1060,37 +845,17 @@ class AllianceService:
         # that would conflict with the manual officer row manipulations below.
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ALLIANCE_NOT_FOUND,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
 
-        # Target must be an existing officer
-        officer_row_result = await session.exec(
-            select(AllianceOfficer).where(
-                AllianceOfficer.alliance_id == alliance_id,
-                AllianceOfficer.game_account_id == new_owner_game_account_id,
-            )
+        officer_row = await cls._rank_row(
+            session, AllianceOfficer, alliance_id, new_owner_game_account_id
         )
-        officer_row = officer_row_result.first()
         if officer_row is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=GAME_ACCOUNT_NOT_OFFICER,
-            )
+            raise HTTPException(status.HTTP_403_FORBIDDEN, GAME_ACCOUNT_NOT_OFFICER)
 
-        former_owner_id = alliance.owner_id
-
-        # 1. Remove target from officers (they become owner)
         await session.delete(officer_row)
-
-        # 2. Add former owner as officer
-        session.add(AllianceOfficer(alliance_id=alliance_id, game_account_id=former_owner_id))
-
-        # 3. Swap ownership
+        session.add(AllianceOfficer(alliance_id=alliance_id, game_account_id=alliance.owner_id))
         alliance.owner_id = new_owner_game_account_id
-        session.add(alliance)
-
         await session.commit()
         session.expire_all()
         return await cls._load_alliance_with_relations(session, alliance_id)
@@ -1110,10 +875,7 @@ class AllianceService:
         await cls.assert_is_alliance_member(session, game_account, alliance_id)
         if group is not None:
             if group not in (1, 2, 3):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=INVALID_GROUP_VALUE,
-                )
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, INVALID_GROUP_VALUE)
             # Count current members in this group (excluding the target account)
             count_result = await session.exec(
                 select(func.count(GameAccount.id)).where(
@@ -1125,8 +887,8 @@ class AllianceService:
             current_count = count_result.one()
             if current_count >= MAX_MEMBERS_PER_GROUP:
                 raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=group_max_members_reached(group, MAX_MEMBERS_PER_GROUP),
+                    status.HTTP_409_CONFLICT,
+                    group_max_members_reached(group, MAX_MEMBERS_PER_GROUP),
                 )
         # A defender only exists on the battlegroup its owner belongs to. Moving
         # the member (or pulling them out of every group) would strand their
@@ -1144,29 +906,6 @@ class AllianceService:
     # ---- Visitor access ----
 
     @classmethod
-    async def get_member_or_visitor_account(
-        cls,
-        session: SessionDep,
-        alliance_id: uuid.UUID,
-        user_id: uuid.UUID,
-    ) -> None:
-        """Raise 403 if the user has no game account that is a member or visitor of this alliance."""
-
-        user_accounts = await cls._get_user_accounts(session, user_id)
-        # Check member
-        for acc in user_accounts:
-            if acc.alliance_id == alliance_id:
-                return
-        # Check visitor
-        for acc in user_accounts:
-            if await AllianceVisitorService.is_visitor(session, alliance_id, acc.id):
-                return
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=NOT_ALLIANCE_MEMBER,
-        )
-
-    @classmethod
     async def get_user_visitor_account(
         cls,
         session: SessionDep,
@@ -1174,15 +913,10 @@ class AllianceService:
         user_id: uuid.UUID,
     ) -> GameAccount:
         """Return the user's game account that is a visitor of this alliance. Raises 403 if not found."""
-
-        user_accounts = await cls._get_user_accounts(session, user_id)
-        for acc in user_accounts:
-            if await AllianceVisitorService.is_visitor(session, alliance_id, acc.id):
-                return acc
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=NOT_ALLIANCE_MEMBER,
-        )
+        account = await cls._visitor_account(session, alliance_id, user_id)
+        if account is None:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, NOT_ALLIANCE_MEMBER)
+        return account
 
     @classmethod
     async def get_my_visited_alliances(
@@ -1292,21 +1026,13 @@ class AllianceService:
         """True if viewer shares an alliance context (member or visitor) with target."""
 
         viewer_accounts = await cls._get_user_accounts(session, viewer_user_id)
-        viewer_alliance_ids: set[uuid.UUID] = set()
-        for acc in viewer_accounts:
-            if acc.alliance_id:
-                viewer_alliance_ids.add(acc.alliance_id)
         visits = await AllianceVisitorService.get_visited_alliances(session, viewer_user_id)
-        for v in visits:
-            viewer_alliance_ids.add(v.alliance_id)
-
+        viewer_alliance_ids = {a.alliance_id for a in viewer_accounts if a.alliance_id} | {
+            v.alliance_id for v in visits
+        }
         if not viewer_alliance_ids:
             return False
-
-        if (
-            target_game_account.alliance_id
-            and target_game_account.alliance_id in viewer_alliance_ids
-        ):
+        if target_game_account.alliance_id in viewer_alliance_ids:
             return True
 
         result = await session.exec(

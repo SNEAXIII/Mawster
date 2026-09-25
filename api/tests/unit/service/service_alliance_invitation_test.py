@@ -9,10 +9,8 @@ from src.enums.InvitationStatus import InvitationStatus
 from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceInvitation import AllianceInvitation
 from src.models.user.GameAccount import GameAccount
-from src.services.alliance.AllianceInvitationService import (
-    MAX_MEMBERS_PER_ALLIANCE,
-    AllianceInvitationService,
-)
+from src.services.alliance.AllianceInvitationService import AllianceInvitationService
+from src.services.alliance.AllianceService import MAX_MEMBERS_PER_ALLIANCE
 from tests.utils.utils_constant import ALLIANCE_NAME, ALLIANCE_TAG, GAME_PSEUDO, USER_ID
 
 # ---------------------------------------------------------------------------
@@ -177,13 +175,9 @@ class TestGetInvitationsForUser:
         acc = _make_account(user_id=USER_ID)
         inv = _make_invitation(game_account_id=acc.id)
 
-        accounts_mock = mocker.MagicMock()
-        accounts_mock.all.return_value = [acc]
-
         invitations_mock = mocker.MagicMock()
         invitations_mock.all.return_value = [inv]
-
-        session.exec = mocker.AsyncMock(side_effect=[accounts_mock, invitations_mock])
+        session.exec = mocker.AsyncMock(return_value=invitations_mock)
 
         result = await AllianceInvitationService.get_invitations_for_user(session, USER_ID)
         assert len(result) == 1
