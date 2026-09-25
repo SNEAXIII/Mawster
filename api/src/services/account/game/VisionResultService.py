@@ -13,6 +13,7 @@ from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
 from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.security.secrets import SECRET
+from src.services.account.game.VisionProgressService import VisionProgressService
 from src.utils.db import SessionDep
 
 if TYPE_CHECKING:
@@ -68,7 +69,7 @@ class VisionResultService:
             cls._fail(session, job, message)
         else:
             cls._succeed(session, job, message)
-        cls._advance(session, vision_import)
+        await cls._advance(session, vision_import)
 
         await session.commit()
 
@@ -85,17 +86,13 @@ class VisionResultService:
         The failed job already counted towards `screens_done` (a dead screenshot
         is a finished one). Relaunching it has to rewind that, or the import sits
         at `done` with a job still running, and `screens_done` overshoots
-        `screens_total` when the second result lands.
+        `screens_total` when the second result lands. Putting the job back to
+        PENDING is that rewind: the count follows the jobs.
         """
         job.status = VisionJobStatus.PENDING
         job.error = None
 
-        vision_import.screens_done = max(0, vision_import.screens_done - 1)
-        vision_import.status = (
-            VisionImportStatus.PENDING
-            if vision_import.screens_done == 0
-            else VisionImportStatus.RUNNING
-        )
+        await VisionProgressService.sync(session, vision_import)
 
         await session.commit()
 
@@ -115,8 +112,7 @@ class VisionResultService:
             # within the user's reach.
             job.status = VisionJobStatus.FAILED
             job.error = JOB_NEVER_QUEUED
-            vision_import.screens_done += 1
-            vision_import.status = vision_import.status_for_progress()
+            await VisionProgressService.sync(session, vision_import)
             await session.commit()
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
@@ -165,8 +161,7 @@ class VisionResultService:
         logger.warning("vision job %s failed: %s", job.id, job.error)
 
     @classmethod
-    def _advance(cls, session: SessionDep, vision_import: VisionImport) -> None:
+    async def _advance(cls, session: SessionDep, vision_import: VisionImport) -> None:
         """A failed screenshot still counts as a finished one — otherwise the
         import never reaches `done` and the user watches a spinner forever."""
-        vision_import.screens_done += 1
-        vision_import.status = vision_import.status_for_progress()
+        await VisionProgressService.sync(session, vision_import)

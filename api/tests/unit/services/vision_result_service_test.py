@@ -10,6 +10,7 @@ from src.enums.VisionJobStatus import VisionJobStatus
 from src.Messages.vision_messages import JOB_NEVER_QUEUED
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
+from src.models.vision.VisionPrediction import VisionPrediction
 from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.services.account.game.VisionResultService import VisionResultService
 
@@ -22,6 +23,27 @@ async def _make_job(session) -> VisionJob:
     session.add(job)
     await session.commit()
     return job
+
+
+async def _persist_import(session, *, total, statuses) -> tuple[VisionImport, list[VisionJob]]:
+    """An import and its jobs, in the database.
+
+    `screens_done` is derived from the jobs by a SQL count, so a FakeSession
+    cannot prove anything about progress: these tests need real rows.
+    """
+    vision_import = VisionImport(game_account_id=uuid.uuid4(), screens_total=total)
+    session.add(vision_import)
+    await session.commit()
+
+    jobs = []
+    for job_status in statuses:
+        job = VisionJob(
+            import_id=vision_import.id, object_key="imports/a/b/screen.png", status=job_status
+        )
+        session.add(job)
+        jobs.append(job)
+    await session.commit()
+    return vision_import, jobs
 
 
 class FakePublisher:
@@ -96,27 +118,29 @@ def _done_message(job: VisionJob, vision_import: VisionImport) -> VisionResultMe
 
 
 @pytest.mark.asyncio
-async def test_done_writes_predictions_and_advances_progress():
-    job, vision_import = _job(), _import(total=2, done=0)
-    session = FakeSession(job, vision_import)
+async def test_done_writes_predictions_and_advances_progress(session):
+    vision_import, jobs = await _persist_import(
+        session, total=2, statuses=(VisionJobStatus.PENDING, VisionJobStatus.PENDING)
+    )
 
-    await VisionResultService.handle(session, _done_message(job, vision_import))
+    await VisionResultService.handle(session, _done_message(jobs[0], vision_import))
 
-    assert job.status == VisionJobStatus.DONE
+    assert jobs[0].status == VisionJobStatus.DONE
     assert vision_import.screens_done == 1
     assert vision_import.status == VisionImportStatus.RUNNING
-    predictions = [o for o in session.added if o.__class__.__name__ == "VisionPrediction"]
+    predictions = (await session.exec(select(VisionPrediction))).all()
     assert len(predictions) == 1
     assert predictions[0].champion_name == "Hulk"
     assert predictions[0].signature == 200
 
 
 @pytest.mark.asyncio
-async def test_last_job_flips_the_import_to_done():
-    job, vision_import = _job(), _import(total=1, done=0)
-    session = FakeSession(job, vision_import)
+async def test_last_job_flips_the_import_to_done(session):
+    vision_import, jobs = await _persist_import(
+        session, total=1, statuses=(VisionJobStatus.PENDING,)
+    )
 
-    await VisionResultService.handle(session, _done_message(job, vision_import))
+    await VisionResultService.handle(session, _done_message(jobs[0], vision_import))
 
     assert vision_import.screens_done == 1
     assert vision_import.status == VisionImportStatus.DONE
@@ -182,12 +206,14 @@ async def test_result_for_a_cancelled_import_is_dropped():
 
 
 @pytest.mark.asyncio
-async def test_failure_is_terminal_and_never_requeues():
+async def test_failure_is_terminal_and_never_requeues(session):
     """A screenshot that fails does so deterministically — a blurry image will be
     blurry again. No automatic retry: the job dies with its error, and the user
     decides whether to relaunch it (see the retry endpoint)."""
-    job, vision_import = _job(attempts=0), _import(total=2, done=0)
-    session = FakeSession(job, vision_import)
+    vision_import, jobs = await _persist_import(
+        session, total=2, statuses=(VisionJobStatus.PENDING, VisionJobStatus.PENDING)
+    )
+    job = jobs[0]
     message = VisionResultMessage(
         job_id=job.id, import_id=vision_import.id, status="failed", error="ocr blew up"
     )
@@ -203,9 +229,11 @@ async def test_failure_is_terminal_and_never_requeues():
 
 
 @pytest.mark.asyncio
-async def test_a_failed_last_job_still_completes_the_import():
-    job, vision_import = _job(), _import(total=1, done=0)
-    session = FakeSession(job, vision_import)
+async def test_a_failed_last_job_still_completes_the_import(session):
+    vision_import, jobs = await _persist_import(
+        session, total=1, statuses=(VisionJobStatus.PENDING,)
+    )
+    job = jobs[0]
     message = VisionResultMessage(
         job_id=job.id, import_id=vision_import.id, status="failed", error="not a roster"
     )
@@ -216,15 +244,16 @@ async def test_a_failed_last_job_still_completes_the_import():
 
 
 @pytest.mark.asyncio
-async def test_retry_requeues_the_job_and_rewinds_the_progress():
+async def test_retry_requeues_the_job_and_rewinds_the_progress(session):
     """The failed job already counted as finished. Relaunching it must undo that,
     or the import ends up `done` with a job still running, and screens_done
     overshoots screens_total when the result comes back."""
-    job = _job(status=VisionJobStatus.FAILED, attempts=1)
-    job.error = "not a roster"
-    vision_import = _import(total=2, done=2)
+    vision_import, jobs = await _persist_import(
+        session, total=2, statuses=(VisionJobStatus.FAILED, VisionJobStatus.DONE)
+    )
     vision_import.status = VisionImportStatus.DONE
-    session = FakeSession(job, vision_import)
+    job = jobs[0]
+    job.error = "not a roster"
     publisher = FakePublisher()
 
     await VisionResultService.retry_job(session, publisher, job, vision_import)
@@ -237,28 +266,29 @@ async def test_retry_requeues_the_job_and_rewinds_the_progress():
 
 
 @pytest.mark.asyncio
-async def test_retry_of_the_only_job_puts_the_import_back_to_pending():
-    job = _job(status=VisionJobStatus.FAILED, attempts=1)
-    vision_import = _import(total=1, done=1)
+async def test_retry_of_the_only_job_puts_the_import_back_to_pending(session):
+    vision_import, jobs = await _persist_import(
+        session, total=1, statuses=(VisionJobStatus.FAILED,)
+    )
     vision_import.status = VisionImportStatus.DONE
-    session = FakeSession(job, vision_import)
 
-    await VisionResultService.retry_job(session, FakePublisher(), job, vision_import)
+    await VisionResultService.retry_job(session, FakePublisher(), jobs[0], vision_import)
 
     assert vision_import.screens_done == 0
     assert vision_import.status == VisionImportStatus.PENDING
 
 
 @pytest.mark.asyncio
-async def test_retry_reverts_to_failed_when_publish_fails():
+async def test_retry_reverts_to_failed_when_publish_fails(session):
     """A publish failure after the rewind-commit must not strand the job: only
     FAILED jobs are retryable, so a job left PENDING-but-unqueued would be
     unreachable forever. The revert must restore the exact pre-retry state."""
-    job = _job(status=VisionJobStatus.FAILED, attempts=1)
-    job.error = "not a roster"
-    vision_import = _import(total=2, done=2)
+    vision_import, jobs = await _persist_import(
+        session, total=2, statuses=(VisionJobStatus.FAILED, VisionJobStatus.DONE)
+    )
     vision_import.status = VisionImportStatus.DONE
-    session = FakeSession(job, vision_import)
+    job = jobs[0]
+    job.error = "not a roster"
 
     publisher = RaisingPublisher()
 
@@ -270,8 +300,6 @@ async def test_retry_reverts_to_failed_when_publish_fails():
     assert job.error == JOB_NEVER_QUEUED
     assert vision_import.screens_done == 2
     assert vision_import.status == VisionImportStatus.DONE
-    # Rewind commit + compensating revert commit.
-    assert session.commits == 2
 
 
 @pytest.mark.asyncio

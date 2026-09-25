@@ -39,6 +39,7 @@ from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
 from src.security.secrets import SECRET
 from src.services.account.game.VisionDatasetService import ConfirmedRow, VisionDatasetService
+from src.services.account.game.VisionProgressService import VisionProgressService
 from src.storage.base import Storage, import_prefix, screen_key
 from src.utils.db import SessionDep
 
@@ -373,11 +374,11 @@ class VisionImportService:
     ) -> None:
         """Queue a single job, accounting for it if the broker refuses.
 
-        The count matters more than it looks: a job that is never published
-        produces no worker result, and the worker result is the only thing that
-        ever increments `screens_done`. Without the increment here the import
-        would sit one screenshot short of its total forever, which reads as a
-        spinner that never stops.
+        Failing it here matters more than it looks: a job that is never published
+        produces no worker result, so nothing else would ever move it out of
+        PENDING. It would not count as finished, and the import would sit one
+        screenshot short of its total forever, which reads as a spinner that
+        never stops.
         """
         try:
             await publisher.publish_job(
@@ -387,22 +388,21 @@ class VisionImportService:
                 object_key=job.object_key,
             )
         except Exception as error:
-            cls._fail_unqueued(session, vision_import, job)
+            await cls._fail_unqueued(session, vision_import, job)
             await session.commit()
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=BROKER_UNAVAILABLE
             ) from error
 
     @classmethod
-    def _fail_unqueued(
+    async def _fail_unqueued(
         cls, session: SessionDep, vision_import: VisionImport, job: VisionJob
     ) -> None:
         """Mark a job that will never reach a worker, and advance the import past it."""
         job.status = VisionJobStatus.FAILED
         job.error = JOB_NEVER_QUEUED
-        vision_import.screens_done += 1
-        vision_import.status = vision_import.status_for_progress()
         session.add(job)
+        await VisionProgressService.sync(session, vision_import)
         session.add(vision_import)
 
     @classmethod
@@ -452,13 +452,12 @@ class VisionImportService:
             except HTTPException as error:
                 job.status = VisionJobStatus.FAILED
                 job.error = str(error.detail)
-                vision_import.screens_done += 1
                 session.add(job)
                 continue
             job.status = VisionJobStatus.PENDING
             session.add(job)
 
-        vision_import.status = vision_import.status_for_progress()
+        await VisionProgressService.sync(session, vision_import)
         session.add(vision_import)
         await session.commit()
         await session.refresh(vision_import)
