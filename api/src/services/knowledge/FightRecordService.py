@@ -5,7 +5,7 @@ from collections import defaultdict
 from fastapi import HTTPException
 from sqlalchemy import func, literal, null, union_all
 from sqlalchemy.orm import aliased, selectinload
-from sqlmodel import and_, select
+from sqlmodel import select
 from starlette import status
 
 from src.dto.admin.dto_fight_record import (
@@ -54,64 +54,51 @@ class FightRecordService:
         stmt = (
             select(WarDefensePlacement)
             .where(
-                and_(
-                    WarDefensePlacement.war_id == war.id,
-                    WarDefensePlacement.attacker_champion_user_id.isnot(None),
-                    WarDefensePlacement.is_fight_not_done.is_(False),
-                )
+                WarDefensePlacement.war_id == war.id,
+                WarDefensePlacement.attacker_champion_user_id.isnot(None),
+                WarDefensePlacement.is_fight_not_done.is_(False),
             )
             .options(selectinload(WarDefensePlacement.attacker_champion_user))
         )
-        result = await session.exec(stmt)
-        placements = result.all()
-
-        for placement in placements:
-            attacker_cu: ChampionUser = placement.attacker_champion_user
-            record = WarFightRecord(
-                war_defense_placement_id=placement.id,
-                rank=attacker_cu.rank,
-                ascension=attacker_cu.ascension,
-            )
-            session.add(record)
-            await session.flush()
-            await cls._link_note(session, placement, record)
-
-        await session.commit()
-
-        await session.refresh(war)
+        for placement in (await session.exec(stmt)).all():
+            await cls._create_record(session, placement)
         war.snapshotted_at = utcnow()
-        session.add(war)
         await session.commit()
 
-    @classmethod
-    async def _link_note(
-        cls, session: SessionDep, placement: WarDefensePlacement, record: WarFightRecord
-    ) -> None:
+    @staticmethod
+    async def _record_for(session: SessionDep, placement_id: uuid.UUID) -> WarFightRecord | None:
+        result = await session.exec(
+            select(WarFightRecord).where(WarFightRecord.war_defense_placement_id == placement_id)
+        )
+        return result.first()
+
+    @staticmethod
+    async def _create_record(session: SessionDep, placement: WarDefensePlacement) -> None:
+        """Freeze the attacker's rank on a new record, and link the node's note to it."""
+        attacker = placement.attacker_champion_user
+        record = WarFightRecord(
+            war_defense_placement_id=placement.id,
+            rank=attacker.rank,
+            ascension=attacker.ascension,
+        )
+        session.add(record)
+        await session.flush()
         note = (
             await session.exec(
                 select(WarFightNote).where(
-                    and_(
-                        WarFightNote.war_id == placement.war_id,
-                        WarFightNote.battlegroup == placement.battlegroup,
-                        WarFightNote.node_number == placement.node_number,
-                    )
+                    WarFightNote.war_id == placement.war_id,
+                    WarFightNote.battlegroup == placement.battlegroup,
+                    WarFightNote.node_number == placement.node_number,
                 )
             )
         ).first()
         if note is not None:
             note.war_fight_record_id = record.id
-            session.add(note)
 
     @classmethod
     async def drop_node_record(cls, session: SessionDep, placement_id: uuid.UUID) -> None:
         """Delete a node's Fight Record, unlinking its Fight Note first — call before deleting a placement."""
-        record = (
-            await session.exec(
-                select(WarFightRecord).where(
-                    WarFightRecord.war_defense_placement_id == placement_id
-                )
-            )
-        ).first()
+        record = await cls._record_for(session, placement_id)
         if record is None:
             return
         notes = await session.exec(
@@ -119,7 +106,6 @@ class FightRecordService:
         )
         for note in notes.all():
             note.war_fight_record_id = None
-            session.add(note)
         await session.flush()
         await session.delete(record)
         await session.commit()
@@ -142,37 +128,19 @@ class FightRecordService:
         if placement.attacker_champion_user_id is None or placement.is_fight_not_done:
             await cls.drop_node_record(session, placement_id)
             return
-        attacker = placement.attacker_champion_user
-        record = (
-            await session.exec(
-                select(WarFightRecord).where(
-                    WarFightRecord.war_defense_placement_id == placement_id
-                )
-            )
-        ).first()
+        record = await cls._record_for(session, placement_id)
         if record is None:
-            record = WarFightRecord(
-                war_defense_placement_id=placement.id,
-                rank=attacker.rank,
-                ascension=attacker.ascension,
-            )
-            session.add(record)
-            await session.flush()
-            await cls._link_note(session, placement, record)
+            await cls._create_record(session, placement)
         elif refreeze:
-            record.rank = attacker.rank
-            record.ascension = attacker.ascension
-            session.add(record)
+            record.rank = placement.attacker_champion_user.rank
+            record.ascension = placement.attacker_champion_user.ascension
         await session.commit()
 
     @classmethod
     async def assert_user_in_alliance(cls, session: SessionDep, user_id: uuid.UUID) -> None:
         member_result = await session.exec(
             select(GameAccount).where(
-                and_(
-                    GameAccount.user_id == user_id,
-                    GameAccount.alliance_id.isnot(None),
-                )
+                GameAccount.user_id == user_id, GameAccount.alliance_id.isnot(None)
             )
         )
         if member_result.first() is not None:
@@ -185,8 +153,7 @@ class FightRecordService:
         )
         if visitor_result.first() is None:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User must belong to or visit an alliance",
+                status.HTTP_403_FORBIDDEN, "User must belong to or visit an alliance"
             )
 
     @classmethod
@@ -195,10 +162,7 @@ class FightRecordService:
     ) -> list[uuid.UUID]:
         member_result = await session.exec(
             select(GameAccount.alliance_id).where(
-                and_(
-                    GameAccount.user_id == user_id,
-                    GameAccount.alliance_id.isnot(None),
-                )
+                GameAccount.user_id == user_id, GameAccount.alliance_id.isnot(None)
             )
         )
         member_ids: set[uuid.UUID] = set(member_result.all())
@@ -223,8 +187,6 @@ class FightRecordService:
             return [
                 model.season_id.in_(select(Season.id).where(Season.status == SeasonStatus.active))
             ]
-        if season_selector == SeasonSelectorType.Specific and season_id:
-            return [model.season_id == season_id]
         if season_id:
             return [model.season_id == season_id]
         return []
@@ -232,7 +194,7 @@ class FightRecordService:
     @classmethod
     # Refactor candidate, the worst in the codebase: 27 complexity, 27 branches, 84
     # statements. Filter building and result shaping are two jobs in one function.
-    async def get_fight_records(  # noqa: C901, PLR0912, PLR0915
+    async def get_fight_records(  # noqa: C901, PLR0912
         cls,
         session: SessionDep,
         accessible_alliance_ids: list[uuid.UUID],
@@ -325,7 +287,7 @@ class FightRecordService:
                 .join(reg_defender, WarDefensePlacement.champion_id == reg_defender.id)
                 .join(GameAccount, ChampionUser.game_account_id == GameAccount.id)
                 .outerjoin(reg_season, War.season_id == reg_season.id)
-                .where(and_(*reg_conds))
+                .where(*reg_conds)
             )
             sub_queries.append(reg_sub)
 
@@ -387,7 +349,7 @@ class FightRecordService:
                 .join(imp_attacker, WarFightRecordImport.champion_id == imp_attacker.id)
                 .join(imp_defender, WarFightRecordImport.defender_champion_id == imp_defender.id)
                 .outerjoin(imp_season, WarFightRecordImport.season_id == imp_season.id)
-                .where(and_(*imp_conds))
+                .where(*imp_conds)
             )
             sub_queries.append(imp_sub)
 
@@ -423,48 +385,7 @@ class FightRecordService:
             .all()
         )
 
-        # Map raw rows → WarFightRecordResponse
-        items = [
-            WarFightRecordResponse(
-                id=row["id"],
-                is_imported=row["is_imported"],
-                war_id=row["war_id"],
-                alliance_id=row["alliance_id"],
-                alliance_name=row["alliance_name"],
-                alliance_tag=row["alliance_tag"],
-                season_id=row["season_id"],
-                season_number=row["season_number"],
-                game_account_pseudo=row["game_account_pseudo"],
-                battlegroup=row["battlegroup"],
-                node_number=row["node_number"],
-                tier=row["tier"],
-                champion_id=row["champion_id"],
-                champion_name=row["champion_name"],
-                champion_class=row["champion_class"],
-                image_url=row["image_url"],
-                stars=row["stars"],
-                rank=row["rank"],
-                ascension=row["ascension"],
-                defender_champion_id=row["defender_champion_id"],
-                defender_champion_name=row["defender_champion_name"],
-                defender_champion_class=row["defender_champion_class"],
-                defender_image_url=row["defender_image_url"],
-                defender_stars=row["defender_stars"],
-                defender_rank=row["defender_rank"],
-                defender_ascension=row["defender_ascension"],
-                ko_count=row["ko_count"],
-                is_planning_error=bool(row["is_planning_error"]),
-                assisted=bool(row["assisted"]),
-                war_boost=row["war_boost"],
-                has_defense_boost=bool(row["has_defense_boost"]),
-                has_power_boost=bool(row["has_power_boost"]),
-                has_specials_boost=bool(row["has_specials_boost"]),
-                synergies=[],
-                prefights=[],
-                created_at=row["created_at"],
-            )
-            for row in rows
-        ]
+        items = [WarFightRecordResponse.model_validate(dict(row)) for row in rows]
 
         attacker_by_record = {
             row["id"]: row["attacker_champion_user_id"] for row in rows if not row["is_imported"]
@@ -473,49 +394,8 @@ class FightRecordService:
         await cls._attach_saga_roles(session, regular)
         await cls._attach_team(session, regular, attacker_by_record)
 
-        # Attach war fight notes to regular (non-imported) records in this page
-        record_ids = [it.id for it in items if not it.is_imported]
-        if record_ids:
-            notes = (
-                await session.exec(
-                    select(WarFightNote).where(
-                        and_(
-                            WarFightNote.war_fight_record_id.in_(record_ids),
-                            WarFightNote.deleted_at.is_(None),
-                        )
-                    )
-                )
-            ).all()
-            note_by_record = {n.war_fight_record_id: n.content for n in notes}
-            note_id_by_record = {n.war_fight_record_id: n.id for n in notes}
-            # Pseudo of the author of the latest note version (updated_by).
-            editor_ids = {n.updated_by_game_account_id for n in notes}
-            pseudo_by_account = {}
-            if editor_ids:
-                editor_accounts = (
-                    await session.exec(
-                        select(GameAccount.id, GameAccount.game_pseudo).where(
-                            GameAccount.id.in_(editor_ids)
-                        )
-                    )
-                ).all()
-                pseudo_by_account = dict(editor_accounts)
-            author_by_record = {
-                n.war_fight_record_id: pseudo_by_account.get(n.updated_by_game_account_id)
-                for n in notes
-            }
-            counts = await ModerationService.pending_report_counts(session, [n.id for n in notes])
-            blocked_records = {
-                n.war_fight_record_id for n in notes if counts.get(n.id, 0) >= AUTO_BLOCK_THRESHOLD
-            }
-            for it in items:
-                it.note_id = note_id_by_record.get(it.id)
-                it.note_author = author_by_record.get(it.id)
-                if it.id in blocked_records:
-                    it.note = None
-                    it.note_blocked = True
-                else:
-                    it.note = note_by_record.get(it.id)
+        if regular:
+            await cls._attach_notes(session, regular)
 
         return PaginatedFightRecordsResponse(
             items=items,
@@ -524,6 +404,34 @@ class FightRecordService:
             size=size,
             pages=max(1, math.ceil(total / size)),
         )
+
+    @staticmethod
+    async def _attach_notes(session: SessionDep, items: list[WarFightRecordResponse]) -> None:
+        notes = (
+            await session.exec(
+                select(WarFightNote).where(
+                    WarFightNote.war_fight_record_id.in_([it.id for it in items]),
+                    WarFightNote.deleted_at.is_(None),
+                )
+            )
+        ).all()
+        note_by_record = {n.war_fight_record_id: n for n in notes}
+        # The author shown is whoever wrote the latest version.
+        editors = await session.exec(
+            select(GameAccount.id, GameAccount.game_pseudo).where(
+                GameAccount.id.in_({n.updated_by_game_account_id for n in notes})
+            )
+        )
+        pseudo_by_account = dict(editors.all())
+        counts = await ModerationService.pending_report_counts(session, [n.id for n in notes])
+        for it in items:
+            note = note_by_record.get(it.id)
+            if note is None:
+                continue
+            it.note_id = note.id
+            it.note_author = pseudo_by_account.get(note.updated_by_game_account_id)
+            it.note_blocked = counts.get(note.id, 0) >= AUTO_BLOCK_THRESHOLD
+            it.note = None if it.note_blocked else note.content
 
     @classmethod
     async def _attach_saga_roles(
