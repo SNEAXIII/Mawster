@@ -7,6 +7,11 @@ Cypress.on('uncaught:exception', (err) => {
   if (err.message.includes('ResizeObserver')) return false;
 });
 
+// Skip the first-visit language picker, which would cover every page
+Cypress.on('window:before:load', (win) => {
+  if (!win.localStorage.getItem('mawster-locale')) win.localStorage.setItem('mawster-locale', 'en');
+});
+
 // Remove the default 10ms per-keystroke delay globally
 Cypress.Commands.overwrite<'type', 'element'>('type', (originalFn, subject, text, options) => {
   return originalFn(subject, text, { delay: 0, ...options });
