@@ -1,4 +1,5 @@
 import uuid
+from collections import defaultdict
 
 from fastapi import HTTPException
 from sqlalchemy import Integer, case, cast, func, or_
@@ -752,6 +753,40 @@ class WarService:
 
     # ─── Attacker endpoints ───────────────────────────────────────────────────
 
+    @staticmethod
+    async def _taken_attackers(
+        session: SessionDep, war: War | None, battlegroup: int, node_number: int | None
+    ) -> tuple[dict[uuid.UUID, set[uuid.UUID]], dict[uuid.UUID, uuid.UUID]]:
+        """Per account: attackers already used (nodes + synergy + prefight), and the one on node_number."""
+        taken: dict[uuid.UUID, set[uuid.UUID]] = defaultdict(set)
+        replacing: dict[uuid.UUID, uuid.UUID] = {}
+        if war is None:
+            return taken, replacing
+        node_rows = await session.exec(
+            select(
+                ChampionUser.game_account_id,
+                WarDefensePlacement.attacker_champion_user_id,
+                WarDefensePlacement.node_number,
+            )
+            .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+            .where(
+                WarDefensePlacement.war_id == war.id, WarDefensePlacement.battlegroup == battlegroup
+            )
+        )
+        for account_id, champion_user_id, node in node_rows.all():
+            taken[account_id].add(champion_user_id)
+            if node == node_number:
+                replacing[account_id] = champion_user_id
+        for model in (WarSynergyAttacker, WarPrefightAttacker):
+            rows = await session.exec(
+                select(model.game_account_id, model.champion_user_id).where(
+                    model.war_id == war.id, model.battlegroup == battlegroup
+                )
+            )
+            for account_id, champion_user_id in rows.all():
+                taken[account_id].add(champion_user_id)
+        return taken, replacing
+
     @classmethod
     async def get_available_attackers(
         cls,
@@ -779,90 +814,27 @@ class WarService:
         )
         members = members_result.all()
 
-        # Get champion_user_ids already placed in regular defense for members currently in this BG.
-        defense_conditions = and_(
-            DefensePlacement.alliance_id == alliance_id,
-            GameAccount.alliance_group == battlegroup,
-        )
-        if attacker_id is not None:
-            defense_conditions = and_(
-                defense_conditions, DefensePlacement.game_account_id == attacker_id
+        defense_result = await session.exec(
+            select(DefensePlacement.champion_user_id).where(
+                DefensePlacement.alliance_id == alliance_id,
+                col(DefensePlacement.game_account_id).in_([m.id for m in members]),
             )
-        request_sql = (
-            select(DefensePlacement.champion_user_id)
-            .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
-            .where(defense_conditions)
         )
-        defense_result = await session.exec(request_sql)
         defense_champion_user_ids = set(defense_result.all())
         banned_champion_ids: set[uuid.UUID] = (
             {ban.champion_id for ban in war.bans} if war else set()
         )
+        taken, replacing = await cls._taken_attackers(session, war, battlegroup, node_number)
         saga = await SagaService.resolve_current(session)
         result: list[AvailableAttackerResponse] = []
         for game_account in members:
-            all_attackers_ids: set[uuid.UUID] = set()
-            if war:
-                node_result = await session.exec(
-                    select(WarDefensePlacement)
-                    .join(
-                        ChampionUser,
-                        WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
-                    )
-                    .where(
-                        and_(
-                            WarDefensePlacement.war_id == war.id,
-                            WarDefensePlacement.battlegroup == battlegroup,
-                            ChampionUser.game_account_id == game_account.id,
-                        )
-                    )
-                )
-                node_placements = node_result.all()
-                all_attackers_ids = {p.attacker_champion_user_id for p in node_placements}
-                synergy_result = await session.exec(
-                    select(WarSynergyAttacker).where(
-                        and_(
-                            WarSynergyAttacker.war_id == war.id,
-                            WarSynergyAttacker.battlegroup == battlegroup,
-                            WarSynergyAttacker.game_account_id == game_account.id,
-                        )
-                    )
-                )
-                synergy_ids = {s.champion_user_id for s in synergy_result.all()}
-                all_attackers_ids = all_attackers_ids | synergy_ids
-                prefight_result = await session.exec(
-                    select(WarPrefightAttacker).where(
-                        and_(
-                            WarPrefightAttacker.war_id == war.id,
-                            WarPrefightAttacker.battlegroup == battlegroup,
-                            WarPrefightAttacker.game_account_id == game_account.id,
-                        )
-                    )
-                )
-                prefight_ids = {pf.champion_user_id for pf in prefight_result.all()}
-                all_attackers_ids = all_attackers_ids | prefight_ids
-            # When replacing the attacker on a specific node, exclude that slot from the limit count.
-            ids_for_limit = all_attackers_ids
-            if war and node_number is not None:
-                replacing_id = next(
-                    (
-                        p.attacker_champion_user_id
-                        for p in node_placements
-                        if p.node_number == node_number
-                    ),
-                    None,
-                )
-                if replacing_id is not None:
-                    ids_for_limit = all_attackers_ids - {replacing_id}
+            used = taken[game_account.id]
+            full = war is not None and len(used - {replacing.get(game_account.id)}) >= max_attackers
             for champion_user in game_account.roster:
-                if champion_user.id in defense_champion_user_ids:
-                    continue
-                if champion_user.champion_id in banned_champion_ids:
-                    continue
                 if (
-                    war
-                    and len(ids_for_limit) >= max_attackers
-                    and champion_user.id not in all_attackers_ids
+                    champion_user.id in defense_champion_user_ids
+                    or champion_user.champion_id in banned_champion_ids
+                    or (full and champion_user.id not in used)
                 ):
                     continue
                 att, dfn = saga.get(champion_user.champion_id, (False, False))
