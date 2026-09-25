@@ -3,6 +3,18 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.20.1](https://github.com/SNEAXIII/Mawster/compare/v1.20.0...v1.20.1) (2026-09-25)
+
+
+### Corrigé
+
+* stop an AI import from hanging one screenshot short ([#603](https://github.com/SNEAXIII/Mawster/issues/603)) ([deddcbb](https://github.com/SNEAXIII/Mawster/commit/deddcbb01d1ad3a71976e642145726bc927c6f65))
+
+
+### Modifié
+
+* batch attacker lookups in get_available_attackers ([#601](https://github.com/SNEAXIII/Mawster/issues/601)) ([af75c00](https://github.com/SNEAXIII/Mawster/commit/af75c00a3902cfa80d53d62dd57202e656d87e74))
+
 ## [1.20.0](https://github.com/SNEAXIII/Mawster/compare/v1.19.0...v1.20.0) (2026-09-23)
 
 
