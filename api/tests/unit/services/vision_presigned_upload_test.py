@@ -86,8 +86,19 @@ class FakeSession:
     async def commit(self) -> None:
         self.commits += 1
 
-    async def refresh(self, _obj) -> None:
+    async def flush(self) -> None:
         pass
+
+    async def refresh(self, obj) -> None:
+        """Stands in for the SQL count VisionProgressService writes and reads back.
+
+        The service derives `screens_done` from the jobs in terminal status, so
+        the stub has to do the same or every progress assertion below reads 0.
+        """
+        if isinstance(obj, VisionImport):
+            obj.screens_done = sum(
+                job.status in (VisionJobStatus.DONE, VisionJobStatus.FAILED) for job in self._jobs
+            )
 
     async def exec(self, _statement):
         return FakeResult(self._jobs)
