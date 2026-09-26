@@ -27,7 +27,7 @@ class AuthService:
     async def require_admin(
         cls,
         token: Annotated[str, Depends(oauth2_scheme)],
-    ) -> True:
+    ) -> bool:
         role = JWTService.decode_jwt(token)["role"]
         if role not in (Roles.ADMIN, Roles.SUPER_ADMIN):
             raise INSUFFISANT_ROLE_EXCEPTION
@@ -37,7 +37,7 @@ class AuthService:
     async def require_super_admin(
         cls,
         token: Annotated[str, Depends(oauth2_scheme)],
-    ) -> True:
+    ) -> bool:
         role = JWTService.decode_jwt(token)["role"]
         if role != Roles.SUPER_ADMIN:
             raise INSUFFISANT_ROLE_EXCEPTION

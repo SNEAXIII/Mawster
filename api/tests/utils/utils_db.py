@@ -1,11 +1,11 @@
 import os
 import time
+from collections.abc import AsyncGenerator, Sequence
 from pathlib import Path
 from uuid import uuid4
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -28,7 +28,7 @@ sqlite_async_engine = create_async_engine(
     echo=IS_ECHO_ASYNC,
 )
 
-Session = sessionmaker(
+Session = async_sessionmaker(
     bind=sqlite_async_engine,
     class_=AsyncSession,
     expire_on_commit=False,
@@ -90,12 +90,12 @@ def reset_test_db():
     _truncate_all()
 
 
-async def get_test_session() -> AsyncSession:
+async def get_test_session() -> AsyncGenerator[AsyncSession]:
     async with Session() as session:
         yield session
 
 
-async def load_objects(objects: list[SQLModel]) -> None:
+async def load_objects(objects: Sequence[SQLModel]) -> None:
     async with AsyncSession(
         sqlite_async_engine,
         expire_on_commit=False,
