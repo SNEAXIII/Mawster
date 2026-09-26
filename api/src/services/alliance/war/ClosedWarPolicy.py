@@ -23,7 +23,7 @@ class ClosedWarPolicy:
     @staticmethod
     def assert_open(war: War) -> None:
         if war.status == WarStatus.ended:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=WAR_CLOSED)
+            raise HTTPException(status.HTTP_409_CONFLICT, WAR_CLOSED)
 
     @staticmethod
     def is_map_correctable(war: War, latest_season: Season | None) -> bool:
@@ -38,7 +38,7 @@ class ClosedWarPolicy:
             return
         await AllianceService.require_strategist(session, war.alliance_id, user_id)
         if not cls.is_map_correctable(war, await SeasonService.get_display_season(session)):
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=WAR_MAP_SEALED)
+            raise HTTPException(status.HTTP_409_CONFLICT, WAR_MAP_SEALED)
 
     @staticmethod
     def is_attacker_locked(war: War, placement: WarDefensePlacement) -> bool:
@@ -53,6 +53,4 @@ class ClosedWarPolicy:
     @classmethod
     def assert_attacker_unlocked(cls, war: War, placement: WarDefensePlacement) -> None:
         if cls.is_attacker_locked(war, placement):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail=ATTACKER_LEFT_BATTLEGROUP_LOCKED
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, ATTACKER_LEFT_BATTLEGROUP_LOCKED)

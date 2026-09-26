@@ -4,7 +4,7 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
-from sqlmodel import and_, or_, select
+from sqlmodel import or_, select
 from starlette import status
 
 from src.dto.admin.dto_moderation import (
@@ -41,57 +41,42 @@ def _revision_pseudo(
     return None
 
 
+def _mute_is_active():
+    return UserMute.lifted_at.is_(None), or_(
+        UserMute.expires_at.is_(None), UserMute.expires_at > utcnow()
+    )
+
+
 class ModerationService:
     @classmethod
     async def is_user_muted(cls, session: SessionDep, user_id: uuid.UUID) -> bool:
-        now = utcnow()
-        mute = (
-            await session.exec(
-                select(UserMute).where(
-                    and_(
-                        UserMute.user_id == user_id,
-                        UserMute.lifted_at.is_(None),
-                        or_(UserMute.expires_at.is_(None), UserMute.expires_at > now),
-                    )
-                )
-            )
-        ).first()
-        return mute is not None
+        return await cls.get_active_mute(session, user_id) is not None
 
     @classmethod
     async def report_note(cls, session, note_id, reporter_account_id, reporter_user_id, body):
-        note = (await session.exec(select(WarFightNote).where(WarFightNote.id == note_id))).first()
+        note = await session.get(WarFightNote, note_id)
         if note is None or note.deleted_at is not None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Note not found")
 
         if await cls.is_user_muted(session, reporter_user_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are muted and cannot report",
-            )
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "You are muted and cannot report")
 
         if note.whitelisted_at is not None:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Note already reviewed; cannot report until it is edited",
+                status.HTTP_409_CONFLICT, "Note already reviewed; cannot report until it is edited"
             )
 
         existing = (
             await session.exec(
                 select(NoteReport).where(
-                    and_(
-                        NoteReport.note_id == note_id,
-                        NoteReport.reporter_game_account_id == reporter_account_id,
-                        NoteReport.status == NoteReportStatus.pending,
-                    )
+                    NoteReport.note_id == note_id,
+                    NoteReport.reporter_game_account_id == reporter_account_id,
+                    NoteReport.status == NoteReportStatus.pending,
                 )
             )
         ).first()
         if existing is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="You already reported this note",
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, "You already reported this note")
 
         report = NoteReport(
             note_id=note_id,
@@ -106,12 +91,10 @@ class ModerationService:
 
     @classmethod
     async def resolve_report(cls, session, report_id, admin_user_id, body):
-        report = (await session.exec(select(NoteReport).where(NoteReport.id == report_id))).first()
+        report = await session.get(NoteReport, report_id)
         if report is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Report not found")
-        note = (
-            await session.exec(select(WarFightNote).where(WarFightNote.id == report.note_id))
-        ).first()
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Report not found")
+        note = await session.get(WarFightNote, report.note_id)
         now = utcnow()
 
         if body.action == "delete":
@@ -137,10 +120,7 @@ class ModerationService:
         pending = (
             await session.exec(
                 select(NoteReport).where(
-                    and_(
-                        NoteReport.note_id == note.id,
-                        NoteReport.status == NoteReportStatus.pending,
-                    )
+                    NoteReport.note_id == note.id, NoteReport.status == NoteReportStatus.pending
                 )
             )
         ).all()
@@ -148,8 +128,6 @@ class ModerationService:
             r.status = new_status
             r.resolved_by_id = admin_user_id
             r.resolved_at = now
-            session.add(r)
-        session.add(note)
         await session.commit()
 
     @classmethod
@@ -169,21 +147,12 @@ class ModerationService:
     @classmethod
     async def lift_mute(cls, session, user_id, admin_user_id, commit=True):
         now = utcnow()
-        actives = (
-            await session.exec(
-                select(UserMute).where(
-                    and_(
-                        UserMute.user_id == user_id,
-                        UserMute.lifted_at.is_(None),
-                        or_(UserMute.expires_at.is_(None), UserMute.expires_at > now),
-                    )
-                )
-            )
-        ).all()
-        for m in actives:
+        actives = await session.exec(
+            select(UserMute).where(UserMute.user_id == user_id, *_mute_is_active())
+        )
+        for m in actives.all():
             m.lifted_at = now
             m.lifted_by_id = admin_user_id
-            session.add(m)
         if commit:
             await session.commit()
 
@@ -205,10 +174,7 @@ class ModerationService:
             await session.exec(
                 select(NoteReport.note_id, func.count())
                 .where(
-                    and_(
-                        NoteReport.note_id.in_(note_ids),
-                        NoteReport.status == NoteReportStatus.pending,
-                    )
+                    NoteReport.note_id.in_(note_ids), NoteReport.status == NoteReportStatus.pending
                 )
                 .group_by(NoteReport.note_id)
             )
@@ -228,9 +194,8 @@ class ModerationService:
             .join(WarFightNote, NoteReport.note_id == WarFightNote.id)
             .join(Alliance, WarFightNote.alliance_id == Alliance.id)
             .join(GameAccount, NoteReport.reporter_game_account_id == GameAccount.id)
+            .where(*conds)
         )
-        if conds:
-            base = base.where(and_(*conds))
 
         total = (await session.exec(select(func.count()).select_from(base.subquery()))).one()
         rows = (
@@ -273,7 +238,7 @@ class ModerationService:
         ).first()
         if reported is None:
             # 404 rather than 403: do not confirm that an unreported note exists.
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Note not found")
 
         admin = aliased(User)
         rows = (
@@ -305,20 +270,13 @@ class ModerationService:
     @classmethod
     async def list_mutes(cls, session, active_only=True):
         admin = aliased(User)
-        conds = []
-        if active_only:
-            now = utcnow()
-            conds += [
-                UserMute.lifted_at.is_(None),
-                or_(UserMute.expires_at.is_(None), UserMute.expires_at > now),
-            ]
         stmt = (
             select(UserMute, User, admin)
             .join(User, UserMute.user_id == User.id)
             .join(admin, UserMute.muted_by_id == admin.id, isouter=True)
         )
-        if conds:
-            stmt = stmt.where(and_(*conds))
+        if active_only:
+            stmt = stmt.where(*_mute_is_active())
         rows = (await session.exec(stmt.order_by(UserMute.created_at.desc()))).all()
         return [
             MuteResponse(
@@ -359,15 +317,7 @@ class ModerationService:
 
     @classmethod
     async def get_active_mute(cls, session, user_id):
-        now = utcnow()
-        return (
-            await session.exec(
-                select(UserMute).where(
-                    and_(
-                        UserMute.user_id == user_id,
-                        UserMute.lifted_at.is_(None),
-                        or_(UserMute.expires_at.is_(None), UserMute.expires_at > now),
-                    )
-                )
-            )
-        ).first()
+        result = await session.exec(
+            select(UserMute).where(UserMute.user_id == user_id, *_mute_is_active())
+        )
+        return result.first()

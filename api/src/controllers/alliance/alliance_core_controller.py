@@ -194,7 +194,7 @@ async def update_alliance_elo(
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService.require_officer(session, alliance_id, current_user.id)
-    updated = await AllianceService.update_elo(session, alliance, body.elo)
+    updated = await AllianceService.update_alliance(session, alliance, elo=body.elo)
     return _to_response(updated)
 
 
@@ -210,7 +210,7 @@ async def update_alliance_tier(
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
     await AllianceService.require_officer(session, alliance_id, current_user.id)
-    updated = await AllianceService.update_tier(session, alliance, body.tier)
+    updated = await AllianceService.update_alliance(session, alliance, tier=body.tier)
     return _to_response(updated)
 
 

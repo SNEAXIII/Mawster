@@ -113,38 +113,6 @@ class TestAssertIsOwnerOrOfficer:
 
 
 # =========================================================================
-# _assert_is_owner
-# =========================================================================
-
-
-class TestAssertIsOwner:
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ("is_owner", "should_pass"),
-        [(True, True), (False, False)],
-        ids=["owner_passes", "non_owner_denied"],
-    )
-    async def test_owner_check(self, mocker, is_owner, should_pass):
-        session = _mock_session(mocker)
-        owner_acc = _make_account(user_id=USER_ID)
-        alliance = _make_alliance(owner_id=owner_acc.id)
-
-        caller_id = USER_ID if is_owner else uuid.uuid4()
-        caller_accounts = [owner_acc] if is_owner else [_make_account(user_id=caller_id)]
-
-        result_mock = mocker.MagicMock()
-        result_mock.all.return_value = caller_accounts
-        session.exec.return_value = result_mock
-
-        if should_pass:
-            await AllianceService._assert_is_owner(session, alliance, caller_id)
-        else:
-            with pytest.raises(HTTPException) as exc:
-                await AllianceService._assert_is_owner(session, alliance, caller_id)
-            assert exc.value.status_code == 403
-
-
-# =========================================================================
 # _assert_can_remove_member (new access control)
 # =========================================================================
 

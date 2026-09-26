@@ -42,8 +42,10 @@ class AllianceVisitorService:
     async def is_visitor(
         session: SessionDep, alliance_id: uuid.UUID, game_account_id: uuid.UUID
     ) -> bool:
-        visitor = await AllianceVisitorService.find_visitor(session, alliance_id, game_account_id)
-        return visitor is not None
+        return (
+            await AllianceVisitorService.find_visitor(session, alliance_id, game_account_id)
+            is not None
+        )
 
     @classmethod
     async def create_visitor(
@@ -54,15 +56,11 @@ class AllianceVisitorService:
     ) -> AllianceVisitor:
         existing = await cls.find_visitor(session, alliance_id, game_account_id)
         if existing is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=ALREADY_A_VISITOR,
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, ALREADY_A_VISITOR)
         count = await cls.count_visitors(session, alliance_id)
         if count >= MAX_VISITORS_PER_ALLIANCE:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=alliance_max_visitors_reached(MAX_VISITORS_PER_ALLIANCE),
+                status.HTTP_409_CONFLICT, alliance_max_visitors_reached(MAX_VISITORS_PER_ALLIANCE)
             )
         visitor = AllianceVisitor(
             alliance_id=alliance_id,
@@ -82,10 +80,7 @@ class AllianceVisitorService:
     ) -> None:
         visitor = await cls.find_visitor(session, alliance_id, game_account_id)
         if visitor is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=NOT_A_VISITOR,
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, NOT_A_VISITOR)
         await session.delete(visitor)
         await session.commit()
 
@@ -118,19 +113,10 @@ class AllianceVisitorService:
         cls, session: SessionDep, user_id: uuid.UUID
     ) -> list[AllianceVisitor]:
         """Return all active visits for game accounts belonging to this user."""
-
-        accs = await session.exec(
-            select(GameAccount).where(
-                GameAccount.user_id == user_id,
-                GameAccount.deleted_at.is_(None),
-            )
-        )
-        account_ids = {acc.id for acc in accs.all()}
-        if not account_ids:
-            return []
         result = await session.exec(
             select(AllianceVisitor)
-            .where(AllianceVisitor.game_account_id.in_(account_ids))  # type: ignore[union-attr]
+            .join(GameAccount, AllianceVisitor.game_account_id == GameAccount.id)
+            .where(GameAccount.user_id == user_id, GameAccount.deleted_at.is_(None))
             .options(selectinload(AllianceVisitor.alliance))  # type: ignore[arg-type]
         )
         return result.all()

@@ -61,7 +61,6 @@ async def add_war_synergy(
         battlegroup,
         body.champion_user_id,
         body.target_champion_user_id,
-        current_user.id,
     )
 
 

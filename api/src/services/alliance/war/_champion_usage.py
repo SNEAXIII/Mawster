@@ -1,6 +1,6 @@
 """Champion usage query shared by the alliance and player stats."""
 
-from sqlalchemy import Integer, Select, and_, cast, func
+from sqlalchemy import Integer, Select, cast, func
 from sqlmodel import select
 
 from src.models.champion.Champion import Champion
@@ -31,7 +31,7 @@ def champion_usage_statement(conditions: list, deathless: bool | None, perspecti
             )
         )
         .join(Champion, Champion.id == group_by_col)
-        .where(and_(*conditions))
+        .where(*conditions)
         .group_by(group_by_col, Champion.name, Champion.image_url)
         .order_by(func.count(WarFightRecord.id).desc())
     )

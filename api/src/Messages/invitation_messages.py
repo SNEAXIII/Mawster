@@ -9,7 +9,3 @@ PENDING_INVITATION_ALREADY_EXISTS = (
 INVITER_NOT_IN_ALLIANCE = "You don't have a game account in this alliance"
 INVITATION_NOT_FOR_YOUR_GAME_ACCOUNT = "This invitation is not for your game account"
 INVITATION_NOT_IN_THIS_ALLIANCE = "This invitation does not belong to this alliance"
-
-
-def alliance_max_members_reached(max_members: int) -> str:
-    return f"This alliance already has {max_members} members (maximum reached)"

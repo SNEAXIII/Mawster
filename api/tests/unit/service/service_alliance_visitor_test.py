@@ -262,13 +262,9 @@ class TestGetVisitedAlliances:
         acc = GameAccount(id=uuid.uuid4(), user_id=user_id, game_pseudo="TestAcc")
         visitor = _make_visitor(game_account_id=acc.id)
 
-        accounts_mock = mocker.MagicMock()
-        accounts_mock.all.return_value = [acc]
-
         visits_mock = mocker.MagicMock()
         visits_mock.all.return_value = [visitor]
-
-        session.exec = mocker.AsyncMock(side_effect=[accounts_mock, visits_mock])
+        session.exec = mocker.AsyncMock(return_value=visits_mock)
 
         result = await AllianceVisitorService.get_visited_alliances(session, user_id)
         assert len(result) == 1

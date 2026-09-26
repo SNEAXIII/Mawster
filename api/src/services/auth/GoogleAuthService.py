@@ -15,19 +15,12 @@ from src.utils.db import SessionDep
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo"
 
-GOOGLE_TOKEN_INVALID_EXCEPTION = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail=GOOGLE_TOKEN_INVALID,
-)
+GOOGLE_TOKEN_INVALID_EXCEPTION = HTTPException(status.HTTP_401_UNAUTHORIZED, GOOGLE_TOKEN_INVALID)
 
-GOOGLE_API_ERROR_EXCEPTION = HTTPException(
-    status_code=status.HTTP_502_BAD_GATEWAY,
-    detail=GOOGLE_API_ERROR,
-)
+GOOGLE_API_ERROR_EXCEPTION = HTTPException(status.HTTP_502_BAD_GATEWAY, GOOGLE_API_ERROR)
 
 GOOGLE_TOKEN_FOREIGN_APP_EXCEPTION = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail=GOOGLE_TOKEN_FOREIGN_APP,
+    status.HTTP_401_UNAUTHORIZED, GOOGLE_TOKEN_FOREIGN_APP
 )
 
 

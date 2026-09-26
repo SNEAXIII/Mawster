@@ -29,6 +29,12 @@ const fr: Translations = {
       description: 'Rechargez la page pour obtenir les dernières mises à jour.',
       action: 'Recharger',
     },
+    languagePicker: {
+      title: 'Choisissez votre langue',
+      description: 'Vous pourrez la modifier plus tard dans les paramètres.',
+      english: 'English',
+      french: 'Français',
+    },
   },
 
   // Navigation

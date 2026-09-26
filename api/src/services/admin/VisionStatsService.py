@@ -64,6 +64,11 @@ def _ratio(numerator: int, denominator: int) -> float:
     return round(numerator / denominator, 4)
 
 
+def _count_if(condition):
+    """SUM of 1 per row matching `condition`, 0 on an empty set."""
+    return func.coalesce(func.sum(cast(case((condition, 1), else_=0), Integer)), 0)
+
+
 def _as_date(value: date | datetime | str) -> date:
     """Normalise what the DB returned for `DATE(created_at)`.
 
@@ -104,12 +109,7 @@ class VisionStatsService:
                     col(VisionImport.status),
                     func.count(col(VisionImport.id)),
                     func.coalesce(func.sum(col(VisionImport.screens_total)), 0),
-                    func.coalesce(
-                        func.sum(
-                            cast(case((col(VisionImport.share_dataset), 1), else_=0), Integer)
-                        ),
-                        0,
-                    ),
+                    _count_if(col(VisionImport.share_dataset)),
                 )
                 .where(cls._since(col(VisionImport.created_at), days))
                 .group_by(col(VisionImport.status))
@@ -145,19 +145,8 @@ class VisionStatsService:
             await session.exec(
                 select(
                     func.count(col(VisionPrediction.id)),
-                    func.coalesce(
-                        func.sum(
-                            cast(
-                                case((col(VisionPrediction.champion_name).is_(None), 1), else_=0),
-                                Integer,
-                            )
-                        ),
-                        0,
-                    ),
-                    func.coalesce(
-                        func.sum(cast(case((col(VisionPrediction.reranked), 1), else_=0), Integer)),
-                        0,
-                    ),
+                    _count_if(col(VisionPrediction.champion_name).is_(None)),
+                    _count_if(col(VisionPrediction.reranked)),
                     func.avg(col(VisionPrediction.confidence)),
                 )
                 .select_from(VisionPrediction)
@@ -197,21 +186,7 @@ class VisionStatsService:
                     day_col,
                     func.count(col(VisionImport.id)),
                     func.coalesce(func.sum(col(VisionImport.screens_total)), 0),
-                    func.coalesce(
-                        func.sum(
-                            cast(
-                                case(
-                                    (
-                                        col(VisionImport.status) == VisionImportStatus.CONFIRMED,
-                                        1,
-                                    ),
-                                    else_=0,
-                                ),
-                                Integer,
-                            )
-                        ),
-                        0,
-                    ),
+                    _count_if(col(VisionImport.status) == VisionImportStatus.CONFIRMED),
                 )
                 .where(cls._since(col(VisionImport.created_at), days))
                 .group_by(day_col)
@@ -368,22 +343,16 @@ class VisionStatsService:
         if sort_by not in USER_SORT_COLUMNS:
             sort_by = "imports_total"
 
-        def status_sum(status: VisionImportStatus):
-            return func.coalesce(
-                func.sum(cast(case((col(VisionImport.status) == status, 1), else_=0), Integer)), 0
-            )
-
+        status = col(VisionImport.status)
         aggregates = {
             "imports_total": func.count(col(VisionImport.id)),
-            "imports_confirmed": status_sum(VisionImportStatus.CONFIRMED),
-            "imports_cancelled": status_sum(VisionImportStatus.CANCELLED),
-            "imports_failed": status_sum(VisionImportStatus.FAILED),
+            "imports_confirmed": _count_if(status == VisionImportStatus.CONFIRMED),
+            "imports_cancelled": _count_if(status == VisionImportStatus.CANCELLED),
+            "imports_failed": _count_if(status == VisionImportStatus.FAILED),
             "screens_total": func.coalesce(func.sum(col(VisionImport.screens_total)), 0),
             "last_import_at": func.max(col(VisionImport.created_at)),
         }
-        shared_sum = func.coalesce(
-            func.sum(cast(case((col(VisionImport.share_dataset), 1), else_=0), Integer)), 0
-        )
+        shared_sum = _count_if(col(VisionImport.share_dataset))
 
         base = (
             select(

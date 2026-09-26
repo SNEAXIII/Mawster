@@ -53,13 +53,11 @@ jobs:
         run: uvx --no-build ruff@0.16.0 format --check .
       - name: Run unit tests
         working-directory: ${{ env.WORKDIR }}
-        run: uv run --no-sync pytest tests/unit -v --tb=short
+        run: uv run --no-sync --no-build pytest tests/unit -v --tb=short
       - name: Run integration tests
         working-directory: ${{ env.WORKDIR }}
         # `auto` is the runner's 4 vCPUs. Oversubscribing does not pay: 6 workers measured
-        # 49s against 46s here, once the aiosqlite DEBUG logging stopped being the thing
-        # workers were blocked on. Don't retry it without a new reason.
-        run: uv run --no-sync pytest tests/integration -v --tb=short -n auto
+        run: uv run --no-sync --no-build pytest tests/integration -v --tb=short -n auto
 
   lint-front:
     name: Lint & typecheck for frontend

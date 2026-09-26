@@ -1,11 +1,11 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlalchemy import Float, Integer, and_, cast, func, union
+from sqlalchemy import Float, Integer, cast, func, union
 from sqlmodel import select
 from starlette import status
 
-from src.dto.alliance.war.dto_statistic import NOT_FOUGHT_KOS, ChampionUsageResponse
+from src.dto.alliance.war.dto_statistic import ChampionUsageResponse
 from src.dto.player.dto_player_stats import (
     PlayerSeasonAllianceResponse,
     PlayerSeasonOption,
@@ -24,6 +24,7 @@ from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.services.alliance.war._champion_usage import champion_usage_statement
 from src.services.alliance.war._stat_expressions import (
+    ratio_percent,
     total_fights,
     total_kos,
     total_not_fought,
@@ -40,9 +41,7 @@ class PlayerStatsService:
         """Today: only the owner may view. Future officer view extends here only."""
         account = await session.get(GameAccount, game_account_id)
         if account is None or account.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Game account not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Game account not found")
         return account
 
     @classmethod
@@ -107,26 +106,12 @@ class PlayerStatsService:
         """
         await cls.assert_can_view_account(session, current_user, game_account_id)
 
-        # --- shared filters ---
-        attacker_conds = [
-            ChampionUser.game_account_id == game_account_id,
-            War.status == WarStatus.ended,
-        ]
-        assist_conds = [
-            ChampionUser.game_account_id == game_account_id,
-            War.status == WarStatus.ended,
-        ]
+        # Joined through the attacker or the assist champion, depending on the query.
+        conds = [ChampionUser.game_account_id == game_account_id, War.status == WarStatus.ended]
         if season_id is not None:
-            attacker_conds.append(War.season_id == season_id)
-            assist_conds.append(War.season_id == season_id)
-
-        # ratio: same semantics as the alliance service (assists never move it)
-        ratio_kos = total_kos + NOT_FOUGHT_KOS * total_not_fought
-        ratio_fights = total_fights + total_not_fought
-        ratio_expr = cast(
-            func.round(func.coalesce((1 - ratio_kos / func.nullif(ratio_fights, 0)) * 100, 100), 1),
-            Float,
-        )
+            conds.append(War.season_id == season_id)
+        # Assists never move the ratio: it is attacker-only, as for the alliance.
+        ratio_expr = ratio_percent(total_kos, total_fights, total_not_fought)
 
         # --- card: attacker aggregates ---
         card_row = (
@@ -144,7 +129,7 @@ class PlayerStatsService:
                         ChampionUser,
                         ChampionUser.id == WarDefensePlacement.attacker_champion_user_id,
                     )
-                    .where(and_(*attacker_conds))
+                    .where(*conds)
                 )
             )
             .mappings()
@@ -159,14 +144,14 @@ class PlayerStatsService:
                 ChampionUser,
                 ChampionUser.id == WarDefensePlacement.attacker_champion_user_id,
             )
-            .where(and_(*attacker_conds)),
+            .where(*conds),
             select(War.id.label("war_id"))
             .join(WarDefensePlacement, WarDefensePlacement.war_id == War.id)
             .join(
                 ChampionUser,
                 ChampionUser.id == WarDefensePlacement.assist_champion_user_id,
             )
-            .where(and_(*assist_conds)),
+            .where(*conds),
         ).subquery()
 
         # Single-column count() selects are auto-scalarized by SQLModel exec,
@@ -182,7 +167,7 @@ class PlayerStatsService:
                     ChampionUser,
                     ChampionUser.id == WarDefensePlacement.assist_champion_user_id,
                 )
-                .where(and_(*assist_conds))
+                .where(*conds)
             )
         ).one()
 
@@ -224,7 +209,7 @@ class PlayerStatsService:
                         ChampionUser.id == WarDefensePlacement.attacker_champion_user_id,
                     )
                     .join(Season, Season.id == War.season_id)
-                    .where(and_(*attacker_conds))
+                    .where(*conds)
                     .group_by(*group_cols)
                     .order_by(order_col.asc())
                 )

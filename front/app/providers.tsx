@@ -8,6 +8,7 @@ import { SeasonProvider } from '@/app/contexts/season-context'
 import { GameAccountsProvider } from '@/app/contexts/game-accounts-context'
 import { signOutAndRedirect } from '@/app/lib/sign-out'
 import VersionWatcher from '@/components/version-watcher'
+import LanguagePickerDialog from '@/components/language-picker-dialog'
 import { useEffect } from 'react'
 
 function SessionWatcher() {
@@ -36,6 +37,7 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
         <SessionWatcher />
         <I18nProvider>
           <VersionWatcher />
+          <LanguagePickerDialog />
           <AllianceProvider>
             <GameAccountsProvider>
               <SeasonProvider>{children}</SeasonProvider>
