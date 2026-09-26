@@ -27,6 +27,12 @@ const en = {
       description: 'Reload the page to get the latest updates.',
       action: 'Reload',
     },
+    languagePicker: {
+      title: 'Choose your language',
+      description: 'You can change it later from the settings.',
+      english: 'English',
+      french: 'Français',
+    },
   },
 
   // Navigation
