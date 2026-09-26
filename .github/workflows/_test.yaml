@@ -57,8 +57,6 @@ jobs:
       - name: Run integration tests
         working-directory: ${{ env.WORKDIR }}
         # `auto` is the runner's 4 vCPUs. Oversubscribing does not pay: 6 workers measured
-        # 49s against 46s here, once the aiosqlite DEBUG logging stopped being the thing
-        # workers were blocked on. Don't retry it without a new reason.
         run: uv run --no-sync --no-build pytest tests/integration -v --tb=short -n auto
 
   lint-front:
