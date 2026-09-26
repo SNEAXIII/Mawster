@@ -120,7 +120,7 @@ class GameAccountService:
             sql = sql.options(selectinload(GameAccount.alliance))  # type: ignore[arg-type]
         sql = sql.order_by(GameAccount.is_primary.desc())  # type: ignore[union-attr]
         result = await session.exec(sql)
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def get_restorable_game_accounts(
@@ -137,7 +137,7 @@ class GameAccountService:
             .order_by(GameAccount.deleted_at.desc())  # type: ignore[union-attr]
         )
         result = await session.exec(sql)
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def get_game_account(

@@ -3,8 +3,8 @@ import uuid
 from unittest.mock import AsyncMock
 
 import pytest
-from fastapi import HTTPException
-from starlette.datastructures import Headers, UploadFile
+from fastapi import HTTPException, UploadFile
+from starlette.datastructures import Headers
 
 from src.enums.VisionImportStatus import VisionImportStatus
 from src.enums.VisionJobStatus import VisionJobStatus

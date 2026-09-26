@@ -50,7 +50,7 @@ class DefensePlacementService:
             .where(*_in_bg(alliance_id, battlegroup))
             .options(*_PLACEMENT_OPTIONS)
         )
-        return result.all()
+        return list(result.all())
 
     @staticmethod
     async def _placement_on_node(
@@ -198,7 +198,7 @@ class DefensePlacementService:
                 GameAccount.alliance_id == alliance_id, GameAccount.alliance_group == battlegroup
             )
         )
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def get_available_champions(
