@@ -2,8 +2,10 @@
 
 import { createContext, useContext } from 'react'
 import type { usePlanEditor } from '@/app/game/defense/_hooks/use-plan-editor'
+import type { useActivePlan } from '@/app/game/defense/_hooks/use-active-plan'
 
-type DefenseActionsContextValue = ReturnType<typeof usePlanEditor>
+type DefenseActionsContextValue =
+  ReturnType<typeof usePlanEditor> | ReturnType<typeof useActivePlan>
 
 const DefenseActionsContext = createContext<DefenseActionsContextValue | null>(null)
 

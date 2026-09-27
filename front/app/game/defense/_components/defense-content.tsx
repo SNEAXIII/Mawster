@@ -73,12 +73,12 @@ export default function DefensePageContent({
     )
   }
 
-  const { defenseActions } = vm
+  const { defenseActions, gridActions } = vm
 
   return (
     <div className='flex flex-col gap-4'>
       <ExportModeProvider value={exporting}>
-        <DefenseActionsProvider value={defenseActions}>
+        <DefenseActionsProvider value={gridActions}>
           <DefenseHeader
             alliances={vm.alliances}
             selectedAllianceId={vm.selectedAllianceId}
@@ -93,42 +93,48 @@ export default function DefensePageContent({
             exporting={exporting}
           />
           {vm.userCanPlace && (
-            <>
-              <div className='flex flex-wrap items-center justify-between gap-2'>
-                <PlanToolbar
-                  allianceId={vm.selectedAllianceId}
-                  format={vm.format}
-                  plans={vm.planList.plans}
-                  quota={vm.planList.quota}
-                  selected={vm.selectedPlan}
-                  onSelect={vm.planList.setSelectedPlanId}
-                  commands={vm.planCommands}
-                />
-                {defenseActions.placements.length > 0 && (
-                  <Button
-                    variant='destructive'
-                    size='sm'
-                    data-cy='defense-clear-all'
-                    onClick={() => defenseActions.setClearConfirmOpen(true)}
-                  >
-                    <FiTrash2 className='w-4 h-4 mr-1' />
-                    {t.game.defense.clearAll}
-                  </Button>
-                )}
-              </div>
-              <DefenseGrid
-                onNodeClick={vm.handleNodeClick}
-                canManage={vm.userCanPlace}
-                exportDefenseMapRef={exportDefenseMapRef}
-                exportDefenseAssignementsRef={exportDefenseAssignementsRef}
-                exporting={exporting}
-                selectedAllianceTag={selectedAlliance?.tag}
-                selectedAllianceName={selectedAlliance?.name}
-                selectedBg={vm.selectedBg}
+            <div className='flex flex-wrap items-center justify-between gap-2'>
+              <PlanToolbar
+                allianceId={vm.selectedAllianceId}
                 format={vm.format}
+                plans={vm.planList.plans}
+                quota={vm.planList.quota}
+                selected={vm.selectedPlan}
+                onSelect={vm.planList.setSelectedPlanId}
+                commands={vm.planCommands}
               />
-            </>
+              {defenseActions.placements.length > 0 && (
+                <Button
+                  variant='destructive'
+                  size='sm'
+                  data-cy='defense-clear-all'
+                  onClick={() => defenseActions.setClearConfirmOpen(true)}
+                >
+                  <FiTrash2 className='w-4 h-4 mr-1' />
+                  {t.game.defense.clearAll}
+                </Button>
+              )}
+            </div>
           )}
+          {!vm.userCanPlace && gridActions.plan === null && (
+            <p
+              className='text-sm text-muted-foreground'
+              data-cy='defense-no-active-plan'
+            >
+              {t.game.defense.plans.noActive}
+            </p>
+          )}
+          <DefenseGrid
+            onNodeClick={vm.handleNodeClick}
+            canManage={vm.userCanPlace}
+            exportDefenseMapRef={exportDefenseMapRef}
+            exportDefenseAssignementsRef={exportDefenseAssignementsRef}
+            exporting={exporting}
+            selectedAllianceTag={selectedAlliance?.tag}
+            selectedAllianceName={selectedAlliance?.name}
+            selectedBg={vm.selectedBg}
+            format={vm.gridFormat}
+          />
         </DefenseActionsProvider>
       </ExportModeProvider>
     </div>

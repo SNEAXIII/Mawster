@@ -8,6 +8,7 @@ import type { SeasonFormat } from '@/app/services/season'
 import { usePlanList } from '../_hooks/use-plan-list'
 import { usePlanEditor } from '../_hooks/use-plan-editor'
 import { usePlanCommands } from '../_hooks/use-plan-commands'
+import { useActivePlan } from '../_hooks/use-active-plan'
 
 interface UseDefenseViewModelOptions {
   onStateChange?: (allianceId: string, bg: number) => void
@@ -51,6 +52,9 @@ export function useDefenseViewModel({
     selected: selectedPlan,
     onChanged: (planId) => planList.refreshPlans(planId),
   })
+  const activeView = useActivePlan(selectedAllianceId, selectedBg, !userCanPlace)
+  const gridActions = userCanPlace ? defenseActions : activeView
+  const gridFormat = userCanPlace ? format : activeView.activeFormat
 
   useEffect(() => {
     if (alliances.length > 0 && !selectedAllianceId) {
@@ -89,6 +93,8 @@ export function useDefenseViewModel({
     selectedPlan,
     planCommands,
     defenseActions,
+    gridActions,
+    gridFormat,
     handleNodeClick,
     handleBgChange,
     handleAllianceChange,
