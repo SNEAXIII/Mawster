@@ -64,7 +64,7 @@ from src.Messages.war_messages import (
     node_exceeds_map,
 )
 from src.models.alliance.Alliance import Alliance
-from src.models.alliance.DefensePlacement import DefensePlacement
+from src.models.alliance.DefensePlan import DefensePlanNode
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
@@ -78,6 +78,7 @@ from src.models.war.WarSynergyAttacker import WarSynergyAttacker
 from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
 from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
+from src.services.alliance.defense.DefensePlanService import DefensePlanService
 from src.services.alliance.war.ClosedWarPolicy import ClosedWarPolicy
 from src.services.alliance.war.WarFormatConfig import for_format
 from src.services.knowledge.FightRecordService import FightRecordService
@@ -667,16 +668,15 @@ class WarService:
         """Not banned, not on alliance defense, and within the member's attacker cap."""
         if champion_user.champion_id in {ban.champion_id for ban in war.bans}:
             raise HTTPException(status.HTTP_409_CONFLICT, CHAMPION_BANNED_FOR_WAR)
+        fmt = await cls._war_format(session, war)
         on_defense = await session.exec(
-            select(DefensePlacement).where(
-                DefensePlacement.champion_user_id == champion_user.id,
-                DefensePlacement.alliance_id == alliance_id,
-                DefensePlacement.battlegroup == battlegroup,
+            DefensePlanService.active_defender_ids(alliance_id, fmt, battlegroup).where(
+                DefensePlanNode.champion_user_id == champion_user.id
             )
         )
         if on_defense.first():
             raise HTTPException(status.HTTP_409_CONFLICT, CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE)
-        max_attackers = for_format(await cls._war_format(session, war)).max_attackers_per_member
+        max_attackers = for_format(fmt).max_attackers_per_member
         taken = await cls._taken_attackers(session, war.id, battlegroup, exclude_node)
         if len(taken[champion_user.game_account_id] | {champion_user.id}) > max_attackers:
             raise HTTPException(
@@ -699,7 +699,8 @@ class WarService:
         war: War | None = None,
         node_number: int | None = None,
     ) -> list[AvailableAttackerResponse]:
-        max_attackers = for_format(await cls._war_format(session, war)).max_attackers_per_member
+        fmt = await cls._war_format(session, war)
+        max_attackers = for_format(fmt).max_attackers_per_member
         stmt = (
             select(GameAccount)
             .where(
@@ -714,10 +715,7 @@ class WarService:
         on_defense = set(
             (
                 await session.exec(
-                    select(DefensePlacement.champion_user_id).where(
-                        DefensePlacement.alliance_id == alliance_id,
-                        col(DefensePlacement.game_account_id).in_([m.id for m in members]),
-                    )
+                    DefensePlanService.active_defender_ids(alliance_id, fmt, battlegroup)
                 )
             ).all()
         )
@@ -760,15 +758,9 @@ class WarService:
         battlegroup: int,
         war: War | None = None,
     ) -> list[AvailablePrefightAttackerResponse]:
-        on_defense = (
-            select(DefensePlacement.champion_user_id)
-            .join(GameAccount, DefensePlacement.game_account_id == GameAccount.id)
-            .where(
-                DefensePlacement.alliance_id == alliance_id,
-                GameAccount.alliance_group == battlegroup,
-            )
-            .scalar_subquery()
-        )
+        on_defense = DefensePlanService.active_defender_ids(
+            alliance_id, await cls._war_format(session, war), battlegroup
+        ).scalar_subquery()
         stmt = (
             select(ChampionUser, GameAccount, Champion)
             .join(GameAccount, ChampionUser.game_account_id == GameAccount.id)  # type: ignore[arg-type]

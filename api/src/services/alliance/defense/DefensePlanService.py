@@ -1,8 +1,9 @@
 import uuid
+from collections.abc import Sequence
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.enums.DefensePlanState import DefensePlanState
@@ -36,6 +37,14 @@ PLAN_OPTIONS = (
 
 def _scope(alliance_id: uuid.UUID, battlegroup: int, fmt: SeasonFormat, model=DefensePlan) -> tuple:
     return model.alliance_id == alliance_id, model.battlegroup == battlegroup, model.format == fmt
+
+
+async def _drop_players(session: SessionDep, nodes: Sequence[DefensePlanNode]) -> None:
+    """The Champion stays on the node; only its Player leaves."""
+    for node in nodes:
+        node.champion_user_id = None
+        session.add(node)
+    await session.flush()
 
 
 class DefensePlanService:
@@ -100,6 +109,52 @@ class DefensePlanService:
             )
         )
         return set(result.all())
+
+    @staticmethod
+    def active_defender_ids(
+        alliance_id: uuid.UUID, fmt: SeasonFormat, battlegroup: int | None = None
+    ):
+        """Roster Entries "on defense": on an Active Plan. Other plans block nothing."""
+        stmt = (
+            select(DefensePlanNode.champion_user_id)
+            .join(DefenseActivePlan, DefenseActivePlan.plan_id == DefensePlanNode.plan_id)  # type: ignore[arg-type]
+            .where(
+                DefenseActivePlan.alliance_id == alliance_id,
+                DefenseActivePlan.format == fmt,
+                col(DefensePlanNode.champion_user_id).is_not(None),
+            )
+        )
+        if battlegroup is not None:
+            stmt = stmt.where(DefenseActivePlan.battlegroup == battlegroup)
+        return stmt
+
+    @staticmethod
+    async def release_member(
+        session: SessionDep, alliance_id: uuid.UUID, game_account_id: uuid.UUID
+    ) -> int:
+        """Drop the Player from every node they hold, keeping the Champion. Flushes, never commits."""
+        nodes = (
+            await session.exec(
+                select(DefensePlanNode)
+                .join(DefensePlan, DefensePlan.id == DefensePlanNode.plan_id)  # type: ignore[arg-type]
+                .join(ChampionUser, ChampionUser.id == DefensePlanNode.champion_user_id)  # type: ignore[arg-type]
+                .where(
+                    DefensePlan.alliance_id == alliance_id,
+                    ChampionUser.game_account_id == game_account_id,
+                )
+            )
+        ).all()
+        await _drop_players(session, nodes)
+        return len(nodes)
+
+    @staticmethod
+    async def release_champion_user(session: SessionDep, champion_user_id: uuid.UUID) -> None:
+        nodes = (
+            await session.exec(
+                select(DefensePlanNode).where(DefensePlanNode.champion_user_id == champion_user_id)
+            )
+        ).all()
+        await _drop_players(session, nodes)
 
     @staticmethod
     def state_of(plan: DefensePlan, member_ids: set[uuid.UUID]) -> DefensePlanState:

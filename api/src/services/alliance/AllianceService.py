@@ -44,8 +44,8 @@ from src.models.Base import utcnow
 from src.models.user.GameAccount import GameAccount
 from src.models.user.User import User
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
+from src.services.alliance.defense.DefensePlanService import DefensePlanService
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
-from src.services.alliance.war.DefensePlacementService import DefensePlacementService
 from src.utils.db import SessionDep
 
 MAX_MEMBERS_PER_GROUP = 10
@@ -704,10 +704,8 @@ class AllianceService:
         await cls._delete_rank_row(session, AllianceOfficer, alliance_id, game_account_id)
         await cls._delete_rank_row(session, AllianceStrategist, alliance_id, game_account_id)
 
-        # Their champions leave with them: free the defense nodes they occupied
-        await DefensePlacementService.remove_placements_for_member(
-            session, alliance_id, game_account_id
-        )
+        # Their champions stay on the plans; only the player leaves them.
+        await DefensePlanService.release_member(session, alliance_id, game_account_id)
         # Same for the rank-ups the alliance was waiting on: the roster is out of
         # reach, and once out of the alliance nobody can even cancel those rows.
         await UpgradeRequestService.cancel_pending_for_member(session, game_account_id)
@@ -890,13 +888,9 @@ class AllianceService:
                     status.HTTP_409_CONFLICT,
                     group_max_members_reached(group, MAX_MEMBERS_PER_GROUP),
                 )
-        # A defender only exists on the battlegroup its owner belongs to. Moving
-        # the member (or pulling them out of every group) would strand their
-        # defenders on a map they can no longer be placed on, so free those nodes.
+        # Their champions stay on the plans; only the player leaves them.
         if group != game_account.alliance_group:
-            await DefensePlacementService.remove_placements_for_member(
-                session, alliance_id, game_account_id
-            )
+            await DefensePlanService.release_member(session, alliance_id, game_account_id)
 
         game_account.alliance_group = group
         session.add(game_account)
