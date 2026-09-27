@@ -9,6 +9,18 @@ from src.enums.DefensePlanState import DefensePlanState
 from src.enums.SeasonFormat import SeasonFormat
 
 
+class DefensePlanNodeRequest(BaseModel):
+    champion_id: uuid.UUID | None = None
+    champion_user_id: uuid.UUID | None = None
+
+    @model_validator(mode="after")
+    def names_a_champion(self) -> DefensePlanNodeRequest:
+        if self.champion_id is None and self.champion_user_id is None:
+            message = "Give a champion or a roster entry"
+            raise ValueError(message)
+        return self
+
+
 class DefensePlanCreateRequest(DefenseNameRequest):
     format: SeasonFormat
     template_id: uuid.UUID | None = None

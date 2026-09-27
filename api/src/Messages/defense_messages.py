@@ -21,6 +21,7 @@ TEMPLATE_NAME_TAKEN = "A template with this name already exists for this format"
 FORMAT_MISMATCH = "The source belongs to another format"
 CHAMPION_NOT_FOUND = "Champion not found"
 NO_CHAMPION_ON_NODE = "No champion on this node"
+CHAMPION_USER_MISMATCH = "This roster entry is not the champion placed on the node"
 
 
 def template_quota_reached(limit: int) -> str:  # pragma: no cover
