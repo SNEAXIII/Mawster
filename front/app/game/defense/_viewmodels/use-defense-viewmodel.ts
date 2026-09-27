@@ -1,9 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
 import { useAllianceSelector } from '@/hooks/use-alliance-selector'
-import { useDefenseActions } from '../_hooks/use-defense-actions'
+import { useCurrentSeason } from '@/hooks/use-current-season'
+import type { SeasonFormat } from '@/app/services/season'
+import { usePlanList } from '../_hooks/use-plan-list'
+import { usePlanEditor } from '../_hooks/use-plan-editor'
+import { usePlanCommands } from '../_hooks/use-plan-commands'
 
 interface UseDefenseViewModelOptions {
   onStateChange?: (allianceId: string, bg: number) => void
@@ -32,7 +36,21 @@ export function useDefenseViewModel({
   // owner keep everything else.
   const userCanPlace = selectedAlliance ? canPlace(selectedAlliance) : false
 
-  const defenseActions = useDefenseActions(selectedAllianceId, selectedBg)
+  const currentSeason = useCurrentSeason()
+  const [formatChoice, setFormatChoice] = useState<SeasonFormat | null>(null)
+  const format: SeasonFormat = formatChoice ?? currentSeason?.format ?? 'regular'
+
+  const planList = usePlanList(selectedAllianceId, selectedBg, format, userCanPlace)
+  const selectedPlan = planList.plans.find((p) => p.id === planList.selectedPlanId) ?? null
+  const defenseActions = usePlanEditor(selectedAllianceId, planList.selectedPlanId, () =>
+    planList.refreshPlans()
+  )
+  const planCommands = usePlanCommands({
+    allianceId: selectedAllianceId,
+    bg: selectedBg,
+    selected: selectedPlan,
+    onChanged: (planId) => planList.refreshPlans(planId),
+  })
 
   useEffect(() => {
     if (alliances.length > 0 && !selectedAllianceId) {
@@ -40,7 +58,7 @@ export function useDefenseViewModel({
       setSelectedAllianceId(firstId)
       onStateChange?.(firstId, selectedBg)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [alliances])
 
   const handleNodeClick = (nodeNumber: number) => {
@@ -65,6 +83,11 @@ export function useDefenseViewModel({
     selectedBg,
     loading,
     userCanPlace,
+    format,
+    setFormat: setFormatChoice,
+    planList,
+    selectedPlan,
+    planCommands,
     defenseActions,
     handleNodeClick,
     handleBgChange,

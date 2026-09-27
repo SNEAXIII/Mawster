@@ -3,14 +3,16 @@
 import { useRef, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { useRequiredSession } from '@/hooks/use-required-session'
-import { useCurrentSeason } from '@/hooks/use-current-season'
 import { FullPageSpinner } from '@/components/full-page-spinner'
+import { Button } from '@/components/ui/button'
 import { Shield } from 'lucide-react'
+import { FiTrash2 } from 'react-icons/fi'
 import { DefenseActionsProvider } from '@/app/contexts/defense-actions-context'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import { downloadElementAsPng } from '@/app/lib/export-image'
 import DefenseHeader from './defense-header'
 import DefenseGrid from './defense-grid'
+import PlanToolbar from './plan-toolbar'
 import { useDefenseViewModel } from '../_viewmodels/use-defense-viewmodel'
 
 interface DefensePageContentProps {
@@ -28,7 +30,6 @@ export default function DefensePageContent({
   const { status } = useRequiredSession()
 
   const vm = useDefenseViewModel({ onStateChange, initialAllianceId, initialBg })
-  const currentSeason = useCurrentSeason()
 
   const exportDefenseMapRef = useRef<HTMLDivElement>(null)
   const exportDefenseAssignementsRef = useRef<HTMLDivElement>(null)
@@ -84,24 +85,50 @@ export default function DefensePageContent({
             onAllianceChange={vm.handleAllianceChange}
             selectedBg={vm.selectedBg}
             onBgChange={vm.handleBgChange}
-            onClearClick={() => defenseActions.setClearConfirmOpen(true)}
             canManage={vm.userCanPlace}
-            defenseSummary={defenseActions.defenseSummary}
+            format={vm.format}
+            onFormatChange={vm.setFormat}
             onExportMapClick={handleExportMap}
             onExportListClick={handleExportList}
             exporting={exporting}
           />
-          <DefenseGrid
-            onNodeClick={vm.handleNodeClick}
-            canManage={vm.userCanPlace}
-            exportDefenseMapRef={exportDefenseMapRef}
-            exportDefenseAssignementsRef={exportDefenseAssignementsRef}
-            exporting={exporting}
-            selectedAllianceTag={selectedAlliance?.tag}
-            selectedAllianceName={selectedAlliance?.name}
-            selectedBg={vm.selectedBg}
-            format={currentSeason?.format ?? 'regular'}
-          />
+          {vm.userCanPlace && (
+            <>
+              <div className='flex flex-wrap items-center justify-between gap-2'>
+                <PlanToolbar
+                  allianceId={vm.selectedAllianceId}
+                  format={vm.format}
+                  plans={vm.planList.plans}
+                  quota={vm.planList.quota}
+                  selected={vm.selectedPlan}
+                  onSelect={vm.planList.setSelectedPlanId}
+                  commands={vm.planCommands}
+                />
+                {defenseActions.placements.length > 0 && (
+                  <Button
+                    variant='destructive'
+                    size='sm'
+                    data-cy='defense-clear-all'
+                    onClick={() => defenseActions.setClearConfirmOpen(true)}
+                  >
+                    <FiTrash2 className='w-4 h-4 mr-1' />
+                    {t.game.defense.clearAll}
+                  </Button>
+                )}
+              </div>
+              <DefenseGrid
+                onNodeClick={vm.handleNodeClick}
+                canManage={vm.userCanPlace}
+                exportDefenseMapRef={exportDefenseMapRef}
+                exportDefenseAssignementsRef={exportDefenseAssignementsRef}
+                exporting={exporting}
+                selectedAllianceTag={selectedAlliance?.tag}
+                selectedAllianceName={selectedAlliance?.name}
+                selectedBg={vm.selectedBg}
+                format={vm.format}
+              />
+            </>
+          )}
         </DefenseActionsProvider>
       </ExportModeProvider>
     </div>

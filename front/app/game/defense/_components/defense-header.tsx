@@ -3,10 +3,11 @@
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import type { DefenseSummary } from '@/app/services/defense'
-import { Trash2, Camera } from 'lucide-react'
+import { Camera } from 'lucide-react'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
+import type { SeasonFormat } from '@/app/services/season'
 import AllianceSelect from '@/app/game/_components/alliance-select'
+import FormatToggle from './format-toggle'
 
 interface DefenseHeaderProps {
   alliances: AllianceWithVisitorFlag[]
@@ -14,9 +15,9 @@ interface DefenseHeaderProps {
   onAllianceChange: (id: string) => void
   selectedBg: number
   onBgChange: (bg: number) => void
-  onClearClick: () => void
   canManage: boolean
-  defenseSummary: DefenseSummary | null
+  format: SeasonFormat
+  onFormatChange: (format: SeasonFormat) => void
   onExportMapClick: () => void
   onExportListClick: () => void
   exporting: boolean
@@ -28,9 +29,9 @@ export default function DefenseHeader({
   onAllianceChange,
   selectedBg,
   onBgChange,
-  onClearClick,
   canManage,
-  defenseSummary,
+  format,
+  onFormatChange,
   onExportMapClick,
   onExportListClick,
   exporting,
@@ -76,6 +77,13 @@ export default function DefenseHeader({
             </div>
           </div>
 
+          {canManage && (
+            <FormatToggle
+              value={format}
+              onChange={onFormatChange}
+            />
+          )}
+
           <div className='ml-auto flex items-center gap-2'>
             {/* Export buttons — available to anyone with access to the alliance */}
             <Button
@@ -100,18 +108,6 @@ export default function DefenseHeader({
               <Camera className='w-4 h-4 mr-1' />
               {exporting ? '…' : t.game.defense.exportList}
             </Button>
-            {/* Clear — managers only */}
-            {canManage && defenseSummary && defenseSummary.placements.length > 0 && (
-              <Button
-                variant='destructive'
-                size='sm'
-                data-cy='defense-clear-all'
-                onClick={onClearClick}
-              >
-                <Trash2 className='w-4 h-4 mr-1' />
-                {t.game.defense.clearAll}
-              </Button>
-            )}
           </div>
         </div>
       </CardContent>

@@ -1,9 +1,9 @@
 'use client'
 
 import { createContext, useContext } from 'react'
-import type { useDefenseActions } from '@/app/game/defense/_hooks/use-defense-actions'
+import type { usePlanEditor } from '@/app/game/defense/_hooks/use-plan-editor'
 
-type DefenseActionsContextValue = ReturnType<typeof useDefenseActions>
+type DefenseActionsContextValue = ReturnType<typeof usePlanEditor>
 
 const DefenseActionsContext = createContext<DefenseActionsContextValue | null>(null)
 
