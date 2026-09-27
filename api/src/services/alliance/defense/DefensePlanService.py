@@ -143,13 +143,23 @@ class DefensePlanService:
         return len(nodes)
 
     @staticmethod
-    async def release_champion_user(session: SessionDep, champion_user_id: uuid.UUID) -> None:
+    async def release_champion_users(
+        session: SessionDep, champion_user_ids: Sequence[uuid.UUID]
+    ) -> None:
+        if not champion_user_ids:
+            return
         nodes = (
             await session.exec(
-                select(DefensePlanNode).where(DefensePlanNode.champion_user_id == champion_user_id)
+                select(DefensePlanNode).where(
+                    col(DefensePlanNode.champion_user_id).in_(champion_user_ids)
+                )
             )
         ).all()
         await _drop_players(session, nodes)
+
+    @staticmethod
+    async def release_champion_user(session: SessionDep, champion_user_id: uuid.UUID) -> None:
+        await DefensePlanService.release_champion_users(session, [champion_user_id])
 
     @staticmethod
     def state_of(plan: DefensePlan, member_ids: set[uuid.UUID]) -> DefensePlanState:

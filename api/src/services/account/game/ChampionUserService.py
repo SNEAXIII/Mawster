@@ -298,6 +298,7 @@ class ChampionUserService:
         result = await session.exec(sql)
         entries = result.all()
         count = len(entries)
+        await DefensePlanService.release_champion_users(session, [e.id for e in entries])
         for entry in entries:
             await session.delete(entry)
         await session.commit()
