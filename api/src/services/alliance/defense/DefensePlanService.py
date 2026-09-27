@@ -19,8 +19,7 @@ from src.Messages.defense_messages import (
 from src.models.alliance.DefensePlan import DefenseActivePlan, DefensePlan, DefensePlanNode
 from src.models.alliance.DefenseTemplate import DefenseTemplate
 from src.models.champion.ChampionUser import ChampionUser
-from src.models.user.GameAccount import GameAccount
-from src.services.alliance.defense._rules import assert_name_free, count_rows
+from src.services.alliance.defense._rules import assert_name_free, bg_members, count_rows
 from src.services.alliance.defense.DefenseTemplateService import DefenseTemplateService
 from src.services.alliance.defense.limits import MAX_PLANS_PER_BATTLEGROUP_FORMAT
 from src.services.alliance.defense.plan_state import compute_plan_state
@@ -103,12 +102,8 @@ class DefensePlanService:
     async def bg_member_ids(
         session: SessionDep, alliance_id: uuid.UUID, battlegroup: int
     ) -> set[uuid.UUID]:
-        result = await session.exec(
-            select(GameAccount.id).where(
-                GameAccount.alliance_id == alliance_id, GameAccount.alliance_group == battlegroup
-            )
-        )
-        return set(result.all())
+        members = await bg_members(session, alliance_id, battlegroup)
+        return {m.id for m in members}
 
     @staticmethod
     def active_defender_ids(

@@ -15,6 +15,7 @@ from src.Messages.defense_messages import (
     node_exceeds_map,
 )
 from src.models.champion.Champion import Champion
+from src.models.user.GameAccount import GameAccount
 from src.services.alliance.war.WarFormatConfig import for_format
 from src.utils.db import SessionDep
 
@@ -49,3 +50,14 @@ async def assert_name_free(
 ) -> None:
     if await count_rows(session, model, model.name == name, *filters):
         raise HTTPException(status.HTTP_409_CONFLICT, message)
+
+
+async def bg_members(
+    session: SessionDep, alliance_id: uuid.UUID, battlegroup: int
+) -> list[GameAccount]:
+    result = await session.exec(
+        select(GameAccount).where(
+            GameAccount.alliance_id == alliance_id, GameAccount.alliance_group == battlegroup
+        )
+    )
+    return list(result.all())

@@ -26,6 +26,7 @@ from src.services.alliance.defense._rules import (
     assert_champion_exists,
     assert_champion_free,
     assert_node_on_map,
+    bg_members,
 )
 from src.services.alliance.defense.DefensePlanService import DefensePlanService
 from src.services.alliance.war.WarFormatConfig import for_format
@@ -110,23 +111,12 @@ class DefensePlanNodeService:
             await session.delete(node)
         await session.commit()
 
-    @staticmethod
-    async def _bg_members(
-        session: SessionDep, alliance_id: uuid.UUID, battlegroup: int
-    ) -> list[GameAccount]:
-        result = await session.exec(
-            select(GameAccount).where(
-                GameAccount.alliance_id == alliance_id, GameAccount.alliance_group == battlegroup
-            )
-        )
-        return list(result.all())
-
     @classmethod
     async def available_champions(
         cls, session: SessionDep, plan: DefensePlan, node_number: int | None
     ) -> list[dict]:
         """BG members' champions not on another node, grouped by champion, best owner first."""
-        members = await cls._bg_members(session, plan.alliance_id, plan.battlegroup)
+        members = await bg_members(session, plan.alliance_id, plan.battlegroup)
         if not members:
             return []
         member_map = {m.id: m for m in members}
@@ -184,7 +174,7 @@ class DefensePlanNodeService:
         battlegroup: int,
         plan: DefensePlan | None,
     ) -> list[dict]:
-        members = await cls._bg_members(session, alliance_id, battlegroup)
+        members = await bg_members(session, alliance_id, battlegroup)
         held = _held(plan)
         fmt = plan.format if plan else await SeasonService.get_current_format(session)
         alliance = await session.get(Alliance, alliance_id)
