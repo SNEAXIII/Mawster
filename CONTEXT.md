@@ -257,6 +257,7 @@ Alliance and tied to no Battlegroup and no Player. Names a Champion, never a cop
 rarity and rank are chosen when a Player is assigned, so a Template can plan around a
 Champion nobody has ranked up yet. May be partial, never holds the same Champion twice.
 Up to 15 per format.
+_Table_: `defense_template` (nodes: `defense_template_node`).
 _Avoid_: draft, defense draft.
 
 **Defense Plan**:
@@ -271,6 +272,7 @@ format's defender cap, and the map is as full as the Battlegroup allows — ever
 taken, or every member at their cap — and **Pending** otherwise. Derived from the nodes, never set by hand: a member leaving
 keeps their Champions on the nodes, drops only the Player, and sends the plan back to
 Pending on its own.
+_Table_: `defense_plan` (nodes: `defense_plan_node`).
 _Avoid_: defense assignment, defense placement (ambiguous with War Node), layout, draft.
 
 **Active Plan**:
@@ -281,9 +283,7 @@ an Active Plan that later loses a Player stays active, flagged incomplete. A Ros
 is "on defense" — barred from attacking — only on the Active Plan of the War's format;
 every other plan is a draft of intent and blocks nothing. Plain members and Visitors see only Active Plans; every other plan and every
 Template needs the placement right.
-
-_Debt_: `defense_placement` still holds a single layout per Battlegroup, shared by both
-formats — until the plans land, switching format overwrites nodes 1–10.
+_Table_: `defense_active_plan`.
 
 The asymmetry is deliberate: your layout is a plan you reuse and refine, while an
 enemy layout is throwaway scouting of a different Opponent every War.
