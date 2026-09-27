@@ -1,5 +1,13 @@
 import { setupUser, setupAllianceOwner, setupOwnerMemberAlliance } from '../../support/e2e';
 
+/** setupAllianceOwner plus the Plan 1 every grid-rendering test below needs. */
+function setupOwnerWithPlan(prefix: string, pseudo: string, allianceName: string, tag: string) {
+  return setupAllianceOwner(prefix, pseudo, allianceName, tag).then((data) => {
+    cy.apiCreatePlan(data.userData.access_token, data.allianceId, 1, 'Plan 1');
+    return data;
+  });
+}
+
 describe('Defense – Basic page rendering', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -35,14 +43,14 @@ describe('Defense – Basic page rendering', () => {
   });
 
   it('shows the Members side panel', () => {
-    setupAllianceOwner('def-basic-members', 'MembersPlayer', 'MembersAlliance', 'MP').then(({ userData }) => {
+    setupOwnerWithPlan('def-basic-members', 'MembersPlayer', 'MembersAlliance', 'MP').then(({ userData }) => {
       cy.apiLogin(userData.user_id, 'defense');
       cy.contains('Members').should('be.visible');
     });
   });
 
   it('shows 50 war-map nodes on the page', () => {
-    setupAllianceOwner('def-basic-nodes', 'NodePlayer', 'NodeAlliance', 'ND').then(({ userData }) => {
+    setupOwnerWithPlan('def-basic-nodes', 'NodePlayer', 'NodeAlliance', 'ND').then(({ userData }) => {
       cy.apiLogin(userData.user_id, 'defense');
 
       for (let i = 1; i <= 50; i++) {
@@ -52,7 +60,7 @@ describe('Defense – Basic page rendering', () => {
   });
 
   it("empty nodes show '+' placeholder", () => {
-    setupAllianceOwner('def-basic-empty', 'EmptyPlyr', 'EmptyAlliance', 'EM').then(({ userData }) => {
+    setupOwnerWithPlan('def-basic-empty', 'EmptyPlyr', 'EmptyAlliance', 'EM').then(({ userData }) => {
       cy.apiLogin(userData.user_id, 'defense');
 
       cy.getByCy('war-node-1').should('contain', '+');
@@ -61,13 +69,20 @@ describe('Defense – Basic page rendering', () => {
   });
 
   it('shows section labels (Boss, Mini Boss, Tier 2, Tier 1)', () => {
-    setupAllianceOwner('def-basic-sections', 'SectionPlyr', 'SectionAlliance', 'SE').then(({ userData }) => {
+    setupOwnerWithPlan('def-basic-sections', 'SectionPlyr', 'SectionAlliance', 'SE').then(({ userData }) => {
       cy.apiLogin(userData.user_id, 'defense');
 
       cy.contains('Boss').should('exist');
       cy.contains('Mini Boss').should('exist');
       cy.contains('Tier 2').should('exist');
       cy.contains('Tier 1').should('exist');
+    });
+  });
+
+  it('a placement-right user with no plan sees the create-first prompt', () => {
+    setupAllianceOwner('def-basic-noplan', 'NoPlanPlyr', 'NoPlanAlliance', 'NP').then(({ userData }) => {
+      cy.apiLogin(userData.user_id, 'defense');
+      cy.getByCy('defense-no-plan').should('be.visible');
     });
   });
 
