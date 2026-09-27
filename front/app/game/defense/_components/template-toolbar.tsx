@@ -5,6 +5,7 @@ import { FiCopy, FiEdit2, FiTrash2 } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import { buildCopyName } from './defense-utils'
 import NameDialog from './name-dialog'
 import QuotaCreateButton from './quota-create-button'
 import NamedSelect from './named-select'
@@ -85,7 +86,7 @@ export default function TemplateToolbar({
         open={dialog === 'duplicate'}
         onOpenChange={close}
         title={m.duplicate}
-        initialName={t.game.defense.plans.copyName.replace('{name}', name)}
+        initialName={buildCopyName(t.game.defense.plans.copyName, name)}
         onSubmit={state.duplicate}
       />
       <NameDialog

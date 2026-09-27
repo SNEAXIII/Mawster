@@ -44,3 +44,14 @@ export function memberRoleOrder(member: BgMember): number {
   if (member.is_strategist) return 2
   return 3
 }
+
+// ─── Names ───────────────────────────────────────────────
+
+const NAME_MAX_LENGTH = 50
+
+/** Truncates the base name so a "{name} (copy)"-style template stays within the limit. */
+export function buildCopyName(template: string, name: string): string {
+  const decoration = template.replace('{name}', '')
+  const budget = Math.max(0, NAME_MAX_LENGTH - decoration.length)
+  return template.replace('{name}', name.slice(0, budget))
+}

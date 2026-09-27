@@ -4,6 +4,7 @@ import { useI18n } from '@/app/i18n'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import type { CreatePlanBody, DefensePlanSummary } from '@/app/services/defense'
 import type { SeasonFormat } from '@/app/services/season'
+import { buildCopyName } from './defense-utils'
 import NameDialog from './name-dialog'
 import PlanCreateDialog from './plan-create-dialog'
 import type { PlanToolbarDialog } from './plan-toolbar'
@@ -44,7 +45,7 @@ export default function PlanToolbarDialogs({
         open={dialog === 'duplicate'}
         onOpenChange={close}
         title={p.duplicate}
-        initialName={p.copyName.replace('{name}', selected?.name ?? '')}
+        initialName={buildCopyName(p.copyName, selected?.name ?? '')}
         onSubmit={commands.duplicate}
       />
       <NameDialog
