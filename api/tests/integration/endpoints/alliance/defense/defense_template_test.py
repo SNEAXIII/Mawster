@@ -17,6 +17,7 @@ from tests.utils.utils_client import (
     execute_patch_request,
     execute_post_request,
     execute_put_request,
+    execute_request,
 )
 from tests.utils.utils_constant import USER2_ID, USER_ID
 
@@ -185,6 +186,22 @@ class TestTemplateAccess:
             _templates(bg.alliance.id, "?format=regular"), headers=MEMBER
         )
         assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_plain_member_cannot_write_templates(self):
+        bg = await setup_defense_bg()
+        template = await push_template(bg.alliance.id, champions={1: bg.spider})
+        base = _templates(bg.alliance.id, f"/{template.id}")
+        attempts = [
+            ("POST", _templates(bg.alliance.id), {"name": "Nope", "format": "regular"}),
+            ("PATCH", base, {"name": "Nope"}),
+            ("PUT", f"{base}/nodes/2", {"champion_id": str(bg.wolverine.id)}),
+            ("DELETE", f"{base}/nodes/1", None),
+            ("DELETE", base, None),
+        ]
+        for method, route, payload in attempts:
+            resp = await execute_request(method, route, payload=payload, headers=MEMBER)
+            assert resp.status_code == 403
 
     @pytest.mark.asyncio
     async def test_template_of_another_alliance_is_not_found(self):
