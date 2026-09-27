@@ -5,16 +5,8 @@ import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import { useVisiblePoll } from '@/hooks/use-visible-poll'
 
-/**
- * Shared refetch/poll plumbing for the plan-editor-shaped hooks (usePlanEditor,
- * useActivePlan): owns the loading flag, keeps the poll callback current via a
- * ref, and resets the poll timer after every fetch so a manual refresh is never
- * immediately followed by a stray tick from a stale interval.
- *
- * `ready` gates the fetch itself, calling `onNotReady` instead when false;
- * `pollEnabled` gates the background poll — kept separate because the two
- * hooks disagree on whether an alliance id alone should suspend polling.
- */
+/** Shared refetch/poll plumbing: resets the poll timer after every fetch so a manual
+ *  refresh is never immediately followed by a stray tick from a stale interval. */
 export function usePolledFetch(
   loader: (silent: boolean, isStale: () => boolean) => Promise<void>,
   ready: boolean,

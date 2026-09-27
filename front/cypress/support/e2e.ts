@@ -1758,10 +1758,8 @@ export interface ActiveDefenseSetup {
   planId: string;
 }
 
-/**
- * A Validated regular plan on BG1 — the owner, alone in BG1, holds nodes 1-5 (the cap) —
- * made Active unless `activate` is false. The plain member (no BG) and the Visitor only read it.
- */
+/** A Validated regular plan on BG1 — the owner, alone in BG1, holds nodes 1-5 (the cap) —
+ *  made Active unless `activate` is false. */
 export function setupActiveDefense(prefix: string, { activate = true } = {}): Cypress.Chainable<ActiveDefenseSetup> {
   const safe = safePrefix(prefix);
   const tokens = {

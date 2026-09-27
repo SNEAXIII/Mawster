@@ -1,9 +1,8 @@
 import type { DefensePlacement, DefensePlanNode } from '@/app/services/defense'
 import type { DefenseTemplateNode } from '@/app/services/defense-templates'
 
-/** WarMap renders DefensePlacement; a node without Player shows "???" and no rarity band.
- *  champion_id rides along (outside the shared interface) so a Champion-only node can filter
- *  the selector down to its own species when a Player still needs picking. */
+/** champion_id rides along (outside the shared interface) so a Champion-only node can
+ *  filter the selector down to its own species when a Player still needs picking. */
 export function planNodeToPlacement(
   node: DefensePlanNode,
   allianceId: string
