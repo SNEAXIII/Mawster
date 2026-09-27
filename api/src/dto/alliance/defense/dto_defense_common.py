@@ -1,6 +1,7 @@
 import uuid
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, StringConstraints
 
 from src.game_types import DEFENSE_NAME_MAX_LENGTH
 
@@ -11,7 +12,10 @@ class Quota(BaseModel):
 
 
 class DefenseNameRequest(BaseModel):
-    name: str = Field(min_length=1, max_length=DEFENSE_NAME_MAX_LENGTH)
+    name: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=DEFENSE_NAME_MAX_LENGTH),
+    ]
 
 
 class ChampionFields(BaseModel):
