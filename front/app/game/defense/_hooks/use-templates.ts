@@ -56,8 +56,13 @@ export function useTemplates(allianceId: string, format: SeasonFormat) {
       const result = await action()
       toast.success(success)
       const createdId = (result as DefenseTemplate | undefined)?.id
-      await refresh(createdId ?? preferId ?? selectedId)
-      if (result && (result as DefenseTemplate).nodes) setSelected(result as DefenseTemplate)
+      const keptId = createdId ?? (preferId !== undefined ? preferId : selectedId)
+      await refresh(keptId)
+      if (result && (result as DefenseTemplate).nodes) {
+        setSelected(result as DefenseTemplate)
+      } else if (keptId && keptId === selectedId) {
+        setSelected(await getTemplate(allianceId, keptId))
+      }
     } catch (err: unknown) {
       toast.error((err as Error).message)
     }

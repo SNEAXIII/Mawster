@@ -18,6 +18,14 @@ describe('Defense – templates', () => {
       cy.getByCy('template-champion-option-Wolverine').click();
       cy.getByCy('war-node-12').should('have.attr', 'title').and('include', 'Wolverine');
 
+      cy.getByCy('war-node-remove-12').focus().click();
+      cy.getByCy('war-node-12').should('contain', '+');
+
+      openWarNode(12);
+      cy.getByCy('template-champion-search').type('Wolverine');
+      cy.getByCy('template-champion-option-Wolverine').click();
+      cy.getByCy('war-node-12').should('have.attr', 'title').and('include', 'Wolverine');
+
       cy.getByCy('defense-tab-plans').click();
       cy.getByCy('plan-create-btn').click();
       cy.getByCy('name-dialog-input').type('From Rush');
