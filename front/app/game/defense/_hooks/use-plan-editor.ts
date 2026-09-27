@@ -1,9 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
-import { useVisiblePoll } from '@/hooks/use-visible-poll'
 import {
   clearPlan,
   getPlan,
@@ -16,6 +15,7 @@ import {
   type DefensePlan,
 } from '@/app/services/defense'
 import { planNodeToPlacement } from '../_components/plan-node-adapter'
+import { usePolledFetch } from './use-polled-fetch'
 
 export function usePlanEditor(
   allianceId: string,
@@ -26,44 +26,26 @@ export function usePlanEditor(
   const [plan, setPlan] = useState<DefensePlan | null>(null)
   const [bgMembers, setBgMembers] = useState<BgMember[]>([])
   const [availableChampions, setAvailableChampions] = useState<AvailableChampion[]>([])
-  const [defenseLoading, setDefenseLoading] = useState(false)
   const [selectorNode, setSelectorNode] = useState<number | null>(null)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
 
-  const refreshPlan = useCallback(
-    async (silent = false) => {
-      if (!allianceId || !planId) {
-        setPlan(null)
-        return
-      }
-      if (!silent) setDefenseLoading(true)
-      try {
-        const [loaded, members] = await Promise.all([
-          getPlan(allianceId, planId),
-          getPlanMembers(allianceId, planId),
-        ])
-        setPlan(loaded)
-        setBgMembers(members)
-      } catch {
-        if (!silent) toast.error(t.game.defense.loadError)
-      } finally {
-        if (!silent) setDefenseLoading(false)
-      }
-    },
-    [allianceId, planId, t]
-  )
+  const loadPlan = useCallback(async () => {
+    if (!planId) return
+    const [loaded, members] = await Promise.all([
+      getPlan(allianceId, planId),
+      getPlanMembers(allianceId, planId),
+    ])
+    setPlan(loaded)
+    setBgMembers(members)
+  }, [allianceId, planId])
 
-  const refreshRef = useRef(refreshPlan)
-  useEffect(() => {
-    refreshRef.current = refreshPlan
-  }, [refreshPlan])
-  const resetPollTimer = useVisiblePoll(() => refreshRef.current(true), 10_000, Boolean(planId))
+  const resetPlan = useCallback(() => setPlan(null), [])
 
-  useEffect(() => {
-    refreshPlan()
-    resetPollTimer()
-    // oxlint-disable-next-line react/exhaustive-deps -- resetPollTimer is stable
-  }, [refreshPlan])
+  const {
+    loading: defenseLoading,
+    refresh: refreshPlan,
+    resetPollTimer,
+  } = usePolledFetch(loadPlan, Boolean(allianceId && planId), Boolean(planId), resetPlan)
 
   useEffect(() => {
     if (selectorNode === null || !planId) return

@@ -1,50 +1,33 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
-import { useI18n } from '@/app/i18n'
-import { useVisiblePoll } from '@/hooks/use-visible-poll'
+import { useCallback, useState } from 'react'
 import { getActivePlan, getBgMembers, type ActivePlan, type BgMember } from '@/app/services/defense'
 import { planNodeToPlacement } from '../_components/plan-node-adapter'
+import { usePolledFetch } from './use-polled-fetch'
 
 const noop = async () => {}
 
 /** Read-only counterpart of usePlanEditor for members without placement rights:
  *  same return shape so DefenseGrid renders unchanged, but writes are no-ops. */
 export function useActivePlan(allianceId: string, bg: number, enabled: boolean) {
-  const { t } = useI18n()
   const [active, setActive] = useState<ActivePlan | null>(null)
   const [bgMembers, setBgMembers] = useState<BgMember[]>([])
-  const [defenseLoading, setDefenseLoading] = useState(false)
 
-  const refresh = useCallback(
-    async (silent = false) => {
-      if (!allianceId || !enabled) return
-      if (!silent) setDefenseLoading(true)
-      try {
-        const [loaded, members] = await Promise.all([
-          getActivePlan(allianceId, bg),
-          getBgMembers(allianceId, bg),
-        ])
-        setActive(loaded)
-        setBgMembers(members)
-      } catch {
-        if (!silent) toast.error(t.game.defense.loadError)
-      } finally {
-        if (!silent) setDefenseLoading(false)
-      }
-    },
-    [allianceId, bg, enabled, t]
+  const loadActive = useCallback(async () => {
+    if (!allianceId) return
+    const [loaded, members] = await Promise.all([
+      getActivePlan(allianceId, bg),
+      getBgMembers(allianceId, bg),
+    ])
+    setActive(loaded)
+    setBgMembers(members)
+  }, [allianceId, bg])
+
+  const { loading: defenseLoading, refresh } = usePolledFetch(
+    loadActive,
+    enabled && Boolean(allianceId),
+    enabled && Boolean(allianceId)
   )
-
-  const refreshRef = useRef(refresh)
-  useEffect(() => {
-    refreshRef.current = refresh
-  }, [refresh])
-  useVisiblePoll(() => refreshRef.current(true), 10_000, enabled && Boolean(allianceId))
-  useEffect(() => {
-    refresh()
-  }, [refresh])
 
   return {
     plan: active?.plan ?? null,
