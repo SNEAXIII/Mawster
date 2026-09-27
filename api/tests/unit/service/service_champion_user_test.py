@@ -413,9 +413,14 @@ class TestDeleteChampionUser:
     async def test_delete_ok(self, mocker):
         session = _mock_session(mocker)
         entry = _make_champion_user()
+        # release_champion_user finds no defense plan node to release
+        result_mock = mocker.MagicMock()
+        result_mock.all.return_value = []
+        session.exec.return_value = result_mock
 
         await ChampionUserService.delete_champion_user(session, entry)
 
+        session.flush.assert_awaited_once()
         session.delete.assert_awaited_once_with(entry)
         session.commit.assert_awaited_once()
 
