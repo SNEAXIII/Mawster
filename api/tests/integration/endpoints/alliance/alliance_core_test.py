@@ -664,7 +664,7 @@ class TestRequireVisitor:
     @pytest.mark.asyncio
     async def test_non_member_non_visitor_forbidden_on_defense(self):
         """
-        GET /alliances/{id}/defense/bg/1 calls require_visitor.
+        GET /alliances/{id}/defense/bg/1/active calls require_visitor.
         A user who is neither a member nor a visitor must get 403.
         Covers: is_member (lines 93-99), is_owner (line 186), require_visitor (lines 702-711 via is_visitor).
         """
@@ -674,7 +674,7 @@ class TestRequireVisitor:
         await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         resp = await execute_get_request(
-            f"{ENDPOINT}/{alliance.id}/defense/bg/1",
+            f"{ENDPOINT}/{alliance.id}/defense/bg/1/active",
             headers=HEADERS_USER2,
         )
         assert resp.status_code == 403
@@ -682,7 +682,7 @@ class TestRequireVisitor:
     @pytest.mark.asyncio
     async def test_visitor_allowed_on_defense(self):
         """
-        A visitor account can access GET /alliances/{id}/defense/bg/1.
+        A visitor account can access GET /alliances/{id}/defense/bg/1/active.
         Covers: is_visitor returning True via AllianceVisitorService.
         """
         await _setup_2_users()
@@ -690,7 +690,7 @@ class TestRequireVisitor:
         await push_visitor(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
 
         resp = await execute_get_request(
-            f"{ENDPOINT}/{alliance.id}/defense/bg/1",
+            f"{ENDPOINT}/{alliance.id}/defense/bg/1/active",
             headers=HEADERS_USER2,
         )
         assert resp.status_code == 200

@@ -28,7 +28,6 @@ from src.controllers.alliance.defense.defense_template_controller import (
     defense_template_controller,
 )
 from src.controllers.alliance.matchup_controller import matchup_controller
-from src.controllers.alliance.war.defense_controller import defense_controller
 from src.controllers.alliance.war.fight_record_import_controller import (
     fight_record_import_controller,
 )
@@ -63,7 +62,6 @@ routers = [
     alliance_roster_controller,
     matchup_controller,
     defense_plan_node_controller,
-    defense_controller,
     defense_template_controller,
     defense_plan_controller,
     war_core_controller,

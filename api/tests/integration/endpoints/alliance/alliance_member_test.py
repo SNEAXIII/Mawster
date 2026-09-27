@@ -27,6 +27,7 @@ from tests.utils.utils_client import (
     execute_get_request,
     execute_patch_request,
     execute_post_request,
+    execute_put_request,
 )
 from tests.utils.utils_constant import (
     DISCORD_ID_2,
@@ -735,26 +736,25 @@ class TestGetMyRoles:
 
 class TestGetUserAccountInAlliance:
     @pytest.mark.asyncio
-    async def test_non_member_cannot_place_defense(self):
+    async def test_non_member_cannot_edit_a_defense_plan(self):
         """
-        POST /alliances/{id}/defense/bg/1/place calls get_user_account_in_alliance.
-        A user with no account in the alliance must get 403 (line 70).
+        PUT /alliances/{id}/defense/plans/{plan_id}/nodes/1 requires the placement
+        right. A user with no account in this alliance at all is an outsider, not
+        just a non-strategist member, so `require_strategist_account` reports it
+        as if the alliance did not exist (404), never a success.
         """
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         # USER2 has a game account but NOT in this alliance
         await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        plan = await push_plan(alliance.id)
 
-        resp = await execute_post_request(
-            f"{ENDPOINT}/{alliance.id}/defense/bg/1/place",
-            {
-                "game_account_id": str(uuid.uuid4()),
-                "champion_user_id": str(uuid.uuid4()),
-                "node_number": 1,
-            },
+        resp = await execute_put_request(
+            f"{ENDPOINT}/{alliance.id}/defense/plans/{plan.id}/nodes/1",
+            {"champion_user_id": str(uuid.uuid4())},
             headers=HEADERS_USER2,
         )
-        assert resp.status_code == 403
+        assert resp.status_code == 404
 
 
 # =========================================================================
