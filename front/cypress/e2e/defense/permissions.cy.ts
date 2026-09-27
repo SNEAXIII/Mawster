@@ -1,7 +1,7 @@
 import {
   setupUser,
   setupDefenseOwner,
-  setupDefenseOwnerAndMember,
+  setupActiveDefense,
   setupOwnerMemberAlliance,
   openWarNode,
   seedDefender,
@@ -19,7 +19,9 @@ describe('Defense – Permissions', () => {
   it('clear all button is hidden when no defenders are placed', () => {
     setupUser('def-perm-clr-empty-tok').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'ClrEmptyOwn', true).then((acc) => {
-        cy.apiCreateAlliance(access_token, 'ClrEmptyAll', 'CE', acc.id);
+        cy.apiCreateAlliance(access_token, 'ClrEmptyAll', 'CE', acc.id).then((alliance) =>
+          cy.apiCreatePlan(access_token, alliance.id, 1, 'Plan 1'),
+        );
       });
       cy.apiLogin(user_id, 'defense');
       cy.getByCy('defense-clear-all').should('not.exist');
@@ -44,22 +46,16 @@ describe('Defense – Permissions', () => {
     );
   });
 
-  it('clear all button is hidden from a regular member even with placements', () => {
-    setupDefenseOwnerAndMember('def-perm-clr-mem', 'ClrMemOwn', 'ClrMember', 'ClrMemAll', 'CM').then(
-      ({ adminData, ownerData, memberData, allianceId, ownerAccId }) => {
-        seedDefender({
-          adminToken: adminData.access_token,
-          ownerToken: ownerData.access_token,
-          allianceId,
-          gameAccountId: ownerAccId,
-          name: 'Spider-Man',
-          championClass: 'Cosmic',
-        });
+  it('a regular member reads the active plan without clear, plan or template controls', () => {
+    setupActiveDefense('def-perm-clr-mem').then(({ memberData, ownerPseudo }) => {
+      cy.apiLogin(memberData.user_id, 'defense');
 
-        cy.apiLogin(memberData.user_id, 'defense');
-        cy.getByCy('defense-clear-all').should('not.exist');
-      },
-    );
+      cy.getByCy('war-node-1').should('contain', ownerPseudo);
+      cy.getByCy('defense-export-map-btn').should('be.visible');
+      cy.getByCy('defense-clear-all').should('not.exist');
+      cy.getByCy('plan-select').should('not.exist');
+      cy.getByCy('defense-tab-templates').should('not.exist');
+    });
   });
 
   // =========================================================================
@@ -70,6 +66,7 @@ describe('Defense – Permissions', () => {
     setupOwnerMemberAlliance('def-perm-exp-mem', 'ExpMemOwn', 'ExpMember', 'ExpMemAll', 'EM').then(({ memberData }) => {
       cy.apiLogin(memberData.user_id, 'defense');
 
+      cy.getByCy('defense-no-active-plan').should('be.visible');
       cy.getByCy('defense-export-map-btn').should('be.visible');
       cy.getByCy('defense-export-list-btn').should('be.visible');
     });
@@ -91,11 +88,12 @@ describe('Defense – Permissions', () => {
 
   it('clicking an empty node opens champion selector for the owner', () => {
     setupDefenseOwner('def-perm-click-own', 'ClickOwn2', 'ClickAll2', 'C2').then(
-      ({ adminData, ownerData, ownerAccId }) => {
+      ({ adminData, ownerData, allianceId, ownerAccId }) => {
         // Load a champion so the selector won't be empty
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 

@@ -7,10 +7,11 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
 
   it('shows preferred badge when the single owner is a preferred attacker', () => {
     setupDefenseOwner('def-pref-show', 'PrefBadgePlyr', 'PrefAll', 'PB').then(
-      ({ adminData, ownerData, ownerAccId }) => {
+      ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiGiveChampion(adminData.access_token, ownerData.access_token, ownerAccId, 'Spider-Man', 'Cosmic', '7r3', {
           is_preferred_attacker: true,
         });
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -22,10 +23,11 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
 
   it('does not show preferred badge when the single owner is not a preferred attacker', () => {
     setupDefenseOwner('def-pref-hide', 'NoPrefBadgePlyr', 'NoPrefAll', 'NB').then(
-      ({ adminData, ownerData, ownerAccId }) => {
+      ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiGiveChampion(adminData.access_token, ownerData.access_token, ownerAccId, 'Wolverine', 'Mutant', '7r3', {
           is_preferred_attacker: false,
         });
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -38,7 +40,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
   // Badge only shows when ALL owners are preferred attackers
   it('does not show preferred badge when only some owners are preferred attackers (multi-owner)', () => {
     setupDefenseOwnerAndMember('def-pref-multi', 'MultiPrefOwn', 'MultiPrefMem', 'MultiPrefAll', 'MP').then(
-      ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
             is_preferred_attacker: true,
@@ -47,6 +49,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
             is_preferred_attacker: false,
           });
         });
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -58,7 +61,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
 
   it('shows preferred badge when all owners are preferred attackers (multi-owner)', () => {
     setupDefenseOwnerAndMember('def-pref-all', 'AllPrefOwn', 'AllPrefMem', 'AllPrefAll', 'AP').then(
-      ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
             is_preferred_attacker: true,
@@ -67,6 +70,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
             is_preferred_attacker: true,
           });
         });
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 

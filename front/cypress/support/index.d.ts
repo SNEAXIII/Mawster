@@ -64,6 +64,15 @@ export interface BatchSetupUserResult {
   war_id: string | null;
 }
 
+export type SeasonFormatName = 'regular' | 'big_thing';
+
+/** The fields of a defense plan or template response the specs read. */
+export interface DefensePlanBody {
+  id: string;
+  name: string;
+  format: SeasonFormatName;
+}
+
 declare global {
   namespace Cypress {
     interface Chainable {
@@ -144,7 +153,18 @@ declare global {
       ): Chainable<any>;
 
       /**
-       * Place a defender on a defense node via backend API.
+       * Create a defense plan on a battlegroup via backend API.
+       */
+      apiCreatePlan(
+        token: string,
+        allianceId: string,
+        battlegroup: number,
+        name: string,
+        format?: SeasonFormatName,
+      ): Chainable<DefensePlanBody>;
+
+      /**
+       * Place a defender on the Battlegroup's first regular plan, creating `Plan 1` if none.
        */
       apiPlaceDefender(
         token: string,
@@ -153,7 +173,22 @@ declare global {
         nodeNumber: number,
         championUserId: string,
         gameAccountId: string,
-      ): Chainable<any>;
+      ): Chainable<DefensePlanBody>;
+
+      /**
+       * Make a Validated plan the Active Plan of its battlegroup and format via backend API.
+       */
+      apiActivatePlan(token: string, allianceId: string, planId: string): Chainable<DefensePlanBody>;
+
+      /**
+       * Create a defense template via backend API.
+       */
+      apiCreateTemplate(
+        token: string,
+        allianceId: string,
+        name: string,
+        format?: SeasonFormatName,
+      ): Chainable<DefensePlanBody>;
 
       /**
        * Set (or unset) the battlegroup for an alliance member via backend API.

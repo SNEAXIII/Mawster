@@ -1,4 +1,4 @@
-import { setupDefenseOwner, seedDefender } from '../../support/e2e';
+import { setupDefenseOwner, seedDefender, confirmAction } from '../../support/e2e';
 
 describe('Defense – Clear All', () => {
   beforeEach(() => {
@@ -24,8 +24,7 @@ describe('Defense – Clear All', () => {
 
         cy.getByCy('defender-count-ClearPlyr').should('contain', '2/5');
 
-        cy.getByCy('defense-clear-all').click();
-        cy.contains('button', 'Confirm').click();
+        confirmAction('defense-clear-all');
 
         cy.getByCy('defender-count-ClearPlyr').should('contain', '0/5');
         cy.contains('Defense cleared').should('be.visible');
@@ -46,8 +45,7 @@ describe('Defense – Clear All', () => {
 
         cy.getByCy('war-node-10').should('contain', 'ClrMapPlyr');
 
-        cy.getByCy('defense-clear-all').click();
-        cy.contains('button', 'Confirm').click();
+        confirmAction('defense-clear-all');
 
         cy.getByCy('war-node-10').should('contain', '+');
       },
@@ -68,8 +66,7 @@ describe('Defense – Clear All', () => {
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
-        cy.getByCy('defense-clear-all').click();
-        cy.contains('button', 'Confirm').click();
+        confirmAction('defense-clear-all');
 
         cy.contains('No defenders placed.').scrollIntoView().should('be.visible');
       },

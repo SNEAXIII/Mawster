@@ -75,6 +75,7 @@ describe('Defense – Basic page rendering', () => {
     setupAllianceOwner('def-basic-nocount', 'EmptyCountPlyr', 'EmptyCountAll', 'EC').then(
       ({ userData, accountId, allianceId }) => {
         cy.apiSetMemberGroup(userData.access_token, allianceId, accountId, 1);
+        cy.apiCreatePlan(userData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(userData.user_id, 'defense');
 
@@ -87,6 +88,7 @@ describe('Defense – Basic page rendering', () => {
     setupAllianceOwner('def-basic-nodef', 'NoDefPlyr', 'NoDefAlliance', 'NF').then(
       ({ userData, accountId, allianceId }) => {
         cy.apiSetMemberGroup(userData.access_token, allianceId, accountId, 1);
+        cy.apiCreatePlan(userData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(userData.user_id, 'defense');
         cy.contains('No defenders placed.').scrollIntoView().should('be.visible');
@@ -98,6 +100,7 @@ describe('Defense – Basic page rendering', () => {
     setupAllianceOwner('def-basic-user', 'UserNamePlyr', 'UserNameAll', 'UN').then(
       ({ userData, accountId, allianceId }) => {
         cy.apiSetMemberGroup(userData.access_token, allianceId, accountId, 1);
+        cy.apiCreatePlan(userData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(userData.user_id, 'defense');
         cy.getByCy('member-section-UserNamePlyr').scrollIntoView().should('be.visible');
@@ -111,6 +114,7 @@ describe('Defense – Basic page rendering', () => {
       ({ ownerData, allianceId, ownerAccId, memberAccId }) => {
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, ownerAccId, 1);
         cy.apiSetMemberGroup(ownerData.access_token, allianceId, memberAccId, 1);
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
