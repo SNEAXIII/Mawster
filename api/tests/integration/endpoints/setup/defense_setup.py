@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from src.enums.SeasonFormat import SeasonFormat
 from src.models.alliance.Alliance import Alliance
+from src.models.alliance.DefensePlan import DefenseActivePlan, DefensePlan, DefensePlanNode
 from src.models.alliance.DefenseTemplate import DefenseTemplate, DefenseTemplateNode
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
@@ -81,3 +82,39 @@ async def push_template(
     ]
     await load_objects([template, *nodes])
     return template
+
+
+async def push_plan(
+    alliance_id: uuid.UUID,
+    battlegroup: int = 1,
+    fmt: SeasonFormat = SeasonFormat.regular,
+    name: str = "Plan",
+    active: bool = False,
+) -> DefensePlan:
+    plan = DefensePlan(alliance_id=alliance_id, battlegroup=battlegroup, format=fmt, name=name)
+    rows: list = [plan]
+    if active:
+        rows.append(
+            DefenseActivePlan(
+                alliance_id=alliance_id, battlegroup=battlegroup, format=fmt, plan_id=plan.id
+            )
+        )
+    await load_objects(rows)
+    return plan
+
+
+async def push_plan_node(
+    plan: DefensePlan,
+    node_number: int,
+    champion_user: ChampionUser | None = None,
+    champion: Champion | None = None,
+) -> DefensePlanNode:
+    """Champion only when `champion` is given alone; a Player's copy when `champion_user` is."""
+    node = DefensePlanNode(
+        plan_id=plan.id,
+        node_number=node_number,
+        champion_id=champion.id if champion else champion_user.champion_id,
+        champion_user_id=champion_user.id if champion_user else None,
+    )
+    await load_objects([node])
+    return node

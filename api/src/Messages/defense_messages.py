@@ -25,3 +25,13 @@ NO_CHAMPION_ON_NODE = "No champion on this node"
 
 def template_quota_reached(limit: int) -> str:  # pragma: no cover
     return f"This format already holds {limit} templates"
+
+
+PLAN_NOT_FOUND = "Defense plan not found"
+PLAN_NAME_TAKEN = "A plan with this name already exists for this battlegroup and format"
+SOURCE_PLAN_OTHER_BATTLEGROUP = "The source plan belongs to another battlegroup"
+PLAN_NOT_VALIDATED = "Only a validated plan can be activated"
+
+
+def plan_quota_reached(limit: int) -> str:  # pragma: no cover
+    return f"This battlegroup already holds {limit} plans for this format"

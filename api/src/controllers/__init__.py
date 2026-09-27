@@ -20,6 +20,7 @@ from src.controllers.alliance.alliance_invitation_controller import alliance_inv
 from src.controllers.alliance.alliance_member_controller import alliance_member_controller
 from src.controllers.alliance.alliance_roster_controller import alliance_roster_controller
 from src.controllers.alliance.alliance_visitor_controller import alliance_visitor_controller
+from src.controllers.alliance.defense.defense_plan_controller import defense_plan_controller
 from src.controllers.alliance.defense.defense_template_controller import (
     defense_template_controller,
 )
@@ -60,6 +61,7 @@ routers = [
     matchup_controller,
     defense_controller,
     defense_template_controller,
+    defense_plan_controller,
     war_core_controller,
     war_placement_controller,
     war_note_controller,

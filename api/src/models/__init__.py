@@ -6,6 +6,11 @@ from src.models.alliance.AllianceOfficer import AllianceOfficer  # noqa: F401
 from src.models.alliance.AllianceStrategist import AllianceStrategist  # noqa: F401
 from src.models.alliance.AllianceVisitor import AllianceVisitor  # noqa: F401
 from src.models.alliance.DefensePlacement import DefensePlacement  # noqa: F401
+from src.models.alliance.DefensePlan import (  # noqa: F401
+    DefenseActivePlan,
+    DefensePlan,
+    DefensePlanNode,
+)
 from src.models.alliance.DefenseTemplate import DefenseTemplate, DefenseTemplateNode  # noqa: F401
 from src.models.champion.Champion import Champion  # noqa: F401
 from src.models.champion.ChampionSagaRole import ChampionSagaRole  # noqa: F401
