@@ -39,6 +39,8 @@ def _copy_placements_into_plans() -> None:
         by_bg[(row.alliance_id, row.battlegroup)].append(row)
     now = datetime.now(UTC)
     for (alliance_id, battlegroup), rows in by_bg.items():
+        # Legacy data never enforced one champion per (alliance, battlegroup); keep only the lowest node.
+        rows.sort(key=lambda r: r.node_number)
         for fmt, node_count in _FORMAT_NODE_COUNT:
             plan_id = uuid.uuid4().hex
             bind.execute(
@@ -55,8 +57,12 @@ def _copy_placements_into_plans() -> None:
                     "now": now,
                 },
             )
+            seen_champion_ids: set = set()
             for row in rows:
+                if row.champion_id in seen_champion_ids:
+                    continue
                 if row.node_number <= node_count:
+                    seen_champion_ids.add(row.champion_id)
                     bind.execute(
                         sa.text(
                             "INSERT INTO defense_plan_node (id, plan_id, node_number, champion_id,"
