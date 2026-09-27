@@ -2,8 +2,8 @@
 
 import { FiPlus } from 'react-icons/fi'
 import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { Quota } from '@/app/services/defense'
+import QuotaTooltip from './quota-tooltip'
 
 interface QuotaCreateButtonProps {
   label: string
@@ -22,28 +22,23 @@ export default function QuotaCreateButton({
 }: Readonly<QuotaCreateButtonProps>) {
   const full = quota.used >= quota.limit
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span>
-            <Button
-              size='sm'
-              onClick={onClick}
-              disabled={full}
-              data-cy={`${dataCy}-create-btn`}
-            >
-              <FiPlus className='mr-1' />
-              {label} ·{' '}
-              <span data-cy={`${dataCy}-quota`}>
-                {quota.used}/{quota.limit}
-              </span>
-            </Button>
-          </span>
-        </TooltipTrigger>
-        {full && (
-          <TooltipContent>{reachedText.replace('{limit}', String(quota.limit))}</TooltipContent>
-        )}
-      </Tooltip>
-    </TooltipProvider>
+    <QuotaTooltip
+      full={full}
+      reachedText={reachedText}
+      limit={quota.limit}
+    >
+      <Button
+        size='sm'
+        onClick={onClick}
+        disabled={full}
+        data-cy={`${dataCy}-create-btn`}
+      >
+        <FiPlus className='mr-1' />
+        {label} ·{' '}
+        <span data-cy={`${dataCy}-quota`}>
+          {quota.used}/{quota.limit}
+        </span>
+      </Button>
+    </QuotaTooltip>
   )
 }

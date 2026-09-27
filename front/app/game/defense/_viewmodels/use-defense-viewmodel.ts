@@ -42,10 +42,20 @@ export function useDefenseViewModel({
   const format: SeasonFormat = formatChoice ?? currentSeason?.format ?? 'regular'
 
   const planList = usePlanList(selectedAllianceId, selectedBg, format, userCanPlace)
-  const selectedPlan = planList.plans.find((p) => p.id === planList.selectedPlanId) ?? null
+  const rawSelectedPlan = planList.plans.find((p) => p.id === planList.selectedPlanId) ?? null
   const defenseActions = usePlanEditor(selectedAllianceId, planList.selectedPlanId, () =>
     planList.refreshPlans()
   )
+  // Overlay the polled detail's live fields: the list summary only refreshes on writes.
+  const selectedPlan =
+    rawSelectedPlan && defenseActions.plan?.id === rawSelectedPlan.id
+      ? {
+          ...rawSelectedPlan,
+          state: defenseActions.plan.state,
+          is_active: defenseActions.plan.is_active,
+          is_incomplete: defenseActions.plan.is_incomplete,
+        }
+      : rawSelectedPlan
   const planCommands = usePlanCommands({
     allianceId: selectedAllianceId,
     bg: selectedBg,

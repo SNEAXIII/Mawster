@@ -13,15 +13,19 @@ export function useActivePlan(allianceId: string, bg: number, enabled: boolean) 
   const [active, setActive] = useState<ActivePlan | null>(null)
   const [bgMembers, setBgMembers] = useState<BgMember[]>([])
 
-  const loadActive = useCallback(async () => {
-    if (!allianceId) return
-    const [loaded, members] = await Promise.all([
-      getActivePlan(allianceId, bg),
-      getBgMembers(allianceId, bg),
-    ])
-    setActive(loaded)
-    setBgMembers(members)
-  }, [allianceId, bg])
+  const loadActive = useCallback(
+    async (_silent: boolean, isStale: () => boolean) => {
+      if (!allianceId) return
+      const [loaded, members] = await Promise.all([
+        getActivePlan(allianceId, bg),
+        getBgMembers(allianceId, bg),
+      ])
+      if (isStale()) return
+      setActive(loaded)
+      setBgMembers(members)
+    },
+    [allianceId, bg]
+  )
 
   const { loading: defenseLoading, refresh } = usePolledFetch(
     loadActive,

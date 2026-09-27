@@ -559,6 +559,7 @@ const fr: Translations = {
         select: 'Plan',
         none: 'Aucun plan pour ce groupe et ce format.',
         noActive: "Aucun plan de défense actif pour ce groupe pour l'instant.",
+        createFirst: 'Créez un plan pour commencer à placer des défenseurs.',
         create: 'Nouveau plan',
         createTitle: 'Nouveau plan de défense',
         fromTemplate: 'Partir de',

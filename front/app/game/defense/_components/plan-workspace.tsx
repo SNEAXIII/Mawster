@@ -61,17 +61,26 @@ export default function PlanWorkspace({
           {t.game.defense.plans.noActive}
         </p>
       )}
-      <DefenseGrid
-        onNodeClick={vm.handleNodeClick}
-        canManage={vm.userCanPlace}
-        exportDefenseMapRef={exportDefenseMapRef}
-        exportDefenseAssignementsRef={exportDefenseAssignementsRef}
-        exporting={exporting}
-        selectedAllianceTag={selectedAlliance?.tag}
-        selectedAllianceName={selectedAlliance?.name}
-        selectedBg={vm.selectedBg}
-        format={vm.gridFormat}
-      />
+      {vm.userCanPlace && defenseActions.plan === null ? (
+        <p
+          className='text-sm text-muted-foreground'
+          data-cy='defense-no-plan'
+        >
+          {t.game.defense.plans.createFirst}
+        </p>
+      ) : (
+        <DefenseGrid
+          onNodeClick={vm.handleNodeClick}
+          canManage={vm.userCanPlace}
+          exportDefenseMapRef={exportDefenseMapRef}
+          exportDefenseAssignementsRef={exportDefenseAssignementsRef}
+          exporting={exporting}
+          selectedAllianceTag={selectedAlliance?.tag}
+          selectedAllianceName={selectedAlliance?.name}
+          selectedBg={vm.selectedBg}
+          format={vm.gridFormat}
+        />
+      )}
     </>
   )
 }

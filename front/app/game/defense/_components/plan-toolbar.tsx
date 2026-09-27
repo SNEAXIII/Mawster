@@ -8,6 +8,7 @@ import type { DefensePlanSummary, Quota } from '@/app/services/defense'
 import type { SeasonFormat } from '@/app/services/season'
 import PlanStateBadge from './plan-state-badge'
 import QuotaCreateButton from './quota-create-button'
+import QuotaTooltip from './quota-tooltip'
 import PlanToolbarDialogs from './plan-toolbar-dialogs'
 import NamedSelect from './named-select'
 import type { usePlanCommands } from '../_hooks/use-plan-commands'
@@ -57,16 +58,22 @@ export default function PlanToolbar(props: Readonly<PlanToolbarProps>) {
       />
       {selected && (
         <>
-          <Button
-            size='sm'
-            variant='outline'
-            disabled={full}
-            onClick={() => setDialog('duplicate')}
-            data-cy='plan-duplicate-btn'
+          <QuotaTooltip
+            full={full}
+            reachedText={p.quotaReached}
+            limit={quota.limit}
           >
-            <FiCopy className='mr-1' />
-            {p.duplicate}
-          </Button>
+            <Button
+              size='sm'
+              variant='outline'
+              disabled={full}
+              onClick={() => setDialog('duplicate')}
+              data-cy='plan-duplicate-btn'
+            >
+              <FiCopy className='mr-1' />
+              {p.duplicate}
+            </Button>
+          </QuotaTooltip>
           <Button
             size='sm'
             variant='outline'

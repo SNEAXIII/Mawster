@@ -29,15 +29,19 @@ export function usePlanEditor(
   const [selectorNode, setSelectorNode] = useState<number | null>(null)
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
 
-  const loadPlan = useCallback(async () => {
-    if (!planId) return
-    const [loaded, members] = await Promise.all([
-      getPlan(allianceId, planId),
-      getPlanMembers(allianceId, planId),
-    ])
-    setPlan(loaded)
-    setBgMembers(members)
-  }, [allianceId, planId])
+  const loadPlan = useCallback(
+    async (_silent: boolean, isStale: () => boolean) => {
+      if (!planId) return
+      const [loaded, members] = await Promise.all([
+        getPlan(allianceId, planId),
+        getPlanMembers(allianceId, planId),
+      ])
+      if (isStale()) return
+      setPlan(loaded)
+      setBgMembers(members)
+    },
+    [allianceId, planId]
+  )
 
   const resetPlan = useCallback(() => setPlan(null), [])
 
