@@ -54,7 +54,7 @@ class MasteryService:
         session: SessionDep,
         game_account_id: uuid.UUID,
         items: list[GameAccountMasteryUpsertItem],
-    ) -> list[GameAccountMastery]:
+    ) -> list[GameAccountMasteryResponse]:
         for item in items:
             mastery = await session.get(Mastery, item.mastery_id)
             if mastery is None:

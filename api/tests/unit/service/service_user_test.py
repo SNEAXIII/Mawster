@@ -384,20 +384,12 @@ async def test_update_login_already_taken(mocker):
 
 
 @pytest.mark.asyncio
-async def test_get_user_by_id_with_validity_check_invalid_uuid(mocker):
-    """Invalid UUID string hits lines 68-69 (ValueError branch)."""
+@pytest.mark.parametrize("user_id", ["not-a-uuid", "", None])
+async def test_get_user_by_id_with_validity_check_unparsable_id(mocker, user_id):
+    """A malformed or missing token `user_id` is an unknown user, never a 500."""
     mock_session = session_mock(mocker)
     with pytest.raises(UserLoginError) as exc:
-        await UserService.get_user_by_id_with_validity_check(mock_session, "not-a-uuid")
-    assert exc.value.detail == str(USER_DOESNT_EXISTS)
-
-
-@pytest.mark.asyncio
-async def test_get_user_by_id_with_validity_check_empty_string(mocker):
-    """Empty string hits lines 68-69 (ValueError branch)."""
-    mock_session = session_mock(mocker)
-    with pytest.raises(UserLoginError) as exc:
-        await UserService.get_user_by_id_with_validity_check(mock_session, "")
+        await UserService.get_user_by_id_with_validity_check(mock_session, user_id)
     assert exc.value.detail == str(USER_DOESNT_EXISTS)
 
 

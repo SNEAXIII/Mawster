@@ -43,11 +43,11 @@ class UserService:
 
     @classmethod
     async def get_user_by_id_with_validity_check(
-        cls, session: SessionDep, user_id: str
-    ) -> User | None:
+        cls, session: SessionDep, user_id: str | None
+    ) -> User:
         try:
             uid = uuid.UUID(user_id)
-        except ValueError, AttributeError:
+        except ValueError, AttributeError, TypeError:
             raise USER_DOESNT_EXISTS from None
         return _assert_usable(await cls.get_user(session, uid))
 
@@ -66,7 +66,7 @@ class UserService:
         cls,
         session: SessionDep,
         current_user: User,
-    ) -> True:
+    ) -> bool:
         if current_user.deleted_at:
             # If user already deleted, raise the specific 'already deleted' error
             raise TARGET_USER_IS_ALREADY_DELETED

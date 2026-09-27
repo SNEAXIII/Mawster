@@ -106,7 +106,7 @@ class AllianceVisitorService:
             .where(AllianceVisitor.alliance_id == alliance_id)
             .options(selectinload(AllianceVisitor.game_account))  # type: ignore[arg-type]
         )
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def get_visited_alliances(
@@ -119,4 +119,4 @@ class AllianceVisitorService:
             .where(GameAccount.user_id == user_id, GameAccount.deleted_at.is_(None))
             .options(selectinload(AllianceVisitor.alliance))  # type: ignore[arg-type]
         )
-        return result.all()
+        return list(result.all())

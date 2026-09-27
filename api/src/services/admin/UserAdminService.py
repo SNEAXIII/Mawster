@@ -33,7 +33,7 @@ class UserAdminService:
         user: User | None,
         require_disabled: bool | None = None,
         forbid_admin: bool = True,
-    ) -> None:
+    ) -> User:
         if user is None:
             raise TARGET_USER_DOESNT_EXISTS
         if user.deleted_at:
@@ -46,25 +46,32 @@ class UserAdminService:
             raise TARGET_USER_IS_ALREADY_ENABLED
         if require_disabled is False and user.disabled_at:
             raise TARGET_USER_IS_ALREADY_DISABLED
+        return user
 
     @classmethod
-    async def admin_patch_disable_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
-        user: User | None = await UserService.get_user(session, user_uuid)
-        cls._validate_target_user_for_action(user, require_disabled=False, forbid_admin=True)
+    async def admin_patch_disable_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> bool:
+        user = cls._validate_target_user_for_action(
+            await UserService.get_user(session, user_uuid),
+            require_disabled=False,
+            forbid_admin=True,
+        )
         user.disabled_at = utcnow()
         await session.commit()
         return True
 
     @classmethod
-    async def admin_patch_enable_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
-        user: User | None = await UserService.get_user(session, user_uuid)
-        cls._validate_target_user_for_action(user, require_disabled=True, forbid_admin=False)
+    async def admin_patch_enable_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> bool:
+        user = cls._validate_target_user_for_action(
+            await UserService.get_user(session, user_uuid),
+            require_disabled=True,
+            forbid_admin=False,
+        )
         user.disabled_at = None
         await session.commit()
         return True
 
     @classmethod
-    async def admin_delete_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
+    async def admin_delete_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> bool:
         user: User | None = await UserService.get_user(session, user_uuid)
         if user is None:
             raise TARGET_USER_DOESNT_EXISTS
@@ -76,9 +83,10 @@ class UserAdminService:
         return True
 
     @classmethod
-    async def admin_patch_promote_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
-        user: User | None = await UserService.get_user(session, user_uuid)
-        cls._validate_target_user_for_action(user, require_disabled=None, forbid_admin=True)
+    async def admin_patch_promote_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> bool:
+        user = cls._validate_target_user_for_action(
+            await UserService.get_user(session, user_uuid), require_disabled=None, forbid_admin=True
+        )
         if user.role == Roles.ADMIN:
             raise TARGET_USER_IS_ALREADY_ADMIN
         user.role = Roles.ADMIN
@@ -87,9 +95,10 @@ class UserAdminService:
         return True
 
     @classmethod
-    async def admin_patch_demote_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> True:
-        user: User | None = await UserService.get_user(session, user_uuid)
-        cls._validate_target_user_for_action(user, forbid_admin=False)
+    async def admin_patch_demote_user(cls, session: SessionDep, user_uuid: uuid.UUID) -> bool:
+        user = cls._validate_target_user_for_action(
+            await UserService.get_user(session, user_uuid), forbid_admin=False
+        )
         if user.role != Roles.ADMIN:
             raise TARGET_USER_IS_NOT_ADMIN
         user.role = Roles.USER

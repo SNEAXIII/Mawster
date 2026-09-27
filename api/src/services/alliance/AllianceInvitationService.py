@@ -146,7 +146,7 @@ class AllianceInvitationService:
             )
             .options(*_INVITATION_OPTIONS)
         )
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def get_invitations_for_alliance(
@@ -161,7 +161,7 @@ class AllianceInvitationService:
             )
             .options(*_INVITATION_OPTIONS)
         )
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def accept_invitation(
