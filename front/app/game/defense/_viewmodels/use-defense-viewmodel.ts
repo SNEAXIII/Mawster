@@ -60,7 +60,10 @@ export function useDefenseViewModel({
     allianceId: selectedAllianceId,
     bg: selectedBg,
     selected: selectedPlan,
-    onChanged: (planId) => planList.refreshPlans(planId),
+    onChanged: (planId) => {
+      planList.refreshPlans(planId)
+      defenseActions.refreshPlan(true)
+    },
   })
   const activeView = useActivePlan(selectedAllianceId, selectedBg, !userCanPlace)
   const gridActions = userCanPlace ? defenseActions : activeView
