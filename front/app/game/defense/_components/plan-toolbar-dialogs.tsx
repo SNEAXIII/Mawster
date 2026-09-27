@@ -6,12 +6,11 @@ import type { CreatePlanBody, DefensePlanSummary } from '@/app/services/defense'
 import type { SeasonFormat } from '@/app/services/season'
 import NameDialog from './name-dialog'
 import PlanCreateDialog from './plan-create-dialog'
+import type { PlanToolbarDialog } from './plan-toolbar'
 import type { usePlanCommands } from '../_hooks/use-plan-commands'
 
-type Dialog = 'create' | 'duplicate' | 'rename' | 'template' | 'delete' | 'activate' | null
-
 interface PlanToolbarDialogsProps {
-  dialog: Dialog
+  dialog: PlanToolbarDialog
   close: (open: boolean) => void
   selected: DefensePlanSummary | null
   previous: DefensePlanSummary | undefined

@@ -4,16 +4,17 @@ import { useRef, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { useRequiredSession } from '@/hooks/use-required-session'
 import { FullPageSpinner } from '@/components/full-page-spinner'
-import { Button } from '@/components/ui/button'
 import { Shield } from 'lucide-react'
-import { FiTrash2 } from 'react-icons/fi'
+import TabBar from '@/components/tab-bar'
 import { DefenseActionsProvider } from '@/app/contexts/defense-actions-context'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import { downloadElementAsPng } from '@/app/lib/export-image'
 import DefenseHeader from './defense-header'
-import DefenseGrid from './defense-grid'
-import PlanToolbar from './plan-toolbar'
+import PlanWorkspace from './plan-workspace'
+import TemplateWorkspace from './template-workspace'
 import { useDefenseViewModel } from '../_viewmodels/use-defense-viewmodel'
+
+type DefenseTab = 'plans' | 'templates'
 
 interface DefensePageContentProps {
   onStateChange?: (allianceId: string, bg: number) => void
@@ -30,6 +31,7 @@ export default function DefensePageContent({
   const { status } = useRequiredSession()
 
   const vm = useDefenseViewModel({ onStateChange, initialAllianceId, initialBg })
+  const [tab, setTab] = useState<DefenseTab>('plans')
 
   const exportDefenseMapRef = useRef<HTMLDivElement>(null)
   const exportDefenseAssignementsRef = useRef<HTMLDivElement>(null)
@@ -73,12 +75,10 @@ export default function DefensePageContent({
     )
   }
 
-  const { defenseActions, gridActions } = vm
-
   return (
     <div className='flex flex-col gap-4'>
       <ExportModeProvider value={exporting}>
-        <DefenseActionsProvider value={gridActions}>
+        <DefenseActionsProvider value={vm.gridActions}>
           <DefenseHeader
             alliances={vm.alliances}
             selectedAllianceId={vm.selectedAllianceId}
@@ -93,48 +93,35 @@ export default function DefensePageContent({
             exporting={exporting}
           />
           {vm.userCanPlace && (
-            <div className='flex flex-wrap items-center justify-between gap-2'>
-              <PlanToolbar
-                allianceId={vm.selectedAllianceId}
-                format={vm.format}
-                plans={vm.planList.plans}
-                quota={vm.planList.quota}
-                selected={vm.selectedPlan}
-                onSelect={vm.planList.setSelectedPlanId}
-                commands={vm.planCommands}
-              />
-              {defenseActions.placements.length > 0 && (
-                <Button
-                  variant='destructive'
-                  size='sm'
-                  data-cy='defense-clear-all'
-                  onClick={() => defenseActions.setClearConfirmOpen(true)}
-                >
-                  <FiTrash2 className='w-4 h-4 mr-1' />
-                  {t.game.defense.clearAll}
-                </Button>
-              )}
-            </div>
+            <TabBar
+              tabs={[
+                { value: 'plans', label: t.game.defense.tabs.plans, cy: 'defense-tab-plans' },
+                {
+                  value: 'templates',
+                  label: t.game.defense.tabs.templates,
+                  cy: 'defense-tab-templates',
+                },
+              ]}
+              value={tab}
+              onChange={setTab}
+            />
           )}
-          {!vm.userCanPlace && gridActions.plan === null && (
-            <p
-              className='text-sm text-muted-foreground'
-              data-cy='defense-no-active-plan'
-            >
-              {t.game.defense.plans.noActive}
-            </p>
+          {(!vm.userCanPlace || tab === 'plans') && (
+            <PlanWorkspace
+              vm={vm}
+              exportDefenseMapRef={exportDefenseMapRef}
+              exportDefenseAssignementsRef={exportDefenseAssignementsRef}
+              exporting={exporting}
+              selectedAlliance={selectedAlliance}
+            />
           )}
-          <DefenseGrid
-            onNodeClick={vm.handleNodeClick}
-            canManage={vm.userCanPlace}
-            exportDefenseMapRef={exportDefenseMapRef}
-            exportDefenseAssignementsRef={exportDefenseAssignementsRef}
-            exporting={exporting}
-            selectedAllianceTag={selectedAlliance?.tag}
-            selectedAllianceName={selectedAlliance?.name}
-            selectedBg={vm.selectedBg}
-            format={vm.gridFormat}
-          />
+          {vm.userCanPlace && tab === 'templates' && (
+            <TemplateWorkspace
+              allianceId={vm.selectedAllianceId}
+              format={vm.format}
+              bg={vm.selectedBg}
+            />
+          )}
         </DefenseActionsProvider>
       </ExportModeProvider>
     </div>

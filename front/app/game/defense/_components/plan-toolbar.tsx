@@ -3,22 +3,17 @@
 import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { FiCopy, FiEdit2, FiSave, FiTrash2, FiCheckCircle } from 'react-icons/fi'
 import type { DefensePlanSummary, Quota } from '@/app/services/defense'
 import type { SeasonFormat } from '@/app/services/season'
 import PlanStateBadge from './plan-state-badge'
 import QuotaCreateButton from './quota-create-button'
 import PlanToolbarDialogs from './plan-toolbar-dialogs'
+import NamedSelect from './named-select'
 import type { usePlanCommands } from '../_hooks/use-plan-commands'
 
-type Dialog = 'create' | 'duplicate' | 'rename' | 'template' | 'delete' | 'activate' | null
+export type PlanToolbarDialog =
+  'create' | 'duplicate' | 'rename' | 'template' | 'delete' | 'activate' | null
 
 interface PlanToolbarProps {
   allianceId: string
@@ -34,35 +29,24 @@ export default function PlanToolbar(props: Readonly<PlanToolbarProps>) {
   const { allianceId, format, plans, quota, selected, onSelect, commands } = props
   const { t } = useI18n()
   const p = t.game.defense.plans
-  const [dialog, setDialog] = useState<Dialog>(null)
+  const [dialog, setDialog] = useState<PlanToolbarDialog>(null)
   const full = quota.used >= quota.limit
   const previous = plans.find((plan) => plan.is_active)
   const close = (open: boolean) => !open && setDialog(null)
 
   return (
     <div className='flex flex-wrap items-center gap-2'>
-      <Select
+      <NamedSelect
+        items={plans.map((plan) => ({
+          id: plan.id,
+          name: plan.name,
+          display: plan.is_active ? `★ ${plan.name}` : plan.name,
+        }))}
         value={selected?.id ?? ''}
-        onValueChange={onSelect}
-      >
-        <SelectTrigger
-          className='w-56'
-          data-cy='plan-select'
-        >
-          <SelectValue placeholder={p.none} />
-        </SelectTrigger>
-        <SelectContent>
-          {plans.map((plan) => (
-            <SelectItem
-              key={plan.id}
-              value={plan.id}
-              data-cy={`plan-option-${plan.name}`}
-            >
-              {plan.is_active ? `★ ${plan.name}` : plan.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        onChange={onSelect}
+        placeholder={p.none}
+        dataCy='plan'
+      />
       {selected && <PlanStateBadge plan={selected} />}
       <QuotaCreateButton
         label={p.create}
