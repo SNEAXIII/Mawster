@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from httpx import ASGITransport, AsyncClient, Response
@@ -12,7 +13,7 @@ _SHARED_CLIENT: AsyncClient | None = None
 
 
 @asynccontextmanager
-async def get_test_client() -> AsyncClient:
+async def get_test_client() -> AsyncIterator[AsyncClient]:
     """Yield the shared `AsyncClient` when available, otherwise create a temporary one.
 
     This allows tests to reuse a single client per test (via a fixture) while
@@ -47,21 +48,21 @@ async def execute_get_request(route: str, headers: dict[str, str] | None = None)
 
 
 async def execute_post_request(
-    route: str, payload: dict, headers: dict[str, str] | None = None
+    route: str, payload: dict | list | None, headers: dict[str, str] | None = None
 ) -> Response:
     async with get_test_client() as client:
         return await client.post(route, json=payload, headers=headers)
 
 
 async def execute_put_request(
-    route: str, payload: dict, headers: dict[str, str] | None = None
+    route: str, payload: dict | list | None, headers: dict[str, str] | None = None
 ) -> Response:
     async with get_test_client() as client:
         return await client.put(route, json=payload, headers=headers)
 
 
 async def execute_patch_request(
-    route: str, payload: dict, headers: dict[str, str] | None = None
+    route: str, payload: dict | list | None, headers: dict[str, str] | None = None
 ) -> Response:
     async with get_test_client() as client:
         return await client.patch(route, json=payload, headers=headers)

@@ -1,5 +1,6 @@
 import uuid
 from collections import defaultdict
+from collections.abc import Sequence
 
 from fastapi import HTTPException
 from sqlalchemy import Integer, case, cast, func, or_
@@ -435,7 +436,7 @@ class WarService:
 
     @classmethod
     async def _placement_dtos(
-        cls, session: SessionDep, placements: list[WarDefensePlacement]
+        cls, session: SessionDep, placements: Sequence[WarDefensePlacement]
     ) -> list[WarPlacementResponse]:
         saga = await SagaService.resolve_current(session)
         war = await session.get(War, placements[0].war_id) if placements else None
@@ -988,7 +989,7 @@ class WarService:
     async def _saga_dtos[T: (WarSynergyResponse, WarPrefightResponse)](
         session: SessionDep,
         dto_cls: type[T],
-        rows: list[WarSynergyAttacker] | list[WarPrefightAttacker],
+        rows: Sequence[WarSynergyAttacker] | Sequence[WarPrefightAttacker],
     ) -> list[T]:
         saga = await SagaService.resolve_current(session)
         dtos = []

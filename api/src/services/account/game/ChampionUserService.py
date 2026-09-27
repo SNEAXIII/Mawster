@@ -205,7 +205,7 @@ class ChampionUserService:
             .options(selectinload(ChampionUser.champion))  # type: ignore[arg-type]
         )
         result = await session.exec(sql)
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def get_champion_user(

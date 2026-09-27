@@ -79,7 +79,7 @@ class DevUser(BaseModel):
 
 class PromoteRequest(BaseModel):
     user_id: uuid.UUID
-    role: str = Roles.ADMIN
+    role: Roles = Roles.ADMIN
 
 
 class SetupAllianceSpec(BaseModel):
@@ -144,7 +144,7 @@ class SetupWarSpec(BaseModel):
 
 class SetupUserSpec(BaseModel):
     discord_token: str
-    role: str = "user"
+    role: Roles = Roles.USER
     game_pseudo: str | None = None
     create_alliance: SetupAllianceSpec | None = None
     join_alliance_token: str | None = None
@@ -316,7 +316,7 @@ async def promote_user(body: PromoteRequest, session: SessionDep):
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    return {"message": f"User promoted to {body.role}", "user_id": str(user.id)}
+    return {"message": f"User promoted to {body.role.value}", "user_id": str(user.id)}
 
 
 async def _load_batch_champions(session: SessionDep, specs: list[SetupUserSpec]) -> dict[str, str]:
