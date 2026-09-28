@@ -9,12 +9,14 @@ import { getChampions, type Champion } from '@/app/services/champions'
 
 interface TemplateChampionPickerProps {
   node: number | null
+  takenChampionIds: ReadonlySet<string>
   onClose: () => void
   onPick: (champion: Champion) => void
 }
 
 export default function TemplateChampionPicker({
   node,
+  takenChampionIds,
   onClose,
   onPick,
 }: Readonly<TemplateChampionPickerProps>) {
@@ -50,23 +52,25 @@ export default function TemplateChampionPicker({
           data-cy='template-champion-search'
         />
         <div className='grid grid-cols-5 gap-2 max-h-96 overflow-y-auto'>
-          {champions.map((champion) => (
-            <button
-              key={champion.id}
-              type='button'
-              className='flex flex-col items-center gap-1 rounded-md p-1 hover:bg-muted'
-              onClick={() => onPick(champion)}
-              data-cy={`template-champion-option-${champion.name}`}
-            >
-              <ChampionPortrait
-                imageUrl={champion.image_url}
-                name={champion.name}
-                rarity='7r1'
-                size={56}
-              />
-              <span className='truncate text-xs w-full text-center'>{champion.name}</span>
-            </button>
-          ))}
+          {champions
+            .filter((champion) => !takenChampionIds.has(champion.id))
+            .map((champion) => (
+              <button
+                key={champion.id}
+                type='button'
+                className='flex flex-col items-center gap-1 rounded-md p-1 hover:bg-muted'
+                onClick={() => onPick(champion)}
+                data-cy={`template-champion-option-${champion.name}`}
+              >
+                <ChampionPortrait
+                  imageUrl={champion.image_url}
+                  name={champion.name}
+                  rarity='7r1'
+                  size={56}
+                />
+                <span className='truncate text-xs w-full text-center'>{champion.name}</span>
+              </button>
+            ))}
         </div>
       </DialogContent>
     </Dialog>

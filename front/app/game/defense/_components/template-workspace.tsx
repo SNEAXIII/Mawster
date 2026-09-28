@@ -18,7 +18,11 @@ export default function TemplateWorkspace({
 }: Readonly<{ allianceId: string; format: SeasonFormat; bg: number }>) {
   const state = useTemplates(allianceId, format)
   const [pickerNode, setPickerNode] = useState<number | null>(null)
-  const placements = (state.selected?.nodes ?? []).map((n) => templateNodeToPlacement(n, bg))
+  const nodes = state.selected?.nodes ?? []
+  const placements = nodes.map((n) => templateNodeToPlacement(n, bg))
+  const takenChampionIds = new Set(
+    nodes.filter((n) => n.node_number !== pickerNode).map((n) => n.champion_id)
+  )
 
   return (
     <div className='flex flex-col gap-4'>
@@ -37,6 +41,7 @@ export default function TemplateWorkspace({
       )}
       <TemplateChampionPicker
         node={pickerNode}
+        takenChampionIds={takenChampionIds}
         onClose={() => setPickerNode(null)}
         onPick={(champion) => {
           if (pickerNode !== null) state.placeChampion(pickerNode, champion.id, champion.name)
