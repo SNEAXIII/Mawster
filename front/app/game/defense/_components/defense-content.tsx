@@ -4,8 +4,8 @@ import { useRef, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { useRequiredSession } from '@/hooks/use-required-session'
 import { FullPageSpinner } from '@/components/full-page-spinner'
-import { Shield } from 'lucide-react'
-import TabBar from '@/components/tab-bar'
+import { LayoutTemplate, Map as MapIcon, Shield } from 'lucide-react'
+import { ToggleButton, ToggleGroup } from '@/components/toggle-button'
 import { DefenseActionsProvider } from '@/app/contexts/defense-actions-context'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import { downloadElementAsPng } from '@/app/lib/export-image'
@@ -91,21 +91,29 @@ export default function DefensePageContent({
             onExportMapClick={handleExportMap}
             onExportListClick={handleExportList}
             exporting={exporting}
-          />
-          {vm.userCanPlace && (
-            <TabBar
-              tabs={[
-                { value: 'plans', label: t.game.defense.tabs.plans, cy: 'defense-tab-plans' },
-                {
-                  value: 'templates',
-                  label: t.game.defense.tabs.templates,
-                  cy: 'defense-tab-templates',
-                },
-              ]}
-              value={tab}
-              onChange={setTab}
-            />
-          )}
+            showBg={!vm.userCanPlace || tab === 'plans'}
+          >
+            {vm.userCanPlace && (
+              <ToggleGroup dataCy='defense-tab-toggle'>
+                <ToggleButton
+                  active={tab === 'plans'}
+                  onClick={() => setTab('plans')}
+                  dataCy='defense-tab-plans'
+                >
+                  <MapIcon className='size-3.5' />
+                  {t.game.defense.tabs.plans}
+                </ToggleButton>
+                <ToggleButton
+                  active={tab === 'templates'}
+                  onClick={() => setTab('templates')}
+                  dataCy='defense-tab-templates'
+                >
+                  <LayoutTemplate className='size-3.5' />
+                  {t.game.defense.tabs.templates}
+                </ToggleButton>
+              </ToggleGroup>
+            )}
+          </DefenseHeader>
           {(!vm.userCanPlace || tab === 'plans') && (
             <PlanWorkspace
               vm={vm}
