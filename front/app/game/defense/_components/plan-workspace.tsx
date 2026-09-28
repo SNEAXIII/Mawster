@@ -61,7 +61,7 @@ export default function PlanWorkspace({
           {t.game.defense.plans.noActive}
         </p>
       )}
-      {vm.userCanPlace && defenseActions.plan === null ? (
+      {vm.userCanPlace && vm.planList.listLoaded && vm.planList.selectedPlanId === null ? (
         <p
           className='text-sm text-muted-foreground'
           data-cy='defense-no-plan'

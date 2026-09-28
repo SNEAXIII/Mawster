@@ -16,6 +16,7 @@ export function usePlanList(
   const [plans, setPlans] = useState<DefensePlanSummary[]>([])
   const [quota, setQuota] = useState<Quota>({ used: 0, limit: 10 })
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null)
+  const [listLoaded, setListLoaded] = useState(false)
   const requestIdRef = useRef(0)
 
   const refreshPlans = useCallback(
@@ -32,6 +33,7 @@ export function usePlanList(
           if (wanted && list.plans.some((p) => p.id === wanted)) return wanted
           return (list.plans.find((p) => p.is_active) ?? list.plans[0])?.id ?? null
         })
+        setListLoaded(true)
       } catch {
         if (requestId === requestIdRef.current) toast.error(t.game.defense.loadError)
       }
@@ -41,8 +43,9 @@ export function usePlanList(
 
   useEffect(() => {
     setSelectedPlanId(null)
+    setListLoaded(false)
     refreshPlans()
   }, [refreshPlans])
 
-  return { plans, quota, selectedPlanId, setSelectedPlanId, refreshPlans }
+  return { plans, quota, selectedPlanId, setSelectedPlanId, refreshPlans, listLoaded }
 }
