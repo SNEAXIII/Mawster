@@ -2,10 +2,9 @@ import { setupUser, setupAllianceOwner, setupOwnerMemberAlliance } from '../../s
 
 /** setupAllianceOwner plus the Plan 1 every grid-rendering test below needs. */
 function setupOwnerWithPlan(prefix: string, pseudo: string, allianceName: string, tag: string) {
-  return setupAllianceOwner(prefix, pseudo, allianceName, tag).then((data) => {
-    cy.apiCreatePlan(data.userData.access_token, data.allianceId, 1, 'Plan 1');
-    return data;
-  });
+  return setupAllianceOwner(prefix, pseudo, allianceName, tag).then((data) =>
+    cy.apiCreatePlan(data.userData.access_token, data.allianceId, 1, 'Plan 1').then(() => data),
+  );
 }
 
 describe('Defense – Basic page rendering', () => {
