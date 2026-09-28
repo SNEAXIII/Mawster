@@ -107,7 +107,7 @@ class DefensePlanNodeService:
 
     @staticmethod
     async def clear_plan(session: SessionDep, plan: DefensePlan) -> None:
-        for node in list(plan.nodes):
+        for node in plan.nodes:
             await session.delete(node)
         await session.commit()
 
