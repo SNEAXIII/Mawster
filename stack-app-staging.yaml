@@ -122,7 +122,6 @@ services:
     environment:
       NEXTAUTH_URL: https://www.staging.mawster.app
       NEXTAUTH_URL_INTERNAL: http://front-staging:3000
-      NEXT_PUBLIC_API_CLIENT_HOST: www.staging.mawster.app
     secrets:
       - source: mawster_nextauth_secret_staging
         target: mawster_nextauth_secret

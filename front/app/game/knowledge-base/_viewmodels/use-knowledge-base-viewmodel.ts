@@ -13,7 +13,7 @@ import {
 } from '@/app/services/fight-records'
 import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { reportNote } from '@/app/services/moderation'
-import { toast } from 'sonner'
+import { withToast } from '@/app/lib/with-toast'
 import { useI18n } from '@/app/i18n'
 
 interface Filters {
@@ -197,15 +197,14 @@ export function useKnowledgeBaseViewModel() {
 
   // A report can push a note past the auto-block threshold, so the page is reloaded.
   const handleReportNote = async (noteId: string) => {
-    try {
-      await reportNote(noteId)
-      toast.success(t.moderation.reportSuccess)
-      await load()
-      return true
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.moderation.reportError)
-      return false
-    }
+    const reported = await withToast(
+      async () => {
+        await reportNote(noteId)
+        return true
+      },
+      { success: t.moderation.reportSuccess, error: t.moderation.reportError, onSuccess: load }
+    )
+    return reported ?? false
   }
 
   const handleFilterChange = (key: keyof Filters, value: string | null) => {

@@ -1,5 +1,5 @@
 import type { Champion } from './champions'
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
 export enum ChampionRarity {
@@ -38,13 +38,6 @@ export function splitRarity(rarity: string): { stars: number; rank: number } | n
   const parts = /^(\d+)r(\d+)$/i.exec(rarity)
   if (!parts) return null
   return { stars: Number.parseInt(parts[1], 10), rank: Number.parseInt(parts[2], 10) }
-}
-
-/** Extract the rank part from a rarity string, e.g. '7r5' → 'R5' */
-export function getRankLabel(rarity: string): string {
-  const parsed = splitRarity(rarity)
-  if (!parsed) return rarity.toUpperCase()
-  return `R${parsed.rank}`
 }
 
 /** Shorten a champion name for card display.
@@ -90,21 +83,6 @@ export interface BulkChampionEntry {
   ascension?: number
 }
 
-interface ApiError {
-  detail?: string
-  message?: string
-  statusCode?: number
-}
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data: ApiError = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
-}
-
 // ─── Champions (non-admin, for search) ───────────────────
 export const searchChampions = async (
   search: string,
@@ -112,20 +90,15 @@ export const searchChampions = async (
 ): Promise<{ champions: Champion[] }> => {
   const qs = new URLSearchParams({ page: '1', size: String(size) })
   if (search.trim()) qs.set('search', search.trim())
-  const response = await fetch(`${PROXY}/champions?${qs}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la recherche de champions')
-  return response.json()
+  return api(`/champions?${qs}`, 'Erreur lors de la recherche de champions')
 }
 
 // ─── Roster API ──────────────────────────────────────────
 export const getRoster = async (gameAccountId: string): Promise<RosterEntry[]> => {
-  const response = await fetch(`${PROXY}/champion-users/by-account/${gameAccountId}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la récupération du roster')
-  return response.json()
+  return api(
+    `/champion-users/by-account/${gameAccountId}`,
+    'Erreur lors de la récupération du roster'
+  )
 }
 
 export const updateChampionInRoster = async (
@@ -136,44 +109,38 @@ export const updateChampionInRoster = async (
   isPreferredAttacker: boolean = false,
   ascension: number = 0
 ): Promise<RosterEntry> => {
-  const response = await fetch(`${PROXY}/champion-users`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({
+  return api(
+    '/champion-users',
+    'Erreur lors de la mise à jour du roster',
+    jsonBody('POST', {
       game_account_id: gameAccountId,
       champion_id: championId,
       rarity,
       signature,
       is_preferred_attacker: isPreferredAttacker,
       ascension,
-    }),
-  })
-  await throwOnError(response, 'Erreur lors de la mise à jour du roster')
-  return response.json()
+    })
+  )
 }
 
 export const bulkUpdateRoster = async (
   gameAccountId: string,
   champions: BulkChampionEntry[]
 ): Promise<RosterEntry[]> => {
-  const response = await fetch(`${PROXY}/champion-users/bulk`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({
+  return api(
+    '/champion-users/bulk',
+    'Erreur lors de la mise à jour en masse du roster',
+    jsonBody('POST', {
       game_account_id: gameAccountId,
       champions,
-    }),
-  })
-  await throwOnError(response, 'Erreur lors de la mise à jour en masse du roster')
-  return response.json()
+    })
+  )
 }
 
 export const deleteRosterEntry = async (championUserId: string): Promise<void> => {
-  const response = await fetch(`${PROXY}/champion-users/${championUserId}`, {
+  await api(`/champion-users/${championUserId}`, 'Erreur lors de la suppression du roster', {
     method: 'DELETE',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, 'Erreur lors de la suppression du roster')
 }
 
 /** Compute the next rarity (one rank up within the same star level).
@@ -188,30 +155,25 @@ export function getNextRarity(rarity: string): string | null {
 }
 
 export const upgradeChampionRank = async (championUserId: string): Promise<RosterEntry> => {
-  const response = await fetch(`${PROXY}/champion-users/${championUserId}/upgrade`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors de l'amélioration du champion")
-  return response.json()
+  return api(
+    `/champion-users/${championUserId}/upgrade`,
+    "Erreur lors de l'amélioration du champion",
+    { method: 'PATCH' }
+  )
 }
 
 export const ascendChampion = async (championUserId: string): Promise<RosterEntry> => {
-  const response = await fetch(`${PROXY}/champion-users/${championUserId}/ascend`, {
+  return api(`/champion-users/${championUserId}/ascend`, "Erreur lors de l'ascension du champion", {
     method: 'PATCH',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, "Erreur lors de l'ascension du champion")
-  return response.json()
 }
 
 export const togglePreferredAttacker = async (championUserId: string): Promise<RosterEntry> => {
-  const response = await fetch(`${PROXY}/champion-users/${championUserId}/preferred-attacker`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors du basculement de l'attaquant préféré")
-  return response.json()
+  return api(
+    `/champion-users/${championUserId}/preferred-attacker`,
+    "Erreur lors du basculement de l'attaquant préféré",
+    { method: 'PATCH' }
+  )
 }
 
 // ─── Upgrade Requests ────────────────────────────────────
@@ -234,31 +196,27 @@ export const createUpgradeRequest = async (
   championUserId: string,
   requestedRarity: string
 ): Promise<UpgradeRequest> => {
-  const response = await fetch(`${PROXY}/champion-users/upgrade-requests`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({
+  return api(
+    '/champion-users/upgrade-requests',
+    "Erreur lors de la demande d'upgrade",
+    jsonBody('POST', {
       champion_user_id: championUserId,
       requested_rarity: requestedRarity,
-    }),
-  })
-  await throwOnError(response, "Erreur lors de la demande d'upgrade")
-  return response.json()
+    })
+  )
 }
 
 export const getUpgradeRequests = async (gameAccountId: string): Promise<UpgradeRequest[]> => {
-  const response = await fetch(
-    `${PROXY}/champion-users/upgrade-requests/by-account/${gameAccountId}`,
-    { headers: jsonHeaders }
+  return api(
+    `/champion-users/upgrade-requests/by-account/${gameAccountId}`,
+    'Erreur lors de la récupération des demandes'
   )
-  await throwOnError(response, 'Erreur lors de la récupération des demandes')
-  return response.json()
 }
 
 export const cancelUpgradeRequest = async (requestId: string): Promise<void> => {
-  const response = await fetch(`${PROXY}/champion-users/upgrade-requests/${requestId}`, {
-    method: 'DELETE',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors de l'annulation de la demande")
+  await api(
+    `/champion-users/upgrade-requests/${requestId}`,
+    "Erreur lors de l'annulation de la demande",
+    { method: 'DELETE' }
+  )
 }

@@ -1,4 +1,4 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 import type { WarBoost } from '@/app/services/war'
 
 export interface AllianceSnapshotStat {
@@ -114,30 +114,19 @@ export interface AccessibleAlliance {
 }
 
 export async function getAccessibleAlliances(): Promise<AccessibleAlliance[]> {
-  const res = await fetch(`${PROXY}/alliances/accessible`, { headers: jsonHeaders })
-  if (!res.ok) throw new Error('Failed to load accessible alliances')
-  return res.json()
+  return api('/alliances/accessible', 'Failed to load accessible alliances')
 }
 
 export async function getSeasons(): Promise<Season[]> {
-  const res = await fetch(`${PROXY}/seasons`, { headers: jsonHeaders })
-  if (!res.ok) throw new Error('Failed to load seasons')
-  return res.json()
+  return api('/seasons', 'Failed to load seasons')
 }
 
 export async function getSnapshotStats(): Promise<AllianceSnapshotStat[]> {
-  const res = await fetch(`${PROXY}/admin/wars/snapshot-stats`, { headers: jsonHeaders })
-  if (!res.ok) throw new Error('Failed to load snapshot stats')
-  return res.json()
+  return api('/admin/wars/snapshot-stats', 'Failed to load snapshot stats')
 }
 
 export async function forceSnapshotWars(): Promise<ForceSnapshotResult> {
-  const res = await fetch(`${PROXY}/admin/wars/force-snapshot`, {
-    method: 'POST',
-    headers: jsonHeaders,
-  })
-  if (!res.ok) throw new Error('Failed to force snapshot')
-  return res.json()
+  return api('/admin/wars/force-snapshot', 'Failed to force snapshot', { method: 'POST' })
 }
 
 export async function getFightRecords(
@@ -153,11 +142,7 @@ export async function getFightRecords(
   }
   const query = qs.toString()
   const params = query ? `?${query}` : ''
-  const res = await fetch(`${PROXY}/fight-records${params}`, {
-    headers: jsonHeaders,
-  })
-  if (!res.ok) throw new Error('Failed to load fight records')
-  return res.json()
+  return api(`/fight-records${params}`, 'Failed to load fight records')
 }
 
 export interface ImportRow {
@@ -181,11 +166,9 @@ export async function importFightRecords(
   allianceId: string,
   payload: ImportFightRecordsRequest
 ): Promise<ImportFightRecordsResponse> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/fight-records/import`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify(payload),
-  })
-  if (!response.ok) throw new Error(await response.text())
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/fight-records/import`,
+    'Failed to import fight records',
+    jsonBody('POST', payload)
+  )
 }

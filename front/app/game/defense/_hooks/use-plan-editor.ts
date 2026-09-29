@@ -16,7 +16,7 @@ import {
 } from '@/app/services/defense'
 import { planNodeToPlacement } from '../_components/plan-node-adapter'
 import { usePolledFetch } from './use-polled-fetch'
-import { withToast } from './with-toast'
+import { withToast } from '@/app/lib/with-toast'
 
 export function usePlanEditor(
   allianceId: string,
@@ -67,8 +67,7 @@ export function usePlanEditor(
         resetPollTimer()
         onPlanChanged()
       },
-      success,
-      error
+      { success, error }
     )
 
   const handlePlaceDefender = async (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { withToast } from '@/app/lib/with-toast'
 import { useI18n } from '@/app/i18n'
 import {
   type Mute,
@@ -30,22 +30,20 @@ export function useModerationViewModel() {
   const [revisionsLoading, setRevisionsLoading] = useState(false)
 
   const loadReports = useCallback(async () => {
-    try {
-      const res = await listReports(status === 'all' ? undefined : status)
-      setReports(res.items)
-    } catch (err) {
-      toast.error((err as Error).message || m.loadError)
-    }
+    await withToast(() => listReports(status === 'all' ? undefined : status), {
+      error: m.loadError,
+      onSuccess: (res) => setReports(res.items),
+    })
   }, [status, m.loadError])
 
   const loadSanctions = useCallback(async () => {
-    try {
-      const [mu, wa] = await Promise.all([listMutes(true), listWarns()])
-      setMutes(mu)
-      setWarns(wa)
-    } catch (err) {
-      toast.error((err as Error).message || m.loadError)
-    }
+    await withToast(() => Promise.all([listMutes(true), listWarns()]), {
+      error: m.loadError,
+      onSuccess: ([mu, wa]) => {
+        setMutes(mu)
+        setWarns(wa)
+      },
+    })
   }, [m.loadError])
 
   useEffect(() => {
@@ -57,13 +55,11 @@ export function useModerationViewModel() {
   }, [loadSanctions])
 
   const resolve = async (id: string, action: 'delete' | 'dismiss') => {
-    try {
-      await resolveReport(id, action)
-      toast.success(m.resolveSuccess)
-      await loadReports()
-    } catch (err) {
-      toast.error((err as Error).message || m.resolveError)
-    }
+    await withToast(() => resolveReport(id, action), {
+      success: m.resolveSuccess,
+      error: m.resolveError,
+      onSuccess: loadReports,
+    })
   }
 
   const sanction = async (
@@ -72,28 +68,23 @@ export function useModerationViewModel() {
     reason: string,
     expiresAt: string | null
   ) => {
-    try {
-      if (kind === 'mute') {
-        await muteUser(userId, reason, expiresAt)
-        toast.success(m.muteSuccess)
-      } else {
-        await warnUser(userId, reason)
-        toast.success(m.warnSuccess)
+    const isMute = kind === 'mute'
+    await withToast(
+      () => (isMute ? muteUser(userId, reason, expiresAt) : warnUser(userId, reason)),
+      {
+        success: isMute ? m.muteSuccess : m.warnSuccess,
+        error: isMute ? m.muteError : m.warnError,
+        onSuccess: loadSanctions,
       }
-      await loadSanctions()
-    } catch (err) {
-      toast.error((err as Error).message || (kind === 'mute' ? m.muteError : m.warnError))
-    }
+    )
   }
 
   const lift = async (userId: string) => {
-    try {
-      await liftMute(userId)
-      toast.success(m.liftSuccess)
-      await loadSanctions()
-    } catch (err) {
-      toast.error((err as Error).message || m.liftError)
-    }
+    await withToast(() => liftMute(userId), {
+      success: m.liftSuccess,
+      error: m.liftError,
+      onSuccess: loadSanctions,
+    })
   }
 
   const loadRevisions = useCallback(async (noteId: string) => {

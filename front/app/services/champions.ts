@@ -1,4 +1,4 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 import { CLASS_ORDER } from '@/app/lib/champion-class'
 
 // ─── Types ───────────────────────────────────────────────
@@ -23,33 +23,12 @@ export interface FetchChampionsResponse {
   current_page: number
 }
 
-interface ApiError {
-  detail?: string
-  message?: string
-  statusCode?: number
-}
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data: ApiError = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
-}
-
 export const championClasses = [
   { value: 'all', label: 'All' },
   ...CLASS_ORDER.map((c) => ({ value: c, label: c })),
 ]
 
 // ─── API ─────────────────────────────────────────────────
-export const boolFilterOptions = [
-  { value: 'all', label: 'All' },
-  { value: 'true', label: 'Yes' },
-  { value: 'false', label: 'No' },
-]
-
 export type BoolFilter = 'all' | 'true' | 'false'
 export type ChampionOrderBy = 'name' | 'champion_class'
 export type ChampionOrderDir = 'asc' | 'desc'
@@ -91,21 +70,18 @@ export const getChampions = async (query: ChampionQuery = {}): Promise<FetchCham
     if (value && value !== 'all') qs.set(key, value)
   }
 
-  const response = await fetch(`${PROXY}/champions?${qs}`, { headers: jsonHeaders })
-  await throwOnError(response, 'Erreur lors de la récupération des champions')
-  return response.json()
+  return api(`/champions?${qs}`, 'Erreur lors de la récupération des champions')
 }
 
 export const updateChampionAlias = async (
   championId: string,
   alias: string | null
 ): Promise<void> => {
-  const response = await fetch(`${PROXY}/admin/champions/${championId}/alias`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-    body: JSON.stringify({ alias }),
-  })
-  await throwOnError(response, "Erreur lors de la mise à jour de l'alias")
+  await api(
+    `/admin/champions/${championId}/alias`,
+    "Erreur lors de la mise à jour de l'alias",
+    jsonBody('PATCH', { alias })
+  )
 }
 
 export const loadChampions = async (
@@ -119,13 +95,11 @@ export const loadChampions = async (
     has_prefight?: boolean
   }[]
 ): Promise<{ message: string; created: number; updated: number; skipped: number }> => {
-  const response = await fetch(`${PROXY}/admin/champions/load`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify(champions),
-  })
-  await throwOnError(response, 'Erreur lors du chargement des champions')
-  return response.json()
+  return api(
+    '/admin/champions/load',
+    'Erreur lors du chargement des champions',
+    jsonBody('POST', champions)
+  )
 }
 
 export const exportAllChampions = async (): Promise<
@@ -139,11 +113,10 @@ export const exportAllChampions = async (): Promise<
     has_prefight: boolean
   }[]
 > => {
-  const response = await fetch(`${PROXY}/champions?page=1&size=9999`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors de l'export des champions")
-  const data: FetchChampionsResponse = await response.json()
+  const data: FetchChampionsResponse = await api(
+    '/champions?page=1&size=9999',
+    "Erreur lors de l'export des champions"
+  )
   return data.champions.map((c) => ({
     name: c.name,
     champion_class: c.champion_class,
@@ -156,54 +129,37 @@ export const exportAllChampions = async (): Promise<
 }
 
 export const deleteChampion = async (championId: string): Promise<void> => {
-  const response = await fetch(`${PROXY}/admin/champions/${championId}`, {
+  await api(`/admin/champions/${championId}`, 'Erreur lors de la suppression du champion', {
     method: 'DELETE',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, 'Erreur lors de la suppression du champion')
 }
 
 export const toggleChampionAscendable = async (
   championId: string
 ): Promise<{ is_ascendable: boolean }> => {
-  const response = await fetch(`${PROXY}/admin/champions/${championId}/ascendable`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors du basculement de l'ascension")
-  return response.json()
+  return api(
+    `/admin/champions/${championId}/ascendable`,
+    "Erreur lors du basculement de l'ascension",
+    { method: 'PATCH' }
+  )
 }
 
 export const toggleChampionSevenStars = async (
   championId: string
 ): Promise<{ is_7_stars_available: boolean }> => {
-  const response = await fetch(`${PROXY}/admin/champions/${championId}/seven-stars`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors du basculement de la disponibilité 7 étoiles')
-  return response.json()
+  return api(
+    `/admin/champions/${championId}/seven-stars`,
+    'Erreur lors du basculement de la disponibilité 7 étoiles',
+    { method: 'PATCH' }
+  )
 }
 
 export const toggleChampionPrefight = async (
   championId: string
 ): Promise<{ has_prefight: boolean }> => {
-  const response = await fetch(`${PROXY}/admin/champions/${championId}/prefight`, {
+  return api(`/admin/champions/${championId}/prefight`, 'Erreur lors du basculement du précombat', {
     method: 'PATCH',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, 'Erreur lors du basculement du précombat')
-  return response.json()
-}
-
-export const getSeasonSagaRoles = async (
-  seasonId: string
-): Promise<{ champion_id: string; is_saga_attacker: boolean; is_saga_defender: boolean }[]> => {
-  const response = await fetch(`${PROXY}/admin/seasons/${seasonId}/saga`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors du chargement des rôles saga')
-  return response.json()
 }
 
 export const setChampionSagaRole = async (
@@ -211,13 +167,11 @@ export const setChampionSagaRole = async (
   championId: string,
   body: { is_saga_attacker: boolean; is_saga_defender: boolean }
 ): Promise<{ is_saga_attacker: boolean; is_saga_defender: boolean }> => {
-  const response = await fetch(`${PROXY}/admin/seasons/${seasonId}/saga/${championId}`, {
-    method: 'PUT',
-    headers: jsonHeaders,
-    body: JSON.stringify(body),
-  })
-  await throwOnError(response, 'Erreur lors de la mise à jour du rôle saga')
-  return response.json()
+  return api(
+    `/admin/seasons/${seasonId}/saga/${championId}`,
+    'Erreur lors de la mise à jour du rôle saga',
+    jsonBody('PUT', body)
+  )
 }
 
 /**

@@ -1,14 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { encode } from '@auth/core/jwt'
-import jwt from 'jsonwebtoken'
 import { isServerDev } from '@/app/lib/dev-mode'
 import { getServerApiUrl } from '@/app/lib/serverApiUrl'
 import { withBackendProfile } from '@/app/lib/backend-profile'
-
-interface BackendJwtPayload {
-  user_id: string
-  role: string
-}
+import { tokenFromBackend } from '@/app/lib/auth-refresh'
 
 const COOKIE_NAME = 'authjs.session-token'
 
@@ -35,10 +30,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Login failed' }, { status: 401 })
     }
 
-    const data = await backendRes.json()
-    const decoded = jwt.decode(data.access_token) as BackendJwtPayload | null
+    const fields = tokenFromBackend(await backendRes.json())
 
-    if (!decoded) {
+    if (!fields) {
       return NextResponse.json({ message: 'Invalid token' }, { status: 500 })
     }
 
@@ -50,15 +44,7 @@ export async function POST(req: NextRequest) {
     // Mints the same token the jwt callback would at sign-in, profile included:
     // the session callback reads it without touching the network, so a cookie
     // forged here without one would render a blank username.
-    const token = await withBackendProfile({
-      id: decoded.user_id,
-      role: decoded.role,
-      accessToken: data.access_token,
-      backendRefreshToken: data.refresh_token,
-      accessTokenExpires: Date.now() + 60 * 60 * 1000,
-      expired: false,
-      backendAuthenticated: true,
-    })
+    const token = await withBackendProfile(fields)
 
     const sessionToken = await encode({ token, secret, salt: COOKIE_NAME })
 

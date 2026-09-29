@@ -3,6 +3,22 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.22.1](https://github.com/SNEAXIII/Mawster/compare/v1.22.0...v1.22.1) (2026-09-29)
+
+
+### Corrigé
+
+* clarify the defense plan toolbar ([6a3673c](https://github.com/SNEAXIII/Mawster/commit/6a3673c463cbf8dcbf867d2213c17261e8159f12))
+* drop the pending KO write when an attacker is removed ([#621](https://github.com/SNEAXIII/Mawster/issues/621)) ([0a1124e](https://github.com/SNEAXIII/Mawster/commit/0a1124e63d2c077d45a723c33c30110c517918d9))
+
+
+### Modifié
+
+* build the NextAuth token from the backend JWT in one helper ([#618](https://github.com/SNEAXIII/Mawster/issues/618)) ([95d5ffd](https://github.com/SNEAXIII/Mawster/commit/95d5ffdebb07a786781d9c7130f8ad1840fe692d))
+* drop dead front service exports and unused font ([#616](https://github.com/SNEAXIII/Mawster/issues/616)) ([7320c28](https://github.com/SNEAXIII/Mawster/commit/7320c287442af24a033c658a9fd1b79e3646cbab))
+* factor toast-on-error boilerplate into a shared withToast helper ([#619](https://github.com/SNEAXIII/Mawster/issues/619)) ([bb93878](https://github.com/SNEAXIII/Mawster/commit/bb93878d84cacd4e24d2c4360e8238280fdafa92))
+* share one api request helper across front services ([#620](https://github.com/SNEAXIII/Mawster/issues/620)) ([aec8f43](https://github.com/SNEAXIII/Mawster/commit/aec8f4352a8a7411d212f71241706e8a6c3223d8))
+
 ## [1.22.0](https://github.com/SNEAXIII/Mawster/compare/v1.21.0...v1.22.0) (2026-09-29)
 
 

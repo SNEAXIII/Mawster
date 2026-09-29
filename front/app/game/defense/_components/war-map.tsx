@@ -130,7 +130,7 @@ export function WarMapNode({
               {placement.rarity && (
                 <span
                   className={cn(
-                    'absolute inset-x-0 bottom-0 z-40 rounded-b bg-black/70 text-center text-[9px] font-semibold leading-[11px]',
+                    'absolute inset-x-0 bottom-0 z-40 rounded-b bg-background/70 text-center text-[9px] font-semibold leading-2.75',
                     rarityBadgeClass(placement.rarity)
                   )}
                 >
@@ -142,7 +142,7 @@ export function WarMapNode({
 
           {/* Node number — inside the cell so it never collides with its neighbour,
             and above the portrait badges (z-30) since it must always be readable */}
-          <span className='absolute top-0 left-0 z-40 rounded-br bg-black/70 px-1 text-[9px] font-bold leading-[13px] text-white'>
+          <span className='absolute top-0 left-0 z-40 rounded-br bg-background/70 px-1 text-[9px] font-bold leading-[13px] text-foreground'>
             {nodeNumber}
           </span>
 
@@ -158,7 +158,7 @@ export function WarMapNode({
 
           {locked && (
             <span
-              className='absolute top-0 right-0 z-40 flex items-center justify-center rounded-bl bg-black/70 p-0.5 text-white'
+              className='absolute top-0 right-0 z-40 flex items-center justify-center rounded-bl bg-background/70 p-0.5 text-foreground'
               data-cy={`node-attacker-locked-${nodeNumber}`}
               title={t.game.war.attackerLocked}
             >

@@ -26,16 +26,17 @@ export default function PlanStateBadge({ plan, progress }: Readonly<PlanStateBad
     <span className='flex items-center gap-1'>
       <Badge
         variant={stateVariant(plan)}
+        className='gap-1.5'
         data-cy='plan-state-badge'
       >
         {plan.state === 'validated' ? p.validated : p.incomplete}
         {progress && (
-          <>
-            {' · '}
-            <span data-cy='plan-state-progress'>
-              {progress.assigned}/{progress.total}
-            </span>
-          </>
+          <span
+            className='border-l border-current/30 pl-1.5 tabular-nums'
+            data-cy='plan-state-progress'
+          >
+            {progress.assigned}/{progress.total}
+          </span>
         )}
       </Badge>
       {plan.is_active && <Badge data-cy='plan-active-badge'>{p.active}</Badge>}

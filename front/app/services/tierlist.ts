@@ -1,4 +1,4 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -63,67 +63,34 @@ export interface TierListSavePayload {
   tags: TierListTag[]
 }
 
-interface ApiError {
-  detail?: string
-  message?: string
-}
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data: ApiError = await response.json().catch(() => ({}))
-  const message = data.message ?? data.detail ?? fallback
-  const error = new Error(message)
-  ;(error as Error & { status: number }).status = response.status
-  throw error
-}
-
 // ─── Catalog ─────────────────────────────────────────────
 
 /** The champion catalog. Answers signed out — the tier list is public. */
 export async function fetchCatalog(): Promise<CatalogResponse> {
-  const response = await fetch(`${PROXY}/catalog/champions`, { headers: jsonHeaders })
-  await throwOnError(response, 'Failed to load the champion catalog')
-  return response.json()
+  return api('/catalog/champions', 'Failed to load the champion catalog')
 }
 
 // ─── Tier lists ──────────────────────────────────────────
 
 export async function fetchTierLists(): Promise<TierListSummary[]> {
-  const response = await fetch(`${PROXY}/tierlists`, { headers: jsonHeaders })
-  await throwOnError(response, 'Failed to load your tier lists')
-  return response.json()
+  return api('/tierlists', 'Failed to load your tier lists')
 }
 
 export async function fetchTierList(id: string): Promise<TierListDetail> {
-  const response = await fetch(`${PROXY}/tierlists/${id}`, { headers: jsonHeaders })
-  await throwOnError(response, 'Failed to load this tier list')
-  return response.json()
+  return api(`/tierlists/${id}`, 'Failed to load this tier list')
 }
 
 export async function createTierList(payload: TierListSavePayload): Promise<TierListDetail> {
-  const response = await fetch(`${PROXY}/tierlists`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify(payload),
-  })
-  await throwOnError(response, 'Failed to create the tier list')
-  return response.json()
+  return api('/tierlists', 'Failed to create the tier list', jsonBody('POST', payload))
 }
 
 export async function saveTierList(
   id: string,
   payload: TierListSavePayload
 ): Promise<TierListDetail> {
-  const response = await fetch(`${PROXY}/tierlists/${id}`, {
-    method: 'PUT',
-    headers: jsonHeaders,
-    body: JSON.stringify(payload),
-  })
-  await throwOnError(response, 'Failed to save the tier list')
-  return response.json()
+  return api(`/tierlists/${id}`, 'Failed to save the tier list', jsonBody('PUT', payload))
 }
 
 export async function deleteTierList(id: string): Promise<void> {
-  const response = await fetch(`${PROXY}/tierlists/${id}`, { method: 'DELETE' })
-  await throwOnError(response, 'Failed to delete the tier list')
+  await api(`/tierlists/${id}`, 'Failed to delete the tier list', { method: 'DELETE' })
 }
