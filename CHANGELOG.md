@@ -3,6 +3,18 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.22.0](https://github.com/SNEAXIII/Mawster/compare/v1.21.0...v1.22.0) (2026-09-29)
+
+
+### Ajouté
+
+* defense templates and plans per battlegroup and format ([d104dc1](https://github.com/SNEAXIII/Mawster/commit/d104dc12181314f9883c05cab427862b5e745a5c))
+
+
+### Modifié
+
+* fix the type errors ty reports on the backend ([#607](https://github.com/SNEAXIII/Mawster/issues/607)) ([cbba541](https://github.com/SNEAXIII/Mawster/commit/cbba541ac774a56c9cfc0c5dc01ec28bdeada1a7))
+
 ## [1.21.0](https://github.com/SNEAXIII/Mawster/compare/v1.20.0...v1.21.0) (2026-09-26)
 
 
