@@ -21,13 +21,6 @@ export const TAG_DISPLAY: Record<TagKey, TagDisplay> = {
 }
 
 /**
- * Derived, never set: a champion marked both attacker and defender is a dual
- * threat, and shows that instead of the two — three chips saying the same thing
- * is noise.
- */
-export const DUAL_DISPLAY: TagDisplay = { code: 'DUAL', tone: 'bg-violet-500/90 text-white' }
-
-/**
  * Marker artwork, served next to the portraits and the star frames.
  *
  * The game's own glyphs rather than a vector icon set: a generic sword next to
