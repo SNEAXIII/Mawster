@@ -1,15 +1,6 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 
 // ─── Moderation Service ──────────────────────────────────
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
-}
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -75,18 +66,15 @@ export interface MyModeration {
 // ─── Reader API ──────────────────────────────────────────
 
 export async function reportNote(noteId: string, reason?: string): Promise<void> {
-  const response = await fetch(`${PROXY}/notes/${noteId}/report`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ reason: reason ?? null }),
-  })
-  await throwOnError(response, 'Failed to report note')
+  await api(
+    `/notes/${noteId}/report`,
+    'Failed to report note',
+    jsonBody('POST', { reason: reason ?? null })
+  )
 }
 
 export async function getMyModeration(): Promise<MyModeration> {
-  const response = await fetch(`${PROXY}/me/moderation`, { headers: jsonHeaders })
-  await throwOnError(response, 'Failed to load moderation status')
-  return response.json()
+  return api('/me/moderation', 'Failed to load moderation status')
 }
 
 // ─── Admin API ───────────────────────────────────────────
@@ -96,26 +84,19 @@ export async function listReports(status?: string, page = 1): Promise<PaginatedR
   if (status) params.set('status', status)
   params.set('page', String(page))
   const suffix = params.toString() ? `?${params}` : ''
-  const response = await fetch(`${PROXY}/admin/note-reports${suffix}`, { headers: jsonHeaders })
-  await throwOnError(response, 'Failed to load note reports')
-  return response.json()
+  return api(`/admin/note-reports${suffix}`, 'Failed to load note reports')
 }
 
 export async function resolveReport(reportId: string, action: 'delete' | 'dismiss'): Promise<void> {
-  const response = await fetch(`${PROXY}/admin/note-reports/${reportId}/resolve`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ action }),
-  })
-  await throwOnError(response, 'Failed to resolve report')
+  await api(
+    `/admin/note-reports/${reportId}/resolve`,
+    'Failed to resolve report',
+    jsonBody('POST', { action })
+  )
 }
 
 export async function getRevisions(noteId: string): Promise<NoteRevision[]> {
-  const response = await fetch(`${PROXY}/admin/notes/${noteId}/revisions`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Failed to load note revisions')
-  return response.json()
+  return api(`/admin/notes/${noteId}/revisions`, 'Failed to load note revisions')
 }
 
 export async function muteUser(
@@ -123,45 +104,31 @@ export async function muteUser(
   reason: string,
   expiresAt?: string | null
 ): Promise<void> {
-  const response = await fetch(`${PROXY}/admin/users/${userId}/mute`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ reason, expires_at: expiresAt ?? null }),
-  })
-  await throwOnError(response, 'Failed to mute user')
+  await api(
+    `/admin/users/${userId}/mute`,
+    'Failed to mute user',
+    jsonBody('POST', { reason, expires_at: expiresAt ?? null })
+  )
 }
 
 export async function liftMute(userId: string): Promise<void> {
-  const response = await fetch(`${PROXY}/admin/users/${userId}/mute`, {
-    method: 'DELETE',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Failed to lift mute')
+  await api(`/admin/users/${userId}/mute`, 'Failed to lift mute', { method: 'DELETE' })
 }
 
 export async function warnUser(userId: string, reason: string): Promise<void> {
-  const response = await fetch(`${PROXY}/admin/users/${userId}/warn`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ reason }),
-  })
-  await throwOnError(response, 'Failed to warn user')
+  await api(`/admin/users/${userId}/warn`, 'Failed to warn user', jsonBody('POST', { reason }))
 }
 
 export async function listMutes(activeOnly?: boolean): Promise<Mute[]> {
   const params = new URLSearchParams()
   if (activeOnly !== undefined) params.set('active_only', String(activeOnly))
   const suffix = params.toString() ? `?${params}` : ''
-  const response = await fetch(`${PROXY}/admin/mutes${suffix}`, { headers: jsonHeaders })
-  await throwOnError(response, 'Failed to load mutes')
-  return response.json()
+  return api(`/admin/mutes${suffix}`, 'Failed to load mutes')
 }
 
 export async function listWarns(userId?: string): Promise<Warn[]> {
   const params = new URLSearchParams()
   if (userId) params.set('user_id', userId)
   const suffix = params.toString() ? `?${params}` : ''
-  const response = await fetch(`${PROXY}/admin/warns${suffix}`, { headers: jsonHeaders })
-  await throwOnError(response, 'Failed to load warns')
-  return response.json()
+  return api(`/admin/warns${suffix}`, 'Failed to load warns')
 }

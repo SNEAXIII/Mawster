@@ -1,4 +1,4 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 import type { SeasonFormat } from '@/app/services/season'
 
 // ─── Defense Placement Service ───────────────────────────
@@ -58,15 +58,6 @@ export interface BgMember {
   is_owner: boolean
   is_officer: boolean
   is_strategist: boolean
-}
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
 }
 
 export type PlanState = 'incomplete' | 'validated'
@@ -133,20 +124,8 @@ export interface CreatePlanBody {
 
 // ─── Defense API ─────────────────────────────────────────
 
-export async function defenseRequest<T>(
-  path: string,
-  fallback: string,
-  init: RequestInit = {}
-): Promise<T> {
-  const response = await fetch(`${PROXY}/alliances/${path}`, { headers: jsonHeaders, ...init })
-  await throwOnError(response, fallback)
-  if (response.status === 204) return undefined as T
-  return response.json()
-}
-
-export function jsonBody(method: string, payload?: unknown): RequestInit {
-  return { method, body: payload === undefined ? undefined : JSON.stringify(payload) }
-}
+export const defenseRequest = <T>(path: string, fallback: string, init?: RequestInit) =>
+  api<T>(`/alliances/${path}`, fallback, init)
 
 const plan = (allianceId: string, planId: string) => `${allianceId}/defense/plans/${planId}`
 const bgPath = (allianceId: string, bg: number) => `${allianceId}/defense/bg/${bg}`

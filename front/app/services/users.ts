@@ -1,5 +1,5 @@
 import { possibleRoles, possibleStatus } from '@/app/lib/constants'
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { PROXY, api, jsonBody, jsonHeaders } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
 export interface User {
@@ -19,12 +19,6 @@ export interface FetchUsersResponse {
   current_page: number
 }
 
-interface ApiError {
-  detail?: string
-  message?: string
-  statusCode?: number
-}
-
 export interface ValidationErrors {
   [key: string]: { type: string; message: string }
 }
@@ -36,15 +30,6 @@ export interface ApiErrorResponse {
 
 // Every call goes through the Next.js /api/back proxy.
 // The backend JWT is injected server-side, never client-side.
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data: ApiError = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
-}
 
 // ─── API ─────────────────────────────────────────────────
 export const getUsers = async (
@@ -59,54 +44,40 @@ export const getUsers = async (
   if (role && role !== possibleRoles[0].value) qs.set('role', role)
   if (search?.trim()) qs.set('search', search.trim())
 
-  const response = await fetch(`${PROXY}/admin/users?${qs}`, { headers: jsonHeaders })
-  await throwOnError(response, 'Erreur lors de la récupération des utilisateurs')
-  return response.json()
+  return api(`/admin/users?${qs}`, 'Erreur lors de la récupération des utilisateurs')
 }
 
 export const deleteAccount = async (confirmation?: string): Promise<true> => {
-  const response = await fetch(`${PROXY}/user/delete`, {
-    method: 'DELETE',
-    headers: jsonHeaders,
-    body: JSON.stringify({ confirmation: confirmation ?? '' }),
-  })
-  await throwOnError(response, 'Erreur lors de la suppression du compte')
+  await api(
+    '/user/delete',
+    'Erreur lors de la suppression du compte',
+    jsonBody('DELETE', { confirmation: confirmation ?? '' })
+  )
   return true
 }
 
 export const updateLogin = async (login: string): Promise<void> => {
-  const response = await fetch(`${PROXY}/user/login`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-    body: JSON.stringify({ login }),
-  })
-  await throwOnError(response, 'Erreur lors de la mise à jour du pseudo')
+  await api('/user/login', 'Erreur lors de la mise à jour du pseudo', jsonBody('PATCH', { login }))
 }
 
 export const disableUser = async (userId: string): Promise<true> => {
-  const response = await fetch(`${PROXY}/admin/users/disable/${userId}`, {
+  await api(`/admin/users/disable/${userId}`, "Erreur lors de la désactivation de l'utilisateur", {
     method: 'PATCH',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, "Erreur lors de la désactivation de l'utilisateur")
   return true
 }
 
 export const enableUser = async (userId: string): Promise<true> => {
-  const response = await fetch(`${PROXY}/admin/users/enable/${userId}`, {
+  await api(`/admin/users/enable/${userId}`, "Erreur lors de la réactivation de l'utilisateur", {
     method: 'PATCH',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, "Erreur lors de la réactivation de l'utilisateur")
   return true
 }
 
 export const deleteUser = async (userId: string): Promise<true> => {
-  const response = await fetch(`${PROXY}/admin/users/delete/${userId}`, {
+  await api(`/admin/users/delete/${userId}`, "Erreur lors de la suppression de l'utilisateur", {
     method: 'DELETE',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, "Erreur lors de la suppression de l'utilisateur")
   return true
 }
 
@@ -131,10 +102,10 @@ export const promoteToAdmin = async (userId: string): Promise<true> => {
 }
 
 export const demoteFromAdmin = async (userId: string): Promise<true> => {
-  const response = await fetch(`${PROXY}/admin/users/demote/${userId}`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors de la rétrogradation de l'administrateur")
+  await api(
+    `/admin/users/demote/${userId}`,
+    "Erreur lors de la rétrogradation de l'administrateur",
+    { method: 'PATCH' }
+  )
   return true
 }

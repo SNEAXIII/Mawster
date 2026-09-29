@@ -1,4 +1,4 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { PROXY, api, jsonBody, jsonHeaders } from '@/app/services/utils'
 
 export type SeasonFormat = 'regular' | 'big_thing'
 export type SeasonStatus = 'upcoming' | 'active' | 'ended'
@@ -20,47 +20,24 @@ export async function getCurrentSeason(): Promise<Season | null> {
 }
 
 export async function listSeasons(): Promise<Season[]> {
-  const res = await fetch(`${PROXY}/admin/seasons`, { headers: jsonHeaders })
-  if (!res.ok) throw new Error('Failed to load seasons')
-  return res.json()
+  return api('/admin/seasons', 'Failed to load seasons')
 }
 
 export async function createSeason(
   number: number,
   format: SeasonFormat = 'regular'
 ): Promise<Season> {
-  const res = await fetch(`${PROXY}/admin/seasons`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ number, format }),
-  })
-  if (!res.ok) throw new Error('Failed to create season')
-  return res.json()
+  return api('/admin/seasons', 'Failed to create season', jsonBody('POST', { number, format }))
 }
 
 export async function openSeason(id: string): Promise<Season> {
-  const res = await fetch(`${PROXY}/admin/seasons/${id}/open`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  })
-  if (!res.ok) throw new Error('Failed to open season')
-  return res.json()
+  return api(`/admin/seasons/${id}/open`, 'Failed to open season', { method: 'PATCH' })
 }
 
 export async function closeSeason(id: string): Promise<Season> {
-  const res = await fetch(`${PROXY}/admin/seasons/${id}/close`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  })
-  if (!res.ok) throw new Error('Failed to close season')
-  return res.json()
+  return api(`/admin/seasons/${id}/close`, 'Failed to close season', { method: 'PATCH' })
 }
 
 export async function revertSeason(id: string): Promise<Season> {
-  const res = await fetch(`${PROXY}/admin/seasons/${id}/revert`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-  })
-  if (!res.ok) throw new Error('Failed to revert season')
-  return res.json()
+  return api(`/admin/seasons/${id}/revert`, 'Failed to revert season', { method: 'PATCH' })
 }

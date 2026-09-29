@@ -1,4 +1,4 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { PROXY, api, jsonBody } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
 export interface VisionImport {
@@ -65,21 +65,6 @@ export interface CurrentVisionImport {
   predictions_count: number
 }
 
-interface ApiError {
-  detail?: string
-  message?: string
-  statusCode?: number
-}
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data: ApiError = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
-}
-
 // ─── Direct-to-storage upload (presigned) ────────────────
 export interface VisionUploadTarget {
   job_id: string
@@ -119,10 +104,10 @@ const initVisionImport = async (
   files: File[],
   shareDataset: boolean
 ): Promise<VisionInitResponse> => {
-  const response = await fetch(`${PROXY}/vision/imports/init`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({
+  return api(
+    '/vision/imports/init',
+    "Erreur lors de la préparation de l'import",
+    jsonBody('POST', {
       game_account_id: gameAccountId,
       share_dataset: shareDataset,
       screens: files.map((file) => ({
@@ -130,10 +115,8 @@ const initVisionImport = async (
         content_type: declaredType(file),
         size: file.size,
       })),
-    }),
-  })
-  await throwOnError(response, "Erreur lors de la préparation de l'import")
-  return response.json()
+    })
+  )
 }
 
 // Straight to RustFS — not through the Next proxy, and not through the API.
@@ -155,20 +138,17 @@ const putScreenshot = async (target: VisionUploadTarget, file: File): Promise<vo
 // letting it wait for the slowest file of the batch. The backend re-checks the
 // stored object here — this call is what turns an anonymous PUT into a job.
 const commitScreen = async (importId: string, jobId: string): Promise<void> => {
-  const response = await fetch(`${PROXY}/vision/imports/${importId}/screens/${jobId}/commit`, {
-    method: 'POST',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la mise en file de la capture')
+  await api(
+    `/vision/imports/${importId}/screens/${jobId}/commit`,
+    'Erreur lors de la mise en file de la capture',
+    { method: 'POST' }
+  )
 }
 
 const commitVisionImport = async (importId: string): Promise<VisionImport> => {
-  const response = await fetch(`${PROXY}/vision/imports/${importId}/commit`, {
+  return api(`/vision/imports/${importId}/commit`, "Erreur lors de la validation de l'import", {
     method: 'POST',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, "Erreur lors de la validation de l'import")
-  return response.json()
 }
 
 /**
@@ -230,21 +210,16 @@ export const createVisionImport = async (
 }
 
 export const getVisionImport = async (importId: string): Promise<VisionImportStatus> => {
-  const response = await fetch(`${PROXY}/vision/imports/${importId}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors de la récupération de l'import")
-  return response.json()
+  return api(`/vision/imports/${importId}`, "Erreur lors de la récupération de l'import")
 }
 
 export const getVisionPredictions = async (
   importId: string
 ): Promise<VisionPredictionsResponse> => {
-  const response = await fetch(`${PROXY}/vision/imports/${importId}/predictions`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la récupération des prédictions')
-  return response.json()
+  return api(
+    `/vision/imports/${importId}/predictions`,
+    'Erreur lors de la récupération des prédictions'
+  )
 }
 
 // Every thumbnail of a screenshot lives in one sheet, so this is one request for
@@ -272,32 +247,27 @@ export const confirmVisionImport = async (
   rows: ConfirmedRow[],
   shareDataset: boolean
 ): Promise<{ samples_archived: number }> => {
-  const response = await fetch(`${PROXY}/vision/imports/${importId}/confirm`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ rows, share_dataset: shareDataset }),
-  })
-  await throwOnError(response, "Erreur lors de la confirmation de l'import")
-  return response.json()
+  return api(
+    `/vision/imports/${importId}/confirm`,
+    "Erreur lors de la confirmation de l'import",
+    jsonBody('POST', { rows, share_dataset: shareDataset })
+  )
 }
 
 export const getCurrentVisionImport = async (
   gameAccountId: string
 ): Promise<CurrentVisionImport | null> => {
-  const response = await fetch(`${PROXY}/vision/imports/current?game_account_id=${gameAccountId}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors de la récupération de l'import en cours")
-  if (response.status === 204) return null
-  return response.json()
+  const current = await api<CurrentVisionImport | undefined>(
+    `/vision/imports/current?game_account_id=${gameAccountId}`,
+    "Erreur lors de la récupération de l'import en cours"
+  )
+  return current ?? null
 }
 
 export const cancelVisionImport = async (importId: string): Promise<void> => {
-  const response = await fetch(`${PROXY}/vision/imports/${importId}`, {
+  await api(`/vision/imports/${importId}`, "Erreur lors de l'annulation de l'import", {
     method: 'DELETE',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, "Erreur lors de l'annulation de l'import")
 }
 
 // Relaunches one screenshot the pipeline could not read. There is no
@@ -305,9 +275,7 @@ export const cancelVisionImport = async (importId: string): Promise<void> => {
 // VisionResultService.retry_job on the backend for why a failure is terminal
 // until the user explicitly asks again).
 export const retryVisionJob = async (jobId: string): Promise<void> => {
-  const response = await fetch(`${PROXY}/vision/jobs/${jobId}/retry`, {
+  await api(`/vision/jobs/${jobId}/retry`, 'Erreur lors de la relance de la capture', {
     method: 'POST',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, 'Erreur lors de la relance de la capture')
 }

@@ -1,14 +1,5 @@
 import type { Perspective } from '@/app/components/statistics/member-champion-chart'
-import { PROXY, jsonHeaders } from '@/app/services/utils'
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
-}
+import { api } from '@/app/services/utils'
 
 export interface PlayerSeasonStats {
   id: string
@@ -38,11 +29,7 @@ export async function getCurrentSeasonStatistics(
   if (seasonId) params.set('season_id', seasonId)
   if (warId) params.set('war_id', warId)
   const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${PROXY}/statistics/current_season/${allianceId}${query}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Failed to load season statistics')
-  return response.json()
+  return api(`/statistics/current_season/${allianceId}${query}`, 'Failed to load season statistics')
 }
 
 export interface ChampionUsageItem {
@@ -70,11 +57,7 @@ export async function getChampionUsage(
   if (deathless) params.set('deathless', 'true')
   if (perspective === 'defender') params.set('perspective', 'defender')
   const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${PROXY}/statistics/champion-usage/${allianceId}${query}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Failed to load champion usage')
-  return response.json()
+  return api(`/statistics/champion-usage/${allianceId}${query}`, 'Failed to load champion usage')
 }
 
 export interface WarBattlegroupDeaths {
@@ -97,9 +80,8 @@ export async function getSeasonWarStats(
   seasonId?: string
 ): Promise<SeasonWarStats[]> {
   const query = seasonId ? `?season_id=${seasonId}` : ''
-  const response = await fetch(`${PROXY}/statistics/season-wars/${allianceId}${query}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Failed to load season war statistics')
-  return response.json()
+  return api(
+    `/statistics/season-wars/${allianceId}${query}`,
+    'Failed to load season war statistics'
+  )
 }
