@@ -4,6 +4,7 @@ import pytest
 
 from main import app
 from src.utils.db import get_session
+from tests.integration.endpoints.setup.defense_setup import push_plan
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -18,6 +19,7 @@ from tests.utils.utils_client import (
     execute_delete_request,
     execute_get_request,
     execute_post_request,
+    execute_put_request,
 )
 from tests.utils.utils_constant import (
     DISCORD_ID_2,
@@ -78,57 +80,51 @@ class TestStrategistDefenseAssignment:
     async def test_strategist_places_a_defender_for_another_player(self):
         """The strategist is the requester; the defender belongs to a
         teammate, not to the strategist's own account — this exercises the
-        `is_manager` branch of `place_defender`, not the self-placement one."""
+        officer-or-strategist branch of `require_strategist_account`, not the
+        owner one."""
         alliance, _member, _roster_entry = await _setup_strategist()
 
         teammate = await _push_teammate(alliance)
         champion = await push_champion(name="Iron Man", champion_class="Tech")
         teammate_roster_entry = await push_champion_user(teammate, champion)
+        plan = await push_plan(alliance.id)
 
-        response = await execute_post_request(
-            f"{ENDPOINT}/{alliance.id}/defense/bg/1/place",
-            payload={
-                "node_number": 1,
-                "champion_user_id": str(teammate_roster_entry.id),
-                "game_account_id": str(teammate.id),
-            },
+        response = await execute_put_request(
+            f"{ENDPOINT}/{alliance.id}/defense/plans/{plan.id}/nodes/1",
+            payload={"champion_user_id": str(teammate_roster_entry.id)},
             headers=HEADERS_USER2,
         )
 
-        assert response.status_code in (200, 201)
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_strategist_clears_a_battlegroup(self):
         alliance, _member, _roster_entry = await _setup_strategist()
+        plan = await push_plan(alliance.id)
 
         response = await execute_delete_request(
-            f"{ENDPOINT}/{alliance.id}/defense/bg/1/clear",
+            f"{ENDPOINT}/{alliance.id}/defense/plans/{plan.id}/nodes",
             headers=HEADERS_USER2,
         )
 
-        assert response.status_code in (200, 204)
+        assert response.status_code == 204
 
     @pytest.mark.asyncio
     async def test_strategist_removes_a_defender(self):
         """A bare strategist (no officer row) removes a placement — this
-        exercises `remove_defender`'s guard specifically, not just `place`."""
-        alliance, member, roster_entry = await _setup_strategist()
+        exercises `remove_plan_node`'s guard specifically, not just `set_plan_node`."""
+        alliance, _member, roster_entry = await _setup_strategist()
+        plan = await push_plan(alliance.id)
 
-        # Self-placement is open to any member regardless of rank, so this
-        # setup step alone doesn't exercise the guard under test — only the
-        # DELETE below does.
-        await execute_post_request(
-            f"{ENDPOINT}/{alliance.id}/defense/bg/1/place",
-            payload={
-                "node_number": 1,
-                "champion_user_id": str(roster_entry.id),
-                "game_account_id": str(member.id),
-            },
+        # Setup step, not the guard under test — only the DELETE below is.
+        await execute_put_request(
+            f"{ENDPOINT}/{alliance.id}/defense/plans/{plan.id}/nodes/1",
+            payload={"champion_user_id": str(roster_entry.id)},
             headers=HEADERS_USER2,
         )
 
         response = await execute_delete_request(
-            f"{ENDPOINT}/{alliance.id}/defense/bg/1/node/1",
+            f"{ENDPOINT}/{alliance.id}/defense/plans/{plan.id}/nodes/1",
             headers=HEADERS_USER2,
         )
 

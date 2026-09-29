@@ -1,8 +1,9 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { type ReactNode, useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
+import { ToggleButton, ToggleGroup } from '@/components/toggle-button'
 import { Shield, Swords, Trash2, Pencil, Camera, Link2 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { useI18n } from '@/app/i18n'
@@ -19,29 +20,7 @@ import ExportHeader from '@/app/game/_components/export-header'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import { downloadElementAsPng } from '@/app/lib/export-image'
 
-type ToggleButtonProps = {
-  active: boolean
-  onClick: () => void
-  dataCy?: string
-  children: ReactNode
-}
-
 export type fightStateFilter = 'all' | 'done' | 'todo'
-
-function ToggleButton({ active, onClick, dataCy, children }: Readonly<ToggleButtonProps>) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
-        active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'
-      )}
-      data-cy={dataCy}
-    >
-      {children}
-    </button>
-  )
-}
 
 const WarDefenseMap = dynamic(() => import('./war-defense-map'), {
   loading: () => <FullPageSpinner />,
@@ -201,10 +180,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
           )}
 
           {/* BG button group */}
-          <div
-            className='flex gap-1 rounded-md border p-1'
-            data-cy='bg-picker'
-          >
+          <ToggleGroup dataCy='bg-picker'>
             {[1, 2, 3].map((bg) => (
               <ToggleButton
                 key={bg}
@@ -215,14 +191,11 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
                 G{bg}
               </ToggleButton>
             ))}
-          </div>
+          </ToggleGroup>
 
           {/* Mode toggle — visible to officers and strategists */}
           {canPlaceWar && (
-            <div
-              className='flex gap-1 rounded-md border p-1'
-              data-cy='war-mode-toggle'
-            >
+            <ToggleGroup dataCy='war-mode-toggle'>
               <ToggleButton
                 active={warMode === WarMode.Attackers}
                 onClick={() => setWarMode(WarMode.Attackers)}
@@ -239,7 +212,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
                 <Shield className='size-3.5' />
                 {t.game.war.modeDefenders}
               </ToggleButton>
-            </div>
+            </ToggleGroup>
           )}
           {/* Clear BG button */}
           {canPlaceWar && !isWarClosed && placements.length > 0 && (

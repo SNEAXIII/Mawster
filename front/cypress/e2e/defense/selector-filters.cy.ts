@@ -29,7 +29,8 @@ function giveChampion(adminToken: string, name: string, cls: string, owners: Own
   });
 }
 
-// Same, then place that champion on a defense node for its owner.
+// Same, then place that champion on a defense node for its owner — the placer holds the
+// placement right, a plain member cannot write a plan.
 function giveChampionAndPlace(
   adminToken: string,
   name: string,
@@ -37,10 +38,11 @@ function giveChampionAndPlace(
   o: Owner,
   allianceId: string,
   node: number,
+  placerToken: string = o.tok,
 ) {
   return cy.apiLoadChampion(adminToken, name, cls).then((champs: { id: string }[]) => {
     cy.apiAddChampionToRoster(o.tok, o.acc, champs[0].id, o.rarity ?? '7r3').then((cu: { id: string }) => {
-      cy.apiPlaceDefender(o.tok, allianceId, 1, node, cu.id, o.acc);
+      cy.apiPlaceDefender(placerToken, allianceId, 1, node, cu.id, o.acc);
     });
   });
 }
@@ -66,11 +68,14 @@ function openSelectorWithRoster(
   tag: string,
   roster: (admin: string, owner: Owner) => void,
 ) {
-  return setupDefenseOwner(prefix, pseudo, allianceName, tag).then(({ adminData, ownerData, ownerAccId }) => {
-    roster(adminData.access_token, { tok: ownerData.access_token, acc: ownerAccId });
-    cy.apiLogin(ownerData.user_id, 'defense');
-    openSelectorOnNode1();
-  });
+  return setupDefenseOwner(prefix, pseudo, allianceName, tag).then(
+    ({ adminData, ownerData, allianceId, ownerAccId }) => {
+      roster(adminData.access_token, { tok: ownerData.access_token, acc: ownerAccId });
+      cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
+      cy.apiLogin(ownerData.user_id, 'defense');
+      openSelectorOnNode1();
+    },
+  );
 }
 
 describe('Defense – AllianceDefenseSelector filters', () => {
@@ -101,10 +106,11 @@ describe('Defense – AllianceDefenseSelector filters', () => {
 
   it('player filter shows only champions owned by the selected player', () => {
     setupDefenseOwnerAndMember('def-flt-plyr', 'PlyrFltOwn', 'PlyrFltMem', 'PlyrAll', 'PF').then(
-      ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         const admin = adminData.access_token;
         giveChampion(admin, 'Spider-Man', 'Cosmic', { tok: ownerData.access_token, acc: ownerAccId });
         giveChampion(admin, 'Wolverine', 'Mutant', { tok: memberData.access_token, acc: memberAccId });
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -141,12 +147,13 @@ describe('Defense – AllianceDefenseSelector filters', () => {
 
   it('not preferred toggle hides champion only when all its owners are preferred attackers', () => {
     setupDefenseOwnerAndMember('def-flt-npref-multi', 'NPrefMultiOwn', 'NPrefMultiMem', 'NPrefMultiAll', 'NM').then(
-      ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         // owner: preferred, member: not preferred → champion stays visible (at least one non-preferred owner)
         giveChampion(adminData.access_token, 'Spider-Man', 'Cosmic', [
           { tok: ownerData.access_token, acc: ownerAccId, preferred: true },
           { tok: memberData.access_token, acc: memberAccId, preferred: false },
         ]);
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -204,7 +211,7 @@ describe('Defense – AllianceDefenseSelector filters', () => {
         const owner = { tok: ownerData.access_token, acc: ownerAccId };
         const member = { tok: memberData.access_token, acc: memberAccId };
         giveChampionAndPlace(admin, 'Spider-Man', 'Cosmic', owner, allianceId, 1);
-        giveChampionAndPlace(admin, 'Wolverine', 'Mutant', member, allianceId, 2);
+        giveChampionAndPlace(admin, 'Wolverine', 'Mutant', member, allianceId, 2, owner.tok);
 
         cy.apiLogin(ownerData.user_id, 'defense');
 

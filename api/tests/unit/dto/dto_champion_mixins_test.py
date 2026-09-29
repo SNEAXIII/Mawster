@@ -17,9 +17,9 @@ from src.dto.admin.dto_fight_record import (
     ChampionUserSnapshotResponse,
     WarFightRecordResponse,
 )
+from src.dto.alliance.defense.dto_defense_plan import DefensePlanNodeResponse
 from src.dto.alliance.dto_alliance_roster import AllianceRosterEntryResponse
 from src.dto.alliance.dto_matchup import ChampionRef as MatchupChampionRef
-from src.dto.alliance.war.dto_defense import DefensePlacementResponse
 from src.dto.alliance.war.dto_war import (
     AvailableAttackerResponse,
     AvailablePrefightAttackerResponse,
@@ -54,7 +54,7 @@ SAGA_CARRIERS = [
     AvailablePrefightAttackerResponse,
     WarSynergyResponse,
     WarPrefightResponse,
-    DefensePlacementResponse,
+    DefensePlanNodeResponse,
 ]
 
 REF_CARRIERS = [

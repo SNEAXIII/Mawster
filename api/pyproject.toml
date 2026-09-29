@@ -41,6 +41,9 @@ concurrency = ["greenlet", "thread"]
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:", "def custom_openapi\\(\\):", "def __str__\\(self\\):"]
 
+[tool.ty.src]
+exclude = ["migrations"]  # Alembic output
+
 [tool.ruff]
 # Rules, formatter settings and ignores live in the repo-wide ruff.toml so that the
 # hook, the CLI and CI can never disagree. Only api-specific overrides belong here.

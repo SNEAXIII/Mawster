@@ -36,7 +36,7 @@ wars, inviting.
 
 **Strategist**:
 A Player granted placement rights over an Alliance, and no authority over its people:
-they lay out the Defense Assignment for anyone, record the enemy defenders on the
+they lay out the Defense Plans for anyone, record the enemy defenders on the
 War map and flag a fight as not done or a planning error, across all three Battlegroups. They invite nobody, remove nobody, promote
 nobody. Ranks between a plain member and an Officer — the two are exclusive, and an
 Officer demoted falls back to plain member, never to Strategist.
@@ -54,7 +54,7 @@ A Player attached to an Alliance in read-only: sees everything a plain member se
 changes nothing. Permanent, with no expiry — a read-only member, not a guest pass.
 
 The rank only means something because an Alliance's interior — its Players, its
-Officers, its Defense Assignment — is closed to whoever holds no rank in it. Being
+Officers, its Defense Plans — is closed to whoever holds no rank in it. Being
 outside is the default; a Visitor is how you let someone in without letting them act.
 
 **Alliance Listing**:
@@ -251,12 +251,39 @@ _Avoid_: placement, war defense placement.
 The enemy defender on a War Node is entered by an Officer to mirror what the game
 shows. Nobody on your side placed it — `placed_by` reads "recorded by".
 
-**Defense Assignment**:
-Your own Alliance's defensive layout: which Roster Entry sits on which node of which
-Battlegroup. One living layout, not a per-War snapshot — it evolves across a Season
-and persists between Wars.
-_Table_: `defense_placement`.
-_Avoid_: defense placement (ambiguous with War Node), defense map.
+**Defense Template**:
+A reusable composition of Champions on the nodes of one Season format, owned by the
+Alliance and tied to no Battlegroup and no Player. Names a Champion, never a copy of it —
+rarity and rank are chosen when a Player is assigned, so a Template can plan around a
+Champion nobody has ranked up yet. May be partial, never holds the same Champion twice.
+Up to 15 per format.
+_Table_: `defense_template` (nodes: `defense_template_node`).
+_Avoid_: draft, defense draft.
+
+**Defense Plan**:
+Your own Alliance's defensive layout for one Battlegroup in one Season format: which
+Roster Entry sits on which node. Born as a copy of a Defense Template — an empty one for
+a plan written from scratch — then independent: editing either never touches the other.
+Up to 10 per Battlegroup and format. Tied to the format, never to a Season: a plan
+persists across Seasons and between Wars.
+
+A plan is **Validated** once every Champion on it has a Player, no Player exceeds the
+format's defender cap, and the map is as full as the Battlegroup allows — every node
+taken, or every member at their cap — and **Incomplete** otherwise. Derived from the nodes, never set by hand: a member leaving
+keeps their Champions on the nodes, drops only the Player, and sends the plan back to
+Incomplete on its own.
+_Table_: `defense_plan` (nodes: `defense_plan_node`).
+_Avoid_: defense assignment, defense placement (ambiguous with War Node), layout, draft.
+
+**Active Plan**:
+The one Defense Plan per Battlegroup and format marked in use. The Season's format picks
+which Active Plan a Battlegroup shows, so a format switch leaves the other format's plans
+untouched. Only a Validated plan can be activated, and activating one demotes the previous;
+an Active Plan that later loses a Player stays active, flagged incomplete. A Roster Entry
+is "on defense" — barred from attacking — only on the Active Plan of the War's format;
+every other plan is a draft of intent and blocks nothing. Plain members and Visitors see only Active Plans; every other plan and every
+Template needs the placement right.
+_Table_: `defense_active_plan`.
 
 The asymmetry is deliberate: your layout is a plan you reuse and refine, while an
 enemy layout is throwaway scouting of a different Opponent every War.

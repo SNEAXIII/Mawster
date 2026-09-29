@@ -49,7 +49,7 @@ export default function DefenseGrid({
   const { t } = useI18n()
   const [playerFilter, setPlayerFilter] = useState('')
   const {
-    defenseSummary,
+    placements,
     availableChampions,
     bgMembers,
     defenseLoading,
@@ -63,12 +63,14 @@ export default function DefenseGrid({
   } = useDefenseActionsContext()
 
   const dimmedNodes = playerFilter
-    ? new Set(
-        (defenseSummary?.placements ?? [])
-          .filter((p) => p.game_pseudo !== playerFilter)
-          .map((p) => p.node_number)
-      )
+    ? new Set(placements.filter((p) => p.game_pseudo !== playerFilter).map((p) => p.node_number))
     : undefined
+
+  const currentPlacement = placements.find((p) => p.node_number === selectorNode)
+  const selectorChampions =
+    currentPlacement && !currentPlacement.game_pseudo
+      ? availableChampions.filter((c) => c.champion_id === currentPlacement.champion_id)
+      : availableChampions
 
   if (defenseLoading) return <FullPageSpinner />
 
@@ -90,7 +92,7 @@ export default function DefenseGrid({
               />
             )}
             <WarMap
-              placements={defenseSummary?.placements ?? []}
+              placements={placements}
               onNodeClick={onNodeClick}
               onRemove={handleRemoveDefender}
               canManage={canManage && !exporting}
@@ -106,7 +108,7 @@ export default function DefenseGrid({
             <CardContent className='p-3'>
               <DefenseSidePanel
                 members={bgMembers}
-                placements={defenseSummary?.placements ?? []}
+                placements={placements}
                 onRemoveDefender={handleRemoveDefender}
                 canManage={canManage}
                 playerFilter={playerFilter}
@@ -123,9 +125,9 @@ export default function DefenseGrid({
           open={selectorNode !== null}
           onClose={() => setSelectorNode(null)}
           nodeNumber={selectorNode}
-          availableChampions={availableChampions}
+          availableChampions={selectorChampions}
           onSelect={handlePlaceDefender}
-          currentPlacement={defenseSummary?.placements.find((p) => p.node_number === selectorNode)}
+          currentPlacement={currentPlacement}
         />
       )}
 

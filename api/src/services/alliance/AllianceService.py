@@ -44,8 +44,8 @@ from src.models.Base import utcnow
 from src.models.user.GameAccount import GameAccount
 from src.models.user.User import User
 from src.services.alliance.AllianceVisitorService import AllianceVisitorService
+from src.services.alliance.defense.DefensePlanService import DefensePlanService
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
-from src.services.alliance.war.DefensePlacementService import DefensePlacementService
 from src.utils.db import SessionDep
 
 MAX_MEMBERS_PER_GROUP = 10
@@ -68,7 +68,7 @@ class AllianceService:
                 GameAccount.deleted_at.is_(None),
             )
         )
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def _get_user_account_ids(cls, session: SessionDep, user_id: uuid.UUID) -> set[uuid.UUID]:
@@ -97,9 +97,7 @@ class AllianceService:
         cls, session: SessionDep, alliance_id: uuid.UUID, user_id: uuid.UUID
     ) -> GameAccount:
         """Load alliance and assert user is owner or officer. Raises 404/403."""
-        alliance = await cls._load_alliance_with_relations(session, alliance_id)
-        if alliance is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
+        alliance = await cls._require_alliance_with_relations(session, alliance_id)
         return await cls._assert_is_owner_or_officer(session, alliance, user_id)
 
     @staticmethod
@@ -111,7 +109,7 @@ class AllianceService:
     @staticmethod
     async def assert_is_alliance_member(
         session: SessionDep, account: GameAccount | User | None, alliance_id: uuid.UUID
-    ) -> None:
+    ) -> GameAccount:
         """Raise 404 if the account is None or not a member of the given alliance."""
         if isinstance(account, User):
             account = (
@@ -119,6 +117,7 @@ class AllianceService:
             ).first()
         if account is None or account.alliance_id != alliance_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_MEMBER_OF_ALLIANCE)
+        return account
 
     @classmethod
     async def _load_alliance_with_relations(
@@ -135,6 +134,15 @@ class AllianceService:
             .options(*_ALLIANCE_OPTIONS)
         )
         return result.first()
+
+    @classmethod
+    async def _require_alliance_with_relations(
+        cls, session: SessionDep, alliance_id: uuid.UUID
+    ) -> Alliance:
+        alliance = await cls._load_alliance_with_relations(session, alliance_id)
+        if alliance is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
+        return alliance
 
     # ---- Boolean permission checks (hierarchical) ----
 
@@ -307,9 +315,7 @@ class AllianceService:
         officers-plus-strategists) decides — and must not be allowed to drift
         apart by a fix landing in one copy and not the other.
         """
-        alliance = await cls._load_alliance_with_relations(session, alliance_id)
-        if alliance is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
+        alliance = await cls._require_alliance_with_relations(session, alliance_id)
         user_account_ids = await cls._get_user_account_ids(session, user_id)
 
         # Determine the privileged account id (owner first, then the extra set)
@@ -489,7 +495,7 @@ class AllianceService:
         owner.alliance_id = alliance.id
         session.add(owner)
         await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance.id)
+        return await cls._require_alliance_with_relations(session, alliance.id)
 
     @classmethod
     async def get_alliance(cls, session: SessionDep, alliance_id: uuid.UUID) -> Alliance | None:
@@ -500,7 +506,7 @@ class AllianceService:
         result = await session.exec(
             select(Alliance).where(Alliance.deleted_at.is_(None)).options(*_ALLIANCE_OPTIONS)  # type: ignore[union-attr]
         )
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def _member_alliance_ids(cls, session: SessionDep, user_id: uuid.UUID) -> set[uuid.UUID]:
@@ -593,7 +599,7 @@ class AllianceService:
             setattr(alliance, name, value)
         session.add(alliance)
         await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance.id)
+        return await cls._require_alliance_with_relations(session, alliance.id)
 
     @classmethod
     async def _assert_owner_is_last_member(cls, session: SessionDep, alliance: Alliance) -> None:
@@ -684,7 +690,7 @@ class AllianceService:
         game_account.alliance_id = alliance_id
         session.add(game_account)
         await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance_id)
+        return await cls._require_alliance_with_relations(session, alliance_id)
 
     @classmethod
     async def remove_member(
@@ -694,20 +700,17 @@ class AllianceService:
         game_account_id: uuid.UUID,
     ) -> Alliance:
         """Remove a member from the alliance. Cannot remove the owner."""
-        alliance = await cls._load_alliance_with_relations(session, alliance_id)
-        if alliance is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
+        alliance = await cls._require_alliance_with_relations(session, alliance_id)
         if alliance.owner_id == game_account_id:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, CANNOT_REMOVE_OWNER)
-        game_account = await session.get(GameAccount, game_account_id)
-        await cls.assert_is_alliance_member(session, game_account, alliance_id)
+        game_account = await cls.assert_is_alliance_member(
+            session, await session.get(GameAccount, game_account_id), alliance_id
+        )
         await cls._delete_rank_row(session, AllianceOfficer, alliance_id, game_account_id)
         await cls._delete_rank_row(session, AllianceStrategist, alliance_id, game_account_id)
 
-        # Their champions leave with them: free the defense nodes they occupied
-        await DefensePlacementService.remove_placements_for_member(
-            session, alliance_id, game_account_id
-        )
+        # Their champions stay on the plans; only the player leaves them.
+        await DefensePlanService.release_member(session, alliance_id, game_account_id)
         # Same for the rank-ups the alliance was waiting on: the roster is out of
         # reach, and once out of the alliance nobody can even cancel those rows.
         await UpgradeRequestService.cancel_pending_for_member(session, game_account_id)
@@ -716,7 +719,7 @@ class AllianceService:
         game_account.alliance_group = None
         session.add(game_account)
         await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance_id)
+        return await cls._require_alliance_with_relations(session, alliance_id)
 
     # ---- Officer management ----
 
@@ -743,7 +746,7 @@ class AllianceService:
         await cls._delete_rank_row(session, AllianceStrategist, alliance_id, game_account_id)
         session.add(AllianceOfficer(alliance_id=alliance_id, game_account_id=game_account_id))
         await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance_id)
+        return await cls._require_alliance_with_relations(session, alliance_id)
 
     @classmethod
     async def remove_officer(
@@ -758,7 +761,7 @@ class AllianceService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_OFFICER)
         await session.delete(officer)
         await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance_id)
+        return await cls._require_alliance_with_relations(session, alliance_id)
 
     # ---- Strategist management ----
 
@@ -815,7 +818,7 @@ class AllianceService:
             raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_ALREADY_STRATEGIST)
         session.add(AllianceStrategist(alliance_id=alliance_id, game_account_id=game_account_id))
         await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance_id)
+        return await cls._require_alliance_with_relations(session, alliance_id)
 
     @classmethod
     async def remove_strategist(
@@ -830,7 +833,7 @@ class AllianceService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_STRATEGIST)
         await session.delete(row)
         await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance_id)
+        return await cls._require_alliance_with_relations(session, alliance_id)
 
     @classmethod
     async def transfer_ownership(
@@ -858,7 +861,7 @@ class AllianceService:
         alliance.owner_id = new_owner_game_account_id
         await session.commit()
         session.expire_all()
-        return await cls._load_alliance_with_relations(session, alliance_id)
+        return await cls._require_alliance_with_relations(session, alliance_id)
 
     # ---- Group management ----
 
@@ -871,8 +874,9 @@ class AllianceService:
         group: int | None,
     ) -> Alliance:
         """Set the group (1, 2, 3 or None) for a member. Max 10 members per group."""
-        game_account = await session.get(GameAccount, game_account_id)
-        await cls.assert_is_alliance_member(session, game_account, alliance_id)
+        game_account = await cls.assert_is_alliance_member(
+            session, await session.get(GameAccount, game_account_id), alliance_id
+        )
         if group is not None:
             if group not in (1, 2, 3):
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, INVALID_GROUP_VALUE)
@@ -890,18 +894,14 @@ class AllianceService:
                     status.HTTP_409_CONFLICT,
                     group_max_members_reached(group, MAX_MEMBERS_PER_GROUP),
                 )
-        # A defender only exists on the battlegroup its owner belongs to. Moving
-        # the member (or pulling them out of every group) would strand their
-        # defenders on a map they can no longer be placed on, so free those nodes.
+        # Their champions stay on the plans; only the player leaves them.
         if group != game_account.alliance_group:
-            await DefensePlacementService.remove_placements_for_member(
-                session, alliance_id, game_account_id
-            )
+            await DefensePlanService.release_member(session, alliance_id, game_account_id)
 
         game_account.alliance_group = group
         session.add(game_account)
         await session.commit()
-        return await cls._load_alliance_with_relations(session, alliance_id)
+        return await cls._require_alliance_with_relations(session, alliance_id)
 
     # ---- Visitor access ----
 
@@ -961,7 +961,7 @@ class AllianceService:
             GameAccount.deleted_at.is_(None),
         )
         result = await session.exec(sql)
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def get_eligible_members(cls, session: SessionDep) -> list[GameAccount]:
@@ -981,7 +981,7 @@ class AllianceService:
         if pending_ids:
             sql = sql.where(GameAccount.id.notin_(pending_ids))  # type: ignore[union-attr]
         result = await session.exec(sql)
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def get_eligible_visitors(
@@ -1014,7 +1014,7 @@ class AllianceService:
         if excluded_ids:
             sql = sql.where(GameAccount.id.notin_(excluded_ids))  # type: ignore[union-attr]
         result = await session.exec(sql)
-        return result.all()
+        return list(result.all())
 
     @classmethod
     async def can_view_roster(

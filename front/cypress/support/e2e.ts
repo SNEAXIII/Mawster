@@ -1,6 +1,13 @@
 /// <reference types="cypress" />
 
-import type { BatchSetupChampionSpec, BatchSetupRosterSpec, BatchSetupSpec, BatchSetupUserResult } from './index';
+import type {
+  BatchSetupChampionSpec,
+  BatchSetupRosterSpec,
+  BatchSetupSpec,
+  BatchSetupUserResult,
+  DefensePlanBody,
+  SeasonFormatName,
+} from './index';
 
 // Suppress benign ResizeObserver errors that occur in some browsers
 Cypress.on('uncaught:exception', (err) => {
@@ -358,7 +365,42 @@ Cypress.Commands.add(
   },
 );
 
-// ── Place defender on defense node (direct backend call) ────────────────────
+// ── Defense plans & templates (direct backend calls) ────────────────────────
+
+function putPlanNode(
+  token: string,
+  allianceId: string,
+  planId: string,
+  nodeNumber: number,
+  championUserId: string,
+): Cypress.Chainable<DefensePlanBody> {
+  return cy
+    .request({
+      method: 'PUT',
+      url: `${BACKEND}/alliances/${allianceId}/defense/plans/${planId}/nodes/${nodeNumber}`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { champion_user_id: championUserId },
+    })
+    .then((res) => {
+      expect(res.status).to.eq(200);
+      return res.body as DefensePlanBody;
+    });
+}
+
+Cypress.Commands.add(
+  'apiCreatePlan',
+  (token: string, allianceId: string, battlegroup: number, name: string, format: SeasonFormatName = 'regular') => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/alliances/${allianceId}/defense/bg/${battlegroup}/plans`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { name, format },
+    }).then((res) => {
+      expect(res.status).to.eq(201);
+      return res.body;
+    });
+  },
+);
 
 Cypress.Commands.add(
   'apiPlaceDefender',
@@ -368,17 +410,39 @@ Cypress.Commands.add(
     battlegroup: number,
     nodeNumber: number,
     championUserId: string,
-    gameAccountId: string,
+    _gameAccountId: string,
   ) => {
     cy.request({
-      method: 'POST',
-      url: `${BACKEND}/alliances/${allianceId}/defense/bg/${battlegroup}/place`,
+      url: `${BACKEND}/alliances/${allianceId}/defense/bg/${battlegroup}/plans?format=regular`,
       headers: { Authorization: `Bearer ${token}` },
-      body: {
-        node_number: nodeNumber,
-        champion_user_id: championUserId,
-        game_account_id: gameAccountId,
-      },
+    })
+      .then((res) =>
+        res.body.plans.length > 0 ? res.body.plans[0] : cy.apiCreatePlan(token, allianceId, battlegroup, 'Plan 1'),
+      )
+      .then((plan: DefensePlanBody) => putPlanNode(token, allianceId, plan.id, nodeNumber, championUserId));
+  },
+);
+
+Cypress.Commands.add('apiActivatePlan', (token: string, allianceId: string, planId: string) => {
+  cy.request({
+    method: 'POST',
+    url: `${BACKEND}/alliances/${allianceId}/defense/plans/${planId}/activate`,
+    headers: { Authorization: `Bearer ${token}` },
+    body: {},
+  }).then((res) => {
+    expect(res.status).to.eq(200);
+    return res.body;
+  });
+});
+
+Cypress.Commands.add(
+  'apiCreateTemplate',
+  (token: string, allianceId: string, name: string, format: SeasonFormatName = 'regular') => {
+    cy.request({
+      method: 'POST',
+      url: `${BACKEND}/alliances/${allianceId}/defense/templates`,
+      headers: { Authorization: `Bearer ${token}` },
+      body: { name, format },
     }).then((res) => {
       expect(res.status).to.eq(201);
       return res.body;
@@ -976,6 +1040,7 @@ export function setupDefenseScenario(
   ownerData: UserSetupData;
   allianceId: string;
   ownerAccId: string;
+  planId: string;
   championUsers: { name: string; cuId: string }[];
 }> {
   const adminToken = `${prefix}-admin`;
@@ -1006,16 +1071,22 @@ export function setupDefenseScenario(
         })),
       },
     ])
-    .then((users) => ({
-      adminData: toUserSetupData(users[adminToken]),
-      ownerData: toUserSetupData(users[ownerToken]),
-      allianceId: users[ownerToken].alliance_id!,
-      ownerAccId: users[ownerToken].account_id!,
-      championUsers: champDefs.map((d) => ({
-        name: d.name,
-        cuId: users[ownerToken].champion_user_ids[d.name],
-      })),
-    }));
+    .then((users) => {
+      const ownerData = toUserSetupData(users[ownerToken]);
+      const allianceId = users[ownerToken].alliance_id!;
+      // The owner lands on an editable plan, as every placement spec needs one.
+      return cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1').then((plan) => ({
+        adminData: toUserSetupData(users[adminToken]),
+        ownerData,
+        allianceId,
+        ownerAccId: users[ownerToken].account_id!,
+        planId: plan.id,
+        championUsers: champDefs.map((d) => ({
+          name: d.name,
+          cuId: users[ownerToken].champion_user_ids[d.name],
+        })),
+      }));
+    });
 }
 
 export function setupOwnerMemberAlliance(
@@ -1636,24 +1707,103 @@ export function setupVisitorScenario(prefix: string): Cypress.Chainable<{
       const ownerAccId = users[ownerToken].account_id!;
       const visitorAccId = users[visitorToken].account_id!;
       const allianceId = users[ownerToken].alliance_id!;
-      return cy
-        .request({
-          method: 'POST',
-          url: `${BACKEND}/alliances/${allianceId}/invitations`,
-          headers: { Authorization: `Bearer ${ownerData.access_token}` },
-          body: { game_account_id: visitorAccId, type: 'visitor' },
-        })
-        .then((invResp) => {
-          const invId = (invResp.body as { id: string }).id;
-          return cy
-            .request({
-              method: 'POST',
-              url: `${BACKEND}/alliances/invitations/${invId}/accept`,
-              headers: { Authorization: `Bearer ${visitorData.access_token}` },
-              body: {},
-            })
-            .then(() => ({ ownerData, visitorData, ownerAccId, visitorAccId, allianceId }));
-        });
+      return joinAsVisitor(ownerData.access_token, visitorData.access_token, allianceId, visitorAccId).then(() => ({
+        ownerData,
+        visitorData,
+        ownerAccId,
+        visitorAccId,
+        allianceId,
+      }));
+    });
+}
+
+// The owner invites the account as a Visitor, and the Visitor accepts.
+function joinAsVisitor(ownerToken: string, visitorToken: string, allianceId: string, visitorAccId: string) {
+  return cy
+    .request({
+      method: 'POST',
+      url: `${BACKEND}/alliances/${allianceId}/invitations`,
+      headers: { Authorization: `Bearer ${ownerToken}` },
+      body: { game_account_id: visitorAccId, type: 'visitor' },
+    })
+    .then((invResp) =>
+      cy.request({
+        method: 'POST',
+        url: `${BACKEND}/alliances/invitations/${(invResp.body as { id: string }).id}/accept`,
+        headers: { Authorization: `Bearer ${visitorToken}` },
+        body: {},
+      }),
+    );
+}
+
+const ACTIVE_DEFENSE_CHAMPIONS: BatchSetupChampionSpec[] = [
+  { name: 'Spider-Man', champion_class: 'Cosmic' },
+  { name: 'Wolverine', champion_class: 'Mutant' },
+  { name: 'Iron Man', champion_class: 'Tech' },
+  { name: 'Doctor Doom', champion_class: 'Mystic' },
+  { name: 'Blade', champion_class: 'Skill' },
+];
+
+export interface ActiveDefenseSetup {
+  adminData: UserSetupData;
+  ownerData: UserSetupData;
+  memberData: UserSetupData;
+  visitorData: UserSetupData;
+  allianceId: string;
+  ownerAccId: string;
+  memberAccId: string;
+  visitorAccId: string;
+  /** The owner's pseudo, shown under each defender of the plan. */
+  ownerPseudo: string;
+  planId: string;
+}
+
+/** A Validated regular plan on BG1 — the owner, alone in BG1, holds nodes 1-5 (the cap) —
+ *  made Active unless `activate` is false. */
+export function setupActiveDefense(prefix: string, { activate = true } = {}): Cypress.Chainable<ActiveDefenseSetup> {
+  const safe = safePrefix(prefix);
+  const tokens = {
+    admin: `${prefix}-admin`,
+    owner: `${prefix}-owner`,
+    member: `${prefix}-member`,
+    visitor: `${prefix}-visitor`,
+  };
+  const ownerPseudo = `${safe}Own`;
+  return cy
+    .apiBatchSetup([
+      { discord_token: tokens.admin, role: 'admin', champions: ACTIVE_DEFENSE_CHAMPIONS },
+      {
+        discord_token: tokens.owner,
+        game_pseudo: ownerPseudo,
+        create_alliance: { name: `${safe}Alliance`, tag: safe.slice(0, 3).toUpperCase() },
+        battlegroup: 1,
+        roster: ACTIVE_DEFENSE_CHAMPIONS.map((c) => ({ champion: c.name, rarity: '7r3' })),
+      },
+      { discord_token: tokens.member, game_pseudo: `${safe}Mem`, join_alliance_token: tokens.owner },
+      { discord_token: tokens.visitor, game_pseudo: `${safe}Vis` },
+    ])
+    .then((users) => {
+      const owner = users[tokens.owner];
+      const setup = {
+        adminData: toUserSetupData(users[tokens.admin]),
+        ownerData: toUserSetupData(owner),
+        memberData: toUserSetupData(users[tokens.member]),
+        visitorData: toUserSetupData(users[tokens.visitor]),
+        allianceId: owner.alliance_id!,
+        ownerAccId: owner.account_id!,
+        memberAccId: users[tokens.member].account_id!,
+        visitorAccId: users[tokens.visitor].account_id!,
+        ownerPseudo,
+      };
+      const token = setup.ownerData.access_token;
+      joinAsVisitor(token, setup.visitorData.access_token, setup.allianceId, setup.visitorAccId);
+      return cy.apiCreatePlan(token, setup.allianceId, 1, 'Plan 1').then((plan) => {
+        ACTIVE_DEFENSE_CHAMPIONS.forEach((c, i) =>
+          putPlanNode(token, setup.allianceId, plan.id, i + 1, owner.champion_user_ids[c.name]),
+        );
+        if (activate) cy.apiActivatePlan(token, setup.allianceId, plan.id);
+        return cy.wrap({ ...setup, planId: plan.id }, { log: false });
+      });
     });
 }
 
@@ -1739,6 +1889,12 @@ Cypress.Commands.add(
 export function confirmAction(selector: string): void {
   cy.getByCy(selector).click();
   cy.getByCy('confirmation-dialog-confirm').click();
+}
+
+// The defense name dialog may open pre-filled (copy, rename): clear it before typing.
+export function submitNameDialog(name: string): void {
+  cy.getByCy('name-dialog-input').clear().type(name);
+  cy.getByCy('name-dialog-submit').click();
 }
 
 // War/defense map nodes sit inside a scroll container, so scroll them into

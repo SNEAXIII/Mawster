@@ -113,10 +113,11 @@ export function WarMapNode({
         >
           {placement && (
             <>
+              {/* A plan or template node without a Player has no copy, hence no rarity yet */}
               <ChampionPortrait
                 imageUrl={placement.champion_image_url}
                 name={placement.champion_name}
-                rarity={placement.rarity}
+                rarity={placement.rarity || '7r1'}
                 size={PORTRAIT}
                 box='frame'
                 isPreferred={placement.is_preferred_attacker}
@@ -126,14 +127,16 @@ export function WarMapNode({
                 sagaMode='defender'
               />
               {/* Rarity over the frame's bottom band */}
-              <span
-                className={cn(
-                  'absolute inset-x-0 bottom-0 z-40 rounded-b bg-black/70 text-center text-[9px] font-semibold leading-[11px]',
-                  rarityBadgeClass(placement.rarity)
-                )}
-              >
-                {nodeRarityLabel(placement, hideSig)}
-              </span>
+              {placement.rarity && (
+                <span
+                  className={cn(
+                    'absolute inset-x-0 bottom-0 z-40 rounded-b bg-black/70 text-center text-[9px] font-semibold leading-[11px]',
+                    rarityBadgeClass(placement.rarity)
+                  )}
+                >
+                  {nodeRarityLabel(placement, hideSig)}
+                </span>
+              )}
             </>
           )}
 

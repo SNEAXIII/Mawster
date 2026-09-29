@@ -3,9 +3,8 @@ from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlalchemy.orm import sessionmaker
-from sqlmodel import Session, create_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
+from sqlmodel import create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.security.secrets import SECRET
@@ -32,7 +31,7 @@ async_engine = AsyncEngine(
     )
 )
 
-SessionFactory = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
+SessionFactory = async_sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cover
@@ -40,4 +39,4 @@ async def get_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cover
         yield session
 
 
-SessionDep = Annotated[Session, Depends(get_session)]
+SessionDep = Annotated[AsyncSession, Depends(get_session)]

@@ -3,15 +3,18 @@
 import { useRef, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { useRequiredSession } from '@/hooks/use-required-session'
-import { useCurrentSeason } from '@/hooks/use-current-season'
 import { FullPageSpinner } from '@/components/full-page-spinner'
-import { Shield } from 'lucide-react'
+import { LayoutTemplate, Map as MapIcon, Shield } from 'lucide-react'
+import { ToggleButton, ToggleGroup } from '@/components/toggle-button'
 import { DefenseActionsProvider } from '@/app/contexts/defense-actions-context'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import { downloadElementAsPng } from '@/app/lib/export-image'
 import DefenseHeader from './defense-header'
-import DefenseGrid from './defense-grid'
+import PlanWorkspace from './plan-workspace'
+import TemplateWorkspace from './template-workspace'
 import { useDefenseViewModel } from '../_viewmodels/use-defense-viewmodel'
+
+type DefenseTab = 'plans' | 'templates'
 
 interface DefensePageContentProps {
   onStateChange?: (allianceId: string, bg: number) => void
@@ -28,7 +31,7 @@ export default function DefensePageContent({
   const { status } = useRequiredSession()
 
   const vm = useDefenseViewModel({ onStateChange, initialAllianceId, initialBg })
-  const currentSeason = useCurrentSeason()
+  const [tab, setTab] = useState<DefenseTab>('plans')
 
   const exportDefenseMapRef = useRef<HTMLDivElement>(null)
   const exportDefenseAssignementsRef = useRef<HTMLDivElement>(null)
@@ -38,7 +41,6 @@ export default function DefensePageContent({
 
   const exportImage = async (target: 'map' | 'assignments') => {
     const ref = target === 'map' ? exportDefenseMapRef : exportDefenseAssignementsRef
-    if (!exportDefenseMapRef.current || !exportDefenseAssignementsRef.current) return
     setExporting(true)
     // Wait for React to commit the state change (bg-black, hidden remove buttons,
     // full-resolution champion images) to the DOM
@@ -58,9 +60,6 @@ export default function DefensePageContent({
     }
   }
 
-  const handleExportMap = () => exportImage('map')
-  const handleExportList = () => exportImage('assignments')
-
   if (vm.loading || status === 'loading') return <FullPageSpinner />
 
   if (vm.alliances.length === 0) {
@@ -72,36 +71,61 @@ export default function DefensePageContent({
     )
   }
 
-  const { defenseActions } = vm
-
   return (
     <div className='flex flex-col gap-4'>
       <ExportModeProvider value={exporting}>
-        <DefenseActionsProvider value={defenseActions}>
+        <DefenseActionsProvider value={vm.gridActions}>
           <DefenseHeader
             alliances={vm.alliances}
             selectedAllianceId={vm.selectedAllianceId}
             onAllianceChange={vm.handleAllianceChange}
             selectedBg={vm.selectedBg}
             onBgChange={vm.handleBgChange}
-            onClearClick={() => defenseActions.setClearConfirmOpen(true)}
             canManage={vm.userCanPlace}
-            defenseSummary={defenseActions.defenseSummary}
-            onExportMapClick={handleExportMap}
-            onExportListClick={handleExportList}
+            format={vm.format}
+            onFormatChange={vm.setFormat}
+            onExportMapClick={() => exportImage('map')}
+            onExportListClick={() => exportImage('assignments')}
             exporting={exporting}
-          />
-          <DefenseGrid
-            onNodeClick={vm.handleNodeClick}
-            canManage={vm.userCanPlace}
-            exportDefenseMapRef={exportDefenseMapRef}
-            exportDefenseAssignementsRef={exportDefenseAssignementsRef}
-            exporting={exporting}
-            selectedAllianceTag={selectedAlliance?.tag}
-            selectedAllianceName={selectedAlliance?.name}
-            selectedBg={vm.selectedBg}
-            format={currentSeason?.format ?? 'regular'}
-          />
+            showBg={!vm.userCanPlace || tab === 'plans'}
+          >
+            {vm.userCanPlace && (
+              <ToggleGroup dataCy='defense-tab-toggle'>
+                <ToggleButton
+                  active={tab === 'plans'}
+                  onClick={() => setTab('plans')}
+                  dataCy='defense-tab-plans'
+                >
+                  <MapIcon className='size-3.5' />
+                  {t.game.defense.tabs.plans}
+                </ToggleButton>
+                <ToggleButton
+                  active={tab === 'templates'}
+                  onClick={() => setTab('templates')}
+                  dataCy='defense-tab-templates'
+                >
+                  <LayoutTemplate className='size-3.5' />
+                  {t.game.defense.tabs.templates}
+                </ToggleButton>
+              </ToggleGroup>
+            )}
+          </DefenseHeader>
+          {(!vm.userCanPlace || tab === 'plans') && (
+            <PlanWorkspace
+              vm={vm}
+              exportDefenseMapRef={exportDefenseMapRef}
+              exportDefenseAssignementsRef={exportDefenseAssignementsRef}
+              exporting={exporting}
+              selectedAlliance={selectedAlliance}
+            />
+          )}
+          {vm.userCanPlace && tab === 'templates' && (
+            <TemplateWorkspace
+              allianceId={vm.selectedAllianceId}
+              format={vm.format}
+              bg={vm.selectedBg}
+            />
+          )}
         </DefenseActionsProvider>
       </ExportModeProvider>
     </div>

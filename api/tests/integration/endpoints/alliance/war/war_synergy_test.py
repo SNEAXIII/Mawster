@@ -4,8 +4,8 @@ import uuid
 
 import pytest
 
-from src.models.alliance.DefensePlacement import DefensePlacement
 from src.models.war.War import War
+from tests.integration.endpoints.setup.defense_setup import push_plan, push_plan_node
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -233,17 +233,8 @@ class TestAddSynergy:
         # Place synergy champion in regular alliance defense
         defense_champ = await push_champion(name="Captain America", champion_class="Science")
         defense_cu = await push_champion_user(data["member"], defense_champ, stars=7, rank=3)
-        await load_objects(
-            [
-                DefensePlacement(
-                    alliance_id=data["alliance"].id,
-                    battlegroup=1,
-                    node_number=5,
-                    game_account_id=data["member"].id,
-                    champion_user_id=defense_cu.id,
-                )
-            ]
-        )
+        plan = await push_plan(data["alliance"].id, battlegroup=1, active=True)
+        await push_plan_node(plan, 5, defense_cu)
 
         response = await execute_post_request(
             _synergy_url(data["alliance"].id, data["war"].id),

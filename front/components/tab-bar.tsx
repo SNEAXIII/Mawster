@@ -22,7 +22,7 @@ export default function TabBar<T extends string | number>({
   return (
     <div
       role='tablist'
-      className='mb-4 inline-flex h-9 max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-muted p-[3px] text-muted-foreground'
+      className='inline-flex h-9 max-w-full self-start items-center gap-1 overflow-x-auto rounded-lg bg-muted p-0.75 text-muted-foreground'
     >
       {tabs.map((tab) => {
         const isActive = value === tab.value

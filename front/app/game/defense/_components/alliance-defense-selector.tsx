@@ -183,7 +183,7 @@ export default function AllianceDefenseSelector({
               <ChampionPortrait
                 imageUrl={currentPlacement.champion_image_url}
                 name={currentPlacement.champion_name}
-                rarity={currentPlacement.rarity}
+                rarity={currentPlacement.rarity || '7r1'}
                 size={44}
                 ascension={currentPlacement.ascension}
                 is_saga_attacker={currentPlacement.is_saga_attacker}

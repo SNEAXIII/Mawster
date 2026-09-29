@@ -27,3 +27,6 @@ Signature = Annotated[int, Field(ge=0, le=200)]
 
 # A defender cannot take more than 3 attacker KOs before the node is exhausted.
 KoCount = Annotated[int, Field(ge=0, le=3)]
+
+# Defense template and plan name length limit.
+DEFENSE_NAME_MAX_LENGTH = 50

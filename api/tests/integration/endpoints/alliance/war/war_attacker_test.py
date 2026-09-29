@@ -6,10 +6,11 @@ from typing import ClassVar
 import pytest
 
 from src.enums.Roles import Roles
+from src.enums.SeasonFormat import SeasonFormat
 from src.enums.WarBoost import WarBoost
 from src.models import User
-from src.models.alliance.DefensePlacement import DefensePlacement
 from src.models.war.War import War
+from tests.integration.endpoints.setup.defense_setup import push_plan, push_plan_node
 from tests.integration.endpoints.setup.game_setup import (
     get_game_account,
     push_champion,
@@ -35,6 +36,29 @@ from tests.utils.utils_constant import (
 from tests.utils.utils_db import load_objects
 
 # ─── Attacker helpers ─────────────────────────────────────
+
+
+async def _assign(data):
+    """The member assigns their Wolverine on node 10 of BG1."""
+    return await execute_post_request(
+        f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
+        payload={"champion_user_id": str(data["champion_user"].id)},
+        headers=create_auth_headers(user_id=str(USER2_ID)),
+    )
+
+
+async def _available_names(data) -> list[str]:
+    response = await execute_get_request(
+        f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers",
+        headers=create_auth_headers(user_id=str(USER2_ID)),
+    )
+    assert response.status_code == 200
+    return [a["champion_name"] for a in response.json()]
+
+
+async def _plan_wolverine(data, fmt: SeasonFormat = SeasonFormat.regular, active: bool = True):
+    plan = await push_plan(data["alliance"].id, battlegroup=1, fmt=fmt, active=active)
+    await push_plan_node(plan, 5, data["champion_user"])
 
 
 class TestAvailableAttackers:
@@ -305,74 +329,25 @@ class TestAssignAttacker:
 
     @pytest.mark.asyncio
     async def test_assign_attacker_regular_defense_conflict(self):
-        """Champion already in regular alliance defense cannot be assigned as war attacker."""
+        """Champion on the Active Plan cannot be assigned as war attacker."""
         data = await _setup_attacker_scenario()
-        # Place Wolverine (data["champion_user"]) in regular defense for BG1
-        defense = DefensePlacement(
-            alliance_id=data["alliance"].id,
-            battlegroup=1,
-            node_number=5,
-            champion_user_id=data["champion_user"].id,
-            game_account_id=data["member"].id,
-        )
-        await load_objects([defense])
-
-        headers = create_auth_headers(user_id=str(USER2_ID))
-        response = await execute_post_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
-            payload={"champion_user_id": str(data["champion_user"].id)},
-            headers=headers,
-        )
+        await _plan_wolverine(data)
+        response = await _assign(data)
         assert response.status_code == 409
 
     @pytest.mark.asyncio
     async def test_available_attackers_excludes_regular_defense_champions(self):
-        """Champion in regular alliance defense must not appear in available attackers."""
+        """Champion on the Active Plan must not appear in available attackers."""
         data = await _setup_attacker_scenario()
-        # Place Wolverine in regular defense
-        defense = DefensePlacement(
-            alliance_id=data["alliance"].id,
-            battlegroup=1,
-            node_number=5,
-            champion_user_id=data["champion_user"].id,
-            game_account_id=data["member"].id,
-        )
-        await load_objects([defense])
-
-        headers = create_auth_headers(user_id=str(USER2_ID))
-        response = await execute_get_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers",
-            headers=headers,
-        )
-        assert response.status_code == 200
-        names = [a["champion_name"] for a in response.json()]
-        assert "Wolverine" not in names
+        await _plan_wolverine(data)
+        assert "Wolverine" not in await _available_names(data)
 
     @pytest.mark.asyncio
-    async def test_available_attackers_excludes_defense_by_current_alliance_group(self):
-        """Defense filter uses member's current alliance_group, not stored battlegroup."""
+    async def test_available_attackers_keep_champion_on_inactive_plan(self):
+        """Only the Active Plan keeps a Roster Entry out of attack."""
         data = await _setup_attacker_scenario()
-        # Simulate inconsistency: defense stored as battlegroup=2 but member is in BG1
-        # (can happen if member was moved after defense was created)
-        defense = DefensePlacement(
-            alliance_id=data["alliance"].id,
-            battlegroup=2,  # stored with wrong BG
-            node_number=5,
-            champion_user_id=data["champion_user"].id,
-            game_account_id=data["member"].id,
-        )
-        await load_objects([defense])
-
-        headers = create_auth_headers(user_id=str(USER2_ID))
-        response = await execute_get_request(
-            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-attackers",
-            headers=headers,
-        )
-        assert response.status_code == 200
-        names = [a["champion_name"] for a in response.json()]
-        # Member is in BG1; their champion is in defense (stored as BG2 due to inconsistency).
-        # Robust fix: filter by member's current alliance_group, so still excluded.
-        assert "Wolverine" not in names
+        await _plan_wolverine(data, active=False)
+        assert "Wolverine" in await _available_names(data)
 
     @pytest.mark.asyncio
     async def test_reassign_attacker_on_occupied_node_does_not_count_as_extra(self):
@@ -478,6 +453,20 @@ class TestAssignAttacker:
             headers=headers_member,
         )
         assert resp.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_champion_on_inactive_plan_can_attack(self):
+        data = await _setup_attacker_scenario()
+        await _plan_wolverine(data, active=False)
+        response = await _assign(data)
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_active_plan_of_other_format_does_not_block(self):
+        data = await _setup_attacker_scenario()
+        await _plan_wolverine(data, fmt=SeasonFormat.big_thing)
+        response = await _assign(data)
+        assert response.status_code == 200
 
 
 # ─── TestRemoveAttacker ───────────────────────────────────
