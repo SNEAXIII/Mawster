@@ -13,7 +13,7 @@ description: >
 élément de la page ouvre le fichier source du composant dans VS Code, à la bonne ligne.
 
 L'outil a été retiré du repo. Ce skill sait le remettre et le re-retirer, parce que
-l'installation touche quatre points dont deux ne sont pas évidents.
+l'installation touche cinq points dont trois ne sont pas évidents.
 
 ## Pourquoi ce n'est pas un simple `npm i`
 
@@ -104,7 +104,23 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 Cette route n'a aucun appelant dans le code — l'inspector l'appelle par URL. Un `grep` la
 fera donc passer pour du code mort ; elle ne l'est pas tant que l'inspector est monté.
 
-### 5. Monter le composant dans `front/app/layout.tsx`
+### 5. Rewrites dans `front/next.config.ts`
+
+L'inspector appelle `/__open-stack-frame-in-editor`, pas la route ci-dessus. Ajouter dans le
+tableau retourné par `rewrites()`, après la règle `/static/:path*` :
+
+```ts
+{
+  source: '/__open-stack-frame-in-editor',
+  destination: '/api/dev/open-editor',
+},
+{
+  source: '/__open-stack-frame-in-editor/relative',
+  destination: '/api/dev/open-editor',
+},
+```
+
+### 6. Monter le composant dans `front/app/layout.tsx`
 
 ```tsx
 import { DevInspector } from './_components/dev-inspector'
@@ -116,7 +132,7 @@ puis dans le `<body>`, juste après `<TestModeBanner />` :
 <DevInspector />
 ```
 
-### 6. Vérifier
+### 7. Vérifier
 
 ```bash
 npm run build
@@ -134,7 +150,8 @@ rm -rf app/api/dev/open-editor
 npm uninstall react-dev-inspector @react-dev-inspector/babel-plugin react-dev-utils
 ```
 
-Puis retirer l'import et le `<DevInspector />` de `app/layout.tsx`.
+Puis retirer l'import et le `<DevInspector />` de `app/layout.tsx`, et les deux rewrites
+`/__open-stack-frame-in-editor` de `next.config.ts`.
 
 Garder `app/api/dev/login` et `app/api/dev/users` : ce sont d'autres helpers de dev, sans
 rapport.
@@ -155,5 +172,5 @@ rm -rf .next/dev/types .next-3001/dev/types && npm run build
 
 ## État actuel du repo
 
-Retiré (mars 2026). Les quatre points ci-dessus sont absents ; `front/package.json` ne
+Retiré (mars 2026). Les points ci-dessus sont absents, rewrites compris ; `front/package.json` ne
 contient plus aucune de ces dépendances.

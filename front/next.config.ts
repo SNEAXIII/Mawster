@@ -33,14 +33,6 @@ const nextConfig: NextConfig = {
         source: '/static/:path*',
         destination: `http://${STATIC_SERVER_HOST}:${STATIC_PORT}/static/:path*`,
       },
-      {
-        source: '/__open-stack-frame-in-editor',
-        destination: '/api/dev/open-editor',
-      },
-      {
-        source: '/__open-stack-frame-in-editor/relative',
-        destination: '/api/dev/open-editor',
-      },
     ]
   },
 }
