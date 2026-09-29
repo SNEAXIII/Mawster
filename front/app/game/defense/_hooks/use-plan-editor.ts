@@ -16,6 +16,7 @@ import {
 } from '@/app/services/defense'
 import { planNodeToPlacement } from '../_components/plan-node-adapter'
 import { usePolledFetch } from './use-polled-fetch'
+import { withToast } from './with-toast'
 
 export function usePlanEditor(
   allianceId: string,
@@ -58,12 +59,17 @@ export function usePlanEditor(
       .catch(() => toast.error(t.game.defense.loadError))
   }, [allianceId, planId, selectorNode, t])
 
-  const afterWrite = async (message: string) => {
-    toast.success(message)
-    await refreshPlan(true)
-    resetPollTimer()
-    onPlanChanged()
-  }
+  const write = (action: () => Promise<unknown>, success: string, error: string) =>
+    withToast(
+      async () => {
+        await action()
+        await refreshPlan(true)
+        resetPollTimer()
+        onPlanChanged()
+      },
+      success,
+      error
+    )
 
   const handlePlaceDefender = async (
     championUserId: string,
@@ -71,34 +77,29 @@ export function usePlanEditor(
     name: string
   ) => {
     if (!planId || selectorNode === null) return
-    try {
-      await setPlanNode(allianceId, planId, selectorNode, championUserId)
-      await afterWrite(
-        t.game.defense.placeSuccess.replace('{name}', name).replace('{node}', String(selectorNode))
-      )
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.defense.placeError)
-    }
+    await write(
+      () => setPlanNode(allianceId, planId, selectorNode, championUserId),
+      t.game.defense.placeSuccess.replace('{name}', name).replace('{node}', String(selectorNode)),
+      t.game.defense.placeError
+    )
   }
 
   const handleRemoveDefender = async (nodeNumber: number) => {
     if (!planId) return
-    try {
-      await removePlanNode(allianceId, planId, nodeNumber)
-      await afterWrite(t.game.defense.removeSuccess)
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.defense.removeError)
-    }
+    await write(
+      () => removePlanNode(allianceId, planId, nodeNumber),
+      t.game.defense.removeSuccess,
+      t.game.defense.removeError
+    )
   }
 
   const handleClearDefense = async () => {
     if (!planId) return
-    try {
-      await clearPlan(allianceId, planId)
-      await afterWrite(t.game.defense.clearSuccess)
-    } catch (err: unknown) {
-      toast.error((err as Error).message || t.game.defense.clearError)
-    }
+    await write(
+      () => clearPlan(allianceId, planId),
+      t.game.defense.clearSuccess,
+      t.game.defense.clearError
+    )
     setClearConfirmOpen(false)
   }
 

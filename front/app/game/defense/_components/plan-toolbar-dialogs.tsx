@@ -2,7 +2,7 @@
 
 import { useI18n } from '@/app/i18n'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
-import type { CreatePlanBody, DefensePlanSummary } from '@/app/services/defense'
+import type { DefensePlanSummary } from '@/app/services/defense'
 import type { SeasonFormat } from '@/app/services/season'
 import { buildCopyName } from './defense-utils'
 import NameDialog from './name-dialog'
@@ -39,7 +39,7 @@ export default function PlanToolbarDialogs({
         onOpenChange={close}
         allianceId={allianceId}
         format={format}
-        onCreate={(body: CreatePlanBody) => commands.create(body)}
+        onCreate={commands.create}
       />
       <NameDialog
         open={dialog === 'duplicate'}

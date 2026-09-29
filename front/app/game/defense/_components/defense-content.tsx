@@ -41,7 +41,6 @@ export default function DefensePageContent({
 
   const exportImage = async (target: 'map' | 'assignments') => {
     const ref = target === 'map' ? exportDefenseMapRef : exportDefenseAssignementsRef
-    if (!exportDefenseMapRef.current || !exportDefenseAssignementsRef.current) return
     setExporting(true)
     // Wait for React to commit the state change (bg-black, hidden remove buttons,
     // full-resolution champion images) to the DOM
@@ -60,9 +59,6 @@ export default function DefensePageContent({
       setExporting(false)
     }
   }
-
-  const handleExportMap = () => exportImage('map')
-  const handleExportList = () => exportImage('assignments')
 
   if (vm.loading || status === 'loading') return <FullPageSpinner />
 
@@ -88,8 +84,8 @@ export default function DefensePageContent({
             canManage={vm.userCanPlace}
             format={vm.format}
             onFormatChange={vm.setFormat}
-            onExportMapClick={handleExportMap}
-            onExportListClick={handleExportList}
+            onExportMapClick={() => exportImage('map')}
+            onExportListClick={() => exportImage('assignments')}
             exporting={exporting}
             showBg={!vm.userCanPlace || tab === 'plans'}
           >

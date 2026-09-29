@@ -94,7 +94,7 @@ export default function TemplateToolbar({
         onOpenChange={close}
         title={m.rename}
         initialName={name}
-        onSubmit={(value) => state.rename(value)}
+        onSubmit={state.rename}
       />
       <ConfirmationDialog
         open={dialog === 'delete'}

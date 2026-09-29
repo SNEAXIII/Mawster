@@ -1,6 +1,5 @@
 'use client'
 
-import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import {
   activatePlan,
@@ -11,6 +10,7 @@ import {
   type CreatePlanBody,
   type DefensePlanSummary,
 } from '@/app/services/defense'
+import { withToast } from './with-toast'
 
 interface PlanCommandsOptions {
   allianceId: string
@@ -23,19 +23,8 @@ export function usePlanCommands({ allianceId, bg, selected, onChanged }: PlanCom
   const { t } = useI18n()
   const p = t.game.defense.plans
 
-  const run = async <T>(action: () => Promise<T>, success: string): Promise<T | undefined> => {
-    try {
-      const result = await action()
-      toast.success(success)
-      return result
-    } catch (err: unknown) {
-      toast.error((err as Error).message)
-      return undefined
-    }
-  }
-
   const create = async (body: CreatePlanBody) => {
-    const created = await run(() => createPlan(allianceId, bg, body), p.created)
+    const created = await withToast(() => createPlan(allianceId, bg, body), p.created)
     if (created) onChanged(created.id)
   }
 
@@ -46,24 +35,25 @@ export function usePlanCommands({ allianceId, bg, selected, onChanged }: PlanCom
 
   const rename = async (name: string) => {
     if (!selected) return
-    if (await run(() => renamePlan(allianceId, selected.id, name), p.renamed))
+    if (await withToast(() => renamePlan(allianceId, selected.id, name), p.renamed))
       onChanged(selected.id)
   }
 
   const remove = async () => {
     if (!selected) return
-    await run(() => deletePlan(allianceId, selected.id), p.deleted)
+    await withToast(() => deletePlan(allianceId, selected.id), p.deleted)
     onChanged()
   }
 
   const activate = async () => {
     if (!selected) return
-    if (await run(() => activatePlan(allianceId, selected.id), p.activated)) onChanged(selected.id)
+    if (await withToast(() => activatePlan(allianceId, selected.id), p.activated))
+      onChanged(selected.id)
   }
 
   const saveAsTemplate = async (name: string) => {
     if (!selected) return
-    await run(() => savePlanAsTemplate(allianceId, selected.id, name), p.savedAsTemplate)
+    await withToast(() => savePlanAsTemplate(allianceId, selected.id, name), p.savedAsTemplate)
   }
 
   return { create, duplicate, rename, remove, activate, saveAsTemplate }

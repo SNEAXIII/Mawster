@@ -16,6 +16,7 @@ import {
   type DefenseTemplateSummary,
 } from '@/app/services/defense-templates'
 import type { SeasonFormat } from '@/app/services/season'
+import { withToast } from './with-toast'
 
 export function useTemplates(allianceId: string, format: SeasonFormat) {
   const { t } = useI18n()
@@ -51,10 +52,9 @@ export function useTemplates(allianceId: string, format: SeasonFormat) {
       .catch(() => toast.error(t.game.defense.loadError))
   }, [allianceId, selectedId, t])
 
-  const run = async (action: () => Promise<unknown>, success: string, preferId?: string | null) => {
-    try {
+  const run = (action: () => Promise<unknown>, success: string, preferId?: string | null) =>
+    withToast(async () => {
       const result = await action()
-      toast.success(success)
       const createdId = (result as DefenseTemplate | undefined)?.id
       const keptId = createdId ?? (preferId !== undefined ? preferId : selectedId)
       await refresh(keptId)
@@ -63,10 +63,7 @@ export function useTemplates(allianceId: string, format: SeasonFormat) {
       } else if (keptId && keptId === selectedId) {
         setSelected(await getTemplate(allianceId, keptId))
       }
-    } catch (err: unknown) {
-      toast.error((err as Error).message)
-    }
-  }
+    }, success)
 
   return {
     templates,

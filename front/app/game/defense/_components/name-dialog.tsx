@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { NAME_MAX_LENGTH } from './defense-utils'
 
 interface NameDialogProps {
   open: boolean
@@ -12,9 +13,9 @@ interface NameDialogProps {
   title: string
   initialName: string
   onSubmit: (name: string) => void
+  submitLabel?: string
+  children?: ReactNode
 }
-
-const NAME_MAX_LENGTH = 50
 
 export default function NameDialog({
   open,
@@ -22,6 +23,8 @@ export default function NameDialog({
   title,
   initialName,
   onSubmit,
+  submitLabel,
+  children,
 }: Readonly<NameDialogProps>) {
   const { t } = useI18n()
   const [name, setName] = useState(initialName)
@@ -56,12 +59,13 @@ export default function NameDialog({
             data-cy='name-dialog-input'
             autoFocus
           />
+          {children}
           <Button
             type='submit'
             disabled={!trimmed}
             data-cy='name-dialog-submit'
           >
-            {t.common.save}
+            {submitLabel ?? t.common.save}
           </Button>
         </form>
       </DialogContent>

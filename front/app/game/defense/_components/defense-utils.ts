@@ -47,7 +47,7 @@ export function memberRoleOrder(member: BgMember): number {
 
 // ─── Names ───────────────────────────────────────────────
 
-const NAME_MAX_LENGTH = 50
+export const NAME_MAX_LENGTH = 50
 
 /** Truncates the base name so a "{name} (copy)"-style template stays within the limit. */
 export function buildCopyName(template: string, name: string): string {
