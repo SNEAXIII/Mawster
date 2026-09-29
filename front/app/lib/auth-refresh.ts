@@ -9,10 +9,31 @@ export const decodeJwt = <T>(token: string): T | null => {
   }
 }
 
-interface JwtPayload {
+export interface JwtPayload {
   user_id: string
   role: string
   type: string
+  exp: number
+}
+
+interface BackendTokens {
+  access_token?: string
+  refresh_token?: string
+}
+
+/** NextAuth token fields for a backend `{access_token, refresh_token}` pair, or null if undecodable. */
+export function tokenFromBackend(data: BackendTokens) {
+  const decoded = data.access_token ? decodeJwt<JwtPayload>(data.access_token) : null
+  if (!decoded || typeof decoded.exp !== 'number') return null
+  return {
+    id: decoded.user_id,
+    role: decoded.role,
+    accessToken: data.access_token,
+    backendRefreshToken: data.refresh_token,
+    accessTokenExpires: decoded.exp * 1000,
+    expired: false,
+    backendAuthenticated: true,
+  }
 }
 
 /**
@@ -31,21 +52,8 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
       })
 
       if (refreshRes.ok) {
-        const data = await refreshRes.json()
-        const decoded = decodeJwt<JwtPayload>(data.access_token)
-
-        if (decoded) {
-          return {
-            ...token,
-            id: decoded.user_id,
-            role: decoded.role,
-            accessToken: data.access_token,
-            backendRefreshToken: data.refresh_token,
-            accessTokenExpires: Date.now() + 60 * 60 * 1000,
-            expired: false,
-            backendAuthenticated: true,
-          }
-        }
+        const fields = tokenFromBackend(await refreshRes.json())
+        if (fields) return { ...token, ...fields }
       }
     }
 
@@ -82,24 +90,17 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
         return { ...token, expired: true, backendAuthenticated: false }
       }
 
-      const data = await backendRes.json()
-      const decoded = decodeJwt<JwtPayload>(data.access_token)
+      const fields = tokenFromBackend(await backendRes.json())
 
-      if (!decoded) {
+      if (!fields) {
         console.error('Impossible de décoder le JWT backend après refresh')
         return { ...token, expired: true, backendAuthenticated: false }
       }
 
       return {
         ...token,
-        id: decoded.user_id,
-        role: decoded.role,
-        accessToken: data.access_token,
-        backendRefreshToken: data.refresh_token,
-        accessTokenExpires: Date.now() + 60 * 60 * 1000,
+        ...fields,
         discordRefreshToken: discordTokens.refresh_token ?? token.discordRefreshToken,
-        expired: false,
-        backendAuthenticated: true,
       }
     }
 
