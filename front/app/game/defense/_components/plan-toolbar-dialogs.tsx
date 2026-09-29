@@ -71,7 +71,7 @@ export default function PlanToolbarDialogs({
           selected?.name ?? ''
         )}
         onConfirm={() => {
-          commands.remove()
+          void commands.remove()
           close(false)
         }}
         variant='destructive'
@@ -84,7 +84,7 @@ export default function PlanToolbarDialogs({
           .replace('{name}', selected?.name ?? '')
           .replace('{previous}', previous?.name ?? '')}
         onConfirm={() => {
-          commands.activate()
+          void commands.activate()
           close(false)
         }}
       />
