@@ -13,7 +13,7 @@ export default function FormatToggle({
   const { t } = useI18n()
   return (
     <div className='flex items-center gap-2'>
-      <span className='text-sm font-medium'>{t.game.defense.formats.label}:</span>
+      <span className='text-sm font-medium whitespace-nowrap'>{t.game.defense.formats.label}:</span>
       <ToggleGroup>
         {FORMATS.map((format) => (
           <ToggleButton
