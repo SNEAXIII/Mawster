@@ -40,13 +40,6 @@ export function splitRarity(rarity: string): { stars: number; rank: number } | n
   return { stars: Number.parseInt(parts[1], 10), rank: Number.parseInt(parts[2], 10) }
 }
 
-/** Extract the rank part from a rarity string, e.g. '7r5' → 'R5' */
-export function getRankLabel(rarity: string): string {
-  const parsed = splitRarity(rarity)
-  if (!parsed) return rarity.toUpperCase()
-  return `R${parsed.rank}`
-}
-
 /** Shorten a champion name for card display.
  *  Removes parenthesized suffixes: "Spider-Woman (Jessica Drew)" → "Spider-Woman" */
 export function shortenChampionName(name: string): string {

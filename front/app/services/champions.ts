@@ -44,12 +44,6 @@ export const championClasses = [
 ]
 
 // ─── API ─────────────────────────────────────────────────
-export const boolFilterOptions = [
-  { value: 'all', label: 'All' },
-  { value: 'true', label: 'Yes' },
-  { value: 'false', label: 'No' },
-]
-
 export type BoolFilter = 'all' | 'true' | 'false'
 export type ChampionOrderBy = 'name' | 'champion_class'
 export type ChampionOrderDir = 'asc' | 'desc'
@@ -193,16 +187,6 @@ export const toggleChampionPrefight = async (
     headers: jsonHeaders,
   })
   await throwOnError(response, 'Erreur lors du basculement du précombat')
-  return response.json()
-}
-
-export const getSeasonSagaRoles = async (
-  seasonId: string
-): Promise<{ champion_id: string; is_saga_attacker: boolean; is_saga_defender: boolean }[]> => {
-  const response = await fetch(`${PROXY}/admin/seasons/${seasonId}/saga`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors du chargement des rôles saga')
   return response.json()
 }
 
