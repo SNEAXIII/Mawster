@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useI18n } from '@/app/i18n'
+import { useI18n, type Locale } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Shield, UserPlus, Users, X, Pencil, Check, Eye } from 'lucide-react'
 import InviteMemberCombo from './alliance-invite-member-combo'
 import type { GameAccount, AllianceInvitation } from '@/app/services/game'
-import { formatDateMedium } from '@/app/lib/utils'
+import { formatDate } from '@/app/lib/utils'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
 import { CollapsibleSection } from '@/components/collapsible-section'
 import AllianceMemberRow from './alliance-member-row'
@@ -21,7 +21,7 @@ import type { AllianceActions } from '../_viewmodels/use-alliance-actions'
 
 interface AllianceCardProps {
   alliance: AllianceWithVisitorFlag
-  locale: string
+  locale: Locale
   /** Currently open invite-member form alliance id */
   memberAllianceId: string | null
   memberAccountId: string
@@ -148,7 +148,7 @@ export default function AllianceCard({
               />
               <span className='text-xs text-muted-foreground'>·</span>
               <span className='text-xs text-muted-foreground'>
-                {formatDateMedium(alliance.created_at, locale)}
+                {formatDate(alliance.created_at, locale, 'medium')}
               </span>
             </div>
             <div className='flex items-center gap-2 mt-1 flex-wrap'>

@@ -148,12 +148,6 @@ export async function restoreGameAccount(id: string): Promise<GameAccount> {
 }
 
 // ─── Alliances ───────────────────────────────────────────
-export async function getAllAlliances(): Promise<Alliance[]> {
-  const response = await debugFetch(`${PROXY}/alliances`, { headers: jsonHeaders })
-  await throwOnError(response, 'Erreur lors de la récupération des alliances')
-  return response.json()
-}
-
 export async function getMyAlliances(): Promise<Alliance[]> {
   const response = await debugFetch(`${PROXY}/alliances/mine`, { headers: jsonHeaders })
   await throwOnError(response, 'Erreur lors de la récupération de vos alliances')

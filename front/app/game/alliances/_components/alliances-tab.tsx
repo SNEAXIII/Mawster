@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { GameAccount, AllianceInvitation } from '@/app/services/game'
 import { Card, CardContent } from '@/components/ui/card'
-import { useI18n } from '@/app/i18n'
+import { useI18n, type Locale } from '@/app/i18n'
 import { Shield } from 'lucide-react'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 import AllianceSelect from '@/app/game/_components/alliance-select'
@@ -13,7 +13,7 @@ import type { AllianceActions } from '../_viewmodels/use-alliance-actions'
 
 interface AlliancesTabProps {
   alliances: AllianceWithVisitorFlag[]
-  locale: string
+  locale: Locale
   memberAllianceId: string | null
   memberAccountId: string
   eligibleMembers: GameAccount[]

@@ -1,7 +1,7 @@
 'use client'
 
 import { useI18n } from '@/app/i18n'
-import { formatDateLong } from '@/app/lib/utils'
+import { formatDate } from '@/app/lib/utils'
 import type { DeletedGameAccount } from '@/app/services/game'
 import { Button } from '@/components/ui/button'
 import { Loader, RotateCcw, Trash2 } from 'lucide-react'
@@ -57,7 +57,7 @@ export default function DeletedAccountsList({
               <p className='text-xs text-muted-foreground'>
                 {t.game.accounts.deletedOn.replace(
                   '{date}',
-                  formatDateLong(account.deleted_at, locale)
+                  formatDate(account.deleted_at, locale, 'long')
                 )}
                 {' · '}
                 <span data-cy={`deleted-account-days-left-${account.game_pseudo}`}>

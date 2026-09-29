@@ -2,20 +2,18 @@ import NextAuth from 'next-auth'
 import Discord from 'next-auth/providers/discord'
 import Google from 'next-auth/providers/google'
 import Credentials from 'next-auth/providers/credentials'
-import jwt from 'jsonwebtoken'
 import { getServerApiUrl } from '@/app/lib/serverApiUrl'
-import { refreshBackendToken } from '@/app/lib/auth-refresh'
+import {
+  decodeJwt,
+  refreshBackendToken,
+  tokenFromBackend,
+  type JwtPayload,
+} from '@/app/lib/auth-refresh'
 import { withBackendProfile } from '@/app/lib/backend-profile'
 
 import { isServerDev } from '@/app/lib/dev-mode'
 
 const IS_DEV = isServerDev()
-
-interface JwtPayload {
-  user_id: string
-  role: string
-  type: string
-}
 
 export const {
   handlers: { GET, POST },
@@ -61,7 +59,7 @@ export const {
               if (!res.ok) return null
 
               const data = await res.json()
-              const decoded = jwt.decode(data.access_token) as JwtPayload | null
+              const decoded = decodeJwt<JwtPayload>(data.access_token)
               if (!decoded) return null
 
               return {
@@ -96,7 +94,7 @@ export const {
         }
 
         const data = await res.json()
-        const decoded = jwt.decode(data.access_token) as JwtPayload | null
+        const decoded = decodeJwt<JwtPayload>(data.access_token)
         if (!decoded) {
           console.error(`Impossible de décoder le JWT backend (${provider})`)
           return '/login?error=GENERIC'
@@ -115,30 +113,25 @@ export const {
     async jwt({ token, user, account, trigger, profile: _profile }) {
       // Dev login via CredentialsProvider (no Discord)
       if (account?.provider === 'dev-login' && user) {
-        return await withBackendProfile({
-          ...token,
-          id: user.id,
-          role: user.role,
-          accessToken: user.accessToken,
-          backendRefreshToken: user.refreshToken,
-          accessTokenExpires: Date.now() + 60 * 60 * 1000,
-          expired: false,
-          backendAuthenticated: true,
+        const fields = tokenFromBackend({
+          access_token: user.accessToken,
+          refresh_token: user.refreshToken,
         })
+        if (!fields) return { ...token, expired: true, backendAuthenticated: false }
+        return await withBackendProfile({ ...token, ...fields })
       }
 
       // Login initial via OAuth: the exchange already happened in signIn
       if (account?.provider === 'discord' || account?.provider === 'google') {
+        const fields = tokenFromBackend({
+          access_token: account.backendAccessToken,
+          refresh_token: account.backendRefreshToken,
+        })
+        if (!fields) return { ...token, expired: true, backendAuthenticated: false }
         return await withBackendProfile({
           ...token,
-          id: account.backendUserId,
-          role: account.backendRole,
-          accessToken: account.backendAccessToken,
-          backendRefreshToken: account.backendRefreshToken,
-          accessTokenExpires: Date.now() + 60 * 60 * 1000,
+          ...fields,
           ...(account.provider === 'discord' ? { discordRefreshToken: account.refresh_token } : {}),
-          expired: false,
-          backendAuthenticated: true,
         })
       }
 

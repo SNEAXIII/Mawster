@@ -12,7 +12,7 @@ docker push sneaxiii/mawster-api:latest
 ## Frontend
 
 ```bash
-docker build -t sneaxiii/mawster-front:latest --build-arg NEXT_PUBLIC_API_CLIENT_HOST=https://www.mawster.app -f front/front.Dockerfile ./front
+docker build -t sneaxiii/mawster-front:latest -f front/front.Dockerfile ./front
 docker push sneaxiii/mawster-front:latest
 ```
 

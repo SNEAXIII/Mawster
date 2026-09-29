@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { User, Calendar } from 'lucide-react'
 import { FiEdit2, FiCheck, FiX } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
-import { formatDateLong } from '@/app/lib/utils'
+import { formatDate } from '@/app/lib/utils'
 import { InfoRow } from './info-row'
 import { useUpdateLogin } from '../_viewmodels/use-update-login'
 
@@ -132,7 +132,7 @@ export function AccountInfoCard({
           <InfoRow
             icon={<Calendar className='size-4' />}
             label={t.profile.memberSince}
-            value={createdAt ? formatDateLong(createdAt, locale) : t.common.notAvailable}
+            value={createdAt ? formatDate(createdAt, locale, 'long') : t.common.notAvailable}
             fallback={t.common.notAvailable}
             dataCy='member-since-row'
           />

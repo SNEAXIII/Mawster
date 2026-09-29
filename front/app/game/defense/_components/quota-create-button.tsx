@@ -33,9 +33,12 @@ export default function QuotaCreateButton({
         disabled={full}
         data-cy={`${dataCy}-create-btn`}
       >
-        <FiPlus className='mr-1' />
-        {label} ·{' '}
-        <span data-cy={`${dataCy}-quota`}>
+        <FiPlus />
+        {label}
+        <span
+          className='rounded text-xs tabular-nums'
+          data-cy={`${dataCy}-quota`}
+        >
           {quota.used}/{quota.limit}
         </span>
       </Button>
