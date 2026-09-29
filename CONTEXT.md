@@ -269,9 +269,9 @@ persists across Seasons and between Wars.
 
 A plan is **Validated** once every Champion on it has a Player, no Player exceeds the
 format's defender cap, and the map is as full as the Battlegroup allows — every node
-taken, or every member at their cap — and **Pending** otherwise. Derived from the nodes, never set by hand: a member leaving
+taken, or every member at their cap — and **Incomplete** otherwise. Derived from the nodes, never set by hand: a member leaving
 keeps their Champions on the nodes, drops only the Player, and sends the plan back to
-Pending on its own.
+Incomplete on its own.
 _Table_: `defense_plan` (nodes: `defense_plan_node`).
 _Avoid_: defense assignment, defense placement (ambiguous with War Node), layout, draft.
 

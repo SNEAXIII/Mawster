@@ -69,7 +69,7 @@ async function throwOnError(response: Response, fallback: string) {
   throw err
 }
 
-export type PlanState = 'pending' | 'validated'
+export type PlanState = 'incomplete' | 'validated'
 
 export interface Quota {
   used: number

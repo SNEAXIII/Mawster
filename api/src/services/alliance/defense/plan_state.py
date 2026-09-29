@@ -12,12 +12,12 @@ def compute_plan_state(
 ) -> DefensePlanState:
     """Validated per CONTEXT.md; see ADR 0018 for why this is never stored."""
     if any(assignee not in member_ids for assignee in assignees):
-        return DefensePlanState.pending
+        return DefensePlanState.incomplete
     held = Counter(assignees)
     if any(count > cap for count in held.values()):
-        return DefensePlanState.pending
+        return DefensePlanState.incomplete
     if len(assignees) == node_count:
         return DefensePlanState.validated
     if member_ids and all(held[member] == cap for member in member_ids):
         return DefensePlanState.validated
-    return DefensePlanState.pending
+    return DefensePlanState.incomplete

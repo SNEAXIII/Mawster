@@ -112,7 +112,7 @@ def _plan_summary(plan: DefensePlan, member_ids: set[uuid.UUID], is_active: bool
         "format": plan.format,
         "state": state,
         "is_active": is_active,
-        "is_incomplete": is_active and state == DefensePlanState.pending,
+        "is_incomplete": is_active and state == DefensePlanState.incomplete,
         "filled_nodes": len(plan.nodes),
         "created_at": plan.created_at,
     }

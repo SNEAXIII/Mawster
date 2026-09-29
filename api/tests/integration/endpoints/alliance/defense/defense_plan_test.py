@@ -53,7 +53,7 @@ class TestPlanCreation:
         )
         assert resp.status_code == 201
         body = resp.json()
-        assert (body["nodes"], body["state"], body["is_active"]) == ([], "pending", False)
+        assert (body["nodes"], body["state"], body["is_active"]) == ([], "incomplete", False)
         listing = await execute_get_request(
             _bg_route(bg.alliance.id, "/plans?format=regular"), headers=OWNER
         )
@@ -214,7 +214,11 @@ class TestActivation:
         body = (
             await execute_get_request(_plan_route(bg.alliance.id, plan.id), headers=OWNER)
         ).json()
-        assert (body["is_active"], body["state"], body["is_incomplete"]) == (True, "pending", True)
+        assert (body["is_active"], body["state"], body["is_incomplete"]) == (
+            True,
+            "incomplete",
+            True,
+        )
 
     @pytest.mark.asyncio
     async def test_deleting_the_active_plan_leaves_the_battlegroup_without_one(self):

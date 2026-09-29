@@ -2,5 +2,5 @@ from enum import Enum
 
 
 class DefensePlanState(str, Enum):
-    pending = "pending"
+    incomplete = "incomplete"
     validated = "validated"
