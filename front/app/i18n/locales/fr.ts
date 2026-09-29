@@ -571,7 +571,6 @@ const fr: Translations = {
         activate: 'Rendre actif',
         active: 'Actif',
         incomplete: 'Incomplet',
-        pending: 'En attente',
         validated: 'Validé',
         quotaReached: 'Limite atteinte : {limit} plans pour ce groupe et ce format.',
         nameLabel: 'Nom',

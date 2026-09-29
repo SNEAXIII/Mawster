@@ -63,7 +63,7 @@ describe('Defense – plans', () => {
     });
   });
 
-  it('keeps a pending plan from being activated', () => {
+  it('keeps an incomplete plan from being activated', () => {
     setupAllianceOwner('def-plans-pending', 'PendOwner', 'PendAlliance', 'PD').then(({ userData, allianceId }) => {
       cy.apiCreatePlan(userData.access_token, allianceId, 1, 'Draft');
       cy.apiLogin(userData.user_id, 'defense');

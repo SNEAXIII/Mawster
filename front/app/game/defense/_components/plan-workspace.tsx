@@ -26,6 +26,11 @@ export default function PlanWorkspace({
 }: Readonly<PlanWorkspaceProps>) {
   const { t } = useI18n()
   const { defenseActions } = vm
+  const plan = defenseActions.plan
+  const progress =
+    plan && plan.id === vm.selectedPlan?.id
+      ? { assigned: plan.nodes.filter((n) => n.champion_user_id).length, total: plan.node_count }
+      : undefined
 
   return (
     <>
@@ -37,6 +42,7 @@ export default function PlanWorkspace({
             plans={vm.planList.plans}
             quota={vm.planList.quota}
             selected={vm.selectedPlan}
+            progress={progress}
             onSelect={vm.planList.setSelectedPlanId}
             commands={vm.planCommands}
           />

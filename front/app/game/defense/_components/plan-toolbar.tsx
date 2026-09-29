@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { FiCopy, FiEdit2, FiSave, FiTrash2, FiCheckCircle } from 'react-icons/fi'
 import type { DefensePlanSummary, Quota } from '@/app/services/defense'
 import type { SeasonFormat } from '@/app/services/season'
-import PlanStateBadge from './plan-state-badge'
+import PlanStateBadge, { type PlanProgress } from './plan-state-badge'
 import QuotaCreateButton from './quota-create-button'
 import QuotaTooltip from './quota-tooltip'
 import PlanToolbarDialogs from './plan-toolbar-dialogs'
@@ -22,12 +22,13 @@ interface PlanToolbarProps {
   plans: DefensePlanSummary[]
   quota: Quota
   selected: DefensePlanSummary | null
+  progress?: PlanProgress
   onSelect: (planId: string) => void
   commands: ReturnType<typeof usePlanCommands>
 }
 
 export default function PlanToolbar(props: Readonly<PlanToolbarProps>) {
-  const { allianceId, format, plans, quota, selected, onSelect, commands } = props
+  const { allianceId, format, plans, quota, selected, progress, onSelect, commands } = props
   const { t } = useI18n()
   const p = t.game.defense.plans
   const [dialog, setDialog] = useState<PlanToolbarDialog>(null)
@@ -48,7 +49,23 @@ export default function PlanToolbar(props: Readonly<PlanToolbarProps>) {
         placeholder={p.none}
         dataCy='plan'
       />
-      {selected && <PlanStateBadge plan={selected} />}
+      {selected && (
+        <PlanStateBadge
+          plan={selected}
+          progress={progress}
+        />
+      )}
+      {selected && !selected.is_active && (
+        <Button
+          size='sm'
+          disabled={selected.state !== 'validated'}
+          onClick={() => (previous ? setDialog('activate') : commands.activate())}
+          data-cy='plan-activate-btn'
+        >
+          <FiCheckCircle className='mr-1' />
+          {p.activate}
+        </Button>
+      )}
       <QuotaCreateButton
         label={p.create}
         quota={quota}
@@ -92,17 +109,6 @@ export default function PlanToolbar(props: Readonly<PlanToolbarProps>) {
             <FiEdit2 className='mr-1' />
             {p.rename}
           </Button>
-          {!selected.is_active && (
-            <Button
-              size='sm'
-              disabled={selected.state !== 'validated'}
-              onClick={() => (previous ? setDialog('activate') : commands.activate())}
-              data-cy='plan-activate-btn'
-            >
-              <FiCheckCircle className='mr-1' />
-              {p.activate}
-            </Button>
-          )}
           <Button
             size='sm'
             variant='destructive'

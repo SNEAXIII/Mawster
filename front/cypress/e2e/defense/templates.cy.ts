@@ -38,6 +38,37 @@ describe('Defense – templates', () => {
     });
   });
 
+  it('counts only champions with a player and frames the unassigned one', () => {
+    setupDefenseOwner('def-tpl-count', 'TplCntOwner', 'TplCntAll', 'TN').then(
+      ({ adminData, ownerData, allianceId }) => {
+        cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant');
+        cy.apiCreateTemplate(ownerData.access_token, allianceId, 'Rush');
+        cy.apiLogin(ownerData.user_id, 'defense');
+
+        cy.getByCy('defense-tab-templates').click();
+        pickTemplateChampion(12, 'Wolverine');
+
+        cy.getByCy('defense-tab-plans').click();
+        cy.getByCy('plan-create-btn').click();
+        cy.getByCy('name-dialog-input').type('From Rush');
+        cy.getByCy('plan-create-template-select').click();
+        cy.getByCy('plan-create-template-Rush').click();
+        cy.getByCy('name-dialog-submit').click();
+
+        cy.getByCy('war-node-unassigned-12').should('exist');
+        cy.getByCy('plan-state-progress')
+          .invoke('text')
+          .should('match', /^0\/\d+$/);
+
+        openWarNode(12);
+        cy.getByCy('defense-current-placement')
+          .find('img')
+          .first()
+          .should('have.attr', 'src', '/static/frame/7_stars.png');
+      },
+    );
+  });
+
   it('hides a champion already placed on another node of the template', () => {
     setupDefenseOwner('def-tpl-dup', 'TplDupOwner', 'TplDupAll', 'TD').then(({ adminData, ownerData, allianceId }) => {
       cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant');

@@ -566,7 +566,6 @@ const en = {
         activate: 'Set as active',
         active: 'Active',
         incomplete: 'Incomplete',
-        pending: 'Pending',
         validated: 'Validated',
         quotaReached: 'Limit reached: {limit} plans for this battlegroup and format.',
         nameLabel: 'Name',
