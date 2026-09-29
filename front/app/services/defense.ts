@@ -105,17 +105,12 @@ export interface DefensePlanSummary {
   format: SeasonFormat
   state: PlanState
   is_active: boolean
-  is_incomplete: boolean
-  filled_nodes: number
   created_at: string
 }
 
 export interface DefensePlan extends DefensePlanSummary {
   node_count: number
-  max_defenders: number
-  source_template_id: string | null
   nodes: DefensePlanNode[]
-  member_defender_counts: Record<string, number>
 }
 
 export interface DefensePlanList {

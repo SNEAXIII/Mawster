@@ -56,17 +56,12 @@ class DefensePlanSummary(BaseModel):
     format: SeasonFormat
     state: DefensePlanState
     is_active: bool
-    is_incomplete: bool
-    filled_nodes: int
     created_at: datetime
 
 
 class DefensePlanResponse(DefensePlanSummary):
     node_count: int
-    max_defenders: int
-    source_template_id: uuid.UUID | None = None
     nodes: list[DefensePlanNodeResponse]
-    member_defender_counts: dict[str, int]
 
 
 class DefensePlanListResponse(BaseModel):

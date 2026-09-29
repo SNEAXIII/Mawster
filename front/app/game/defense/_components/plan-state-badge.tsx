@@ -6,7 +6,7 @@ import type { DefensePlanSummary } from '@/app/services/defense'
 
 function stateVariant(plan: DefensePlanSummary) {
   if (plan.state === 'validated') return 'default'
-  return plan.is_incomplete ? 'destructive' : 'secondary'
+  return plan.is_active ? 'destructive' : 'secondary'
 }
 
 export interface PlanProgress {

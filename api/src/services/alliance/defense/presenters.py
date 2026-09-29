@@ -1,7 +1,6 @@
 """Turn Defense Templates and Plans into response DTOs."""
 
 import uuid
-from collections import Counter
 
 from src.dto.alliance.defense.dto_defense_common import Quota
 from src.dto.alliance.defense.dto_defense_plan import (
@@ -16,7 +15,6 @@ from src.dto.alliance.defense.dto_defense_template import (
     DefenseTemplateResponse,
     DefenseTemplateSummary,
 )
-from src.enums.DefensePlanState import DefensePlanState
 from src.enums.SeasonFormat import SeasonFormat
 from src.models.alliance.DefensePlan import DefensePlan, DefensePlanNode
 from src.models.alliance.DefenseTemplate import DefenseTemplate
@@ -104,16 +102,13 @@ def _node_response(node: DefensePlanNode, battlegroup: int, saga: dict) -> Defen
 
 
 def _plan_summary(plan: DefensePlan, member_ids: set[uuid.UUID], is_active: bool) -> dict:
-    state = DefensePlanService.state_of(plan, member_ids)
     return {
         "id": plan.id,
         "name": plan.name,
         "battlegroup": plan.battlegroup,
         "format": plan.format,
-        "state": state,
+        "state": DefensePlanService.state_of(plan, member_ids),
         "is_active": is_active,
-        "is_incomplete": is_active and state == DefensePlanState.incomplete,
-        "filled_nodes": len(plan.nodes),
         "created_at": plan.created_at,
     }
 
@@ -124,16 +119,11 @@ async def plan_response(session: SessionDep, plan: DefensePlan) -> DefensePlanRe
         session, plan.alliance_id, plan.battlegroup, plan.format
     )
     saga = await SagaService.resolve_current(session)
-    params = for_format(plan.format)
     nodes = sorted(plan.nodes, key=lambda n: n.node_number)
-    counts = Counter(str(n.champion_user.game_account_id) for n in nodes if n.champion_user)
     return DefensePlanResponse(
         **_plan_summary(plan, member_ids, plan.id in active_ids),
-        node_count=params.node_count,
-        max_defenders=params.max_defenders_per_player,
-        source_template_id=plan.source_template_id,
+        node_count=for_format(plan.format).node_count,
         nodes=[_node_response(n, plan.battlegroup, saga) for n in nodes],
-        member_defender_counts=dict(counts),
     )
 
 

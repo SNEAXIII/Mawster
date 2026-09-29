@@ -53,7 +53,6 @@ export function useDefenseViewModel({
           ...rawSelectedPlan,
           state: defenseActions.plan.state,
           is_active: defenseActions.plan.is_active,
-          is_incomplete: defenseActions.plan.is_incomplete,
         }
       : rawSelectedPlan
   const planCommands = usePlanCommands({

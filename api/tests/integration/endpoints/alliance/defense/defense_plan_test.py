@@ -69,7 +69,6 @@ class TestPlanCreation:
             headers=OWNER,
         )
         body = resp.json()
-        assert body["source_template_id"] == str(template.id)
         assert [(n["champion_name"], n["game_account_id"]) for n in body["nodes"]] == [
             ("Spider-Man", None),
             ("Wolverine", None),
@@ -207,18 +206,14 @@ class TestActivation:
         assert active == ["B"]
 
     @pytest.mark.asyncio
-    async def test_active_plan_that_turns_pending_stays_active_and_incomplete(self):
+    async def test_active_plan_that_turns_incomplete_stays_active(self):
         bg = await setup_defense_bg()
         plan = await push_plan(bg.alliance.id, active=True)
         await push_plan_node(plan, 1, champion=bg.spider)
         body = (
             await execute_get_request(_plan_route(bg.alliance.id, plan.id), headers=OWNER)
         ).json()
-        assert (body["is_active"], body["state"], body["is_incomplete"]) == (
-            True,
-            "incomplete",
-            True,
-        )
+        assert (body["is_active"], body["state"]) == (True, "incomplete")
 
     @pytest.mark.asyncio
     async def test_deleting_the_active_plan_leaves_the_battlegroup_without_one(self):

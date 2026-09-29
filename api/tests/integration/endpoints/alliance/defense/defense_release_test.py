@@ -48,7 +48,7 @@ class TestRelease:
             (1, "Spider-Man", str(bg.owner.id)),
             (2, "Iron Man", None),
         ]
-        assert (body["is_active"], body["is_incomplete"]) == (True, True)
+        assert (body["is_active"], body["state"]) == (True, "incomplete")
 
     @pytest.mark.asyncio
     async def test_member_moved_to_another_battlegroup_leaves_the_champion(self):
