@@ -126,3 +126,13 @@ jobs:
     with:
       version: ${{ needs.changes.outputs.version }}
       released: ${{ needs.changes.outputs.released }}
+
+  # Nothing needs it: a Sonar outage never blocks a merge or a deploy.
+  sonar:
+    name: Sonar
+    permissions:
+      contents: read
+      pull-requests: read
+    needs: test
+    if: ${{ !cancelled() && (github.event_name == 'pull_request' || github.ref_name == 'release') }}
+    uses: $/.github/workflows/_sonar.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.

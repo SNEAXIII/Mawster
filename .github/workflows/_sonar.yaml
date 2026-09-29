@@ -1,0 +1,34 @@
+name: Sonar scan
+
+# Called by ci.yaml and sonar.yaml, never triggered. The caller's run must hold a
+# `backend-coverage` artifact (api/coverage.xml from pytest --cov).
+on:
+  workflow_call:
+
+jobs:
+  sonar:
+    name: SonarQube Cloud scan
+    if: github.actor != 'dependabot[bot]'
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-latest
+    # SONAR_TOKEN is an environment secret: without this line it resolves to an
+    # empty string and the scanner fails with "Not authorized".
+    environment: Api
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          # Sonar reads git blame to decide what counts as new code.
+          fetch-depth: 0
+      - name: Download backend coverage
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: backend-coverage
+          path: api
+      - name: SonarQube Cloud scan
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
