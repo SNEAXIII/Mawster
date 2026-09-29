@@ -233,7 +233,7 @@ class ChampionUserService:
 
     @classmethod
     async def delete_champion_user(cls, session: SessionDep, champion_user: ChampionUser) -> None:
-        await DefensePlanService.release_champion_user(session, champion_user.id)
+        await DefensePlanService.release_champion_users(session, [champion_user.id])
         await session.delete(champion_user)
         await session.commit()
 

@@ -9,7 +9,6 @@ from starlette import status
 from src.Messages.defense_messages import (
     CHAMPION_NOT_FOUND_IN_ROSTER,
     CHAMPION_USER_MISMATCH,
-    NO_CHAMPION_ON_NODE,
     PLAYER_NOT_IN_ALLIANCE,
     PLAYER_NOT_IN_BATTLEGROUP,
     player_max_defenders_reached,
@@ -27,6 +26,8 @@ from src.services.alliance.defense._rules import (
     assert_champion_free,
     assert_node_on_map,
     bg_members,
+    delete_node,
+    find_node,
 )
 from src.services.alliance.defense.DefensePlanService import DefensePlanService
 from src.services.alliance.war.WarFormatConfig import for_format
@@ -63,9 +64,9 @@ class DefensePlanNodeService:
         else:
             await assert_champion_exists(session, champion_id)
         assert_champion_free(plan.nodes, champion_id, node_number)
-        node = next((n for n in plan.nodes if n.node_number == node_number), None)
-        if node is None:
-            node = DefensePlanNode(plan_id=plan.id, node_number=node_number)
+        node = find_node(plan.nodes, node_number) or DefensePlanNode(
+            plan_id=plan.id, node_number=node_number
+        )
         node.champion_id = champion_id
         node.champion_user_id = champion_user_id
         node.placed_by_id = placed_by_id
@@ -99,11 +100,7 @@ class DefensePlanNodeService:
 
     @staticmethod
     async def remove_node(session: SessionDep, plan: DefensePlan, node_number: int) -> None:
-        node = next((n for n in plan.nodes if n.node_number == node_number), None)
-        if node is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, NO_CHAMPION_ON_NODE)
-        await session.delete(node)
-        await session.commit()
+        await delete_node(session, plan.nodes, node_number)
 
     @staticmethod
     async def clear_plan(session: SessionDep, plan: DefensePlan) -> None:

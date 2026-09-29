@@ -7,8 +7,6 @@ from starlette import status
 
 from src.enums.SeasonFormat import SeasonFormat
 from src.Messages.defense_messages import (
-    FORMAT_MISMATCH,
-    NO_CHAMPION_ON_NODE,
     TEMPLATE_NAME_TAKEN,
     TEMPLATE_NOT_FOUND,
     template_quota_reached,
@@ -19,7 +17,10 @@ from src.services.alliance.defense._rules import (
     assert_champion_free,
     assert_name_free,
     assert_node_on_map,
+    assert_same_format,
     count_rows,
+    delete_node,
+    find_node,
 )
 from src.services.alliance.defense.limits import MAX_TEMPLATES_PER_FORMAT
 from src.utils.db import SessionDep
@@ -60,17 +61,6 @@ class DefenseTemplateService:
         )
         return list(result.all())
 
-    @staticmethod
-    async def count_templates(
-        session: SessionDep, alliance_id: uuid.UUID, fmt: SeasonFormat
-    ) -> int:
-        return await count_rows(
-            session,
-            DefenseTemplate,
-            DefenseTemplate.alliance_id == alliance_id,
-            DefenseTemplate.format == fmt,
-        )
-
     @classmethod
     async def create_template(
         cls,
@@ -83,8 +73,7 @@ class DefenseTemplateService:
         champion_nodes: list[tuple[int, uuid.UUID]] = []
         if source_template_id is not None:
             source = await cls.get_template(session, alliance_id, source_template_id)
-            if source.format != fmt:
-                raise HTTPException(status.HTTP_400_BAD_REQUEST, FORMAT_MISMATCH)
+            assert_same_format(source.format, fmt)
             champion_nodes = [(n.node_number, n.champion_id) for n in source.nodes]
         return await cls.create_with_nodes(session, alliance_id, name, fmt, champion_nodes)
 
@@ -97,7 +86,13 @@ class DefenseTemplateService:
         fmt: SeasonFormat,
         champion_nodes: list[tuple[int, uuid.UUID]],
     ) -> DefenseTemplate:
-        if await cls.count_templates(session, alliance_id, fmt) >= MAX_TEMPLATES_PER_FORMAT:
+        used = await count_rows(
+            session,
+            DefenseTemplate,
+            DefenseTemplate.alliance_id == alliance_id,
+            DefenseTemplate.format == fmt,
+        )
+        if used >= MAX_TEMPLATES_PER_FORMAT:
             raise HTTPException(
                 status.HTTP_409_CONFLICT, template_quota_reached(MAX_TEMPLATES_PER_FORMAT)
             )
@@ -138,9 +133,9 @@ class DefenseTemplateService:
         assert_node_on_map(template.format, node_number)
         await assert_champion_exists(session, champion_id)
         assert_champion_free(template.nodes, champion_id, node_number)
-        node = next((n for n in template.nodes if n.node_number == node_number), None)
-        if node is None:
-            node = DefenseTemplateNode(template_id=template.id, node_number=node_number)
+        node = find_node(template.nodes, node_number) or DefenseTemplateNode(
+            template_id=template.id, node_number=node_number
+        )
         node.champion_id = champion_id
         session.add(node)
         await session.commit()
@@ -148,11 +143,7 @@ class DefenseTemplateService:
 
     @staticmethod
     async def remove_node(session: SessionDep, template: DefenseTemplate, node_number: int) -> None:
-        node = next((n for n in template.nodes if n.node_number == node_number), None)
-        if node is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, NO_CHAMPION_ON_NODE)
-        await session.delete(node)
-        await session.commit()
+        await delete_node(session, template.nodes, node_number)
 
     @staticmethod
     async def _assert_name_free(

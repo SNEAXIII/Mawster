@@ -12,6 +12,8 @@ from src.enums.SeasonFormat import SeasonFormat
 from src.Messages.defense_messages import (
     CHAMPION_ALREADY_PLACED_OTHER_NODE,
     CHAMPION_NOT_FOUND,
+    FORMAT_MISMATCH,
+    NO_CHAMPION_ON_NODE,
     node_exceeds_map,
 )
 from src.models.champion.Champion import Champion
@@ -29,6 +31,23 @@ def assert_node_on_map(fmt: SeasonFormat, node_number: int) -> None:
     node_count = for_format(fmt).node_count
     if not 1 <= node_number <= node_count:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, node_exceeds_map(node_count))
+
+
+def assert_same_format(source_format: SeasonFormat, fmt: SeasonFormat) -> None:
+    if source_format != fmt:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, FORMAT_MISMATCH)
+
+
+def find_node[N: _Node](nodes: Iterable[N], node_number: int) -> N | None:
+    return next((n for n in nodes if n.node_number == node_number), None)
+
+
+async def delete_node(session: SessionDep, nodes: Iterable[_Node], node_number: int) -> None:
+    node = find_node(nodes, node_number)
+    if node is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, NO_CHAMPION_ON_NODE)
+    await session.delete(node)
+    await session.commit()
 
 
 def assert_champion_free(nodes: Iterable[_Node], champion_id: uuid.UUID, node_number: int) -> None:

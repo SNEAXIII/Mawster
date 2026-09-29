@@ -9,7 +9,6 @@ from starlette import status
 from src.enums.DefensePlanState import DefensePlanState
 from src.enums.SeasonFormat import SeasonFormat
 from src.Messages.defense_messages import (
-    FORMAT_MISMATCH,
     PLAN_NAME_TAKEN,
     PLAN_NOT_FOUND,
     PLAN_NOT_VALIDATED,
@@ -19,7 +18,12 @@ from src.Messages.defense_messages import (
 from src.models.alliance.DefensePlan import DefenseActivePlan, DefensePlan, DefensePlanNode
 from src.models.alliance.DefenseTemplate import DefenseTemplate
 from src.models.champion.ChampionUser import ChampionUser
-from src.services.alliance.defense._rules import assert_name_free, bg_members, count_rows
+from src.services.alliance.defense._rules import (
+    assert_name_free,
+    assert_same_format,
+    bg_members,
+    count_rows,
+)
 from src.services.alliance.defense.DefenseTemplateService import DefenseTemplateService
 from src.services.alliance.defense.limits import MAX_PLANS_PER_BATTLEGROUP_FORMAT
 from src.services.alliance.defense.plan_state import compute_plan_state
@@ -158,10 +162,6 @@ class DefensePlanService:
         await _drop_players(session, nodes)
 
     @staticmethod
-    async def release_champion_user(session: SessionDep, champion_user_id: uuid.UUID) -> None:
-        await DefensePlanService.release_champion_users(session, [champion_user_id])
-
-    @staticmethod
     def state_of(plan: DefensePlan, member_ids: set[uuid.UUID]) -> DefensePlanState:
         params = for_format(plan.format)
         assignees = [
@@ -192,7 +192,7 @@ class DefensePlanService:
         plan = DefensePlan(alliance_id=alliance_id, battlegroup=battlegroup, format=fmt, name=name)
         if template_id is not None:
             template = await DefenseTemplateService.get_template(session, alliance_id, template_id)
-            cls._assert_same_format(template, fmt)
+            assert_same_format(template.format, fmt)
             plan.source_template_id = template.id
             plan.nodes = [
                 DefensePlanNode(node_number=n.node_number, champion_id=n.champion_id)
@@ -200,7 +200,7 @@ class DefensePlanService:
             ]
         elif source_plan_id is not None:
             source = await cls.get_plan(session, alliance_id, source_plan_id)
-            cls._assert_same_format(source, fmt)
+            assert_same_format(source.format, fmt)
             if source.battlegroup != battlegroup:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, SOURCE_PLAN_OTHER_BATTLEGROUP)
             plan.source_template_id = source.source_template_id
@@ -269,11 +269,6 @@ class DefensePlanService:
         return await DefenseTemplateService.create_with_nodes(
             session, plan.alliance_id, name, plan.format, champion_nodes
         )
-
-    @staticmethod
-    def _assert_same_format(source: DefensePlan | DefenseTemplate, fmt: SeasonFormat) -> None:
-        if source.format != fmt:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, FORMAT_MISMATCH)
 
     @staticmethod
     async def _assert_name_free(
