@@ -1,4 +1,4 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 
 export type MatchupVerdict = 'discouraged' | 'ok' | 'good'
 export type MatchupTargetType = 'defender' | 'node'
@@ -141,44 +141,30 @@ export async function getMatchups(
   allianceId: string,
   filters: MatchupFilters = {}
 ): Promise<MatchupRating[]> {
-  const res = await fetch(`${PROXY}/alliances/${allianceId}/matchups${toQuery(filters)}`, {
-    headers: jsonHeaders,
-  })
-  if (!res.ok) throw new Error('Failed to load matchups')
-  return res.json()
+  return api(`/alliances/${allianceId}/matchups${toQuery(filters)}`, 'Failed to load matchups')
 }
 
 export async function evaluateMatchups(
   allianceId: string,
   params: MatchupEvaluationParams
 ): Promise<MatchupEvaluationRow[]> {
-  const res = await fetch(
-    `${PROXY}/alliances/${allianceId}/matchups/evaluation${toQuery(params)}`,
-    { headers: jsonHeaders }
+  return api(
+    `/alliances/${allianceId}/matchups/evaluation${toQuery(params)}`,
+    'Failed to evaluate matchups'
   )
-  if (!res.ok) throw new Error('Failed to evaluate matchups')
-  return res.json()
 }
 
 export async function upsertMatchup(
   allianceId: string,
   body: MatchupUpsertBody
 ): Promise<MatchupRating[]> {
-  const res = await fetch(`${PROXY}/alliances/${allianceId}/matchups`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) throw new Error('Failed to save matchup')
-  return res.json()
+  return api(`/alliances/${allianceId}/matchups`, 'Failed to save matchup', jsonBody('POST', body))
 }
 
 export async function deleteMatchup(allianceId: string, ratingId: string): Promise<void> {
-  const res = await fetch(`${PROXY}/alliances/${allianceId}/matchups/${ratingId}`, {
+  await api(`/alliances/${allianceId}/matchups/${ratingId}`, 'Failed to delete matchup', {
     method: 'DELETE',
-    headers: jsonHeaders,
   })
-  if (!res.ok) throw new Error('Failed to delete matchup')
 }
 
 export async function getMatchupGrid(
@@ -186,15 +172,13 @@ export async function getMatchupGrid(
   championId: string,
   gameAccountId?: string | null
 ): Promise<MatchupGridResponse> {
-  const res = await fetch(
-    `${PROXY}/alliances/${allianceId}/matchups/grid${toQuery({
+  return api(
+    `/alliances/${allianceId}/matchups/grid${toQuery({
       champion_id: championId,
       game_account_id: gameAccountId,
     })}`,
-    { headers: jsonHeaders }
+    'Failed to load matchup grid'
   )
-  if (!res.ok) throw new Error('Failed to load matchup grid')
-  return res.json()
 }
 
 export async function getMatchupDefenderGrid(
@@ -202,13 +186,11 @@ export async function getMatchupDefenderGrid(
   defenderChampionId: string,
   gameAccountId?: string | null
 ): Promise<MatchupDefenderGridResponse> {
-  const res = await fetch(
-    `${PROXY}/alliances/${allianceId}/matchups/grid-by-defender${toQuery({
+  return api(
+    `/alliances/${allianceId}/matchups/grid-by-defender${toQuery({
       defender_champion_id: defenderChampionId,
       game_account_id: gameAccountId,
     })}`,
-    { headers: jsonHeaders }
+    'Failed to load defender matchup grid'
   )
-  if (!res.ok) throw new Error('Failed to load defender matchup grid')
-  return res.json()
 }

@@ -1,5 +1,6 @@
 import type { SeasonFormat } from '@/app/services/season'
-import { defenseRequest, jsonBody, type Quota } from '@/app/services/defense'
+import { defenseRequest, type Quota } from '@/app/services/defense'
+import { jsonBody } from '@/app/services/utils'
 
 export interface DefenseTemplateNode {
   node_number: number

@@ -1,4 +1,4 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
 export interface GameAccount {
@@ -68,46 +68,22 @@ export interface AllianceVisitor {
   visited_at: string
 }
 
-import { IS_DEV } from '@/app/lib/dev-mode'
 import type { RosterEntry } from '@/app/services/roster'
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
-}
-
-async function debugFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  if (IS_DEV) {
-    const method = init?.method ?? 'GET'
-    const url = input instanceof Request ? input.url : String(input)
-    const payload = init?.body ? JSON.parse(init.body as string) : undefined
-    console.debug(`[API] ${method} ${url}`, payload ?? '')
-  }
-  return fetch(input, init)
-}
 
 // ─── Game Accounts ───────────────────────────────────────
 export async function getMyGameAccounts(): Promise<GameAccount[]> {
-  const response = await debugFetch(`${PROXY}/game-accounts`, { headers: jsonHeaders })
-  await throwOnError(response, 'Erreur lors de la récupération des comptes de jeu')
-  return response.json()
+  return api('/game-accounts', 'Erreur lors de la récupération des comptes de jeu')
 }
 
 export async function createGameAccount(
   game_pseudo: string,
   is_primary: boolean = false
 ): Promise<GameAccount> {
-  const response = await debugFetch(`${PROXY}/game-accounts`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ game_pseudo, is_primary }),
-  })
-  await throwOnError(response, 'Erreur lors de la création du compte de jeu')
-  return response.json()
+  return api(
+    '/game-accounts',
+    'Erreur lors de la création du compte de jeu',
+    jsonBody('POST', { game_pseudo, is_primary })
+  )
 }
 
 export async function updateGameAccount(
@@ -115,49 +91,36 @@ export async function updateGameAccount(
   game_pseudo: string,
   is_primary: boolean
 ): Promise<GameAccount> {
-  const response = await debugFetch(`${PROXY}/game-accounts/${id}`, {
-    method: 'PUT',
-    headers: jsonHeaders,
-    body: JSON.stringify({ game_pseudo, is_primary }),
-  })
-  await throwOnError(response, 'Erreur lors de la mise à jour du compte de jeu')
-  return response.json()
+  return api(
+    `/game-accounts/${id}`,
+    'Erreur lors de la mise à jour du compte de jeu',
+    jsonBody('PUT', { game_pseudo, is_primary })
+  )
 }
 
 export async function deleteGameAccount(id: string): Promise<void> {
-  const response = await debugFetch(`${PROXY}/game-accounts/${id}`, {
+  await api(`/game-accounts/${id}`, 'Erreur lors de la suppression du compte de jeu', {
     method: 'DELETE',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, 'Erreur lors de la suppression du compte de jeu')
 }
 
 export async function getDeletedGameAccounts(): Promise<DeletedGameAccount[]> {
-  const response = await debugFetch(`${PROXY}/game-accounts/deleted`, { headers: jsonHeaders })
-  await throwOnError(response, 'Erreur lors de la récupération des comptes supprimés')
-  return response.json()
+  return api('/game-accounts/deleted', 'Erreur lors de la récupération des comptes supprimés')
 }
 
 export async function restoreGameAccount(id: string): Promise<GameAccount> {
-  const response = await debugFetch(`${PROXY}/game-accounts/${id}/restore`, {
+  return api(`/game-accounts/${id}/restore`, 'Erreur lors de la restauration du compte de jeu', {
     method: 'POST',
-    headers: jsonHeaders,
   })
-  await throwOnError(response, 'Erreur lors de la restauration du compte de jeu')
-  return response.json()
 }
 
 // ─── Alliances ───────────────────────────────────────────
 export async function getMyAlliances(): Promise<Alliance[]> {
-  const response = await debugFetch(`${PROXY}/alliances/mine`, { headers: jsonHeaders })
-  await throwOnError(response, 'Erreur lors de la récupération de vos alliances')
-  return response.json()
+  return api('/alliances/mine', 'Erreur lors de la récupération de vos alliances')
 }
 
 export async function getMyVisitedAlliances(): Promise<Alliance[]> {
-  const response = await debugFetch(`${PROXY}/alliances/my-visited`, { headers: jsonHeaders })
-  await throwOnError(response, 'Erreur lors de la récupération des alliances visitées')
-  return response.json()
+  return api('/alliances/my-visited', 'Erreur lors de la récupération des alliances visitées')
 }
 
 export type AllianceRosterEntry = RosterEntry & {
@@ -195,48 +158,41 @@ export async function getAllianceRoster(
   if (query?.distinctChampionLimit != null)
     qs.set('distinct_champion_limit', String(query.distinctChampionLimit))
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/roster${suffix}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors de la récupération du roster de l'alliance")
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/roster${suffix}`,
+    "Erreur lors de la récupération du roster de l'alliance"
+  )
 }
 
 export async function getAllianceVisitors(allianceId: string): Promise<AllianceVisitor[]> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/visitors`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la récupération des visiteurs')
-  return response.json()
+  return api(`/alliances/${allianceId}/visitors`, 'Erreur lors de la récupération des visiteurs')
 }
 
 export async function kickVisitor(allianceId: string, gameAccountId: string): Promise<void> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/visitors/${gameAccountId}`, {
-    method: 'DELETE',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la suppression du visiteur')
+  await api(
+    `/alliances/${allianceId}/visitors/${gameAccountId}`,
+    'Erreur lors de la suppression du visiteur',
+    { method: 'DELETE' }
+  )
 }
 
 export async function leaveAsVisitor(allianceId: string): Promise<void> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/visitors/me`, {
-    method: 'DELETE',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors de la sortie de l'alliance visitée")
+  await api(
+    `/alliances/${allianceId}/visitors/me`,
+    "Erreur lors de la sortie de l'alliance visitée",
+    { method: 'DELETE' }
+  )
 }
 
 export async function inviteVisitor(
   allianceId: string,
   gameAccountId: string
 ): Promise<AllianceInvitation> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ game_account_id: gameAccountId, type: 'visitor' }),
-  })
-  await throwOnError(response, "Erreur lors de l'invitation du visiteur")
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/invitations`,
+    "Erreur lors de l'invitation du visiteur",
+    jsonBody('POST', { game_account_id: gameAccountId, type: 'visitor' })
+  )
 }
 
 export interface RankingHistoryPoint {
@@ -258,11 +214,10 @@ export interface RankingHistoryResponse {
 export async function fetchAllianceRankingHistory(
   allianceId: string
 ): Promise<RankingHistoryResponse> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/ranking-history`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors de la récupération de l'historique de classement")
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/ranking-history`,
+    "Erreur lors de la récupération de l'historique de classement"
+  )
 }
 
 export interface AllianceRoleEntry {
@@ -280,9 +235,7 @@ export interface AllianceMyRoles {
 }
 
 export async function getMyAllianceRoles(): Promise<AllianceMyRoles> {
-  const response = await debugFetch(`${PROXY}/alliances/my-roles`, { headers: jsonHeaders })
-  await throwOnError(response, 'Erreur lors de la récupération de vos rôles')
-  return response.json()
+  return api('/alliances/my-roles', 'Erreur lors de la récupération de vos rôles')
 }
 
 export async function createAlliance(
@@ -290,13 +243,11 @@ export async function createAlliance(
   tag: string,
   owner_id: string
 ): Promise<Alliance> {
-  const response = await debugFetch(`${PROXY}/alliances`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ name, tag, owner_id }),
-  })
-  await throwOnError(response, "Erreur lors de la création de l'alliance")
-  return response.json()
+  return api(
+    '/alliances',
+    "Erreur lors de la création de l'alliance",
+    jsonBody('POST', { name, tag, owner_id })
+  )
 }
 
 /**
@@ -304,35 +255,30 @@ export async function createAlliance(
  * the call unless it matches exactly, so the confirmation is not UI-only.
  */
 export async function deleteAlliance(id: string, name: string): Promise<void> {
-  const response = await debugFetch(`${PROXY}/alliances/${id}`, {
-    method: 'DELETE',
-    headers: jsonHeaders,
-    body: JSON.stringify({ name }),
-  })
-  await throwOnError(response, "Erreur lors de la suppression de l'alliance")
+  await api(
+    `/alliances/${id}`,
+    "Erreur lors de la suppression de l'alliance",
+    jsonBody('DELETE', { name })
+  )
 }
 
 // ─── Eligibility ─────────────────────────────────────────
 export async function getEligibleOwners(): Promise<GameAccount[]> {
-  const response = await debugFetch(`${PROXY}/alliances/eligible-owners`, { headers: jsonHeaders })
-  await throwOnError(response, 'Erreur lors de la récupération des comptes éligibles')
-  return response.json()
+  return api('/alliances/eligible-owners', 'Erreur lors de la récupération des comptes éligibles')
 }
 
 export async function getEligibleMembers(allianceId: string): Promise<GameAccount[]> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/eligible-members`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la récupération des membres éligibles')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/eligible-members`,
+    'Erreur lors de la récupération des membres éligibles'
+  )
 }
 
 export async function getEligibleVisitors(allianceId: string): Promise<GameAccount[]> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/eligible-visitors`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la récupération des visiteurs éligibles')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/eligible-visitors`,
+    'Erreur lors de la récupération des visiteurs éligibles'
+  )
 }
 
 // ─── Invitations ─────────────────────────────────────────
@@ -355,147 +301,112 @@ export async function inviteMember(
   allianceId: string,
   gameAccountId: string
 ): Promise<AllianceInvitation> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ game_account_id: gameAccountId, type: 'member' }),
-  })
-  await throwOnError(response, "Erreur lors de l'envoi de l'invitation")
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/invitations`,
+    "Erreur lors de l'envoi de l'invitation",
+    jsonBody('POST', { game_account_id: gameAccountId, type: 'member' })
+  )
 }
 
 export async function getAllianceInvitations(allianceId: string): Promise<AllianceInvitation[]> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/invitations`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la récupération des invitations')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/invitations`,
+    'Erreur lors de la récupération des invitations'
+  )
 }
 
 export async function cancelInvitation(allianceId: string, invitationId: string): Promise<void> {
-  const response = await debugFetch(
-    `${PROXY}/alliances/${allianceId}/invitations/${invitationId}`,
-    {
-      method: 'DELETE',
-      headers: jsonHeaders,
-    }
+  await api(
+    `/alliances/${allianceId}/invitations/${invitationId}`,
+    "Erreur lors de l'annulation de l'invitation",
+    { method: 'DELETE' }
   )
-  await throwOnError(response, "Erreur lors de l'annulation de l'invitation")
 }
 
 export async function getMyInvitations(): Promise<AllianceInvitation[]> {
-  const response = await debugFetch(`${PROXY}/alliances/my-invitations`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors de la récupération de vos invitations')
-  return response.json()
+  return api('/alliances/my-invitations', 'Erreur lors de la récupération de vos invitations')
 }
 
 export async function acceptInvitation(invitationId: string): Promise<AllianceInvitation> {
-  const response = await debugFetch(`${PROXY}/alliances/invitations/${invitationId}/accept`, {
-    method: 'POST',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors de l'acceptation de l'invitation")
-  return response.json()
+  return api(
+    `/alliances/invitations/${invitationId}/accept`,
+    "Erreur lors de l'acceptation de l'invitation",
+    { method: 'POST' }
+  )
 }
 
 export async function declineInvitation(invitationId: string): Promise<AllianceInvitation> {
-  const response = await debugFetch(`${PROXY}/alliances/invitations/${invitationId}/decline`, {
-    method: 'POST',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, "Erreur lors du refus de l'invitation")
-  return response.json()
+  return api(
+    `/alliances/invitations/${invitationId}/decline`,
+    "Erreur lors du refus de l'invitation",
+    { method: 'POST' }
+  )
 }
 
 // ─── Members ─────────────────────────────────────────────
 export async function removeMember(allianceId: string, gameAccountId: string): Promise<Alliance> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/members/${gameAccountId}`, {
-    method: 'DELETE',
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Erreur lors du retrait du membre')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/members/${gameAccountId}`,
+    'Erreur lors du retrait du membre',
+    { method: 'DELETE' }
+  )
 }
 
 // ─── Officers ────────────────────────────────────────────
 export async function addOfficer(allianceId: string, gameAccountId: string): Promise<Alliance> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/officers`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ game_account_id: gameAccountId }),
-  })
-  await throwOnError(response, "Erreur lors de l'ajout de l'officer")
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/officers`,
+    "Erreur lors de l'ajout de l'officer",
+    jsonBody('POST', { game_account_id: gameAccountId })
+  )
 }
 
 export async function removeOfficer(allianceId: string, gameAccountId: string): Promise<Alliance> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/officers`, {
-    method: 'DELETE',
-    headers: jsonHeaders,
-    body: JSON.stringify({ game_account_id: gameAccountId }),
-  })
-  await throwOnError(response, "Erreur lors du retrait de l'officer")
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/officers`,
+    "Erreur lors du retrait de l'officer",
+    jsonBody('DELETE', { game_account_id: gameAccountId })
+  )
 }
 
 // ─── Strategists ─────────────────────────────────────────
 export async function addStrategist(allianceId: string, gameAccountId: string): Promise<Alliance> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/strategists`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ game_account_id: gameAccountId }),
-  })
-  await throwOnError(response, "Erreur lors de l'ajout du stratège")
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/strategists`,
+    "Erreur lors de l'ajout du stratège",
+    jsonBody('POST', { game_account_id: gameAccountId })
+  )
 }
 
 export async function removeStrategist(
   allianceId: string,
   gameAccountId: string
 ): Promise<Alliance> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/strategists`, {
-    method: 'DELETE',
-    headers: jsonHeaders,
-    body: JSON.stringify({ game_account_id: gameAccountId }),
-  })
-  await throwOnError(response, 'Erreur lors du retrait du stratège')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/strategists`,
+    'Erreur lors du retrait du stratège',
+    jsonBody('DELETE', { game_account_id: gameAccountId })
+  )
 }
 
 export async function transferOwnership(
   allianceId: string,
   gameAccountId: string
 ): Promise<Alliance> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/owner`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-    body: JSON.stringify({ game_account_id: gameAccountId }),
-  })
-  await throwOnError(response, 'Failed to transfer ownership')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/owner`,
+    'Failed to transfer ownership',
+    jsonBody('PATCH', { game_account_id: gameAccountId })
+  )
 }
 
 // ─── ELO / Tier ──────────────────────────────────────────
 export async function patchAllianceElo(allianceId: string, elo: number): Promise<Alliance> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/elo`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-    body: JSON.stringify({ elo }),
-  })
-  if (!response.ok) throw new Error('Failed to update ELO')
-  return response.json()
+  return api(`/alliances/${allianceId}/elo`, 'Failed to update ELO', jsonBody('PATCH', { elo }))
 }
 
 export async function patchAllianceTier(allianceId: string, tier: number): Promise<Alliance> {
-  const response = await debugFetch(`${PROXY}/alliances/${allianceId}/tier`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-    body: JSON.stringify({ tier }),
-  })
-  if (!response.ok) throw new Error('Failed to update Tier')
-  return response.json()
+  return api(`/alliances/${allianceId}/tier`, 'Failed to update Tier', jsonBody('PATCH', { tier }))
 }
 
 // ─── Groups ──────────────────────────────────────────────
@@ -504,14 +415,9 @@ export async function setMemberGroup(
   gameAccountId: string,
   group: number | null
 ): Promise<Alliance> {
-  const response = await debugFetch(
-    `${PROXY}/alliances/${allianceId}/members/${gameAccountId}/group`,
-    {
-      method: 'PATCH',
-      headers: jsonHeaders,
-      body: JSON.stringify({ group }),
-    }
+  return api(
+    `/alliances/${allianceId}/members/${gameAccountId}/group`,
+    'Erreur lors du changement de groupe',
+    jsonBody('PATCH', { group })
   )
-  await throwOnError(response, 'Erreur lors du changement de groupe')
-  return response.json()
 }

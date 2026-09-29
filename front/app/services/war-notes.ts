@@ -1,15 +1,6 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 
 // ─── War Fight Note Service ──────────────────────────────
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
-}
 
 export interface WarFightNote {
   id: string
@@ -28,16 +19,11 @@ export async function upsertWarFightNote(
   nodeNumber: number,
   content: string
 ): Promise<WarFightNote> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/nodes/${battlegroup}/${nodeNumber}/note`,
-    {
-      method: 'PUT',
-      headers: jsonHeaders,
-      body: JSON.stringify({ content }),
-    }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/nodes/${battlegroup}/${nodeNumber}/note`,
+    'Failed to save war fight note',
+    jsonBody('PUT', { content })
   )
-  await throwOnError(response, 'Failed to save war fight note')
-  return response.json()
 }
 
 export async function deleteWarFightNote(
@@ -46,12 +32,9 @@ export async function deleteWarFightNote(
   battlegroup: number,
   nodeNumber: number
 ): Promise<void> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/nodes/${battlegroup}/${nodeNumber}/note`,
-    {
-      method: 'DELETE',
-      headers: jsonHeaders,
-    }
+  await api(
+    `/alliances/${allianceId}/wars/${warId}/nodes/${battlegroup}/${nodeNumber}/note`,
+    'Failed to delete war fight note',
+    { method: 'DELETE' }
   )
-  await throwOnError(response, 'Failed to delete war fight note')
 }

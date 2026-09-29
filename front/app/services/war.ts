@@ -1,4 +1,4 @@
-import { PROXY, jsonHeaders } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 import type { SeasonFormat } from '@/app/services/season'
 
 // ─── War Service ─────────────────────────────────────────
@@ -171,31 +171,14 @@ export interface WarPrefight {
   created_at: string
 }
 
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
-}
-
 // ─── War API ─────────────────────────────────────────────
 
 export async function getWars(allianceId: string): Promise<War[]> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Failed to load wars')
-  return response.json()
+  return api(`/alliances/${allianceId}/wars`, 'Failed to load wars')
 }
 
 export async function getCurrentWar(allianceId: string): Promise<War> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/current`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Failed to load current war')
-  return response.json()
+  return api(`/alliances/${allianceId}/wars/current`, 'Failed to load current war')
 }
 
 export async function createWar(
@@ -203,13 +186,11 @@ export async function createWar(
   opponentName: string,
   bannedChampionIds: string[] = []
 ): Promise<War> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ opponent_name: opponentName, banned_champion_ids: bannedChampionIds }),
-  })
-  await throwOnError(response, 'Failed to create war')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/wars`,
+    'Failed to create war',
+    jsonBody('POST', { opponent_name: opponentName, banned_champion_ids: bannedChampionIds })
+  )
 }
 
 export async function updateWar(
@@ -218,13 +199,11 @@ export async function updateWar(
   opponentName: string,
   bannedChampionIds: string[] = []
 ): Promise<War> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-    body: JSON.stringify({ opponent_name: opponentName, banned_champion_ids: bannedChampionIds }),
-  })
-  await throwOnError(response, 'Failed to update war')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/wars/${warId}`,
+    'Failed to update war',
+    jsonBody('PATCH', { opponent_name: opponentName, banned_champion_ids: bannedChampionIds })
+  )
 }
 
 export async function getWarDefense(
@@ -232,11 +211,10 @@ export async function getWarDefense(
   warId: string,
   battlegroup: number
 ): Promise<WarDefenseSummary> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Failed to load war defense')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}`,
+    'Failed to load war defense'
+  )
 }
 
 export interface WarPlacementCreateRequest {
@@ -253,16 +231,11 @@ export async function placeWarDefender(
   battlegroup: number,
   request: WarPlacementCreateRequest
 ): Promise<WarPlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/place`,
-    {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify(request),
-    }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/place`,
+    'Failed to place defender',
+    jsonBody('POST', request)
   )
-  await throwOnError(response, 'Failed to place defender')
-  return response.json()
 }
 
 export async function removeWarDefender(
@@ -271,11 +244,11 @@ export async function removeWarDefender(
   battlegroup: number,
   nodeNumber: number
 ): Promise<void> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}`,
-    { method: 'DELETE', headers: jsonHeaders }
+  await api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}`,
+    'Failed to remove defender',
+    { method: 'DELETE' }
   )
-  await throwOnError(response, 'Failed to remove defender')
 }
 
 export async function endWar(
@@ -285,13 +258,11 @@ export async function endWar(
   eloChange: number | null,
   opponentDeaths: number | null
 ): Promise<War> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/end`, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ win, elo_change: eloChange, opponent_deaths: opponentDeaths }),
-  })
-  await throwOnError(response, 'Failed to end war')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/end`,
+    'Failed to end war',
+    jsonBody('POST', { win, elo_change: eloChange, opponent_deaths: opponentDeaths })
+  )
 }
 
 export async function updateWarOpponentDeaths(
@@ -299,13 +270,11 @@ export async function updateWarOpponentDeaths(
   warId: string,
   opponentDeaths: number | null
 ): Promise<War> {
-  const response = await fetch(`${PROXY}/alliances/${allianceId}/wars/${warId}/opponent-deaths`, {
-    method: 'PATCH',
-    headers: jsonHeaders,
-    body: JSON.stringify({ opponent_deaths: opponentDeaths }),
-  })
-  await throwOnError(response, 'Failed to update opponent deaths')
-  return response.json()
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/opponent-deaths`,
+    'Failed to update opponent deaths',
+    jsonBody('PATCH', { opponent_deaths: opponentDeaths })
+  )
 }
 
 export async function clearWarBg(
@@ -313,11 +282,11 @@ export async function clearWarBg(
   warId: string,
   battlegroup: number
 ): Promise<void> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/clear`,
-    { method: 'DELETE', headers: jsonHeaders }
+  await api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/clear`,
+    'Failed to clear war battlegroup',
+    { method: 'DELETE' }
   )
-  await throwOnError(response, 'Failed to clear war battlegroup')
 }
 
 // ─── Attacker API ─────────────────────────────────────────
@@ -333,12 +302,10 @@ export async function getAvailableAttackers(
   if (targetGameAccountId) params.set('attacker_id', targetGameAccountId)
   if (nodeNumber !== undefined) params.set('node_number', String(nodeNumber))
   const suffix = params.toString() ? `?${params}` : ''
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers${suffix}`,
-    { headers: jsonHeaders }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers${suffix}`,
+    'Failed to load available attackers'
   )
-  await throwOnError(response, 'Failed to load available attackers')
-  return response.json()
 }
 
 export async function assignWarAttacker(
@@ -348,16 +315,11 @@ export async function assignWarAttacker(
   nodeNumber: number,
   championUserId: string
 ): Promise<WarPlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
-    {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({ champion_user_id: championUserId }),
-    }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
+    'Failed to assign attacker',
+    jsonBody('POST', { champion_user_id: championUserId })
   )
-  await throwOnError(response, 'Failed to assign attacker')
-  return response.json()
 }
 
 export async function removeWarAttacker(
@@ -366,12 +328,11 @@ export async function removeWarAttacker(
   battlegroup: number,
   nodeNumber: number
 ): Promise<WarPlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
-    { method: 'DELETE', headers: jsonHeaders }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/attacker`,
+    'Failed to remove attacker',
+    { method: 'DELETE' }
   )
-  await throwOnError(response, 'Failed to remove attacker')
-  return response.json()
 }
 
 export async function updateWarBoosts(
@@ -381,16 +342,11 @@ export async function updateWarBoosts(
   nodeNumber: number,
   boosts: WarBoosts
 ): Promise<WarPlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/boosts`,
-    {
-      method: 'PUT',
-      headers: jsonHeaders,
-      body: JSON.stringify(boosts),
-    }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/boosts`,
+    'Failed to update boosts',
+    jsonBody('PUT', boosts)
   )
-  await throwOnError(response, 'Failed to update boosts')
-  return response.json()
 }
 
 export async function updateWarKo(
@@ -400,16 +356,11 @@ export async function updateWarKo(
   nodeNumber: number,
   koCount: number
 ): Promise<WarPlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/ko`,
-    {
-      method: 'PATCH',
-      headers: jsonHeaders,
-      body: JSON.stringify({ ko_count: koCount }),
-    }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/ko`,
+    'Failed to update KO count',
+    jsonBody('PATCH', { ko_count: koCount })
   )
-  await throwOnError(response, 'Failed to update KO count')
-  return response.json()
 }
 
 export async function toggleCombatCompleted(
@@ -418,12 +369,11 @@ export async function toggleCombatCompleted(
   battlegroup: number,
   nodeNumber: number
 ): Promise<WarPlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/complete`,
-    { method: 'PATCH', headers: jsonHeaders }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/complete`,
+    'Failed to toggle combat completion',
+    { method: 'PATCH' }
   )
-  await throwOnError(response, 'Failed to toggle combat completion')
-  return response.json()
 }
 
 export async function toggleFightNotDone(
@@ -432,12 +382,11 @@ export async function toggleFightNotDone(
   battlegroup: number,
   nodeNumber: number
 ): Promise<WarPlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/fight-not-done`,
-    { method: 'PATCH', headers: jsonHeaders }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/fight-not-done`,
+    'Failed to toggle fight not done',
+    { method: 'PATCH' }
   )
-  await throwOnError(response, 'Failed to toggle fight not done')
-  return response.json()
 }
 
 export async function togglePlanningError(
@@ -446,12 +395,11 @@ export async function togglePlanningError(
   battlegroup: number,
   nodeNumber: number
 ): Promise<WarPlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/planning-error`,
-    { method: 'PATCH', headers: jsonHeaders }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/planning-error`,
+    'Failed to toggle planning error',
+    { method: 'PATCH' }
   )
-  await throwOnError(response, 'Failed to toggle planning error')
-  return response.json()
 }
 
 // ─── Assist API ───────────────────────────────────────────
@@ -463,16 +411,11 @@ export async function assignWarAssist(
   nodeNumber: number,
   championUserId: string
 ): Promise<WarPlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/assist`,
-    {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({ champion_user_id: championUserId }),
-    }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/assist`,
+    'Failed to assign assist',
+    jsonBody('POST', { champion_user_id: championUserId })
   )
-  await throwOnError(response, 'Failed to assign assist')
-  return response.json()
 }
 
 export async function removeWarAssist(
@@ -481,12 +424,11 @@ export async function removeWarAssist(
   battlegroup: number,
   nodeNumber: number
 ): Promise<WarPlacement> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/assist`,
-    { method: 'DELETE', headers: jsonHeaders }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/node/${nodeNumber}/assist`,
+    'Failed to remove assist',
+    { method: 'DELETE' }
   )
-  await throwOnError(response, 'Failed to remove assist')
-  return response.json()
 }
 
 // ─── Synergy API ──────────────────────────────────────────
@@ -496,12 +438,10 @@ export async function getWarSynergies(
   warId: string,
   battlegroup: number
 ): Promise<WarSynergy[]> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
-    { headers: jsonHeaders }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
+    'Failed to load synergy attackers'
   )
-  await throwOnError(response, 'Failed to load synergy attackers')
-  return response.json()
 }
 
 export async function addWarSynergy(
@@ -511,19 +451,14 @@ export async function addWarSynergy(
   championUserId: string,
   targetChampionUserId: string
 ): Promise<WarSynergy> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
-    {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        champion_user_id: championUserId,
-        target_champion_user_id: targetChampionUserId,
-      }),
-    }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
+    'Failed to add synergy attacker',
+    jsonBody('POST', {
+      champion_user_id: championUserId,
+      target_champion_user_id: targetChampionUserId,
+    })
   )
-  await throwOnError(response, 'Failed to add synergy attacker')
-  return response.json()
 }
 
 export async function removeWarSynergy(
@@ -532,11 +467,11 @@ export async function removeWarSynergy(
   battlegroup: number,
   championUserId: string
 ): Promise<void> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy/${championUserId}`,
-    { method: 'DELETE', headers: jsonHeaders }
+  await api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy/${championUserId}`,
+    'Failed to remove synergy attacker',
+    { method: 'DELETE' }
   )
-  await throwOnError(response, 'Failed to remove synergy attacker')
 }
 
 // ─── Available Prefight Attackers API ─────────────────────
@@ -546,12 +481,10 @@ export async function getAvailablePrefightAttackers(
   warId: string,
   battlegroup: number
 ): Promise<AvailableAttacker[]> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-prefight-attackers`,
-    { headers: jsonHeaders }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-prefight-attackers`,
+    'Failed to load available pre-fight attackers'
   )
-  await throwOnError(response, 'Failed to load available pre-fight attackers')
-  return response.json()
 }
 
 // ─── Prefight API ─────────────────────────────────────────
@@ -561,12 +494,10 @@ export async function getWarPrefights(
   warId: string,
   battlegroup: number
 ): Promise<WarPrefight[]> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
-    { headers: jsonHeaders }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
+    'Failed to load pre-fight attackers'
   )
-  await throwOnError(response, 'Failed to load pre-fight attackers')
-  return response.json()
 }
 
 export async function addWarPrefight(
@@ -576,19 +507,14 @@ export async function addWarPrefight(
   championUserId: string,
   targetNodeNumber: number
 ): Promise<WarPrefight> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
-    {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        champion_user_id: championUserId,
-        target_node_number: targetNodeNumber,
-      }),
-    }
+  return api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
+    'Failed to add pre-fight attacker',
+    jsonBody('POST', {
+      champion_user_id: championUserId,
+      target_node_number: targetNodeNumber,
+    })
   )
-  await throwOnError(response, 'Failed to add pre-fight attacker')
-  return response.json()
 }
 
 export async function removeWarPrefight(
@@ -598,9 +524,9 @@ export async function removeWarPrefight(
   championUserId: string,
   targetNodeNumber: number
 ): Promise<void> {
-  const response = await fetch(
-    `${PROXY}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}/node/${targetNodeNumber}`,
-    { method: 'DELETE', headers: jsonHeaders }
+  await api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}/node/${targetNodeNumber}`,
+    'Failed to remove pre-fight attacker',
+    { method: 'DELETE' }
   )
-  await throwOnError(response, 'Failed to remove pre-fight attacker')
 }

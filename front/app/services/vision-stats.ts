@@ -1,16 +1,7 @@
 // ─── Admin AI-import stats service ───────────────────────
 // Read-only aggregates over the vision (AI) roster imports. Admin-only on the
 // backend; nothing here is reachable from a normal user session.
-import { PROXY, jsonHeaders } from '@/app/services/utils'
-
-async function throwOnError(response: Response, fallback: string) {
-  if (response.ok) return
-  const data = await response.json().catch(() => ({}))
-  const msg = data.message ?? data.detail ?? fallback
-  const err = new Error(`Erreur ${response.status}: ${msg}`)
-  ;(err as Error & { status: number }).status = response.status
-  throw err
-}
+import { api } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -114,11 +105,7 @@ export const ALL_TIME_DAYS = 0
 // ─── API ─────────────────────────────────────────────────
 
 export async function getVisionStats(days: number): Promise<VisionStats> {
-  const response = await fetch(`${PROXY}/admin/vision/stats?days=${days}`, {
-    headers: jsonHeaders,
-  })
-  await throwOnError(response, 'Failed to load AI import stats')
-  return response.json()
+  return api(`/admin/vision/stats?days=${days}`, 'Failed to load AI import stats')
 }
 
 export async function getVisionUserStats(params: {
@@ -135,9 +122,7 @@ export async function getVisionUserStats(params: {
     sort_by: params.sortBy ?? 'imports_total',
     sort_order: params.sortOrder ?? 'desc',
   })
-  const response = await fetch(`${PROXY}/admin/vision/users?${query}`, { headers: jsonHeaders })
-  await throwOnError(response, 'Failed to load AI importer stats')
-  return response.json()
+  return api(`/admin/vision/users?${query}`, 'Failed to load AI importer stats')
 }
 
 export async function getVisionImports(params: {
@@ -154,7 +139,5 @@ export async function getVisionImports(params: {
   })
   if (params.status) query.set('status', params.status)
   if (params.userId) query.set('user_id', params.userId)
-  const response = await fetch(`${PROXY}/admin/vision/imports?${query}`, { headers: jsonHeaders })
-  await throwOnError(response, 'Failed to load AI imports')
-  return response.json()
+  return api(`/admin/vision/imports?${query}`, 'Failed to load AI imports')
 }
