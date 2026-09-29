@@ -27,7 +27,7 @@ describe('Defense – Clear All', () => {
         confirmAction('defense-clear-all');
 
         cy.getByCy('defender-count-ClearPlyr').should('contain', '0/5');
-        cy.contains('Defense cleared').should('be.visible');
+        cy.contains('Defenders removed').should('be.visible');
       },
     );
   });

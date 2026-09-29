@@ -1,7 +1,7 @@
 'use client'
 
 import type { RefObject } from 'react'
-import { FiTrash2 } from 'react-icons/fi'
+import { FiUserMinus } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import type { AllianceWithVisitorFlag } from '@/app/services/game'
@@ -48,12 +48,12 @@ export default function PlanWorkspace({
           />
           {defenseActions.placements.length > 0 && (
             <Button
-              variant='destructive'
+              variant='outline'
               size='sm'
               data-cy='defense-clear-all'
               onClick={() => defenseActions.setClearConfirmOpen(true)}
             >
-              <FiTrash2 className='w-4 h-4 mr-1' />
+              <FiUserMinus className='w-4 h-4 mr-1' />
               {t.game.defense.clearAll}
             </Button>
           )}
