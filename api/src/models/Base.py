@@ -22,6 +22,8 @@ from src.game_types import (  # noqa: F401
 FK_ALLIANCE = "alliance.id"
 FK_CHAMPION = "champion.id"
 FK_CHAMPION_USER = "champion_user.id"
+FK_DEFENSE_PLAN = "defense_plan.id"
+FK_DEFENSE_TEMPLATE = "defense_template.id"
 FK_GAME_ACCOUNT = "game_account.id"
 FK_MASTERY = "mastery.id"
 FK_MATCHUP_RATING = "matchup_rating.id"

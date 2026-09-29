@@ -47,11 +47,12 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
   it('search filter by champion alias finds the champion', () => {
     setupDefenseOwner('def-pl-alias-search', 'AliasPlyr', 'AliasAll', 'AS').then(
-      ({ adminData, ownerData, ownerAccId }) => {
+      ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic', { alias: 'spidey;peter' }).then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3');
         });
         cy.apiGiveChampion(adminData.access_token, ownerData.access_token, ownerAccId, 'Wolverine', 'Mutant', '7r3');
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -136,11 +137,12 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
   it('shows owner picker when champion has multiple owners', () => {
     setupDefenseOwnerAndMember('def-pl-multi', 'MultiOwn', 'MultiMem', 'MultiAll', 'MO').then(
-      ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', { signature: 200 });
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', { signature: 100 });
         });
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -168,7 +170,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
   it('owner picker shows preferred attacker ⚔ flag and 7 badge', () => {
     setupDefenseOwnerAndMember('def-pl-opref', 'OPrefOwn', 'OPrefMem', 'OPrefAll', 'OP').then(
-      ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
             signature: 200,
@@ -179,6 +181,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
             is_preferred_attacker: false,
           });
         });
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -195,7 +198,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
   it('owner picker shows ascension in rarity label', () => {
     setupDefenseOwnerAndMember('def-pl-oasc', 'OAscOwn', 'OAscMem', 'OAscAll', 'OA').then(
-      ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Doctor Doom', 'Mystic', { is_ascendable: true }).then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
             signature: 200,
@@ -206,6 +209,7 @@ describe('Defense – Champion Selector & Owner Picker', () => {
             ascension: 0,
           });
         });
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -225,13 +229,14 @@ describe('Defense – Champion Selector & Owner Picker', () => {
 
   it("champion placed for player A appears only in player A's section", () => {
     setupDefenseOwnerAndMember('def-pl-iso', 'IsoOwner', 'IsoMember', 'IsoAll', 'IS').then(
-      ({ adminData, ownerData, memberData, ownerAccId, memberAccId }) => {
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', { signature: 200 }),
         );
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) =>
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r4', { signature: 100 }),
         );
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 

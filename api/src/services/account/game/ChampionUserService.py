@@ -22,6 +22,7 @@ from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
 from src.services.admin.ChampionService import ChampionService
+from src.services.alliance.defense.DefensePlanService import DefensePlanService
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from src.utils.db import SessionDep
 
@@ -232,6 +233,7 @@ class ChampionUserService:
 
     @classmethod
     async def delete_champion_user(cls, session: SessionDep, champion_user: ChampionUser) -> None:
+        await DefensePlanService.release_champion_users(session, [champion_user.id])
         await session.delete(champion_user)
         await session.commit()
 
@@ -296,6 +298,7 @@ class ChampionUserService:
         result = await session.exec(sql)
         entries = result.all()
         count = len(entries)
+        await DefensePlanService.release_champion_users(session, [e.id for e in entries])
         for entry in entries:
             await session.delete(entry)
         await session.commit()

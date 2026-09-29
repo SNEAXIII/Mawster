@@ -1,12 +1,15 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import type { DefenseSummary } from '@/app/services/defense'
-import { Trash2, Camera } from 'lucide-react'
+import { Camera } from 'lucide-react'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
+import type { SeasonFormat } from '@/app/services/season'
 import AllianceSelect from '@/app/game/_components/alliance-select'
+import { ToggleButton, ToggleGroup } from '@/components/toggle-button'
+import FormatToggle from './format-toggle'
 
 interface DefenseHeaderProps {
   alliances: AllianceWithVisitorFlag[]
@@ -14,12 +17,14 @@ interface DefenseHeaderProps {
   onAllianceChange: (id: string) => void
   selectedBg: number
   onBgChange: (bg: number) => void
-  onClearClick: () => void
   canManage: boolean
-  defenseSummary: DefenseSummary | null
+  format: SeasonFormat
+  onFormatChange: (format: SeasonFormat) => void
   onExportMapClick: () => void
   onExportListClick: () => void
   exporting: boolean
+  showBg: boolean
+  children?: ReactNode
 }
 
 export default function DefenseHeader({
@@ -28,12 +33,14 @@ export default function DefenseHeader({
   onAllianceChange,
   selectedBg,
   onBgChange,
-  onClearClick,
   canManage,
-  defenseSummary,
+  format,
+  onFormatChange,
   onExportMapClick,
   onExportListClick,
   exporting,
+  showBg,
+  children,
 }: Readonly<DefenseHeaderProps>) {
   const { t } = useI18n()
 
@@ -41,6 +48,8 @@ export default function DefenseHeader({
     <Card>
       <CardContent className='p-4'>
         <div className='flex flex-col sm:flex-row gap-3 items-start sm:items-center'>
+          {children}
+
           {/* Alliance selector */}
           {alliances.length > 1 && (
             <div className='flex items-center gap-2'>
@@ -56,25 +65,32 @@ export default function DefenseHeader({
             </div>
           )}
 
-          {/* BG selector */}
-          <div className='flex flex-wrap items-center gap-2'>
-            <label className='text-sm font-medium whitespace-nowrap'>
-              {t.game.defense.battlegroup}:
-            </label>
-            <div className='flex gap-1'>
-              {[1, 2, 3].map((bg) => (
-                <Button
-                  key={bg}
-                  variant={selectedBg === bg ? 'default' : 'outline'}
-                  size='sm'
-                  onClick={() => onBgChange(bg)}
-                  data-cy={`defense-bg-${bg}`}
-                >
-                  BG {bg}
-                </Button>
-              ))}
+          {showBg && (
+            <div className='flex flex-wrap items-center gap-2'>
+              <label className='text-sm font-medium whitespace-nowrap'>
+                {t.game.defense.battlegroup}:
+              </label>
+              <ToggleGroup>
+                {[1, 2, 3].map((bg) => (
+                  <ToggleButton
+                    key={bg}
+                    active={selectedBg === bg}
+                    onClick={() => onBgChange(bg)}
+                    dataCy={`defense-bg-${bg}`}
+                  >
+                    BG {bg}
+                  </ToggleButton>
+                ))}
+              </ToggleGroup>
             </div>
-          </div>
+          )}
+
+          {canManage && (
+            <FormatToggle
+              value={format}
+              onChange={onFormatChange}
+            />
+          )}
 
           <div className='ml-auto flex items-center gap-2'>
             {/* Export buttons — available to anyone with access to the alliance */}
@@ -100,18 +116,6 @@ export default function DefenseHeader({
               <Camera className='w-4 h-4 mr-1' />
               {exporting ? '…' : t.game.defense.exportList}
             </Button>
-            {/* Clear — managers only */}
-            {canManage && defenseSummary && defenseSummary.placements.length > 0 && (
-              <Button
-                variant='destructive'
-                size='sm'
-                data-cy='defense-clear-all'
-                onClick={onClearClick}
-              >
-                <Trash2 className='w-4 h-4 mr-1' />
-                {t.game.defense.clearAll}
-              </Button>
-            )}
           </div>
         </div>
       </CardContent>

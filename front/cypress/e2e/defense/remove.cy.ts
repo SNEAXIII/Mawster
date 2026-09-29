@@ -58,10 +58,11 @@ describe('Defense – Remove defender', () => {
 
   it('after removing a defender it reappears in the champion selector', () => {
     setupDefenseOwner('def-op-rmreapp', 'RmReappPlyr', 'RmReappAll', 'RR').then(
-      ({ adminData, ownerData, ownerAccId }) => {
+      ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) =>
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3'),
         );
+        cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
         cy.apiLogin(ownerData.user_id, 'defense');
 

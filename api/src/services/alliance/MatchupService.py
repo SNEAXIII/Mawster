@@ -23,13 +23,14 @@ from src.Messages.matchup_messages import (
     GAME_ACCOUNT_NOT_IN_ALLIANCE,
     MATCHUP_NOT_FOUND,
 )
-from src.models.alliance.DefensePlacement import DefensePlacement
 from src.models.Base import utcnow
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.matchup.MatchupRating import MatchupRating
 from src.models.matchup.MatchupSynergy import MatchupSynergy
 from src.models.user.GameAccount import GameAccount
+from src.services.admin.SeasonService import SeasonService
+from src.services.alliance.defense.DefensePlanService import DefensePlanService
 from src.services.alliance.matchup_scoring import (
     build_target_key,
     combine_verdicts,
@@ -100,7 +101,7 @@ class MatchupService:
                 existing.updated_by_game_account_id = author_game_account_id
                 existing.updated_at = utcnow()
                 # Replace the synergies wholesale: an edit describes the fight as it is now,
-                # not a delta. The repo deletes row by row (see DefensePlacementService).
+                # not a delta. The repo deletes row by row.
                 stale = (
                     await session.exec(
                         select(MatchupSynergy).where(
@@ -481,8 +482,8 @@ class MatchupService:
         ordinary roster, because `ChampionUserService` deduplicates on champion *and stars*. We
         surface the strongest, and warn only when that instance is the one placed on defense.
 
-        `DefensePlacement` stores `champion_user_id` — the exact instance — so it maps back to a
-        champion id through the player's roster.
+        The Active Plan of the current format stores `champion_user_id` — the exact instance — so
+        it maps back to a champion id through the player's roster.
         """
         if game_account_id is None:
             return {}, set()
@@ -498,15 +499,10 @@ class MatchupService:
             if best is None or cls._instance_strength(entry) > cls._instance_strength(best):
                 owned[entry.champion_id] = entry
 
-        placements = (
-            await session.exec(
-                select(DefensePlacement).where(
-                    DefensePlacement.alliance_id == alliance_id,
-                    DefensePlacement.game_account_id == game_account_id,
-                )
-            )
-        ).all()
-        placed = {placement.champion_user_id for placement in placements}
+        fmt = await SeasonService.get_current_format(session)
+        placed = set(
+            (await session.exec(DefensePlanService.active_defender_ids(alliance_id, fmt))).all()
+        )
         on_defense = {champion_id for champion_id, entry in owned.items() if entry.id in placed}
         return owned, on_defense
 

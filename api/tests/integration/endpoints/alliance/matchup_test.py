@@ -7,8 +7,8 @@ import pytest
 from main import app
 from src.enums.MatchupTargetType import MatchupTargetType
 from src.enums.MatchupVerdict import MatchupVerdict
-from src.models.alliance.DefensePlacement import DefensePlacement
 from src.utils.db import get_session
+from tests.integration.endpoints.setup.defense_setup import push_plan, push_plan_node
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -38,6 +38,11 @@ async def _setup_alliance_with_champions():
     attacker = await push_champion(name="Doctor Doom", champion_class="Mystic")
     defender = await push_champion(name="Korg", champion_class="Cosmic")
     return alliance, owner, attacker, defender
+
+
+async def _put_on_active_plan(alliance, champion_user) -> None:
+    plan = await push_plan(alliance.id, battlegroup=1, active=True)
+    await push_plan_node(plan, 5, champion_user)
 
 
 @pytest.mark.asyncio
@@ -304,17 +309,7 @@ async def test_evaluation_greys_a_missing_required_synergy_but_not_a_recommended
 async def test_evaluation_warns_when_the_instance_is_placed_on_defense():
     alliance, owner, attacker, defender = await _setup_alliance_with_champions()
     champion_user = await push_champion_user(owner, attacker)
-    await load_objects(
-        [
-            DefensePlacement(
-                alliance_id=alliance.id,
-                battlegroup=1,
-                node_number=5,
-                champion_user_id=champion_user.id,
-                game_account_id=owner.id,
-            )
-        ]
-    )
+    await _put_on_active_plan(alliance, champion_user)
     route = f"/alliances/{alliance.id}/matchups"
     await execute_post_request(
         route,
@@ -508,17 +503,7 @@ async def test_evaluation_only_warns_when_the_strongest_instance_is_on_defense()
     alliance, owner, attacker, defender = await _setup_alliance_with_champions()
     weak = await push_champion_user(owner, attacker, stars=6, rank=5)
     await push_champion_user(owner, attacker, stars=7, rank=3)
-    await load_objects(
-        [
-            DefensePlacement(
-                alliance_id=alliance.id,
-                battlegroup=1,
-                node_number=5,
-                champion_user_id=weak.id,
-                game_account_id=owner.id,
-            )
-        ]
-    )
+    await _put_on_active_plan(alliance, weak)
     route = f"/alliances/{alliance.id}/matchups"
     await execute_post_request(
         route,
@@ -936,17 +921,7 @@ async def test_grid_reports_the_strongest_instance_label_and_defense_placement()
     alliance, owner, attacker, defender = await _setup_alliance_with_champions()
     weak = await push_champion_user(owner, attacker, stars=6, rank=5, signature=0, ascension=0)
     await push_champion_user(owner, attacker, stars=7, rank=3, signature=20, ascension=0)
-    await load_objects(
-        [
-            DefensePlacement(
-                alliance_id=alliance.id,
-                battlegroup=1,
-                node_number=5,
-                champion_user_id=weak.id,
-                game_account_id=owner.id,
-            )
-        ]
-    )
+    await _put_on_active_plan(alliance, weak)
     route = f"/alliances/{alliance.id}/matchups"
     await execute_post_request(route, _defender_payload(attacker.id, defender.id), HEADERS_OWNER)
 

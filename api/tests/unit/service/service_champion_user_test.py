@@ -413,9 +413,14 @@ class TestDeleteChampionUser:
     async def test_delete_ok(self, mocker):
         session = _mock_session(mocker)
         entry = _make_champion_user()
+        # release_champion_user finds no defense plan node to release
+        result_mock = mocker.MagicMock()
+        result_mock.all.return_value = []
+        session.exec.return_value = result_mock
 
         await ChampionUserService.delete_champion_user(session, entry)
 
+        session.flush.assert_awaited_once()
         session.delete.assert_awaited_once_with(entry)
         session.commit.assert_awaited_once()
 
@@ -430,9 +435,12 @@ class TestDeleteRoster:
     async def test_delete_roster_ok(self, mocker):
         session = _mock_session(mocker)
         entries = [_make_champion_user(), _make_champion_user(rarity="7r1")]
-        result_mock = mocker.MagicMock()
-        result_mock.all.return_value = entries
-        session.exec.return_value = result_mock
+        roster_result = mocker.MagicMock()
+        roster_result.all.return_value = entries
+        # release_champion_users finds no defense plan node to release
+        release_result = mocker.MagicMock()
+        release_result.all.return_value = []
+        session.exec.side_effect = [roster_result, release_result]
 
         count = await ChampionUserService.delete_roster(session, GAME_ACCOUNT_ID)
 

@@ -1,4 +1,4 @@
-import { setupVisitorScenario, confirmAction, openWarNode } from '../../support/e2e';
+import { setupVisitorScenario, setupActiveDefense, confirmAction, openWarNode } from '../../support/e2e';
 
 describe('Visitor system', () => {
   beforeEach(() => {
@@ -267,9 +267,11 @@ describe('Visitor — defense page', () => {
   });
 
   it('cannot place a defender (clicking node does not open selector)', () => {
-    setupVisitorScenario('vis-def').then(({ visitorData }) => {
+    setupActiveDefense('vis-def').then(({ visitorData, ownerPseudo }) => {
       cy.apiLogin(visitorData.user_id, 'defense');
-      openWarNode(1);
+      cy.getByCy('war-node-1').should('contain', ownerPseudo);
+      cy.getByCy('plan-select').should('not.exist');
+      openWarNode(6);
       cy.contains('Select Champion').should('not.exist');
     });
   });

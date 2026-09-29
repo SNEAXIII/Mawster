@@ -6,11 +6,12 @@ import pytest
 from sqlmodel import select
 
 from main import app
-from src.models.alliance.DefensePlacement import DefensePlacement
+from src.models.alliance.DefensePlan import DefensePlan, DefensePlanNode
 from src.models.Base import utcnow
 from src.models.champion.RequestedUpgrade import RequestedUpgrade
 from src.models.user.GameAccount import GameAccount
 from src.utils.db import get_session
+from tests.integration.endpoints.setup.defense_setup import push_plan, push_plan_node
 from tests.integration.endpoints.setup.game_setup import (
     push_alliance_with_owner,
     push_champion,
@@ -26,6 +27,7 @@ from tests.utils.utils_client import (
     execute_get_request,
     execute_patch_request,
     execute_post_request,
+    execute_put_request,
 )
 from tests.utils.utils_constant import (
     DISCORD_ID_2,
@@ -62,18 +64,11 @@ async def _setup_2_users():
 
 
 async def _push_placement(alliance, account, node_number, champion_name, battlegroup=1):
-    """Put one of the account's champions on a defense node. Returns the placement."""
+    """Put one of the account's champions on a node of its own plan. Returns the node."""
     champion = await push_champion(name=champion_name, champion_class="Science")
     champion_user = await push_champion_user(account, champion)
-    placement = DefensePlacement(
-        alliance_id=alliance.id,
-        battlegroup=battlegroup,
-        node_number=node_number,
-        champion_user_id=champion_user.id,
-        game_account_id=account.id,
-    )
-    await load_objects([placement])
-    return placement
+    plan = await push_plan(alliance.id, battlegroup, name=f"Plan {node_number}")
+    return await push_plan_node(plan, node_number, champion_user)
 
 
 async def _push_member_in_group(alliance, user_id, game_pseudo, group):
@@ -104,11 +99,14 @@ async def _upgrade_request_ids(session):
     return {r.id for r in result.all()}
 
 
-async def _placement_ids(session, alliance_id):
+async def _node_players(session, alliance_id) -> dict[uuid.UUID, uuid.UUID | None]:
+    """Every node of the alliance's plans, mapped to the Player's roster entry on it."""
     result = await session.exec(
-        select(DefensePlacement).where(DefensePlacement.alliance_id == alliance_id)
+        select(DefensePlanNode.id, DefensePlanNode.champion_user_id)
+        .join(DefensePlan, DefensePlan.id == DefensePlanNode.plan_id)  # type: ignore[arg-type]
+        .where(DefensePlan.alliance_id == alliance_id)
     )
-    return {p.id for p in result.all()}
+    return dict(result.all())
 
 
 # =========================================================================
@@ -258,45 +256,51 @@ class TestRemoveMember:
 
 
 # =========================================================================
-# Leaving / being kicked frees the defense nodes
+# Leaving / being kicked drops the Player from the defense nodes
 # =========================================================================
 
 
-class TestRemoveMemberClearsDefense:
-    """A departed member's champions are gone from the alliance, so their
-    defense placements must not stay on the war map."""
+class TestRemoveMemberReleasesDefense:
+    """A departed member's champions stay on the plans; only the Player leaves them."""
 
     @pytest.mark.asyncio
-    async def test_kicked_member_defense_is_cleared(self, session):
+    async def test_kicked_member_defense_is_released(self, session):
         await _setup_2_users()
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
-        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
-        await _push_placement(alliance, member, 2, "Wolverine")
+        owner_node = await _push_placement(alliance, owner, 1, "Spider-Man")
+        member_node = await _push_placement(alliance, member, 2, "Wolverine")
 
         response = await execute_delete_request(
             f"{ENDPOINT}/{alliance.id}/members/{member.id}",
             headers=HEADERS_USER1,
         )
         assert response.status_code == 200
-        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+        assert await _node_players(session, alliance.id) == {
+            owner_node.id: owner_node.champion_user_id,
+            member_node.id: None,
+        }
 
     @pytest.mark.asyncio
-    async def test_member_leaving_clears_own_defense(self, session):
+    async def test_member_leaving_releases_own_defense(self, session):
         await _setup_2_users()
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
         member = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
-        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
-        await _push_placement(alliance, member, 2, "Wolverine")
-        await _push_placement(alliance, member, 3, "Iron Man", battlegroup=2)
+        owner_node = await _push_placement(alliance, owner, 1, "Spider-Man")
+        bg1_node = await _push_placement(alliance, member, 2, "Wolverine")
+        bg2_node = await _push_placement(alliance, member, 3, "Iron Man", battlegroup=2)
 
         response = await execute_delete_request(
             f"{ENDPOINT}/{alliance.id}/members/{member.id}",
             headers=HEADERS_USER2,
         )
         assert response.status_code == 200
-        # Every battlegroup is cleaned, not just the one they were placed in
-        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+        # Every battlegroup is released, not just the one they were placed in
+        assert await _node_players(session, alliance.id) == {
+            owner_node.id: owner_node.champion_user_id,
+            bg1_node.id: None,
+            bg2_node.id: None,
+        }
 
     @pytest.mark.asyncio
     async def test_other_alliance_defense_is_untouched(self, session):
@@ -310,16 +314,18 @@ class TestRemoveMemberClearsDefense:
             alliance_name="OtherAlliance",
             alliance_tag="OTHR",
         )
-        await _push_placement(alliance, member, 1, "Spider-Man")
-        other_placement = await _push_placement(other_alliance, other_owner, 1, "Wolverine")
+        member_node = await _push_placement(alliance, member, 1, "Spider-Man")
+        other_node = await _push_placement(other_alliance, other_owner, 1, "Wolverine")
 
         response = await execute_delete_request(
             f"{ENDPOINT}/{alliance.id}/members/{member.id}",
             headers=HEADERS_USER1,
         )
         assert response.status_code == 200
-        assert await _placement_ids(session, alliance.id) == set()
-        assert await _placement_ids(session, other_alliance.id) == {other_placement.id}
+        assert await _node_players(session, alliance.id) == {member_node.id: None}
+        assert await _node_players(session, other_alliance.id) == {
+            other_node.id: other_node.champion_user_id
+        }
 
 
 # =========================================================================
@@ -589,19 +595,18 @@ class TestSetMemberGroup:
 # =========================================================================
 
 
-class TestSetMemberGroupClearsDefense:
-    """A defender only exists on its owner's battlegroup, so moving a member out
-    of a battlegroup must take their defenders off that map."""
+class TestSetMemberGroupReleasesDefense:
+    """Moving a member out of a battlegroup drops them from its plans; their champions stay."""
 
     @pytest.mark.asyncio
-    async def test_moving_to_another_group_clears_defense(self, session):
+    async def test_moving_to_another_group_releases_defense(self, session):
         await _setup_2_users()
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
         owner.alliance_group = 1
         await load_objects([owner])
         member = await _push_member_in_group(alliance, USER2_ID, GAME_PSEUDO_2, group=1)
-        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
-        await _push_placement(alliance, member, 2, "Wolverine")
+        owner_node = await _push_placement(alliance, owner, 1, "Spider-Man")
+        member_node = await _push_placement(alliance, member, 2, "Wolverine")
 
         response = await execute_patch_request(
             f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
@@ -609,17 +614,20 @@ class TestSetMemberGroupClearsDefense:
             headers=HEADERS_USER1,
         )
         assert response.status_code == 200
-        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+        assert await _node_players(session, alliance.id) == {
+            owner_node.id: owner_node.champion_user_id,
+            member_node.id: None,
+        }
 
     @pytest.mark.asyncio
-    async def test_removing_from_group_clears_defense(self, session):
+    async def test_removing_from_group_releases_defense(self, session):
         await _setup_2_users()
         alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
         owner.alliance_group = 1
         await load_objects([owner])
         member = await _push_member_in_group(alliance, USER2_ID, GAME_PSEUDO_2, group=1)
-        owner_placement = await _push_placement(alliance, owner, 1, "Spider-Man")
-        await _push_placement(alliance, member, 2, "Wolverine")
+        owner_node = await _push_placement(alliance, owner, 1, "Spider-Man")
+        member_node = await _push_placement(alliance, member, 2, "Wolverine")
 
         response = await execute_patch_request(
             f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
@@ -627,7 +635,10 @@ class TestSetMemberGroupClearsDefense:
             headers=HEADERS_USER1,
         )
         assert response.status_code == 200
-        assert await _placement_ids(session, alliance.id) == {owner_placement.id}
+        assert await _node_players(session, alliance.id) == {
+            owner_node.id: owner_node.champion_user_id,
+            member_node.id: None,
+        }
 
     @pytest.mark.asyncio
     async def test_setting_the_same_group_keeps_defense(self, session):
@@ -636,7 +647,7 @@ class TestSetMemberGroupClearsDefense:
         await _setup_2_users()
         alliance, _owner = await push_alliance_with_owner(user_id=USER_ID)
         member = await _push_member_in_group(alliance, USER2_ID, GAME_PSEUDO_2, group=1)
-        placement = await _push_placement(alliance, member, 2, "Wolverine")
+        node = await _push_placement(alliance, member, 2, "Wolverine")
 
         response = await execute_patch_request(
             f"{ENDPOINT}/{alliance.id}/members/{member.id}/group",
@@ -644,7 +655,7 @@ class TestSetMemberGroupClearsDefense:
             headers=HEADERS_USER1,
         )
         assert response.status_code == 200
-        assert await _placement_ids(session, alliance.id) == {placement.id}
+        assert await _node_players(session, alliance.id) == {node.id: node.champion_user_id}
 
 
 # =========================================================================
@@ -725,26 +736,25 @@ class TestGetMyRoles:
 
 class TestGetUserAccountInAlliance:
     @pytest.mark.asyncio
-    async def test_non_member_cannot_place_defense(self):
+    async def test_non_member_cannot_edit_a_defense_plan(self):
         """
-        POST /alliances/{id}/defense/bg/1/place calls get_user_account_in_alliance.
-        A user with no account in the alliance must get 403 (line 70).
+        PUT /alliances/{id}/defense/plans/{plan_id}/nodes/1 requires the placement
+        right. A user with no account in this alliance at all is an outsider, not
+        just a non-strategist member, so `require_strategist_account` reports it
+        as if the alliance did not exist (404), never a success.
         """
         await _setup_2_users()
         alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
         # USER2 has a game account but NOT in this alliance
         await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        plan = await push_plan(alliance.id)
 
-        resp = await execute_post_request(
-            f"{ENDPOINT}/{alliance.id}/defense/bg/1/place",
-            {
-                "game_account_id": str(uuid.uuid4()),
-                "champion_user_id": str(uuid.uuid4()),
-                "node_number": 1,
-            },
+        resp = await execute_put_request(
+            f"{ENDPOINT}/{alliance.id}/defense/plans/{plan.id}/nodes/1",
+            {"champion_user_id": str(uuid.uuid4())},
             headers=HEADERS_USER2,
         )
-        assert resp.status_code == 403
+        assert resp.status_code == 404
 
 
 # =========================================================================
