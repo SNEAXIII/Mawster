@@ -23,8 +23,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-# Host-agnostic build: bake a placeholder, rewritten at container start in run.sh.
-ENV NEXT_PUBLIC_API_CLIENT_HOST=__NEXT_PUBLIC_API_HOST__
 # The commit this image was built from, inlined into the bundle. It is how a
 # tab opened before a deploy tells its own build from the one /api/version
 # reports. Empty for a local build, which disables the check.
@@ -44,7 +42,6 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-# NEXT_PUBLIC_API_CLIENT_HOST is provided at runtime (stack env) and applied by run.sh.
 
 RUN addgroup --system --gid 1001 nodejs &&\
     adduser --system --uid 1001 nextjs

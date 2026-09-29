@@ -17,7 +17,7 @@ export function ToggleButton({ active, onClick, dataCy, children }: Readonly<Tog
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold transition-colors',
+        'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold whitespace-nowrap transition-colors',
         active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'
       )}
       data-cy={dataCy}

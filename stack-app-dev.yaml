@@ -88,7 +88,6 @@ services:
     environment:
       NEXTAUTH_URL: https://www.dev.mawster.app
       NEXTAUTH_URL_INTERNAL: http://front-dev:3000
-      NEXT_PUBLIC_API_CLIENT_HOST: www.dev.mawster.app
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
       DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}

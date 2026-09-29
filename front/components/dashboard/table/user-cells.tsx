@@ -1,7 +1,7 @@
 'use client'
 
 import { TableCell } from '@/components/ui/table'
-import { formatDateShort, truncateString } from '@/app/lib/utils'
+import { formatDate, truncateString } from '@/app/lib/utils'
 import React from 'react'
 import { useI18n } from '@/app/i18n'
 
@@ -19,14 +19,14 @@ export function RowUserRole(props: Readonly<{ role: string; login: string }>) {
 
 export function RowUserCreatedAt(props: Readonly<{ created_at: string }>) {
   const { locale } = useI18n()
-  return <TableCell>{formatDateShort(props.created_at, locale)}</TableCell>
+  return <TableCell>{formatDate(props.created_at, locale, 'short')}</TableCell>
 }
 
 export function RowUserLastLoginDate(props: Readonly<{ lastLoginDate: string | null }>) {
   const { locale, t } = useI18n()
   return (
     <TableCell>
-      {props.lastLoginDate ? formatDateShort(props.lastLoginDate, locale) : t.common.never}
+      {props.lastLoginDate ? formatDate(props.lastLoginDate, locale, 'short') : t.common.never}
     </TableCell>
   )
 }

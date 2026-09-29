@@ -10,7 +10,7 @@ import {
   type CreatePlanBody,
   type DefensePlanSummary,
 } from '@/app/services/defense'
-import { withToast } from './with-toast'
+import { withToast } from '@/app/lib/with-toast'
 
 interface PlanCommandsOptions {
   allianceId: string
@@ -24,7 +24,7 @@ export function usePlanCommands({ allianceId, bg, selected, onChanged }: PlanCom
   const p = t.game.defense.plans
 
   const create = async (body: CreatePlanBody) => {
-    const created = await withToast(() => createPlan(allianceId, bg, body), p.created)
+    const created = await withToast(() => createPlan(allianceId, bg, body), { success: p.created })
     if (created) onChanged(created.id)
   }
 
@@ -35,25 +35,27 @@ export function usePlanCommands({ allianceId, bg, selected, onChanged }: PlanCom
 
   const rename = async (name: string) => {
     if (!selected) return
-    if (await withToast(() => renamePlan(allianceId, selected.id, name), p.renamed))
+    if (await withToast(() => renamePlan(allianceId, selected.id, name), { success: p.renamed }))
       onChanged(selected.id)
   }
 
   const remove = async () => {
     if (!selected) return
-    await withToast(() => deletePlan(allianceId, selected.id), p.deleted)
+    await withToast(() => deletePlan(allianceId, selected.id), { success: p.deleted })
     onChanged()
   }
 
   const activate = async () => {
     if (!selected) return
-    if (await withToast(() => activatePlan(allianceId, selected.id), p.activated))
+    if (await withToast(() => activatePlan(allianceId, selected.id), { success: p.activated }))
       onChanged(selected.id)
   }
 
   const saveAsTemplate = async (name: string) => {
     if (!selected) return
-    await withToast(() => savePlanAsTemplate(allianceId, selected.id, name), p.savedAsTemplate)
+    await withToast(() => savePlanAsTemplate(allianceId, selected.id, name), {
+      success: p.savedAsTemplate,
+    })
   }
 
   return { create, duplicate, rename, remove, activate, saveAsTemplate }
