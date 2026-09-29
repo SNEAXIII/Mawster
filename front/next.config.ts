@@ -1,10 +1,7 @@
 import type { NextConfig } from 'next'
-const API_PORT = process.env.API_PORT ?? '8000'
 const STATIC_SERVER_HOST =
   process.env.STATIC_SERVER_HOST ?? (process.env.NODE_ENV === 'production' ? 'static' : 'localhost')
 const STATIC_PORT = process.env.STATIC_PORT ?? '8002'
-const NEXT_PUBLIC_API_CLIENT_HOST = process.env.NEXT_PUBLIC_API_CLIENT_HOST ?? 'localhost'
-const API_CLIENT_END_PART = process.env.NODE_ENV === 'production' ? '/api/back' : `:${API_PORT}`
 const port = process.env.PORT ?? '3000'
 
 // A deploy cannot push code into an already-open tab, so the front detects the
@@ -44,5 +41,4 @@ const nextConfig: NextConfig = {
     ]
   },
 }
-export const CLIENT_API_URL: string = `http://${NEXT_PUBLIC_API_CLIENT_HOST}${API_CLIENT_END_PART}`
 export default nextConfig
