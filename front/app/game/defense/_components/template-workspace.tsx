@@ -40,6 +40,7 @@ export default function TemplateWorkspace({
         </div>
       )}
       <TemplateChampionPicker
+        key={pickerNode ?? 'closed'}
         node={pickerNode}
         takenChampionIds={takenChampionIds}
         onClose={() => setPickerNode(null)}
