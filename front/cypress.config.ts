@@ -19,11 +19,5 @@ export default defineConfig({
     // real failure surfaces immediately while debugging.
     retries: { runMode: 2, openMode: 0 },
   },
-  video: false,
-  screenshotOnRunFailure: true, // Keep screenshots of failed tests
   screenshotsFolder: 'cypress/results/screenshots',
-  reporter: 'cypress-multi-reporters',
-  reporterOptions: {
-    configFile: 'cypress/reporter-config.json',
-  },
 })
