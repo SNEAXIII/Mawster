@@ -1,6 +1,13 @@
-import jwt from 'jsonwebtoken'
 import type { JWT } from 'next-auth/jwt'
 import { getServerApiUrl } from '@/app/lib/serverApiUrl'
+
+export const decodeJwt = <T>(token: string): T | null => {
+  try {
+    return JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString()) as T
+  } catch {
+    return null
+  }
+}
 
 interface JwtPayload {
   user_id: string
@@ -25,7 +32,7 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
 
       if (refreshRes.ok) {
         const data = await refreshRes.json()
-        const decoded = jwt.decode(data.access_token) as JwtPayload | null
+        const decoded = decodeJwt<JwtPayload>(data.access_token)
 
         if (decoded) {
           return {
@@ -76,7 +83,7 @@ export async function refreshBackendToken(token: JWT): Promise<JWT> {
       }
 
       const data = await backendRes.json()
-      const decoded = jwt.decode(data.access_token) as JwtPayload | null
+      const decoded = decodeJwt<JwtPayload>(data.access_token)
 
       if (!decoded) {
         console.error('Impossible de décoder le JWT backend après refresh')

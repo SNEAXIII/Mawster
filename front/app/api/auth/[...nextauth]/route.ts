@@ -2,9 +2,8 @@ import NextAuth from 'next-auth'
 import Discord from 'next-auth/providers/discord'
 import Google from 'next-auth/providers/google'
 import Credentials from 'next-auth/providers/credentials'
-import jwt from 'jsonwebtoken'
 import { getServerApiUrl } from '@/app/lib/serverApiUrl'
-import { refreshBackendToken } from '@/app/lib/auth-refresh'
+import { decodeJwt, refreshBackendToken } from '@/app/lib/auth-refresh'
 import { withBackendProfile } from '@/app/lib/backend-profile'
 
 import { isServerDev } from '@/app/lib/dev-mode'
@@ -61,7 +60,7 @@ export const {
               if (!res.ok) return null
 
               const data = await res.json()
-              const decoded = jwt.decode(data.access_token) as JwtPayload | null
+              const decoded = decodeJwt<JwtPayload>(data.access_token)
               if (!decoded) return null
 
               return {
@@ -96,7 +95,7 @@ export const {
         }
 
         const data = await res.json()
-        const decoded = jwt.decode(data.access_token) as JwtPayload | null
+        const decoded = decodeJwt<JwtPayload>(data.access_token)
         if (!decoded) {
           console.error(`Impossible de décoder le JWT backend (${provider})`)
           return '/login?error=GENERIC'

@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { encode } from '@auth/core/jwt'
-import jwt from 'jsonwebtoken'
 import { isServerDev } from '@/app/lib/dev-mode'
 import { getServerApiUrl } from '@/app/lib/serverApiUrl'
 import { withBackendProfile } from '@/app/lib/backend-profile'
+import { decodeJwt } from '@/app/lib/auth-refresh'
 
 interface BackendJwtPayload {
   user_id: string
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await backendRes.json()
-    const decoded = jwt.decode(data.access_token) as BackendJwtPayload | null
+    const decoded = decodeJwt<BackendJwtPayload>(data.access_token)
 
     if (!decoded) {
       return NextResponse.json({ message: 'Invalid token' }, { status: 500 })
