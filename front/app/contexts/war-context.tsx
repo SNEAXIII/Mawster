@@ -570,6 +570,9 @@ export function WarProvider({
 
   const handleRemoveAttacker = async (nodeNumber: number) => {
     if (!selectedAllianceId || !activeWarId) return
+    const key = koKey(activeWarId, nodeNumber)
+    clearTimeout(koPending.current[key]?.timer)
+    delete koPending.current[key]
     try {
       const updated = await write(() =>
         removeWarAttacker(selectedAllianceId, activeWarId, selectedBg, nodeNumber)
