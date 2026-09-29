@@ -10,12 +10,8 @@ name: Test
 on:
   workflow_call:
 
-# Workflow-level env is not inherited from the caller, so it is restated here.
 env:
-  WORKDIR: ./api
-  PYTHON_VERSION: ${{ vars.PYTHON_VERSION }}
   NODE_VERSION: '24'
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   E2E_RUNNERS: '8'
   # Read by the planner and by the runner command below: specs are balanced
   # across E2E_RUNNERS * E2E_WORKERS lanes, so the two must stay in step.
@@ -29,6 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MODE: testing
+    defaults:
+      run:
+        working-directory: ./api
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -37,27 +36,20 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ vars.PYTHON_VERSION }}
           enable-cache: true
       - name: Install dev dependencies
-        working-directory: ${{ env.WORKDIR }}
         # --no-build blocks source-dist build scripts, where a compromised
         # dependency would run code; it also refuses this project, hence
         # --no-install-project — pytest puts ./api on sys.path anyway.
         run: uv sync --all-groups --locked --no-build --no-install-project
       - name: Run Ruff linter
-        working-directory: ${{ env.WORKDIR }}
         run: uvx --no-build ruff@0.16.0 check .
       - name: Run Ruff formatter check
-        working-directory: ${{ env.WORKDIR }}
         run: uvx --no-build ruff@0.16.0 format --check .
-      - name: Run unit tests
-        working-directory: ${{ env.WORKDIR }}
-        run: uv run --no-sync --no-build pytest tests/unit -v --tb=short
-      - name: Run integration tests
-        working-directory: ${{ env.WORKDIR }}
+      - name: Run tests
         # `auto` is the runner's 4 vCPUs. Oversubscribing does not pay: 6 workers measured
-        run: uv run --no-sync --no-build pytest tests/integration -v --tb=short -n auto
+        run: uv run --no-sync --no-build pytest tests -v --tb=short -n auto
 
   lint-front:
     name: Lint & typecheck for frontend
@@ -206,7 +198,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ vars.PYTHON_VERSION }}
           enable-cache: true
       - name: Install API dependencies
         working-directory: ./api
