@@ -1,6 +1,7 @@
 import { type ChangeEvent, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
+import { withToast } from '@/app/lib/with-toast'
 import { type RosterEntry, raritySortValue } from '@/app/services/roster'
 import type { PreviewRow } from '@/components/roster/import-preview-row'
 import { isValidRarity } from '@/components/roster/import-row-validation'
@@ -174,39 +175,40 @@ export function useRosterImportExport({
       // Reset file input so same file can be re-selected
       e.target.value = ''
 
-      try {
-        const text = await file.text()
-        const parsed = parseJsonFile(text, t)
-        const { entries, errors } = parseAndValidateEntries(parsed, t)
+      await withToast(
+        async () => {
+          const text = await file.text()
+          const parsed = parseJsonFile(text, t)
+          const { entries, errors } = parseAndValidateEntries(parsed, t)
 
-        if (errors.length > 0 && entries.length === 0) {
-          throw new TypeError(`${t.roster.importExport.allInvalid}\n${errors.join('\n')}`)
-        }
+          if (errors.length > 0 && entries.length === 0) {
+            throw new TypeError(`${t.roster.importExport.allInvalid}\n${errors.join('\n')}`)
+          }
 
-        if (errors.length > 0) {
-          toast.warning(
-            t.roster.importExport.skippedEntries.replace('{count}', String(errors.length))
+          if (errors.length > 0) {
+            toast.warning(
+              t.roster.importExport.skippedEntries.replace('{count}', String(errors.length))
+            )
+          }
+
+          const uniqueEntries = deduplicateEntries(entries)
+          const championLookup = await fetchChampionLookup(uniqueEntries, roster)
+
+          const rows: PreviewRow[] = uniqueEntries.map((entry) =>
+            buildPreviewRow(entry, roster, championLookup)
           )
-        }
 
-        const uniqueEntries = deduplicateEntries(entries)
-        const championLookup = await fetchChampionLookup(uniqueEntries, roster)
+          // Sort: new first, then changes, then unchanged
+          rows.sort((a, b) => {
+            if (a.isNew !== b.isNew) return a.isNew ? -1 : 1
+            if (a.hasChanges !== b.hasChanges) return a.hasChanges ? -1 : 1
+            return raritySortValue(b.newRarity) - raritySortValue(a.newRarity)
+          })
 
-        const rows: PreviewRow[] = uniqueEntries.map((entry) =>
-          buildPreviewRow(entry, roster, championLookup)
-        )
-
-        // Sort: new first, then changes, then unchanged
-        rows.sort((a, b) => {
-          if (a.isNew !== b.isNew) return a.isNew ? -1 : 1
-          if (a.hasChanges !== b.hasChanges) return a.hasChanges ? -1 : 1
-          return raritySortValue(b.newRarity) - raritySortValue(a.newRarity)
-        })
-
-        openPreview(rows)
-      } catch (err: unknown) {
-        toast.error((err as Error).message || t.roster.importExport.fileReadError)
-      }
+          openPreview(rows)
+        },
+        { error: t.roster.importExport.fileReadError }
+      )
     },
     [roster, t, openPreview]
   )

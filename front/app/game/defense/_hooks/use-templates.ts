@@ -16,7 +16,7 @@ import {
   type DefenseTemplateSummary,
 } from '@/app/services/defense-templates'
 import type { SeasonFormat } from '@/app/services/season'
-import { withToast } from './with-toast'
+import { withToast } from '@/app/lib/with-toast'
 
 export function useTemplates(allianceId: string, format: SeasonFormat) {
   const { t } = useI18n()
@@ -53,17 +53,20 @@ export function useTemplates(allianceId: string, format: SeasonFormat) {
   }, [allianceId, selectedId, t])
 
   const run = (action: () => Promise<unknown>, success: string, preferId?: string | null) =>
-    withToast(async () => {
-      const result = await action()
-      const createdId = (result as DefenseTemplate | undefined)?.id
-      const keptId = createdId ?? (preferId !== undefined ? preferId : selectedId)
-      await refresh(keptId)
-      if (result && (result as DefenseTemplate).nodes) {
-        setSelected(result as DefenseTemplate)
-      } else if (keptId && keptId === selectedId) {
-        setSelected(await getTemplate(allianceId, keptId))
-      }
-    }, success)
+    withToast(
+      async () => {
+        const result = await action()
+        const createdId = (result as DefenseTemplate | undefined)?.id
+        const keptId = createdId ?? (preferId !== undefined ? preferId : selectedId)
+        await refresh(keptId)
+        if (result && (result as DefenseTemplate).nodes) {
+          setSelected(result as DefenseTemplate)
+        } else if (keptId && keptId === selectedId) {
+          setSelected(await getTemplate(allianceId, keptId))
+        }
+      },
+      { success }
+    )
 
   return {
     templates,
