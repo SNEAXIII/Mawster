@@ -11,7 +11,7 @@ from src.services.auth.DiscordAuthService import (
 )
 from src.utils.db import get_session
 from tests.utils import utils_client
-from tests.utils.utils_db import Session, delete_db, get_test_session, reset_test_db
+from tests.utils.utils_db import Session, get_test_session, reset_test_db
 
 
 @pytest.fixture(autouse=True)
@@ -31,13 +31,6 @@ def reset_db() -> Iterator:
 async def session():
     async with Session() as session:
         yield session
-
-
-@pytest.fixture(scope="session", autouse=True)
-def delete_test_db():
-    delete_db()
-    yield
-    delete_db()
 
 
 @pytest_asyncio.fixture(scope="module", autouse=True)
