@@ -47,10 +47,12 @@ jobs:
         run: uvx --no-build ruff@0.16.0 check .
       - name: Run Ruff formatter check
         run: uvx --no-build ruff@0.16.0 format --check .
-      - name: Run tests
+      - name: Run unit tests
+        # Kept apart: importing main under MODE=testing fakes DiscordAuthService.verify_token.
+        run: uv run --no-sync --no-build pytest tests/unit -v --tb=short -n auto --cov
+      - name: Run integration tests
         # `auto` is the runner's 4 vCPUs. Oversubscribing does not pay: 6 workers measured
-        # --cov: the report feeds the sonar job below.
-        run: uv run --no-sync --no-build pytest tests -v --tb=short -n auto --cov --cov-report=xml:coverage.xml
+        run: uv run --no-sync --no-build pytest tests/integration -v --tb=short -n auto --cov --cov-append --cov-report=xml:coverage.xml
       - name: Upload backend coverage
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
