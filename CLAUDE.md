@@ -195,8 +195,9 @@ release-please then counts a second time alongside the real commits, duplicating
   partially-staged work, or revert already-pushed commits without asking first.
 - Before switching branches, check `git status` and warn about uncommitted changes rather than
   stashing them silently.
-- Check the branch before the first commit: on `main`, branch first, whatever the size of the change.
-- `git push` belongs to the user: end on the exact command in a code block. `/main-pr`,
+- Check the branch before the first commit: on `main`, `release` or `staging`, branch first,
+  whatever the size of the change.
+- `git push` belongs to the user: end on the exact command in a code block. `/make-pr`,
   `/commit push`, or an explicit go in reply to that command authorise you to push.
 
 ### Worktrees

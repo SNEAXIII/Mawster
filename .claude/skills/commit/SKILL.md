@@ -33,9 +33,6 @@ Tout autre argument est une consigne de groupement en langage naturel
    - `git diff --stat` (aperçu fichiers + volume, sans charger le contenu)
 2. Diff ciblé **seulement si nécessaire** pour décider du groupement :
    - `git diff -- <fichier>` sur un fichier précis, pas tout le working tree
-   - Garder les gros diffs hors de la fenêtre : passer par
-     `ctx_execute(language: "shell", code: "git diff -- <fichier>")`
-     plutôt que de lire le diff brut directement
 3. Identifier les changements non liés à la feature principale → commits séparés
 4. Commiter chaque groupe dans le bon ordre (fixes avant features)
 5. Vérifier que chaque commit passe le pre-commit hook avant de continuer
@@ -45,12 +42,14 @@ Tout autre argument est une consigne de groupement en langage naturel
 
 ## Conventional Commit Types
 
-Voir « Commit types » dans `CLAUDE.md` — le type se choisit d'après ce que voit le joueur.
+Les règles de type du `CLAUDE.md` du repo priment. À défaut, Conventional Commits : le type se
+choisit d'après ce que voit l'utilisateur final, pas d'après les fichiers touchés.
 
 ## Règles
 
 - **Toujours** commiter depuis une branche dédiée. Est « pas la bonne branche » :
-  HEAD sur `main` / `release` / `staging`, ou HEAD détachée.
+  la branche par défaut (`git symbolic-ref --short refs/remotes/origin/HEAD`), `dev` /
+  `develop`, une branche protégée que liste le `CLAUDE.md`, ou HEAD détachée.
 - Dans ce cas : **prévenir et demander**, jamais décider seul. Annoncer la branche
   courante et pourquoi elle pose problème, puis proposer le choix :
   1. créer une branche dédiée — proposer un nom `type/sujet` déduit des changements
@@ -74,6 +73,7 @@ git commit -m "type: description courte"
 ## Groupement
 
 - Fichiers i18n → même commit que la feature qui les requiert
-- `package.json` + `package-lock.json` → même commit que la feature qui installe la dépendance
+- Manifeste + lockfile (`package.json`/`package-lock.json`, `pyproject.toml`/`uv.lock`…) → même
+  commit que la feature qui installe la dépendance
 - Bug fix trouvé en chemin → commit séparé **avant** la feature
 - Changements visuels sans lien → commit séparé `fix:` ou `style:`
