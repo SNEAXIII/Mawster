@@ -1,10 +1,7 @@
 """Centralized logging configuration — RGPD-compliant.
 
-This module sets up file-based logging for audit trails. To comply with RGPD:
-  - We log user IDs (UUIDs) but NEVER personal data (email, login, IP, etc.)
-  - We log action types, resource IDs, and timestamps
-  - Logs are written to rotating files under `logs/` directory
-  - Retention: 90 days (files auto-rotate at 10 MB, keep 10 backups)
+Logs user IDs (UUIDs), action types and resource IDs — NEVER personal data (email, login, IP).
+Always logs to stdout; in dev only, also to `logs/` files rotated by size (10 MB, 10 backups).
 
 Usage:
     from src.utils.logging_config import setup_logging
