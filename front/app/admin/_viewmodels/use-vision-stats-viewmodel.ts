@@ -67,7 +67,7 @@ export function useVisionStatsViewModel() {
   }, [days, userPage, sortBy, sortOrder, importPage, statusFilter, userFilter])
 
   useEffect(() => {
-    load()
+    void load()
   }, [load])
 
   /** Clicking a column header sorts by it, clicking it again flips the order. */

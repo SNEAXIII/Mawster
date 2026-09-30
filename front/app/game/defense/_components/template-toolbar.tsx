@@ -102,7 +102,7 @@ export default function TemplateToolbar({
         title={m.deleteTitle}
         description={m.deleteDesc.replace('{name}', name)}
         onConfirm={() => {
-          state.remove()
+          void state.remove()
           setDialog(null)
         }}
         variant='destructive'

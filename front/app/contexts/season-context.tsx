@@ -46,7 +46,7 @@ export function SeasonProvider({ children }: Readonly<{ children: React.ReactNod
 
   useEffect(() => {
     if (status === 'loading') return
-    refresh()
+    void refresh()
   }, [refresh, status])
 
   const value = useMemo(() => ({ season, loading, refresh }), [season, loading, refresh])

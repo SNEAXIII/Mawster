@@ -60,7 +60,7 @@ export function useProfileStats() {
   }, [accountId, seasonId, t])
 
   useEffect(() => {
-    loadStats()
+    void loadStats()
   }, [loadStats])
 
   // Champion usage pie — shared chart hook, refetches on its own chartLoading.

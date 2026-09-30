@@ -87,7 +87,7 @@ export default function PrefightSelectorDialog({
                   'hover:ring-2 hover:ring-primary/60'
                 )}
                 onClick={() => {
-                  handleAddPrefight(a.champion_user_id, targetNodeNumber)
+                  void handleAddPrefight(a.champion_user_id, targetNodeNumber)
                   onClose()
                 }}
                 data-cy={`prefight-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}

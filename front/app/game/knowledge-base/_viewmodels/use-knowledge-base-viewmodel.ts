@@ -192,7 +192,7 @@ export function useKnowledgeBaseViewModel() {
   ])
 
   useEffect(() => {
-    load()
+    void load()
   }, [load])
 
   // A report can push a note past the auto-block threshold, so the page is reloaded.

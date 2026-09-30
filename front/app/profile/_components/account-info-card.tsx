@@ -86,7 +86,7 @@ export function AccountInfoCard({
                     autoFocus
                     data-cy='edit-username-input'
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSubmit()
+                      if (e.key === 'Enter') void handleSubmit()
                       if (e.key === 'Escape') handleCancel()
                     }}
                   />

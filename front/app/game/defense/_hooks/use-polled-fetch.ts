@@ -45,7 +45,7 @@ export function usePolledFetch(
   const resetPollTimer = useVisiblePoll(() => refreshRef.current(true), 10_000, pollEnabled)
 
   useEffect(() => {
-    refresh()
+    void refresh()
     resetPollTimer()
     // oxlint-disable-next-line react/exhaustive-deps -- resetPollTimer is stable
   }, [refresh])

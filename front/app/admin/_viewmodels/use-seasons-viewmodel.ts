@@ -36,7 +36,7 @@ export function useSeasonsViewModel() {
   }, [t])
 
   useEffect(() => {
-    load()
+    void load()
   }, [load])
 
   const create = async (number: number, format: SeasonFormat) => {

@@ -65,7 +65,7 @@ export function SeasonWarDeathsCell({
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') commit()
+            if (e.key === 'Enter') void commit()
             if (e.key === 'Escape') setEditing(false)
           }}
           data-cy={`season-war-op-input-${warId}`}
