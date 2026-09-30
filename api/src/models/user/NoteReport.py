@@ -14,6 +14,6 @@ class NoteReport(UUIDBase, TimestampMixin, table=True):
     note_id: uuid.UUID = Field(foreign_key=FK_WAR_FIGHT_NOTE)
     reporter_game_account_id: uuid.UUID = Field(foreign_key=FK_GAME_ACCOUNT)
     reason: str | None = Field(default=None, sa_column=sa.Column(sa.Text, nullable=True))
-    status: NoteReportStatus = Field(default=NoteReportStatus.pending)
+    status: NoteReportStatus = Field(default=NoteReportStatus.PENDING)
     resolved_by_id: uuid.UUID | None = Field(default=None, foreign_key=FK_USER)
     resolved_at: datetime | None = Field(default=None)

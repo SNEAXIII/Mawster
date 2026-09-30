@@ -45,7 +45,7 @@ async def _base_setup():
     return {"alliance": alliance, "owner": owner, "champ": champ}
 
 
-async def _setup_with_active_season(status=SeasonStatus.active):
+async def _setup_with_active_season(status=SeasonStatus.ACTIVE):
     data = await _base_setup()
     season = Season(number=64, status=status)
     war = War(
@@ -54,7 +54,7 @@ async def _setup_with_active_season(status=SeasonStatus.active):
         opponent_name="Enemy",
         created_by_id=data["owner"].id,
         season_id=season.id,
-        status=WarStatus.ended,
+        status=WarStatus.ENDED,
     )
     await load_objects([season, war])
     cu = await push_champion_user(data["owner"], data["champ"])
@@ -96,7 +96,7 @@ class TestGetCurrentSeasonStatistics:
     @pytest.mark.anyio
     async def test_returns_empty_when_season_is_inactive(self):
         data = await _base_setup()
-        season = Season(number=64, status=SeasonStatus.ended)
+        season = Season(number=64, status=SeasonStatus.ENDED)
         war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
@@ -157,7 +157,7 @@ class TestGetCurrentSeasonStatistics:
     @pytest.mark.anyio
     async def test_preseason_returns_previous_ended_season_stats(self):
         # No active season exists; the ended season should be used as a fallback.
-        data = await _setup_with_active_season(status=SeasonStatus.ended)
+        data = await _setup_with_active_season(status=SeasonStatus.ENDED)
         await _add_placement(
             data["war"].id,
             data["cu"].id,
@@ -233,14 +233,14 @@ class TestGetCurrentSeasonStatistics:
     @pytest.mark.anyio
     async def test_active_war_excluded(self):
         data = await _base_setup()
-        season = Season(number=64, status=SeasonStatus.active)
+        season = Season(number=64, status=SeasonStatus.ACTIVE)
         active_war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
             opponent_name="Enemy",
             created_by_id=data["owner"].id,
             season_id=season.id,
-            status=WarStatus.active,
+            status=WarStatus.ACTIVE,
         )
         await load_objects([season, active_war])
         cu = await push_champion_user(data["owner"], data["champ"])
@@ -254,14 +254,14 @@ class TestGetCurrentSeasonStatistics:
     async def test_only_ended_wars_counted_when_mixed(self):
         """Ended war placements are counted; active war placements are excluded."""
         data = await _base_setup()
-        season = Season(number=64, status=SeasonStatus.active)
+        season = Season(number=64, status=SeasonStatus.ACTIVE)
         ended_war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
             opponent_name="Ended",
             created_by_id=data["owner"].id,
             season_id=season.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
         )
         active_war = War(
             id=uuid.uuid4(),
@@ -269,7 +269,7 @@ class TestGetCurrentSeasonStatistics:
             opponent_name="Active",
             created_by_id=data["owner"].id,
             season_id=season.id,
-            status=WarStatus.active,
+            status=WarStatus.ACTIVE,
         )
         await load_objects([season, ended_war, active_war])
         cu = await push_champion_user(data["owner"], data["champ"])
@@ -287,14 +287,14 @@ class TestGetCurrentSeasonStatistics:
     async def test_war_id_filters_stats_to_that_war(self):
         """war_id narrows the table to a single war, like the champion chart."""
         data = await _base_setup()
-        season = Season(number=64, status=SeasonStatus.active)
+        season = Season(number=64, status=SeasonStatus.ACTIVE)
         war_one = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
             opponent_name="First",
             created_by_id=data["owner"].id,
             season_id=season.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
         )
         war_two = War(
             id=uuid.uuid4(),
@@ -302,7 +302,7 @@ class TestGetCurrentSeasonStatistics:
             opponent_name="Second",
             created_by_id=data["owner"].id,
             season_id=season.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
         )
         await load_objects([season, war_one, war_two])
         cu = await push_champion_user(data["owner"], data["champ"])
@@ -323,15 +323,15 @@ class TestGetCurrentSeasonStatistics:
     async def test_season_id_selects_a_past_season(self):
         """Without season_id the display (active) season wins; season_id overrides it."""
         data = await _base_setup()
-        past = Season(number=63, status=SeasonStatus.ended)
-        current = Season(number=64, status=SeasonStatus.active)
+        past = Season(number=63, status=SeasonStatus.ENDED)
+        current = Season(number=64, status=SeasonStatus.ACTIVE)
         past_war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
             opponent_name="Old",
             created_by_id=data["owner"].id,
             season_id=past.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
         )
         current_war = War(
             id=uuid.uuid4(),
@@ -339,7 +339,7 @@ class TestGetCurrentSeasonStatistics:
             opponent_name="New",
             created_by_id=data["owner"].id,
             season_id=current.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
         )
         await load_objects([past, current, past_war, current_war])
         cu = await push_champion_user(data["owner"], data["champ"])
@@ -489,7 +489,7 @@ class TestGetChampionUsage:
             opponent_name="Enemy2",
             created_by_id=data["owner"].id,
             season_id=data["season"].id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
         )
         await load_objects([war2])
         await _push_fight_record(
@@ -869,7 +869,7 @@ class TestGetSeasonWarStats:
             opponent_name="Ongoing",
             created_by_id=data["owner"].id,
             season_id=data["season"].id,
-            status=WarStatus.active,
+            status=WarStatus.ACTIVE,
         )
         await load_objects([active])
 

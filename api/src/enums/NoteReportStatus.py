@@ -2,6 +2,6 @@ from enum import Enum
 
 
 class NoteReportStatus(str, Enum):
-    pending = "pending"
-    resolved = "resolved"  # admin deleted the note
-    dismissed = "dismissed"  # admin whitelisted the note
+    PENDING = "pending"
+    RESOLVED = "resolved"  # admin deleted the note
+    DISMISSED = "dismissed"  # admin whitelisted the note

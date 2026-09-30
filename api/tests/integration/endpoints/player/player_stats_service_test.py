@@ -36,7 +36,7 @@ async def _base_setup():
     return {"alliance": alliance, "owner": owner, "champ": champ}
 
 
-async def _setup_with_ended_season_war(number: int = 64, status: SeasonStatus = SeasonStatus.ended):
+async def _setup_with_ended_season_war(number: int = 64, status: SeasonStatus = SeasonStatus.ENDED):
     data = await _base_setup()
     season = Season(number=number, status=status)
     war = War(
@@ -45,7 +45,7 @@ async def _setup_with_ended_season_war(number: int = 64, status: SeasonStatus = 
         opponent_name="Enemy",
         created_by_id=data["owner"].id,
         season_id=season.id,
-        status=WarStatus.ended,
+        status=WarStatus.ENDED,
     )
     await load_objects([season, war])
     cu = await push_champion_user(data["owner"], data["champ"])
@@ -125,23 +125,23 @@ class TestGetPlayerSeasons:
     async def test_get_player_seasons_orders_by_number_desc(self):
         data = await _base_setup()
 
-        season1 = Season(number=60, status=SeasonStatus.ended)
+        season1 = Season(number=60, status=SeasonStatus.ENDED)
         war1 = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
             opponent_name="Enemy1",
             created_by_id=data["owner"].id,
             season_id=season1.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
         )
-        season2 = Season(number=64, status=SeasonStatus.ended)
+        season2 = Season(number=64, status=SeasonStatus.ENDED)
         war2 = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
             opponent_name="Enemy2",
             created_by_id=data["owner"].id,
             season_id=season2.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
         )
         await load_objects([season1, war1, season2, war2])
         cu = await push_champion_user(data["owner"], data["champ"])
@@ -159,14 +159,14 @@ class TestGetPlayerSeasons:
     @pytest.mark.anyio
     async def test_get_player_seasons_ignores_active_war(self):
         data = await _base_setup()
-        season = Season(number=64, status=SeasonStatus.active)
+        season = Season(number=64, status=SeasonStatus.ACTIVE)
         active_war = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
             opponent_name="Enemy",
             created_by_id=data["owner"].id,
             season_id=season.id,
-            status=WarStatus.active,
+            status=WarStatus.ACTIVE,
         )
         await load_objects([season, active_war])
         cu = await push_champion_user(data["owner"], data["champ"])
@@ -328,7 +328,7 @@ class TestGetPlayerStats:
     @pytest.mark.anyio
     async def test_evolution_orders_wars_chronologically_not_alphabetically(self):
         data = await _base_setup()
-        season = Season(number=64, status=SeasonStatus.ended)
+        season = Season(number=64, status=SeasonStatus.ENDED)
         base = datetime(2026, 1, 1, tzinfo=UTC)
         # "Zeta" happens first, "Alpha" second: chronological != alphabetical
         war_z = War(
@@ -337,7 +337,7 @@ class TestGetPlayerStats:
             opponent_name="Zeta",
             created_by_id=data["owner"].id,
             season_id=season.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
             created_at=base,
         )
         war_a = War(
@@ -346,7 +346,7 @@ class TestGetPlayerStats:
             opponent_name="Alpha",
             created_by_id=data["owner"].id,
             season_id=season.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
             created_at=base + timedelta(hours=1),
         )
         await load_objects([season, war_z, war_a])
@@ -422,14 +422,14 @@ class TestGetPlayerChampionUsage:
         await _push_fight_record(data["war"], data["owner"].id, data["champ"], defender)
         # a second season + war with a different attacker champion
         iron = await push_champion(name="IronMan", champion_class="Tech")
-        season2 = Season(number=60, status=SeasonStatus.ended)
+        season2 = Season(number=60, status=SeasonStatus.ENDED)
         war2 = War(
             id=uuid.uuid4(),
             alliance_id=data["alliance"].id,
             opponent_name="Enemy2",
             created_by_id=data["owner"].id,
             season_id=season2.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
         )
         await load_objects([season2, war2])
         await _push_fight_record(war2, data["owner"].id, iron, defender)

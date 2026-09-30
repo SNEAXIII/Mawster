@@ -27,18 +27,18 @@ class SeasonService:
     @classmethod
     async def get_current_season(cls, session: SessionDep) -> Season | None:
         """The single non-ended season (upcoming or active). Source of the war format."""
-        result = await session.exec(select(Season).where(Season.status != SeasonStatus.ended))
+        result = await session.exec(select(Season).where(Season.status != SeasonStatus.ENDED))
         return result.first()
 
     @classmethod
     async def get_current_format(cls, session: SessionDep) -> SeasonFormat:
         season = await cls.get_current_season(session)
-        return season.format if season is not None else SeasonFormat.regular
+        return season.format if season is not None else SeasonFormat.REGULAR
 
     @classmethod
     async def get_active_season(cls, session: SessionDep) -> Season | None:
         """The live season (status == active). Scope of stats / ranking."""
-        result = await session.exec(select(Season).where(Season.status == SeasonStatus.active))
+        result = await session.exec(select(Season).where(Season.status == SeasonStatus.ACTIVE))
         return result.first()
 
     @classmethod
@@ -48,7 +48,7 @@ class SeasonService:
 
     @classmethod
     async def create_season(
-        cls, session: SessionDep, number: int, season_format: SeasonFormat = SeasonFormat.regular
+        cls, session: SessionDep, number: int, season_format: SeasonFormat = SeasonFormat.REGULAR
     ) -> Season:
         existing = await session.exec(select(Season).where(Season.number == number))
         if existing.first() is not None:
@@ -68,7 +68,7 @@ class SeasonService:
         current = await cls.get_current_season(session)
         if current is not None and current.id != season.id:
             raise HTTPException(http_status.HTTP_409_CONFLICT, SEASON_CURRENT_EXISTS)
-        season.status = SeasonStatus.active
+        season.status = SeasonStatus.ACTIVE
         session.add(season)
         await session.commit()
         await session.refresh(season)
@@ -78,11 +78,11 @@ class SeasonService:
     async def revert_to_preseason(cls, session: SessionDep, season_id: uuid.UUID) -> Season:
         """Revert a closed season back to pre-season: ended -> upcoming. Recovers a mistaken close."""
         season = await cls._get(session, season_id)
-        if season.status != SeasonStatus.ended:
+        if season.status != SeasonStatus.ENDED:
             raise HTTPException(http_status.HTTP_409_CONFLICT, SEASON_NOT_ENDED)
         if await cls.get_current_season(session) is not None:
             raise HTTPException(http_status.HTTP_409_CONFLICT, SEASON_CURRENT_EXISTS)
-        season.status = SeasonStatus.upcoming
+        season.status = SeasonStatus.UPCOMING
         session.add(season)
         await session.commit()
         await session.refresh(season)
@@ -92,7 +92,7 @@ class SeasonService:
     async def close_season(cls, session: SessionDep, season_id: uuid.UUID) -> Season:
         """End a season: active -> ended."""
         season = await cls._get(session, season_id)
-        season.status = SeasonStatus.ended
+        season.status = SeasonStatus.ENDED
         session.add(season)
         await session.commit()
         await session.refresh(season)

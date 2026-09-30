@@ -52,7 +52,7 @@ class TestGetChampionCatalog:
     @pytest.mark.anyio
     async def test_carries_saga_roles_from_the_current_season(self):
         champion = await push_champion(name="Spider-Man")
-        season = Season(number=42, status=SeasonStatus.active)
+        season = Season(number=42, status=SeasonStatus.ACTIVE)
         await load_objects([season])
         await load_objects(
             [
@@ -76,7 +76,7 @@ class TestGetChampionCatalog:
     @pytest.mark.anyio
     async def test_ignores_saga_roles_from_an_ended_season(self):
         champion = await push_champion(name="Spider-Man")
-        season = Season(number=41, status=SeasonStatus.ended)
+        season = Season(number=41, status=SeasonStatus.ENDED)
         await load_objects([season])
         await load_objects(
             [

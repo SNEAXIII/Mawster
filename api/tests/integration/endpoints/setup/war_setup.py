@@ -138,7 +138,7 @@ async def _setup_attacker_scenario(season_id: uuid.UUID | None = None):
 
 async def _setup_closed_war_scenario():
     """Attacker scenario in active Season 1: the member fought node 10, then the War was closed."""
-    season = Season(number=1, status=SeasonStatus.active)
+    season = Season(number=1, status=SeasonStatus.ACTIVE)
     await load_objects([season])
     data = await _setup_attacker_scenario(season_id=season.id)
     base = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}"

@@ -32,12 +32,12 @@ async def _setup(season_number: int = 64):
     alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
     champ = await push_champion(name="Spider-Man", champion_class="Science")
     cu = await push_champion_user(owner, champ)
-    season = Season(number=season_number, status=SeasonStatus.active)
+    season = Season(number=season_number, status=SeasonStatus.ACTIVE)
     await load_objects([season])
     return {"alliance": alliance, "owner": owner, "champ": champ, "cu": cu, "season": season}
 
 
-async def _war(data, hours: int = 0, season_id=None, status=WarStatus.ended, in_season=True):
+async def _war(data, hours: int = 0, season_id=None, status=WarStatus.ENDED, in_season=True):
     war = War(
         alliance_id=data["alliance"].id,
         opponent_name=f"Enemy{hours}",
@@ -181,7 +181,7 @@ class TestWinStreakScope:
         data = await _setup()
         ended = await _war(data, hours=0)
         await _fight(data, ended, 1)
-        active = await _war(data, hours=1, status=WarStatus.active)
+        active = await _war(data, hours=1, status=WarStatus.ACTIVE)
         await _fight(data, active, 1, ko_count=1)
         await _fight(data, active, 2)
         assert await _streak(data) == 1
@@ -310,7 +310,7 @@ class TestWinStreakAcrossSeasons:
     @pytest.mark.anyio
     async def test_chains_across_seasons(self):
         data = await _setup(season_number=63)
-        new_season = Season(number=64, status=SeasonStatus.active)
+        new_season = Season(number=64, status=SeasonStatus.ACTIVE)
         await load_objects([new_season])
         old = await _war(data, hours=0)
         await _fight(data, old, 1)
@@ -322,7 +322,7 @@ class TestWinStreakAcrossSeasons:
     @pytest.mark.anyio
     async def test_ignores_the_season_filter(self):
         data = await _setup(season_number=63)
-        new_season = Season(number=64, status=SeasonStatus.active)
+        new_season = Season(number=64, status=SeasonStatus.ACTIVE)
         await load_objects([new_season])
         old = await _war(data, hours=0)
         await _fight(data, old, 1)

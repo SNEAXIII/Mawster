@@ -36,14 +36,14 @@ MEMBER = create_auth_headers(user_id=str(USER2_ID))
 async def _end_season(season: Season) -> None:
     async with AsyncSession(sqlite_async_engine) as session:
         db_season = await session.get(Season, season.id)
-        db_season.status = SeasonStatus.ended
+        db_season.status = SeasonStatus.ENDED
         session.add(db_season)
         await session.commit()
 
 
 async def _replace_latest_season(season: Season) -> None:
     await _end_season(season)
-    await load_objects([Season(number=season.number + 1, status=SeasonStatus.active)])
+    await load_objects([Season(number=season.number + 1, status=SeasonStatus.ACTIVE)])
 
 
 class TestClosedWarTermsAreSealed:
@@ -112,7 +112,7 @@ class TestClosedWarMapAccess:
     async def test_map_still_correctable_while_next_season_is_upcoming(self):
         data = await _setup_closed_war_scenario()
         await _end_season(data["season"])
-        await load_objects([Season(number=2, status=SeasonStatus.upcoming)])
+        await load_objects([Season(number=2, status=SeasonStatus.UPCOMING)])
         response = await execute_patch_request(
             f"{data['base']}/bg/1/node/10/ko", payload={"ko_count": 1}, headers=OWNER
         )
@@ -329,7 +329,7 @@ class TestClosedWarFormat:
         data = await _setup_closed_war_scenario()
         await _end_season(data["season"])
         await load_objects(
-            [Season(number=2, status=SeasonStatus.upcoming, format=SeasonFormat.big_thing)]
+            [Season(number=2, status=SeasonStatus.UPCOMING, format=SeasonFormat.BIG_THING)]
         )
         await execute_post_request(
             f"{data['base']}/bg/1/place",
@@ -357,7 +357,7 @@ class TestClosedWarFormat:
         data = await _setup_closed_war_scenario()
         await _end_season(data["season"])
         await load_objects(
-            [Season(number=2, status=SeasonStatus.upcoming, format=SeasonFormat.big_thing)]
+            [Season(number=2, status=SeasonStatus.UPCOMING, format=SeasonFormat.BIG_THING)]
         )
         created = await execute_post_request(
             f"/alliances/{data['alliance'].id}/wars",

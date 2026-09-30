@@ -243,7 +243,7 @@ class DefensePlanService:
     @classmethod
     async def activate(cls, session: SessionDep, plan: DefensePlan) -> DefensePlan:
         members = await cls.bg_member_ids(session, plan.alliance_id, plan.battlegroup)
-        if cls.state_of(plan, members) != DefensePlanState.validated:
+        if cls.state_of(plan, members) != DefensePlanState.VALIDATED:
             raise HTTPException(status.HTTP_409_CONFLICT, PLAN_NOT_VALIDATED)
         pointer = (
             await session.exec(

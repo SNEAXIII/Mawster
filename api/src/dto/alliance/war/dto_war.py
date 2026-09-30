@@ -65,7 +65,7 @@ class WarResponse(BaseModel):
     elo_change: int | None = None
     tier: int | None = None
     is_map_correctable: bool = False
-    format: SeasonFormat = SeasonFormat.regular
+    format: SeasonFormat = SeasonFormat.REGULAR
     node_count: int = 50
     max_attackers_per_member: int = 3
 

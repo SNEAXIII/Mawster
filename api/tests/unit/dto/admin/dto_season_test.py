@@ -32,26 +32,26 @@ class TestSeasonCreateRequest:
 class TestSeasonFormat:
     def test_create_request_defaults_to_regular(self):
         req = SeasonCreateRequest(number=5)
-        assert req.format == SeasonFormat.regular
+        assert req.format == SeasonFormat.REGULAR
 
     def test_create_request_accepts_big_thing(self):
-        req = SeasonCreateRequest(number=5, format=SeasonFormat.big_thing)
-        assert req.format == SeasonFormat.big_thing
+        req = SeasonCreateRequest(number=5, format=SeasonFormat.BIG_THING)
+        assert req.format == SeasonFormat.BIG_THING
 
     def test_response_exposes_regular_limits(self):
         season = Season(
-            id=uuid.uuid4(), number=1, status=SeasonStatus.active, format=SeasonFormat.regular
+            id=uuid.uuid4(), number=1, status=SeasonStatus.ACTIVE, format=SeasonFormat.REGULAR
         )
         resp = SeasonResponse.model_validate(season)
-        assert resp.status == SeasonStatus.active
-        assert resp.format == SeasonFormat.regular
+        assert resp.status == SeasonStatus.ACTIVE
+        assert resp.format == SeasonFormat.REGULAR
         assert resp.max_defenders_per_player == 5
         assert resp.max_attackers_per_member == 3
         assert resp.node_count == 50
 
     def test_response_exposes_big_thing_limits(self):
         season = Season(
-            id=uuid.uuid4(), number=2, status=SeasonStatus.active, format=SeasonFormat.big_thing
+            id=uuid.uuid4(), number=2, status=SeasonStatus.ACTIVE, format=SeasonFormat.BIG_THING
         )
         resp = SeasonResponse.model_validate(season)
         assert resp.max_defenders_per_player == 1

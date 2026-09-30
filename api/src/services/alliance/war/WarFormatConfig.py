@@ -17,12 +17,12 @@ class WarFormatParams:
 
 
 _PRESETS: dict[SeasonFormat, WarFormatParams] = {
-    SeasonFormat.regular: WarFormatParams(
+    SeasonFormat.REGULAR: WarFormatParams(
         max_defenders_per_player=5,
         max_attackers_per_member=3,
         node_count=50,
     ),
-    SeasonFormat.big_thing: WarFormatParams(
+    SeasonFormat.BIG_THING: WarFormatParams(
         max_defenders_per_player=1,
         max_attackers_per_member=2,
         node_count=10,

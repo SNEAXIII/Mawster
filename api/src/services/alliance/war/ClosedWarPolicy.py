@@ -22,19 +22,19 @@ class ClosedWarPolicy:
 
     @staticmethod
     def assert_open(war: War) -> None:
-        if war.status == WarStatus.ended:
+        if war.status == WarStatus.ENDED:
             raise HTTPException(status.HTTP_409_CONFLICT, WAR_CLOSED)
 
     @staticmethod
     def is_map_correctable(war: War, latest_season: Season | None) -> bool:
-        if war.status == WarStatus.active:
+        if war.status == WarStatus.ACTIVE:
             return True
         return latest_season is not None and war.season_id == latest_season.id
 
     @classmethod
     async def require_map_edit(cls, session: SessionDep, war: War, user_id: uuid.UUID) -> None:
         """Called after the endpoint's own rank check; a closed War adds Strategist+ and the window."""
-        if war.status == WarStatus.active:
+        if war.status == WarStatus.ACTIVE:
             return
         await AllianceService.require_strategist(session, war.alliance_id, user_id)
         if not cls.is_map_correctable(war, await SeasonService.get_display_season(session)):
@@ -42,7 +42,7 @@ class ClosedWarPolicy:
 
     @staticmethod
     def is_attacker_locked(war: War, placement: WarDefensePlacement) -> bool:
-        if war.status != WarStatus.ended or placement.attacker_champion_user is None:
+        if war.status != WarStatus.ENDED or placement.attacker_champion_user is None:
             return False
         account = placement.attacker_champion_user.game_account
         return (

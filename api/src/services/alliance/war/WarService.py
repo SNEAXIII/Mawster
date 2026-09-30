@@ -145,7 +145,7 @@ class WarService:
     ) -> WarResponse:
         await cls._check_bans(session, banned_champion_ids)
         existing = await session.exec(
-            select(War).where(War.alliance_id == alliance_id, War.status == WarStatus.active)
+            select(War).where(War.alliance_id == alliance_id, War.status == WarStatus.ACTIVE)
         )
         if existing.first() is not None:
             raise HTTPException(status.HTTP_409_CONFLICT, ACTIVE_WAR_ALREADY_EXISTS)
@@ -208,7 +208,7 @@ class WarService:
     async def get_current_war(cls, session: SessionDep, alliance_id: uuid.UUID) -> WarResponse:
         war = (
             await session.exec(
-                select(War).where(War.alliance_id == alliance_id, War.status == WarStatus.active)
+                select(War).where(War.alliance_id == alliance_id, War.status == WarStatus.ACTIVE)
             )
         ).first()
         if war is None:
@@ -233,7 +233,7 @@ class WarService:
         session: SessionDep, war: War | None, current_format: SeasonFormat | None = None
     ) -> SeasonFormat:
         """A closed War keeps its Season's format; a running one follows the Season being played or prepared."""
-        if war is not None and war.status == WarStatus.ended and war.season is not None:
+        if war is not None and war.status == WarStatus.ENDED and war.season is not None:
             return war.season.format
         return current_format or await SeasonService.get_current_format(session)
 
@@ -312,7 +312,7 @@ class WarService:
             war.elo_change = elo_change
             alliance.elo = max(0, min(4500, alliance.elo + elo_change))
 
-        war.status = WarStatus.ended
+        war.status = WarStatus.ENDED
         war.win = win
         war.opponent_deaths = opponent_deaths
         war.tier = alliance.tier
