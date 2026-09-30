@@ -1,6 +1,5 @@
 """Integration tests for the win streak on the personal stats card."""
 
-import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -40,7 +39,6 @@ async def _setup(season_number: int = 64):
 
 async def _war(data, hours: int = 0, season_id=None, status=WarStatus.ended, in_season=True):
     war = War(
-        id=uuid.uuid4(),
         alliance_id=data["alliance"].id,
         opponent_name=f"Enemy{hours}",
         created_by_id=data["owner"].id,
@@ -297,6 +295,15 @@ class TestWinStreakChronology:
         second = await _war(data, hours=1)
         await _fight(data, second, 1)
         assert await _streak(data) == 1
+
+    @pytest.mark.anyio
+    async def test_same_second_wars_keep_creation_order(self):
+        data = await _setup()
+        first = await _war(data)
+        await _fight(data, first, 1, ko_count=1)
+        for _ in range(5):
+            await _fight(data, await _war(data), 1)
+        assert await _streak(data) == 5
 
 
 class TestWinStreakAcrossSeasons:
