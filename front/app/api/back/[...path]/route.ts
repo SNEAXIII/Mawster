@@ -1,15 +1,30 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/app/api/auth/[...nextauth]/route'
+import { getToken } from 'next-auth/jwt'
 import { getServerApiUrl } from '@/app/lib/serverApiUrl'
+import { refreshBackendToken } from '@/app/lib/auth-refresh'
 
 /**
  * Catch-all proxy: every request to /api/back/<path>
- * is forwarded server-side to FastAPI with the backend JWT
- * from the NextAuth session (never exposed to the client).
- *
- * Token refresh is handled transparently by the NextAuth jwt
- * callback — no manual refresh or cookie encoding needed here.
+ * is forwarded server-side to FastAPI with the backend JWT read from
+ * the encrypted NextAuth cookie — the session payload never carries it.
  */
+
+// Same cookie choice as Auth.js: secure cookie name when the app URL is https.
+const SECURE_COOKIE = (process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? 'https:').startsWith(
+  'https:'
+)
+
+async function readBackendToken(req: NextRequest) {
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+    secureCookie: SECURE_COOKIE,
+  })
+  if (!token) return null
+  const fresh = token.accessTokenExpires && Date.now() < token.accessTokenExpires
+  return fresh ? token : refreshBackendToken(token)
+}
+
 /**
  * Backend paths that answer without a session. Everything else is refused here
  * rather than reaching FastAPI unauthenticated: the proxy is what decides a
@@ -22,10 +37,11 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
   const backendPath = path.join('/')
   const isPublicPath = PUBLIC_PATHS.has(backendPath)
 
-  const session = isPublicPath ? null : await auth()
+  const token = isPublicPath ? null : await readBackendToken(req)
+  const expired = !!token && (token.expired || !token.backendAuthenticated)
 
-  if (!isPublicPath && (!session?.accessToken || session.error === 'TokenExpiredError')) {
-    const message = session?.error === 'TokenExpiredError' ? 'Session expired' : 'Unauthenticated'
+  if (!isPublicPath && (!token?.accessToken || expired)) {
+    const message = expired ? 'Session expired' : 'Unauthenticated'
     return NextResponse.json({ message }, { status: 401 })
   }
 
@@ -33,8 +49,8 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
   const backendUrl = `${getServerApiUrl()}/${backendPath}${url.search}`
 
   const headers: HeadersInit = {}
-  if (!isPublicPath && session?.accessToken) {
-    headers.Authorization = `Bearer ${session.accessToken}`
+  if (token?.accessToken) {
+    headers.Authorization = `Bearer ${token.accessToken}`
   }
 
   const contentType = req.headers.get('content-type')
