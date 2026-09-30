@@ -13,8 +13,10 @@ from typing import Annotated
 from sqlmodel import Field
 
 # War-grid coordinates.
-Battlegroup = Annotated[int, Field(ge=1, le=3)]
-NodeNumber = Annotated[int, Field(ge=1, le=50)]
+BATTLEGROUP_MIN, BATTLEGROUP_MAX = 1, 3
+NODE_NUMBER_MIN, NODE_NUMBER_MAX = 1, 50
+Battlegroup = Annotated[int, Field(ge=BATTLEGROUP_MIN, le=BATTLEGROUP_MAX)]
+NodeNumber = Annotated[int, Field(ge=NODE_NUMBER_MIN, le=NODE_NUMBER_MAX)]
 
 # War bracket — 1 is the top, 20 the bottom and the starting point of a fresh alliance.
 Tier = Annotated[int, Field(ge=1, le=20)]
