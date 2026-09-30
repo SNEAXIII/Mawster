@@ -33,7 +33,7 @@ before naming or modelling anything.
 
 ## Commands
 
-**Backend** (`api/`) — always via `/make` skill first, never raw `pytest`/`alembic`/`uvicorn`. Before any backend command, invoke `/make` to check available targets.
+**Backend** (`api/`) — always via `make` (targets: `make help`), never raw `pytest`/`alembic`/`uvicorn`.
 
 Single test file: `uv run pytest tests/unit/dto/dto_from_model_test.py -v`
 
@@ -85,7 +85,7 @@ Pages: `game/roster/`, `game/defense/`, `game/alliances/`, `admin/`, `profile/`,
 
 Auth: NextAuth Discord OAuth2 → backend `POST /auth/discord` → JWT stored in session, attached as `Authorization: Bearer`.
 
-DB: MariaDB (prod), SQLite in-memory (integration tests). Migrations via Alembic — always `make reset-db` before `make create-mig` / `make migrate`. Migration message required: `make create-mig MESSAGE="your_migration_name"`.
+DB: MariaDB (prod), SQLite in-memory, one per xdist worker (integration tests). Migrations via Alembic — always `make reset-db` before `make create-mig` / `make migrate`. Migration message required: `make create-mig MESSAGE="your_migration_name"`.
 
 ---
 
@@ -195,8 +195,9 @@ release-please then counts a second time alongside the real commits, duplicating
   partially-staged work, or revert already-pushed commits without asking first.
 - Before switching branches, check `git status` and warn about uncommitted changes rather than
   stashing them silently.
-- Check the branch before the first commit: on `main`, branch first, whatever the size of the change.
-- `git push` belongs to the user: end on the exact command in a code block. `/main-pr`,
+- Check the branch before the first commit: on `main`, `release` or `staging`, branch first,
+  whatever the size of the change.
+- `git push` belongs to the user: end on the exact command in a code block. `/make-pr`,
   `/commit push`, or an explicit go in reply to that command authorise you to push.
 
 ### Worktrees

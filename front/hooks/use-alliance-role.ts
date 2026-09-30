@@ -27,7 +27,7 @@ export function AllianceRoleProvider({
   const { refreshRoles } = useAllianceContext()
 
   useEffect(() => {
-    if (refreshKey > 0) refreshRoles()
+    if (refreshKey > 0) void refreshRoles()
   }, [refreshKey, refreshRoles])
 
   return React.createElement(React.Fragment, null, children)

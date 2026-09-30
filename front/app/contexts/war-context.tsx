@@ -356,7 +356,7 @@ export function WarProvider({
 
   useEffect(() => {
     setWarSummary(null)
-    if (activeWarId) fetchWarDefense()
+    if (activeWarId) void fetchWarDefense()
   }, [activeWarId, selectedBg, fetchWarDefense])
 
   // Polling every 10s, on-screen tabs only

@@ -261,7 +261,7 @@ export function useRosterViewModel() {
 
   useEffect(() => {
     if (activeTab === RosterTab.Mastery && selectedAccountId) {
-      fetchMasteries(selectedAccountId)
+      void fetchMasteries(selectedAccountId)
     }
     // oxlint-disable-next-line react/exhaustive-deps
   }, [activeTab, selectedAccountId])

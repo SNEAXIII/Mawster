@@ -24,9 +24,9 @@ Do NOT over-interview. If the description is clear enough to file, move on.
 
 ### 2. Explore the codebase in the background
 
-While talking to the user, kick off an Agent (subagent_type=Explore) in the background to understand the relevant area. The goal is NOT to find a fix — it's to:
+While talking to the user, search the relevant area with `Grep` / `ctx_batch_execute` (no Explore agent — see CLAUDE.md). The goal is NOT to find a fix — it's to:
 
-- Learn the domain language used in that area (check UBIQUITOUS_LANGUAGE.md)
+- Learn the domain language used in that area (check `CONTEXT.md`)
 - Understand what the feature is supposed to do
 - Identify the user-facing behavior boundary
 
@@ -121,7 +121,7 @@ When creating a breakdown:
 #### Rules for all issue bodies
 
 - **No file paths or line numbers** — these go stale
-- **Use the project's domain language** (check UBIQUITOUS_LANGUAGE.md if it exists)
+- **Use the project's domain language** (check `CONTEXT.md`)
 - **Describe behaviors, not code** — "the sync service fails to apply the patch" not "applyPatch() throws on line 42"
 - **Reproduction steps are mandatory** — if you can't determine them, ask the user
 - **Keep it concise** — a developer should be able to read the issue in 30 seconds

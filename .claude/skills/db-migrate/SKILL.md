@@ -34,7 +34,7 @@ cd api && MARIADB_DATABASE=mawster_migrate make migrate
 Pour la review, **ne pas faire un `Read` complet** du fichier généré (boilerplate `upgrade`/`downgrade` + chaque colonne). Extraire seulement les opérations réelles :
 
 ```bash
-grep -nE "op\.|sa\.Column" api/alembic/versions/<dernier_fichier>.py
+grep -nE "op\.|sa\.Column" api/migrations/versions/<dernier_fichier>.py
 ```
 
 Afficher ces lignes à l'utilisateur. Ne `Read` le fichier entier que s'il faut l'éditer.

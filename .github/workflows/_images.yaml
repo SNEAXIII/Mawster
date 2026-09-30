@@ -1,9 +1,6 @@
 name: Images
 
-# Called by ci.yaml. The five images used to be five near-identical jobs; only the
-# build context, the Dockerfile and the image name ever differed, so they are one
-# matrix now. The tag trio comes from the caller's metadata job, resolved once
-# there so a run straddling a minute cannot tag two images inconsistently.
+# Called by ci.yaml, which resolves the tags once so all five images match.
 on:
   workflow_call:
     inputs:

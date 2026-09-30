@@ -168,7 +168,6 @@ export const {
 
       return {
         ...session,
-        accessToken: token.accessToken as string,
         user: {
           ...session.user,
           id: profile?.id ?? token.id ?? '',
@@ -208,7 +207,6 @@ export const {
 
 declare module 'next-auth' {
   interface Session {
-    accessToken?: string
     user: {
       id: string
       name: string

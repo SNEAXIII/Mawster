@@ -105,17 +105,6 @@ Cypress.Commands.add('apiBatchSetup', (specs: BatchSetupSpec[]) =>
   cy.apiBatchSetupFull(specs).then((body) => body.users),
 );
 
-Cypress.Commands.add('apiDevBulkCreateFightRecords', (warId: string, gameAccountId: string, count: number) => {
-  cy.request({
-    method: 'POST',
-    url: `${BACKEND}/dev/bulk-create-fight-records`,
-    body: { war_id: warId, game_account_id: gameAccountId, count },
-  }).then((res) => {
-    expect(res.status).to.eq(201);
-    return res.body;
-  });
-});
-
 Cypress.Commands.add(
   'apiBulkFillWarAttackers',
   (warId: string, battlegroup: number, gameAccountId: string, count: number) => {
@@ -523,12 +512,6 @@ Cypress.Commands.add(
     });
   },
 );
-
-// ── Run fixtures (truncate DB + seed) ────────────────────────────────────────
-
-Cypress.Commands.add('runFixtures', () => {
-  cy.request('POST', `${BACKEND}/dev/fixtures`);
-});
 
 // ── Setup knowledge base scenario (light, no truncate) ──────────────────────────
 
@@ -1901,12 +1884,6 @@ export function submitNameDialog(name: string): void {
 // view first and let the click wait for the node to be actionable.
 export function openWarNode(node: number): void {
   cy.getByCy(`war-node-${node}`).scrollIntoView().should('be.visible').click();
-}
-
-export function expectSeasonStatus(number: number, status: 'upcoming' | 'active' | 'ended'): void {
-  cy.getByCy(`season-row-${number}`).within(() => {
-    cy.getByCy(`season-status-${status}`).should('be.visible');
-  });
 }
 
 // Give a champion to a game account and place it as a defender in one step —

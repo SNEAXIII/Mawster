@@ -55,7 +55,7 @@ class UUIDBase(SQLModel):
     Inherit with ``table=True``, e.g. ``class Foo(UUIDBase, table=True): ...``.
     """
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid7, primary_key=True)
 
 
 class UserFk(SQLModel):

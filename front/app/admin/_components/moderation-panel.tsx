@@ -183,7 +183,7 @@ export default function ModerationPanel() {
         variant='destructive'
         confirmText={m.delete}
         onConfirm={() => {
-          if (deleteTarget) onResolve(deleteTarget, 'delete')
+          if (deleteTarget) void onResolve(deleteTarget, 'delete')
           setDeleteTarget(null)
         }}
       />
@@ -195,7 +195,7 @@ export default function ModerationPanel() {
         description={m.dismissDescription}
         confirmText={m.dismiss}
         onConfirm={() => {
-          if (dismissTarget) onResolve(dismissTarget, 'dismiss')
+          if (dismissTarget) void onResolve(dismissTarget, 'dismiss')
           setDismissTarget(null)
         }}
       />

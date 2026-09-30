@@ -16,7 +16,7 @@ function SessionWatcher() {
 
   useEffect(() => {
     if (session?.error === 'TokenExpiredError') {
-      signOutAndRedirect('/login')
+      void signOutAndRedirect('/login')
     }
   }, [session?.error])
 

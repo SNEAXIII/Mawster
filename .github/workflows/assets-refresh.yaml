@@ -9,7 +9,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      issues: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -29,21 +28,9 @@ jobs:
         # setup scripts.
         run: uv run --locked --no-build python scrape_champions.py
 
-      - name: Detect changes
-        id: diff
-        run: |
-          if [ -z "$(git status --porcelain)" ]; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No champion change - nothing to open."
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            git status --porcelain
-          fi
-
       # Fixed branch, not a dated one: successive runs amend one PR instead of
       # piling up one per run.
       - name: Open or update the assets PR
-        if: steps.diff.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
           token: ${{ secrets.BOT_TOKEN }}
@@ -62,26 +49,3 @@ jobs:
             champion until this is promoted to `release`, which rebuilds and
             pushes the api and static images - only then does `make deploy`
             (which runs `seed-champions`) pick it up.
-
-      # One issue, reused. A new issue per failed run would bury the signal.
-      - name: Report a scraper failure
-        if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          set -euo pipefail
-          gh label create scraper-down --color B60205 \
-            --description "Champion wiki scraper is failing" --force
-          existing=$(gh issue list --label scraper-down --state open \
-                       --json number --jq '.[0].number // empty')
-          if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body "Failed again: $RUN_URL"
-          else
-            gh issue create --label scraper-down \
-              --title "Champion scraper is failing" \
-              --body "The wiki scrape failed: $RUN_URL
-
-          Fandom's bot protection is the usual cause - see commit 68a8e5a8, which
-          added the impersonation-profile fallback in \`static-assets/scrape_champions.py\`."
-          fi

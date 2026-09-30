@@ -236,7 +236,7 @@ export default function GameAccountsSection() {
                           className='flex items-center gap-2 flex-1'
                           onSubmit={(e) => {
                             e.preventDefault()
-                            handleEdit(account)
+                            void handleEdit(account)
                           }}
                         >
                           <Input

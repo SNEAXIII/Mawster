@@ -611,12 +611,6 @@ async def bulk_fill_war_attackers(body: BulkFillWarAttackersRequest, session: Se
     return {"assigned": created}
 
 
-class BulkCreateFightRecordsRequest(BaseModel):
-    war_id: uuid.UUID
-    game_account_id: uuid.UUID
-    count: int = Field(ge=1, le=MAX_FIGHTS_PER_WAR)
-
-
 async def _insert_fight_records(
     session: SessionDep, war: War, game_account_id: uuid.UUID, count: int
 ) -> int:
@@ -658,16 +652,6 @@ async def _insert_fight_records(
     )
     await session.commit()
     return len(placements)
-
-
-@dev_controller.post("/bulk-create-fight-records", status_code=201)
-async def bulk_create_fight_records(body: BulkCreateFightRecordsRequest, session: SessionDep):
-    """Insert N fought placements and their records into an existing war. Testing only."""
-    war = await session.get(War, body.war_id)
-    if war is None:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="War not found")
-    created = await _insert_fight_records(session, war, body.game_account_id, body.count)
-    return {"created": created}
 
 
 # scripts/e2e/e2e_parallel.py slices backend.log on these markers, so a newline in a title

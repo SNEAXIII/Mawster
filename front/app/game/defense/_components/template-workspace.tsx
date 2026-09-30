@@ -45,7 +45,7 @@ export default function TemplateWorkspace({
         takenChampionIds={takenChampionIds}
         onClose={() => setPickerNode(null)}
         onPick={(champion) => {
-          if (pickerNode !== null) state.placeChampion(pickerNode, champion.id, champion.name)
+          if (pickerNode !== null) void state.placeChampion(pickerNode, champion.id, champion.name)
           setPickerNode(null)
         }}
       />

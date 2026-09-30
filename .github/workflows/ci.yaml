@@ -19,8 +19,11 @@ jobs:
     name: Test
     permissions:
       contents: read
+      pull-requests: read # _test.yaml calls _sonar.yaml
 
     uses: $/.github/workflows/_test.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   changes:
     permissions:
@@ -56,8 +59,6 @@ jobs:
           persist-credentials: false
           # Full history and tags: git describe needs both.
           fetch-depth: 0
-      # Resolved once here, then passed to the five image jobs. Each of them used to call `date`
-      # on its own, so a run straddling a minute produced images tagged inconsistently.
       - name: Resolve the version
         id: version
         run: |
@@ -103,8 +104,7 @@ jobs:
     name: Images
     permissions:
       contents: read
-    # `test` is named here now that `changes` no longer carries it: it is the gate that keeps
-    # an untested image off Docker Hub.
+    # `test` keeps an untested image off Docker Hub.
     needs: [changes, test]
     uses: $/.github/workflows/_images.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:

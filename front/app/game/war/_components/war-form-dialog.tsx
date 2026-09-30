@@ -90,7 +90,7 @@ export default function WarFormDialog({
     if (mode === 'create') {
       setConfirmOpen(true)
     } else {
-      doConfirm()
+      void doConfirm()
     }
   }
 
@@ -121,7 +121,7 @@ export default function WarFormDialog({
           description={t.game.war.declareWarConfirmDesc.replace('{name}', opponentName.trim())}
           onConfirm={() => {
             setConfirmOpen(false)
-            doConfirm()
+            void doConfirm()
           }}
           requireConfirmText='confirm'
         />
