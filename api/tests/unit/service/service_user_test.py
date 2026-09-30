@@ -127,45 +127,6 @@ async def test_get_users_with_pagination_role_search(mocker):
 
 
 @pytest.mark.asyncio
-async def test_get_user_by_login_with_validity_check_success(mocker):
-    # Arrange
-    fake_user = User(login=LOGIN)
-    mock_session = session_mock(mocker)
-    mock_user_by_login = get_user_by_login_mock(mocker, fake_user)
-
-    # Act
-    result = await UserService.get_user_by_login_with_validity_check(mock_session, LOGIN)
-
-    # Assert
-    assert fake_user == result
-    mock_user_by_login.assert_called_once_with(mock_session, LOGIN)
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("fake_user", "expected_error"),
-    [
-        (None, USER_DOESNT_EXISTS),
-        (User(login=LOGIN, deleted_at=utcnow()), USER_IS_DELETED),
-        (User(login=LOGIN, disabled_at=True), USER_IS_DISABLED),
-    ],
-    ids=["user_doesnt_exists", "deleted", "disabled"],
-)
-async def test_get_user_by_login_with_validity_check_error(mocker, fake_user, expected_error):
-    # Arrange
-    mock_session = session_mock(mocker)
-    mock_user_by_login = get_user_by_login_mock(mocker, fake_user)
-
-    # Act
-    with pytest.raises(UserLoginError) as error:
-        await UserService.get_user_by_login_with_validity_check(mock_session, LOGIN)
-
-    # Assert
-    assert error.value.detail == str(expected_error)
-    mock_user_by_login.assert_called_once_with(mock_session, LOGIN)
-
-
-@pytest.mark.asyncio
 async def test_patch_disable_user_success(mocker, use_time_machine):
     # Arrange
     fake_user = User(login=LOGIN)

@@ -37,8 +37,3 @@ class ChampionRarity(str, Enum):
             return cls(code.strip().lower())
         except ValueError:
             return None
-
-    @classmethod
-    def from_parts(cls, stars: int, rank: int) -> ChampionRarity | None:
-        """Rarity for a stars/rank pair, or None when the pair is not requestable."""
-        return cls.from_code(f"{stars}r{rank}")

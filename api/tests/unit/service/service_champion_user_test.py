@@ -426,41 +426,6 @@ class TestDeleteChampionUser:
 
 
 # =========================================================================
-# delete_roster
-# =========================================================================
-
-
-class TestDeleteRoster:
-    @pytest.mark.asyncio
-    async def test_delete_roster_ok(self, mocker):
-        session = _mock_session(mocker)
-        entries = [_make_champion_user(), _make_champion_user(rarity="7r1")]
-        roster_result = mocker.MagicMock()
-        roster_result.all.return_value = entries
-        # release_champion_users finds no defense plan node to release
-        release_result = mocker.MagicMock()
-        release_result.all.return_value = []
-        session.exec.side_effect = [roster_result, release_result]
-
-        count = await ChampionUserService.delete_roster(session, GAME_ACCOUNT_ID)
-
-        assert count == 2
-        assert session.delete.await_count == 2
-        session.commit.assert_awaited_once()
-
-    @pytest.mark.asyncio
-    async def test_delete_roster_empty(self, mocker):
-        session = _mock_session(mocker)
-        result_mock = mocker.MagicMock()
-        result_mock.all.return_value = []
-        session.exec.return_value = result_mock
-
-        count = await ChampionUserService.delete_roster(session, GAME_ACCOUNT_ID)
-
-        assert count == 0
-
-
-# =========================================================================
 # upgrade_champion_rank
 # =========================================================================
 

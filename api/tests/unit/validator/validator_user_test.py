@@ -1,8 +1,6 @@
 import pytest
-from email_validator import EmailSyntaxError
 
 from src.Messages.user_messages import (
-    EMAIL_INVALID,
     LOGIN_NON_ALPHANUM,
     LOGIN_WRONG_SIZE,
     NOT_STR,
@@ -10,58 +8,12 @@ from src.Messages.user_messages import (
 from src.validators.user_validator import (
     MAX_LOGIN_LENGHT,
     MIN_LOGIN_LENGHT,
-    correct_email_validator,
     login_validator,
 )
-from tests.utils.utils_constant import EMAIL, LOGIN
+from tests.utils.utils_constant import LOGIN
 
 # For login tests
 login_wrong_size = LOGIN_WRONG_SIZE % (MIN_LOGIN_LENGHT, MAX_LOGIN_LENGHT)
-
-
-def validate_email_mock(mocker):
-    return mocker.patch("email_validator.validate_email")
-
-
-def test_email_validator_success(mocker):
-    # Arrange
-    mock_validate_email = validate_email_mock(mocker)
-    mock_validate_email.return_value = True
-
-    # Act
-    result = correct_email_validator(EMAIL)
-
-    # Assert
-    assert result is EMAIL
-    mock_validate_email.assert_called_once_with(EMAIL)
-
-
-def test_email_validator_error_email_not_str(mocker):
-    # Arrange
-    wrong_email = 123
-    mock_validate_email = validate_email_mock(mocker)
-
-    # Act
-    with pytest.raises(ValueError) as error:
-        correct_email_validator(wrong_email)
-
-    # Assert
-    assert error.value.args[0] == NOT_STR
-    mock_validate_email.assert_not_called()
-
-
-def test_email_validator_error_wrong_email(mocker):
-    # Arrange
-    mock_validate_email = validate_email_mock(mocker)
-    mock_validate_email.side_effect = EmailSyntaxError()
-
-    # Act
-    with pytest.raises(EmailSyntaxError) as error:
-        correct_email_validator(EMAIL)
-
-    # Assert
-    assert error.value.args[0] == EMAIL_INVALID
-    mock_validate_email.assert_called_once_with(EMAIL)
 
 
 def test_login_validator_success():

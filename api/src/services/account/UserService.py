@@ -36,12 +36,6 @@ class UserService:
         return result.first()
 
     @classmethod
-    async def get_user_by_login_with_validity_check(
-        cls, session: SessionDep, login: str
-    ) -> User | None:
-        return _assert_usable(await cls.get_user_by_login(session, login))
-
-    @classmethod
     async def get_user_by_id_with_validity_check(
         cls, session: SessionDep, user_id: str | None
     ) -> User:
