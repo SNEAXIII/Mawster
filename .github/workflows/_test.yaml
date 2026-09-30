@@ -49,7 +49,7 @@ jobs:
         run: uvx --no-build ruff@0.16.0 format --check .
       - name: Run tests
         # `auto` is the runner's 4 vCPUs. Oversubscribing does not pay: 6 workers measured
-        # --cov: ci.yaml hands the report to Sonar.
+        # --cov: the report feeds the sonar job below.
         run: uv run --no-sync --no-build pytest tests -v --tb=short -n auto --cov --cov-report=xml:coverage.xml
       - name: Upload backend coverage
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -58,6 +58,15 @@ jobs:
           path: api/coverage.xml
           retention-days: 1
           if-no-files-found: error
+
+  sonar:
+    name: Sonar
+    permissions:
+      contents: read
+      pull-requests: read
+    needs: lint-test-python
+    if: github.event_name == 'pull_request' || github.ref_name == 'release'
+    uses: $/.github/workflows/_sonar.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
 
   lint-front:
     name: Lint & typecheck for frontend

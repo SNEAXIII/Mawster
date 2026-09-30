@@ -1,6 +1,6 @@
 name: Sonar scan
 
-# Called by ci.yaml and sonar.yaml, never triggered. The caller's run must hold a
+# Called by _test.yaml and sonar.yaml, never triggered. The caller's run must hold a
 # `backend-coverage` artifact (api/coverage.xml from pytest --cov).
 on:
   workflow_call:
@@ -13,6 +13,8 @@ jobs:
       contents: read
       pull-requests: read
     runs-on: ubuntu-latest
+    # A Sonar outage must never fail `test`, which gates the images.
+    continue-on-error: true
     # SONAR_TOKEN is an environment secret: without this line it resolves to an
     # empty string and the scanner fails with "Not authorized".
     environment: Api
