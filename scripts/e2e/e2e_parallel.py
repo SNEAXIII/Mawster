@@ -99,7 +99,7 @@ NPX = OS.npx
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mKHFABCDJG]")
 RESULTS_DIR = FRONT_DIR / "cypress" / "results"
 # Next build output for E2E, separate from the dev .next. The same value
-# is spelled out in .github/workflows/api_front__test_lint_build.yaml and
+# is spelled out in .github/workflows/_test.yaml and
 # front/tsconfig.json, so renaming it here alone is not enough.
 NEXT_E2E_DIST = ".next-e2e"
 # Logged by the backend dev controller (api/src/controllers/dev_controller.py)
@@ -474,7 +474,6 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     api_port = BASE_API_PORT + worker
     front_port = BASE_FRONT_PORT + worker
     screenshots_path = f"cypress/results/screenshots/screenshots-{worker}"
-    videos_path = f"cypress/results/videos/videos-{worker}"
 
     log_dir = worker_log_dir(worker)
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -492,11 +491,7 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
         "--expose",
         f"backendUrl=http://localhost:{api_port}",
         "--config",
-        (
-            f"baseUrl=http://localhost:{front_port},"
-            f"screenshotsFolder={screenshots_path},"
-            f"videosFolder={videos_path}"
-        ),
+        (f"baseUrl=http://localhost:{front_port},screenshotsFolder={screenshots_path}"),
     ]
     log(f"Worker {worker}: launching Cypress ({spec_count} spec(s))...")
 
