@@ -61,7 +61,7 @@ def test_note_report_response_note_deleted_default_false():
         battlegroup=1,
         node_number=5,
         note_content="content",
-        status=NoteReportStatus.pending,
+        status=NoteReportStatus.PENDING,
         created_at=utcnow(),
     )
     assert report.note_deleted is False

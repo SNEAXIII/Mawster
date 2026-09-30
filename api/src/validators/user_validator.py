@@ -1,8 +1,4 @@
-import email_validator
-from email_validator import EmailSyntaxError
-
 from src.Messages.user_messages import (
-    EMAIL_INVALID,
     LOGIN_NON_ALPHANUM,
     LOGIN_WRONG_SIZE,
     NOT_STR,
@@ -21,14 +17,3 @@ def login_validator(login: str) -> str:
     if not login.isalnum():
         raise ValueError(LOGIN_NON_ALPHANUM)
     return login
-
-
-def correct_email_validator(email: str) -> str:
-    if not isinstance(email, str):
-        raise ValueError(NOT_STR)
-    email = email.strip()
-    try:
-        email_validator.validate_email(email)
-    except EmailSyntaxError:
-        raise EmailSyntaxError(EMAIL_INVALID) from None
-    return email

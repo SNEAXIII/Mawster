@@ -67,8 +67,9 @@ class ChampionUserService:
             return 0
         return ascension
 
-    @staticmethod
+    @classmethod
     async def _upsert(
+        cls,
         session: SessionDep,
         game_account_id: uuid.UUID,
         champion_id: uuid.UUID,
@@ -83,7 +84,17 @@ class ChampionUserService:
                 ChampionUser.stars == stars,
             )
         )
-        entry = existing.first()
+        return cls._merge(session, existing.first(), game_account_id, champion_id, stars, **fields)
+
+    @staticmethod
+    def _merge(
+        session: SessionDep,
+        entry: ChampionUser | None,
+        game_account_id: uuid.UUID,
+        champion_id: uuid.UUID,
+        stars: int,
+        **fields: int | bool,
+    ) -> ChampionUser:
         if entry is None:
             entry = ChampionUser(
                 game_account_id=game_account_id, champion_id=champion_id, stars=stars, **fields
@@ -142,6 +153,19 @@ class ChampionUserService:
         if await session.get(GameAccount, game_account_id) is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_FOUND)
 
+        names = {entry["champion_name"] for entry in champions}
+        by_name = {
+            c.name: c
+            for c in (await session.exec(select(Champion).where(Champion.name.in_(names)))).all()  # type: ignore[attr-defined]
+        }
+        roster: dict[tuple[uuid.UUID, int], ChampionUser] = {}
+        for row in (
+            await session.exec(
+                select(ChampionUser).where(ChampionUser.game_account_id == game_account_id)
+            )
+        ).all():
+            roster.setdefault((row.champion_id, row.stars), row)
+
         results = []
         seen = set()  # (champion_name_lower, stars) tuples already processed
 
@@ -158,42 +182,40 @@ class ChampionUserService:
                 continue
             seen.add(key)
 
-            # Resolve champion by name
-            champion = await ChampionService.get_champion_by_name(session, champion_name)
+            # A name the collation matches but not byte for byte falls back to the single lookup.
+            champion = by_name.get(champion_name) or await ChampionService.get_champion_by_name(
+                session, champion_name
+            )
             if champion is None:
                 raise HTTPException(
                     status.HTTP_404_NOT_FOUND, champion_name_not_found(champion_name)
                 )
 
-            results.append(
-                await cls._upsert(
-                    session,
-                    game_account_id,
-                    champion.id,
-                    stars,
-                    rank=rank,
-                    signature=signature,
-                    is_preferred_attacker=entry.get("is_preferred_attacker", False),
-                    ascension=cls._validate_ascension(entry.get("ascension", 0), champion),
-                )
+            key = (champion.id, stars)
+            roster[key] = cls._merge(
+                session,
+                roster.get(key),
+                game_account_id,
+                champion.id,
+                stars,
+                rank=rank,
+                signature=signature,
+                is_preferred_attacker=entry.get("is_preferred_attacker", False),
+                ascension=cls._validate_ascension(entry.get("ascension", 0), champion),
             )
+            results.append(roster[key])
 
         await session.commit()
-        for r in results:
-            await session.refresh(r)
-            await UpgradeRequestService.auto_complete_for_champion_user(session, r)
+        ids = [r.id for r in results]
+        await UpgradeRequestService.auto_complete_for_champion_users(session, ids)
 
-        # ponytail: one reload query per row; batch with `in_` once the mock test stops pinning it.
-        refreshed = []
-        for r in results:
-            stmt = (
-                select(ChampionUser)
-                .where(ChampionUser.id == r.id)
-                .options(selectinload(ChampionUser.champion))  # type: ignore[arg-type]
-            )
-            res = await session.exec(stmt)
-            refreshed.append(res.one())
-        return refreshed
+        loaded = await session.exec(
+            select(ChampionUser)
+            .where(ChampionUser.id.in_(ids))  # type: ignore[attr-defined]
+            .options(selectinload(ChampionUser.champion))  # type: ignore[arg-type]
+        )
+        by_id = {cu.id: cu for cu in loaded.all()}
+        return [by_id[i] for i in ids]
 
     @classmethod
     async def get_roster_by_game_account(
@@ -290,16 +312,3 @@ class ChampionUserService:
         await session.commit()
         await session.refresh(champion_user)
         return champion_user
-
-    @classmethod
-    async def delete_roster(cls, session: SessionDep, game_account_id: uuid.UUID) -> int:
-        """Delete all roster entries for a game account. Returns count deleted."""
-        sql = select(ChampionUser).where(ChampionUser.game_account_id == game_account_id)
-        result = await session.exec(sql)
-        entries = result.all()
-        count = len(entries)
-        await DefensePlanService.release_champion_users(session, [e.id for e in entries])
-        for entry in entries:
-            await session.delete(entry)
-        await session.commit()
-        return count

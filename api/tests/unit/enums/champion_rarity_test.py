@@ -38,12 +38,3 @@ class TestFromCode:
     @pytest.mark.parametrize("code", ["invalid", "", "8r1", "6r1", "7r7", "7-3"])
     def test_rejects_non_rarities(self, code):
         assert ChampionRarity.from_code(code) is None
-
-
-class TestFromParts:
-    def test_known_pair(self):
-        assert ChampionRarity.from_parts(7, 4) is ChampionRarity.SEVEN_R4
-
-    def test_pair_outside_the_requestable_range(self):
-        """6r1 is a real champion state, but not something an officer can request."""
-        assert ChampionRarity.from_parts(6, 1) is None

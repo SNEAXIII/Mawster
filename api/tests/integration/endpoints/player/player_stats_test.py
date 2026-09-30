@@ -36,14 +36,14 @@ async def _setup_with_fight():
     alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
     champ = await push_champion(name="Spider-Man", champion_class="Science")
     defender = await push_champion(name="Venom", champion_class="Cosmic")
-    season = Season(number=64, status=SeasonStatus.ended)
+    season = Season(number=64, status=SeasonStatus.ENDED)
     war = War(
         id=uuid.uuid4(),
         alliance_id=alliance.id,
         opponent_name="Enemy",
         created_by_id=owner.id,
         season_id=season.id,
-        status=WarStatus.ended,
+        status=WarStatus.ENDED,
     )
     await load_objects([season, war])
     cu = await push_champion_user(owner, champ)

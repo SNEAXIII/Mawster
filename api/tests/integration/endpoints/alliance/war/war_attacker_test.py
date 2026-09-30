@@ -56,7 +56,7 @@ async def _available_names(data) -> list[str]:
     return [a["champion_name"] for a in response.json()]
 
 
-async def _plan_wolverine(data, fmt: SeasonFormat = SeasonFormat.regular, active: bool = True):
+async def _plan_wolverine(data, fmt: SeasonFormat = SeasonFormat.REGULAR, active: bool = True):
     plan = await push_plan(data["alliance"].id, battlegroup=1, fmt=fmt, active=active)
     await push_plan_node(plan, 5, data["champion_user"])
 
@@ -464,7 +464,7 @@ class TestAssignAttacker:
     @pytest.mark.asyncio
     async def test_active_plan_of_other_format_does_not_block(self):
         data = await _setup_attacker_scenario()
-        await _plan_wolverine(data, fmt=SeasonFormat.big_thing)
+        await _plan_wolverine(data, fmt=SeasonFormat.BIG_THING)
         response = await _assign(data)
         assert response.status_code == 200
 

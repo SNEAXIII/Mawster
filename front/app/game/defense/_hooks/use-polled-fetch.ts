@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import { useVisiblePoll } from '@/hooks/use-visible-poll'
@@ -44,7 +44,8 @@ export function usePolledFetch(
 
   const resetPollTimer = useVisiblePoll(() => refreshRef.current(true), 10_000, pollEnabled)
 
-  useEffect(() => {
+  // Layout effect: `loading` must flip before paint, or an empty grid shows then remounts.
+  useLayoutEffect(() => {
     void refresh()
     resetPollTimer()
     // oxlint-disable-next-line react/exhaustive-deps -- resetPollTimer is stable

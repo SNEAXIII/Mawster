@@ -26,7 +26,7 @@ class War(UUIDBase, SeasonFk, AllianceFk, TimestampMixin, table=True):
     __tablename__ = "war"
 
     opponent_name: str = Field(max_length=100)
-    status: WarStatus = Field(default=WarStatus.active)
+    status: WarStatus = Field(default=WarStatus.ACTIVE)
     created_by_id: uuid.UUID = Field(foreign_key=FK_GAME_ACCOUNT)
     win: bool | None = Field(default=None)
     # Enemy deaths on our defense: nothing tracks them, an officer types the total in.

@@ -3,14 +3,14 @@ name: release-pr
 description: >
   Promeut `main` vers `release` (production) ou `staging` et déclenche le déploiement : merge la
   PR release-please, ouvre et merge la PR de promotion, surveille le run jusqu'au déploiement.
-  Jamais pour une branche de feature — pour ça, voir `make-pr`.
+  Jamais pour une branche de feature — pour ça, voir `git:make-pr`.
 user-invocable: true
 ---
 
 # Release PR
 
 Promotion de `main` vers une branche de déploiement. **Ce skill ne sert jamais à ouvrir la PR
-d'une feature** : `main` ← feature, c'est `/make-pr`.
+d'une feature** : `main` ← feature, c'est `/git:make-pr`.
 
 ## Le pipeline, en une phrase
 
@@ -183,4 +183,4 @@ nommer le job rouge et donner l'URL. **Ne pas diagnostiquer ni corriger** — la
   force-push sa branche à chaque commit sur `main` et efface toute retouche antérieure.
 - Jamais d'édition manuelle de `.release-please-manifest.json`, `version.txt` ni de la version
   dans `api/main.py` : release-please les possède.
-- Une PR de feature ne passe pas par ici : `/make-pr`.
+- Une PR de feature ne passe pas par ici : `/git:make-pr`.

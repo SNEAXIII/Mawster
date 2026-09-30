@@ -30,7 +30,7 @@ def _mock_session(mocker):
     session.add = mocker.MagicMock()
     # Prevent UpgradeRequestService.auto_complete from interfering with unit tests
     mocker.patch(
-        "src.services.account.game.ChampionUserService.UpgradeRequestService.auto_complete_for_champion_user",
+        "src.services.account.game.ChampionUserService.UpgradeRequestService.auto_complete_for_champion_users",
         return_value=None,
     )
     return session
@@ -183,31 +183,22 @@ class TestCreateChampionUser:
 # =========================================================================
 
 
+def _bulk_session(mocker, champions: list[Champion], roster: list[ChampionUser]):
+    """Session answering the three bulk queries: champions by name, roster, reload."""
+    session = _mock_session(mocker)
+    session.get.return_value = _make_game_account()
+    results = [mocker.MagicMock() for _ in range(3)]
+    results[0].all.return_value = champions
+    results[1].all.return_value = roster
+    results[2].all.side_effect = lambda: [c.args[0] for c in session.add.call_args_list]
+    session.exec.side_effect = results
+    return session
+
+
 class TestBulkAddChampions:
     @pytest.mark.asyncio
     async def test_bulk_add_ok(self, mocker):
-        session = _mock_session(mocker)
-        session.get.return_value = _make_game_account()
-        # Mock ChampionService.get_champion_by_name to return a champion
-        champion = _make_champion()
-        mocker.patch(
-            MOCK_GET_CHAMPION_BY_NAME,
-            return_value=champion,
-        )
-        # No existing entries (.first() returns None for each check)
-        check_mock_1 = mocker.MagicMock()
-        check_mock_1.first.return_value = None
-        check_mock_2 = mocker.MagicMock()
-        check_mock_2.first.return_value = None
-        # Eager-loading after commit (.one() returns the champion_user)
-        cu_1 = _make_champion_user(rarity="6r4", signature=0)
-        cu_2 = _make_champion_user(rarity="7r3", signature=200)
-        load_mock_1 = mocker.MagicMock()
-        load_mock_1.one.return_value = cu_1
-        load_mock_2 = mocker.MagicMock()
-        load_mock_2.one.return_value = cu_2
-        session.exec.side_effect = [check_mock_1, check_mock_2, load_mock_1, load_mock_2]
-
+        session = _bulk_session(mocker, [_make_champion()], [])
         champions = [
             {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 0},
             {"champion_name": "Spider-Man", "rarity": "7r3", "signature": 200},
@@ -215,29 +206,14 @@ class TestBulkAddChampions:
 
         results = await ChampionUserService.bulk_add_champions(session, GAME_ACCOUNT_ID, champions)
 
-        assert len(results) == 2
-        assert results[0].rarity == "6r4"
-        assert results[1].rarity == "7r3"
+        assert [r.rarity for r in results] == ["6r4", "7r3"]
+        assert session.exec.await_count == 3
         session.commit.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_bulk_dedup_same_request(self, mocker):
         """If same champion+rarity appears twice, only first occurrence is kept."""
-        session = _mock_session(mocker)
-        session.get.return_value = _make_game_account()
-        champion = _make_champion()
-        mocker.patch(
-            MOCK_GET_CHAMPION_BY_NAME,
-            return_value=champion,
-        )
-        # Only 1 unique entry after dedup
-        check_mock = mocker.MagicMock()
-        check_mock.first.return_value = None
-        cu = _make_champion_user(rarity="6r4", signature=100)
-        load_mock = mocker.MagicMock()
-        load_mock.one.return_value = cu
-        session.exec.side_effect = [check_mock, load_mock]
-
+        session = _bulk_session(mocker, [_make_champion()], [])
         champions = [
             {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 100},
             {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 200},  # duplicate
@@ -251,31 +227,16 @@ class TestBulkAddChampions:
     @pytest.mark.asyncio
     async def test_bulk_updates_existing_in_db(self, mocker):
         """If champion+rarity already in DB, update its signature."""
-        session = _mock_session(mocker)
         existing = _make_champion_user(rarity="6r4", signature=0)
-        session.get.return_value = _make_game_account()
-        champion = _make_champion()
-        mocker.patch(
-            MOCK_GET_CHAMPION_BY_NAME,
-            return_value=champion,
-        )
-        # Check existing returns the existing entry
-        check_mock = mocker.MagicMock()
-        check_mock.first.return_value = existing
-        # Eager-loading returns updated entry
-        updated = _make_champion_user(rarity="6r4", signature=200)
-        load_mock = mocker.MagicMock()
-        load_mock.one.return_value = updated
-        session.exec.side_effect = [check_mock, load_mock]
-
+        session = _bulk_session(mocker, [_make_champion()], [existing])
         champions = [
             {"champion_name": "Spider-Man", "rarity": "6r4", "signature": 200},
         ]
 
         results = await ChampionUserService.bulk_add_champions(session, GAME_ACCOUNT_ID, champions)
 
-        assert len(results) == 1
-        assert results[0].signature == 200
+        assert results == [existing]
+        assert existing.signature == 200
 
     @pytest.mark.asyncio
     async def test_bulk_game_account_not_found(self, mocker):
@@ -290,8 +251,7 @@ class TestBulkAddChampions:
 
     @pytest.mark.asyncio
     async def test_bulk_invalid_rarity(self, mocker):
-        session = _mock_session(mocker)
-        session.get.return_value = _make_game_account()
+        session = _bulk_session(mocker, [], [])
 
         with pytest.raises(HTTPException) as exc:
             await ChampionUserService.bulk_add_champions(
@@ -301,8 +261,7 @@ class TestBulkAddChampions:
 
     @pytest.mark.asyncio
     async def test_bulk_champion_not_found(self, mocker):
-        session = _mock_session(mocker)
-        session.get.return_value = _make_game_account()
+        session = _bulk_session(mocker, [], [])
         mocker.patch(
             MOCK_GET_CHAMPION_BY_NAME,
             return_value=None,
@@ -423,41 +382,6 @@ class TestDeleteChampionUser:
         session.flush.assert_awaited_once()
         session.delete.assert_awaited_once_with(entry)
         session.commit.assert_awaited_once()
-
-
-# =========================================================================
-# delete_roster
-# =========================================================================
-
-
-class TestDeleteRoster:
-    @pytest.mark.asyncio
-    async def test_delete_roster_ok(self, mocker):
-        session = _mock_session(mocker)
-        entries = [_make_champion_user(), _make_champion_user(rarity="7r1")]
-        roster_result = mocker.MagicMock()
-        roster_result.all.return_value = entries
-        # release_champion_users finds no defense plan node to release
-        release_result = mocker.MagicMock()
-        release_result.all.return_value = []
-        session.exec.side_effect = [roster_result, release_result]
-
-        count = await ChampionUserService.delete_roster(session, GAME_ACCOUNT_ID)
-
-        assert count == 2
-        assert session.delete.await_count == 2
-        session.commit.assert_awaited_once()
-
-    @pytest.mark.asyncio
-    async def test_delete_roster_empty(self, mocker):
-        session = _mock_session(mocker)
-        result_mock = mocker.MagicMock()
-        result_mock.all.return_value = []
-        session.exec.return_value = result_mock
-
-        count = await ChampionUserService.delete_roster(session, GAME_ACCOUNT_ID)
-
-        assert count == 0
 
 
 # =========================================================================

@@ -7,9 +7,6 @@ WAR_NOT_FOUND = "War not found"
 CHAMPION_NOT_FOUND = "Champion not found"
 CHAMPION_USER_NOT_FOUND = "Champion user not found"
 TARGET_CHAMPION_USER_NOT_FOUND = "Target champion user not found"
-CHAMPION_ALREADY_PLACED_IN_BG = (
-    "This champion is already placed on another node in this battlegroup"
-)
 NO_DEFENDER_ON_NODE = "No defender on this node"
 NODE_HAS_NO_DEFENDER_PLACE_FIRST = "This node has no defender — place a defender first"
 CHAMPION_NOT_IN_ALLIANCE_BG = (
@@ -26,9 +23,6 @@ TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER = (
 )
 SYNERGY_PROVIDER_CANNOT_BE_TARGET = (
     "Synergy provider cannot be the same champion as the target attacker"
-)
-SYNERGY_PROVIDER_MUST_MATCH_TARGET_ACCOUNT = (
-    "Synergy provider must belong to the same game account as the target attacker"
 )
 CHAMPION_ALREADY_SYNERGY_PROVIDER = "This champion is already a synergy provider in this war+BG"
 SYNERGY_ATTACKER_NOT_FOUND = "Synergy attacker not found"

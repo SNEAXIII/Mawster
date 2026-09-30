@@ -697,7 +697,7 @@ class TestRequireVisitor:
 
 
 # =========================================================================
-# get_user_account_in_alliance — 403 when not a member (line 70)
+# delete_alliance — stale officer row
 # =========================================================================
 
 

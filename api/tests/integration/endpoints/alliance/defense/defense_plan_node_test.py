@@ -19,7 +19,7 @@ from tests.utils.utils_db import load_objects
 
 OWNER = create_auth_headers(user_id=str(USER_ID))
 MEMBER = create_auth_headers(user_id=str(USER2_ID))
-BIG = SeasonFormat.big_thing
+BIG = SeasonFormat.BIG_THING
 
 
 def _node(alliance_id, plan_id, node: int) -> str:

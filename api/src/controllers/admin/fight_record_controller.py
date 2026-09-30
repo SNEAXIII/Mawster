@@ -49,7 +49,7 @@ async def list_fight_records(
     planning_error_only: Annotated[bool | None, Query()] = None,
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1, le=100)] = 20,
-    source: Annotated[FightRecordSource, Query()] = FightRecordSource.All,
+    source: Annotated[FightRecordSource, Query()] = FightRecordSource.ALL,
     sort_by: Annotated[
         sort_literal,
         Query(),

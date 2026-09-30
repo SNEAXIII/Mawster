@@ -23,15 +23,11 @@ Usage:
 import json
 from pathlib import Path
 
-from sqlmodel import Session, create_engine, select
+from sqlmodel import Session, select
 
+from src.fixtures import sync_engine
 from src.fixtures.paths import json_path_from_argv
 from src.models.champion.Champion import Champion
-from src.security.secrets import SECRET
-
-sync_engine = create_engine(
-    f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}:{SECRET.MARIADB_PORT}/{SECRET.MARIADB_DATABASE}",
-)
 
 DEFAULT_JSON_PATH = Path(__file__).parent.parent.parent / "src" / "fixtures" / "champions.json"
 

@@ -9,7 +9,6 @@ from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceOfficer import AllianceOfficer
 from src.models.user.GameAccount import GameAccount
 from src.services.alliance.AllianceService import (
-    MAX_MEMBERS_PER_ALLIANCE,
     MAX_MEMBERS_PER_GROUP,
     AllianceService,
 )
@@ -61,55 +60,6 @@ def _make_officer(alliance_id, game_account_id):
         alliance_id=alliance_id,
         game_account_id=game_account_id,
     )
-
-
-# =========================================================================
-# _assert_is_owner_or_officer
-# =========================================================================
-
-
-class TestAssertIsOwnerOrOfficer:
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ("is_owner", "is_officer", "should_pass"),
-        [
-            (True, False, True),
-            (False, True, True),
-            (False, False, False),
-        ],
-        ids=["owner_passes", "officer_passes", "regular_denied"],
-    )
-    async def test_access_check(self, mocker, is_owner, is_officer, should_pass):
-        session = _mock_session(mocker)
-        owner_acc = _make_account(user_id=USER_ID)
-        officer_acc = _make_account(user_id=USER2_ID, pseudo=GAME_PSEUDO_2)
-        alliance = _make_alliance(
-            owner_id=owner_acc.id,
-            officers=[_make_officer(uuid.uuid4(), officer_acc.id)]
-            if is_officer or not is_owner
-            else [],
-        )
-
-        if is_owner:
-            caller_id = USER_ID
-            caller_accounts = [owner_acc]
-        elif is_officer:
-            caller_id = USER2_ID
-            caller_accounts = [officer_acc]
-        else:
-            caller_id = uuid.uuid4()
-            caller_accounts = [_make_account(user_id=caller_id, pseudo="outsider")]
-
-        result_mock = mocker.MagicMock()
-        result_mock.all.return_value = caller_accounts
-        session.exec.return_value = result_mock
-
-        if should_pass:
-            await AllianceService._assert_is_owner_or_officer(session, alliance, caller_id)
-        else:
-            with pytest.raises(HTTPException) as exc:
-                await AllianceService._assert_is_owner_or_officer(session, alliance, caller_id)
-            assert exc.value.status_code == 403
 
 
 # =========================================================================
@@ -239,62 +189,6 @@ class TestCreateAlliance:
             result = await AllianceService.create_alliance(
                 session, ALLIANCE_NAME, ALLIANCE_TAG, owner_id, USER_ID
             )
-            assert result is not None
-
-
-# =========================================================================
-# add_member
-# =========================================================================
-
-
-class TestAddMember:
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ("account_exists", "already_in_alliance", "current_member_count", "expected_status"),
-        [
-            (True, False, 0, None),
-            (False, False, 0, 404),
-            (True, True, 0, 409),
-            (True, False, MAX_MEMBERS_PER_ALLIANCE, 409),
-        ],
-        ids=["success", "account_not_found", "already_in_alliance", "alliance_full"],
-    )
-    async def test_add_member(
-        self, mocker, account_exists, already_in_alliance, current_member_count, expected_status
-    ):
-        session = _mock_session(mocker)
-        alliance_id = uuid.uuid4()
-        ga_id = uuid.uuid4()
-
-        if account_exists:
-            acc = _make_account(
-                account_id=ga_id,
-                alliance_id=uuid.uuid4() if already_in_alliance else None,
-            )
-        else:
-            acc = None
-
-        session.get.return_value = acc
-
-        # Mock the member count query (used after account checks pass)
-        if account_exists and not already_in_alliance:
-            count_mock = mocker.MagicMock()
-            count_mock.one.return_value = current_member_count
-            session.exec.return_value = count_mock
-
-        if expected_status is None:
-            mocker.patch.object(
-                AllianceService,
-                "_load_alliance_with_relations",
-                return_value=_make_alliance(owner_id=uuid.uuid4(), alliance_id=alliance_id),
-            )
-
-        if expected_status is not None:
-            with pytest.raises(HTTPException) as exc:
-                await AllianceService.add_member(session, alliance_id, ga_id)
-            assert exc.value.status_code == expected_status
-        else:
-            result = await AllianceService.add_member(session, alliance_id, ga_id)
             assert result is not None
 
 

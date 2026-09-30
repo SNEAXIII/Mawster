@@ -27,10 +27,10 @@ def _war(status: WarStatus, season_id: uuid.UUID | None = None) -> War:
 
 class TestAssertOpen:
     def test_running_war_passes(self):
-        ClosedWarPolicy.assert_open(_war(WarStatus.active))
+        ClosedWarPolicy.assert_open(_war(WarStatus.ACTIVE))
 
     def test_closed_war_conflicts(self):
-        war = _war(WarStatus.ended)
+        war = _war(WarStatus.ENDED)
         with pytest.raises(HTTPException) as exc:
             ClosedWarPolicy.assert_open(war)
         assert exc.value.status_code == 409
@@ -38,22 +38,22 @@ class TestAssertOpen:
 
 class TestIsMapCorrectable:
     def test_running_war_is_always_correctable(self):
-        assert ClosedWarPolicy.is_map_correctable(_war(WarStatus.active), None)
+        assert ClosedWarPolicy.is_map_correctable(_war(WarStatus.ACTIVE), None)
 
     def test_closed_war_of_latest_season_is_correctable(self):
-        season = Season(id=uuid.uuid4(), number=12, status=SeasonStatus.ended)
-        assert ClosedWarPolicy.is_map_correctable(_war(WarStatus.ended, season.id), season)
+        season = Season(id=uuid.uuid4(), number=12, status=SeasonStatus.ENDED)
+        assert ClosedWarPolicy.is_map_correctable(_war(WarStatus.ENDED, season.id), season)
 
     def test_closed_war_of_older_season_is_sealed(self):
-        latest = Season(id=uuid.uuid4(), number=13, status=SeasonStatus.active)
-        assert not ClosedWarPolicy.is_map_correctable(_war(WarStatus.ended, uuid.uuid4()), latest)
+        latest = Season(id=uuid.uuid4(), number=13, status=SeasonStatus.ACTIVE)
+        assert not ClosedWarPolicy.is_map_correctable(_war(WarStatus.ENDED, uuid.uuid4()), latest)
 
     def test_closed_off_season_war_is_sealed(self):
-        latest = Season(id=uuid.uuid4(), number=12, status=SeasonStatus.active)
-        assert not ClosedWarPolicy.is_map_correctable(_war(WarStatus.ended, None), latest)
+        latest = Season(id=uuid.uuid4(), number=12, status=SeasonStatus.ACTIVE)
+        assert not ClosedWarPolicy.is_map_correctable(_war(WarStatus.ENDED, None), latest)
 
     def test_closed_war_without_any_season_is_sealed(self):
-        assert not ClosedWarPolicy.is_map_correctable(_war(WarStatus.ended, uuid.uuid4()), None)
+        assert not ClosedWarPolicy.is_map_correctable(_war(WarStatus.ENDED, uuid.uuid4()), None)
 
 
 def _fought_node(war: War, alliance_id, group: int | None) -> WarDefensePlacement:
@@ -71,23 +71,23 @@ def _fought_node(war: War, alliance_id, group: int | None) -> WarDefensePlacemen
 
 class TestIsAttackerLocked:
     def test_running_war_never_locks(self):
-        war = _war(WarStatus.active)
+        war = _war(WarStatus.ACTIVE)
         assert not ClosedWarPolicy.is_attacker_locked(war, _fought_node(war, None, None))
 
     def test_closed_war_player_still_in_battlegroup(self):
-        war = _war(WarStatus.ended)
+        war = _war(WarStatus.ENDED)
         assert not ClosedWarPolicy.is_attacker_locked(war, _fought_node(war, war.alliance_id, 2))
 
     def test_closed_war_player_moved_battlegroup(self):
-        war = _war(WarStatus.ended)
+        war = _war(WarStatus.ENDED)
         assert ClosedWarPolicy.is_attacker_locked(war, _fought_node(war, war.alliance_id, 3))
 
     def test_closed_war_player_left_alliance(self):
-        war = _war(WarStatus.ended)
+        war = _war(WarStatus.ENDED)
         assert ClosedWarPolicy.is_attacker_locked(war, _fought_node(war, None, None))
 
     def test_node_without_attacker(self):
-        war = _war(WarStatus.ended)
+        war = _war(WarStatus.ENDED)
         placement = WarDefensePlacement(
             war_id=war.id, battlegroup=2, node_number=1, champion_id=uuid.uuid4(), stars=7, rank=3
         )

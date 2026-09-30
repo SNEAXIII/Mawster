@@ -398,6 +398,34 @@ class TestBulkAddChampions:
         assert body[0]["signature"] == 200
 
     @pytest.mark.asyncio
+    async def test_bulk_mixes_inserts_and_updates_in_input_order(self):
+        await push_one_user()
+        acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+        spider = await push_champion("Spider-Man", "Science")
+        await push_champion("Wolverine", "Mutant")
+        await push_champion("Hulk", "Science")
+        existing = await _push_champion_user(acc.id, spider.id, "6r4")
+
+        response = await execute_post_request(
+            f"{CHAMPION_USERS_ROUTE}/bulk",
+            {
+                "game_account_id": str(acc.id),
+                "champions": [
+                    {"champion_name": "Wolverine", "rarity": "7r3"},
+                    {"champion_name": "Spider-Man", "rarity": "6r5", "signature": 20},
+                    {"champion_name": "Hulk", "rarity": "6r4"},
+                ],
+            },
+            headers=HEADERS,
+        )
+
+        assert response.status_code == 201
+        body = response.json()
+        assert [e["champion_name"] for e in body] == ["Wolverine", "Spider-Man", "Hulk"]
+        assert body[1]["id"] == str(existing.id)
+        assert (body[1]["rarity"], body[1]["signature"]) == ("6r5", 20)
+
+    @pytest.mark.asyncio
     async def test_bulk_not_own_account_returns_403(self):
         await push_one_user()
         await push_user2()

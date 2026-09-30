@@ -8,7 +8,6 @@ from starlette import status
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.InvitationType import InvitationType
 from src.Messages.invitation_messages import (
-    GAME_ACCOUNT_ALREADY_IN_ALLIANCE,
     GAME_ACCOUNT_NOT_FOUND,
     INVITATION_NO_LONGER_PENDING,
     INVITATION_NOT_FOR_YOUR_GAME_ACCOUNT,
@@ -100,8 +99,7 @@ class AllianceInvitationService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_FOUND)
 
         if invitation_type == InvitationType.MEMBER:
-            if game_account.alliance_id is not None:
-                raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_ALREADY_IN_ALLIANCE)
+            AllianceService.assert_not_in_alliance(game_account)
             await AllianceService.assert_room_for_member(session, alliance_id)
         else:
             await cls._assert_can_become_visitor(session, alliance_id, game_account_id)
@@ -182,8 +180,7 @@ class AllianceInvitationService:
             return await cls._respond(session, invitation, InvitationStatus.ACCEPTED)
 
         game_account = await session.get(GameAccount, invitation.game_account_id)
-        if game_account.alliance_id is not None:
-            raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_ALREADY_IN_ALLIANCE)
+        AllianceService.assert_not_in_alliance(game_account)
         await AllianceService.assert_room_for_member(session, invitation.alliance_id)
         await AllianceVisitorService.remove_if_visitor(
             session, invitation.alliance_id, invitation.game_account_id

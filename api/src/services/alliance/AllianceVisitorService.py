@@ -6,11 +6,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from starlette import status
 
-from src.Messages.visitor_messages import (
-    ALREADY_A_VISITOR,
-    NOT_A_VISITOR,
-    alliance_max_visitors_reached,
-)
+from src.Messages.visitor_messages import NOT_A_VISITOR
 from src.models.alliance.AllianceVisitor import AllianceVisitor
 from src.models.user.GameAccount import GameAccount
 from src.utils.db import SessionDep
@@ -46,30 +42,6 @@ class AllianceVisitorService:
             await AllianceVisitorService.find_visitor(session, alliance_id, game_account_id)
             is not None
         )
-
-    @classmethod
-    async def create_visitor(
-        cls,
-        session: SessionDep,
-        alliance_id: uuid.UUID,
-        game_account_id: uuid.UUID,
-    ) -> AllianceVisitor:
-        existing = await cls.find_visitor(session, alliance_id, game_account_id)
-        if existing is not None:
-            raise HTTPException(status.HTTP_409_CONFLICT, ALREADY_A_VISITOR)
-        count = await cls.count_visitors(session, alliance_id)
-        if count >= MAX_VISITORS_PER_ALLIANCE:
-            raise HTTPException(
-                status.HTTP_409_CONFLICT, alliance_max_visitors_reached(MAX_VISITORS_PER_ALLIANCE)
-            )
-        visitor = AllianceVisitor(
-            alliance_id=alliance_id,
-            game_account_id=game_account_id,
-        )
-        session.add(visitor)
-        await session.commit()
-        await session.refresh(visitor)
-        return visitor
 
     @classmethod
     async def remove_visitor(

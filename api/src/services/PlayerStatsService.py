@@ -61,7 +61,7 @@ class PlayerStatsService:
                 ChampionUser.id == WarDefensePlacement.attacker_champion_user_id,
             )
             .where(ChampionUser.game_account_id == game_account_id)
-            .where(War.status == WarStatus.ended),
+            .where(War.status == WarStatus.ENDED),
             select(Season.id)
             .join(War, War.season_id == Season.id)
             .join(WarDefensePlacement, WarDefensePlacement.war_id == War.id)
@@ -70,7 +70,7 @@ class PlayerStatsService:
                 ChampionUser.id == WarDefensePlacement.assist_champion_user_id,
             )
             .where(ChampionUser.game_account_id == game_account_id)
-            .where(War.status == WarStatus.ended),
+            .where(War.status == WarStatus.ENDED),
         ).subquery()
 
         stmt = (
@@ -107,7 +107,7 @@ class PlayerStatsService:
         await cls.assert_can_view_account(session, current_user, game_account_id)
 
         # Joined through the attacker or the assist champion, depending on the query.
-        conds = [ChampionUser.game_account_id == game_account_id, War.status == WarStatus.ended]
+        conds = [ChampionUser.game_account_id == game_account_id, War.status == WarStatus.ENDED]
         if season_id is not None:
             conds.append(War.season_id == season_id)
         # Assists never move the ratio: it is attacker-only, as for the alliance.
@@ -256,7 +256,7 @@ class PlayerStatsService:
             )
             .where(
                 ChampionUser.game_account_id == game_account_id,
-                War.status == WarStatus.ended,
+                War.status == WarStatus.ENDED,
                 War.season_id.is_not(None),
                 WarDefensePlacement.is_planning_error.is_(False),
             )

@@ -118,7 +118,7 @@ async def _count_pending(session, note_id):
             .where(
                 and_(
                     NoteReport.note_id == note_id,
-                    NoteReport.status == NoteReportStatus.pending,
+                    NoteReport.status == NoteReportStatus.PENDING,
                 )
             )
         )
@@ -139,7 +139,7 @@ async def test_report_note_creates_pending(session):
         body=NoteReportCreateRequest(reason="bad"),
     )
 
-    assert report.status == NoteReportStatus.pending
+    assert report.status == NoteReportStatus.PENDING
     assert await _count_pending(session, note.id) == 1
 
 
@@ -329,7 +329,7 @@ async def test_resolve_delete_soft_deletes_note(session):
     await session.refresh(note)
     await session.refresh(report)
     assert note.deleted_at is not None
-    assert report.status == NoteReportStatus.resolved
+    assert report.status == NoteReportStatus.RESOLVED
 
 
 @pytest.mark.asyncio
@@ -564,7 +564,7 @@ async def test_dismiss_then_edit_allows_rereport(session):
 
     # Editing cleared the whitelist: reporting is allowed again.
     new_report = await _push_pending_report(session, note.id, reporter)
-    assert new_report.status == NoteReportStatus.pending
+    assert new_report.status == NoteReportStatus.PENDING
 
 
 @pytest.mark.asyncio
@@ -625,7 +625,7 @@ async def test_resolve_dismiss_whitelists_note(session):
     await session.refresh(note)
     await session.refresh(report)
     assert note.whitelisted_at is not None
-    assert report.status == NoteReportStatus.dismissed
+    assert report.status == NoteReportStatus.DISMISSED
 
 
 @pytest.mark.asyncio

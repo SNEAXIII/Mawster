@@ -13,7 +13,6 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette import status
-from starlette.middleware.base import _StreamingResponse
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
@@ -64,7 +63,7 @@ async def lifespan(_: FastAPI):
     await consumer.stop()
 
 
-app = FastAPI(title="Mawster", version="1.22.2", lifespan=lifespan)  # x-release-please-version
+app = FastAPI(title="Mawster", version="1.22.3", lifespan=lifespan)  # x-release-please-version
 Instrumentator().instrument(app)
 
 # Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
@@ -114,7 +113,7 @@ if IS_TESTING:
 
 @app.get("/metrics", include_in_schema=False)
 async def metrics():
-    data = await asyncio.get_event_loop().run_in_executor(None, generate_latest)
+    data = await asyncio.to_thread(generate_latest)
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
 
@@ -122,8 +121,8 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
-        title="Mawster",
-        version="1.0.0",
+        title=app.title,
+        version=app.version,
         description="Documentation for Mawster api backend",
         routes=app.routes,
     )
@@ -152,14 +151,14 @@ app.openapi = custom_openapi
 
 
 @app.middleware("http")
-async def check_user_role(
+async def log_and_audit_requests(
     request: Request,
     next_function,
 ):
     uri = request.url.path.rstrip("/")
     method = request.method
     start_time = perf_counter()
-    response: _StreamingResponse = await next_function(request)
+    response: Response = await next_function(request)
     process_time = perf_counter() - start_time
     if not IS_PROD:
         response.headers["X-Process-Time"] = str(process_time)
@@ -189,11 +188,7 @@ async def validation_exception_handler(request, exc):
     """Override default validation error for a better structure"""
     errors_dict = {}
     for error in exc.errors():
-        location_list = error.get("loc")
-        if not location_list:
-            msg = f"loc parameter is not correct:\n {error}"
-            raise ValueError(msg)
-        location = location_list[-1]
+        location = error["loc"][-1]
         error_type = error.get("type").capitalize().replace("_", " ")
         error_message = error.get("msg").removeprefix(f"{error_type}, ")
         errors_dict[location] = {"type": error.get("type"), "message": error_message}

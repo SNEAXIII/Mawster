@@ -14,8 +14,8 @@ class Season(UUIDBase, table=True):
     __tablename__ = "season"
 
     number: int = Field(unique=True)
-    status: SeasonStatus = Field(default=SeasonStatus.upcoming)
-    format: SeasonFormat = Field(default=SeasonFormat.regular)
+    status: SeasonStatus = Field(default=SeasonStatus.UPCOMING)
+    format: SeasonFormat = Field(default=SeasonFormat.REGULAR)
 
     # Relations
     saga_roles: list["ChampionSagaRole"] = Relationship(

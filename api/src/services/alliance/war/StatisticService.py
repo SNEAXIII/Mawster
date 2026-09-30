@@ -67,7 +67,7 @@ class StatisticService:
         war_scope = [
             War.season_id == target_season_id,
             War.alliance_id == alliance_id,
-            War.status == WarStatus.ended,
+            War.status == WarStatus.ENDED,
         ]
         if war_id is not None:
             war_scope.append(War.id == war_id)
@@ -270,7 +270,7 @@ class StatisticService:
             .where(
                 War.alliance_id == alliance_id,
                 War.season_id == target_season_id,
-                War.status == WarStatus.ended,
+                War.status == WarStatus.ENDED,
             )
             .group_by(
                 War.id,

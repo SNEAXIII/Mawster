@@ -4,7 +4,7 @@ technique:
     auditer la chaîne jwt : aucune révocation, aucun logout serveur, refresh de 7 jours en prod
         access 60min mais un refresh volé = 7 jours d'accès sans moyen de couper. choix assumé, jamais audité
     résorber les 16 warnings sonarjs du front puis passer la ci en --deny-warnings
-    faire lire le détail du gate sonar par /merge-pr quand il est rouge (mcp sonarqube)
+    faire lire le détail du gate sonar par /git:merge-pr quand il est rouge (mcp sonarqube)
         aujourd'hui le skill donne juste l'url du check ; get_project_quality_gate_status +
         search_sonar_issues_in_projects diraient quelle condition casse (couverture new code,
         duplication) sans ouvrir le navigateur

@@ -251,7 +251,7 @@ async def test_upsert_on_ended_war_raises_409(session):
 
     data = await _setup_war_with_placement()
     war = data["war"]
-    war.status = WarStatus.ended
+    war.status = WarStatus.ENDED
 
     body = WarFightNoteUpsertRequest(content="too late")
 

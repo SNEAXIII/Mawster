@@ -202,7 +202,7 @@ class TestStrategistWarPlacement:
     @pytest.mark.asyncio
     async def test_bare_strategist_places_a_war_defender(self):
         """Would fail (403 instead of 201) if `place_war_defender` reverted
-        to `assert_officer_or_owner_by_id` / dropped the strategist branch of
+        to `require_officer_account` / dropped the strategist branch of
         `require_strategist_account`."""
         data = await _war_with_strategist()
 

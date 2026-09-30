@@ -167,12 +167,6 @@ class AllianceRemoveStrategistRequest(BaseModel):
     game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
 
 
-class AllianceAddMemberRequest(BaseModel):
-    """DTO to add a game account as member of the alliance."""
-
-    game_account_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
-
-
 class AllianceSetGroupRequest(BaseModel):
     """DTO to assign a member to a group (1, 2, 3) or remove from group (null)."""
 

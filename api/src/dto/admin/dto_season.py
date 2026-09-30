@@ -9,7 +9,7 @@ from src.services.alliance.war.WarFormatConfig import for_format
 
 class SeasonCreateRequest(BaseModel):
     number: int = Field(..., ge=1, le=9999)
-    format: SeasonFormat = SeasonFormat.regular
+    format: SeasonFormat = SeasonFormat.REGULAR
 
 
 class SeasonResponse(BaseModel):
