@@ -88,7 +88,7 @@ export function useUsersViewModel() {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      loadUsers()
+      void loadUsers()
     }, 300)
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)

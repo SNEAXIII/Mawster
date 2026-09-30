@@ -16,7 +16,7 @@ export function usePublicStats() {
   const [stats, setStats] = useState<PublicStats>(FALLBACK_STATS)
 
   useEffect(() => {
-    getPublicStats().then((s) => {
+    void getPublicStats().then((s) => {
       if (s) setStats(s)
     })
   }, [])
