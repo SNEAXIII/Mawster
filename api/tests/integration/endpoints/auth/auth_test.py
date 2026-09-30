@@ -11,11 +11,12 @@ import re
 
 import jwt as pyjwt
 import pytest
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from main import app
 from src.enums.Roles import Roles
-from src.models import User
+from src.models import LoginLog, User
 from src.models.Base import utcnow
 from src.security.secrets import SECRET
 from src.services.auth.DiscordAuthService import DiscordAuthService
@@ -320,6 +321,21 @@ class TestDiscordLogin:
         )
         assert response.status_code == 409
         assert response.json()["message"]["code"] == "ACCOUNT_UNAVAILABLE"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("flag", ["disabled_at", "deleted_at"])
+    async def test_login_refused_when_account_unavailable(self, flag):
+        """A disabled or deleted account gets no token and no login log."""
+        existing = User(login="gonebutlinked", discord_id="1", role=Roles.USER, **{flag: utcnow()})
+        await load_objects([existing])
+
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 409
+        assert response.json()["message"]["code"] == "ACCOUNT_UNAVAILABLE"
+        async with AsyncSession(sqlite_async_engine) as session:
+            assert (await session.exec(select(LoginLog))).first() is None
 
     @pytest.mark.asyncio
     async def test_unverified_email_creates_separate_account_without_hash(self, monkeypatch):
