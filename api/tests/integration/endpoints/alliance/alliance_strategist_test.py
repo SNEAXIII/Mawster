@@ -197,7 +197,10 @@ class TestStrategistMutations:
 
         await AllianceService.add_officer(session, alliance.id, member.id)
 
-        assert await AllianceService._get_strategist_ids(session, alliance.id) == set()
+        assert (
+            await AllianceService._rank_row(session, AllianceStrategist, alliance.id, member.id)
+            is None
+        )
 
     @pytest.mark.asyncio
     async def test_demoting_an_officer_does_not_make_them_strategist(self, session):
@@ -208,7 +211,10 @@ class TestStrategistMutations:
 
         await AllianceService.remove_officer(session, alliance.id, member.id)
 
-        assert await AllianceService._get_strategist_ids(session, alliance.id) == set()
+        assert (
+            await AllianceService._rank_row(session, AllianceStrategist, alliance.id, member.id)
+            is None
+        )
         assert await AllianceService.can_place(session, USER2_ID, alliance.id) is False
 
     @pytest.mark.asyncio
@@ -220,7 +226,10 @@ class TestStrategistMutations:
 
         await AllianceService.remove_member(session, alliance.id, member.id)
 
-        assert await AllianceService._get_strategist_ids(session, alliance.id) == set()
+        assert (
+            await AllianceService._rank_row(session, AllianceStrategist, alliance.id, member.id)
+            is None
+        )
 
 
 class TestStrategistEndpoints:
