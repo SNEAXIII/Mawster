@@ -9,6 +9,9 @@ name: Test
 # jobs — which depend on no lint at all — would start a minute later for nothing.
 on:
   workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: true
 
 env:
   NODE_VERSION: '24'
@@ -69,6 +72,8 @@ jobs:
     needs: lint-test-python
     if: github.event_name == 'pull_request' || github.ref_name == 'release'
     uses: $/.github/workflows/_sonar.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   lint-front:
     name: Lint & typecheck for frontend

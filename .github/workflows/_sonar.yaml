@@ -4,6 +4,9 @@ name: Sonar scan
 # `backend-coverage` artifact (api/coverage.xml from pytest --cov).
 on:
   workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: true
 
 jobs:
   sonar:

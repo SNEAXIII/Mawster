@@ -22,6 +22,8 @@ jobs:
       pull-requests: read # _test.yaml calls _sonar.yaml
 
     uses: $/.github/workflows/_test.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   changes:
     permissions:
