@@ -33,7 +33,7 @@ before naming or modelling anything.
 
 ## Commands
 
-**Backend** (`api/`) — always via `/make` skill first, never raw `pytest`/`alembic`/`uvicorn`. Before any backend command, invoke `/make` to check available targets.
+**Backend** (`api/`) — always via `make` (targets: `make help`), never raw `pytest`/`alembic`/`uvicorn`.
 
 Single test file: `uv run pytest tests/unit/dto/dto_from_model_test.py -v`
 

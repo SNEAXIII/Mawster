@@ -83,18 +83,13 @@ l'étape 2). Le script échoue (exit ≠ 0) si :
 
 ### 5. Compilation / lint
 
-Vérifie que les fichiers générés compilent et que les imports tiennent :
-
-```bash
-cd front && npm run build      # attrape les erreurs TS / imports cassés
-```
-
+Rien à lancer à la main : le pre-commit passe `tsc` Cypress, oxlint et prettier sur les specs.
 Ne lance **pas** la suite Cypress en local — laisse la CI exécuter les specs.
 
 ## Critères de réussite
 
 - `verify_split.py` renvoie `SPLIT OK` ;
-- `npm run build` passe ;
+- le pre-commit passe ;
 - chaque nouveau fichier a un objectif clair, lisible dans son nom et le titre
   de son `describe()` ;
 - aucune logique de test modifiée — uniquement déplacée et regroupée.

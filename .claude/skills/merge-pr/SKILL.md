@@ -61,8 +61,7 @@ Rien n'est corrigé ici. Un bloquant s'expose et arrête le skill.
    - En cours (`PENDING`) : attendre par pauses de 5 s tant que l'état évolue, **plafond dur
      10 min**. Au-delà, donner l'état courant et s'arrêter.
    - Un `FAILURE` : nommer le check rouge et donner son `link`, puis s'arrêter. **Ne pas
-     diagnostiquer.** Ça vaut aussi pour le gate `Sonar` : on rapporte le verdict, pas le détail
-     des conditions (voir Dette connue).
+     diagnostiquer.** Ça vaut aussi pour le gate `Sonar`.
 5. **Worktree local** — `git status --short` sur la branche de la PR, juste avant le merge.
    Un fichier suivi modifié depuis le dernier push : s'arrêter et demander s'il fait partie de la
    PR. L'utilisateur retouche souvent la branche entre le push et le merge.
@@ -108,14 +107,6 @@ C'est le seul endroit où le skill réécrit quelque chose. Une fois confirmé, 
 
    Rapporter la version que la PR release-please porte, et proposer `/release-pr prod` — sans
    l'exécuter.
-
-## Dette connue
-
-Le détail du gate Sonar n'est pas exploité : quand `Sonar` est rouge, le skill donne l'URL et
-s'arrête, sans dire quelle condition casse (couverture du nouveau code, duplication, issues
-bloquantes). Le serveur MCP `sonarqube` le permettrait — `get_project_quality_gate_status` puis
-`search_sonar_issues_in_projects` sur `projectKey=SNEAXIII_Mawster` avec le numéro de PR. Écarté
-pour l'instant, noté dans `docs/backlog.md`.
 
 ## Règles
 
