@@ -2,7 +2,6 @@
 INVITATION_NOT_FOUND = "Invitation not found"
 INVITATION_NO_LONGER_PENDING = "This invitation is no longer pending"
 GAME_ACCOUNT_NOT_FOUND = "Game account not found"
-GAME_ACCOUNT_ALREADY_IN_ALLIANCE = "This game account is already in an alliance"
 PENDING_INVITATION_ALREADY_EXISTS = (
     "A pending invitation already exists for this game account in this alliance"
 )

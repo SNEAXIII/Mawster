@@ -290,16 +290,3 @@ class ChampionUserService:
         await session.commit()
         await session.refresh(champion_user)
         return champion_user
-
-    @classmethod
-    async def delete_roster(cls, session: SessionDep, game_account_id: uuid.UUID) -> int:
-        """Delete all roster entries for a game account. Returns count deleted."""
-        sql = select(ChampionUser).where(ChampionUser.game_account_id == game_account_id)
-        result = await session.exec(sql)
-        entries = result.all()
-        count = len(entries)
-        await DefensePlanService.release_champion_users(session, [e.id for e in entries])
-        for entry in entries:
-            await session.delete(entry)
-        await session.commit()
-        return count

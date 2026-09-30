@@ -35,9 +35,7 @@ async def create_war(
     current_user: CurrentUser,
 ):
     """Declare a new war against an opponent. Officers/owner only."""
-    account = await AllianceService.assert_officer_or_owner_by_id(
-        session, alliance_id, current_user.id
-    )
+    account = await AllianceService.require_officer_account(session, alliance_id, current_user.id)
     return await WarService.create_war(
         session, alliance_id, body.opponent_name, account.id, body.banned_champion_ids
     )
@@ -83,7 +81,7 @@ async def update_war(
     current_user: CurrentUser,
 ):
     """Update opponent name and bans for an active war. Officers/owner only."""
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await AllianceService.require_officer_account(session, alliance_id, current_user.id)
     return await WarService.update_war(
         session, war_id, alliance_id, body.opponent_name, body.banned_champion_ids
     )

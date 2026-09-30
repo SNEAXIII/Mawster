@@ -103,9 +103,7 @@ async def upsert_matchups(
     current_user: CurrentUser,
 ):
     """Rate a champion against a defender, a node, or both at once. Officers and owner only."""
-    author = await AllianceService.assert_officer_or_owner_by_id(
-        session, alliance_id, current_user.id
-    )
+    author = await AllianceService.require_officer_account(session, alliance_id, current_user.id)
     ratings = await MatchupService.upsert(session, alliance_id, author.id, request)
     return [_to_rating_response(rating) for rating in ratings]
 
@@ -125,7 +123,7 @@ async def delete_matchup(
     current_user: CurrentUser,
 ):
     """Delete a rating and its synergies. Officers and owner only."""
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await AllianceService.require_officer_account(session, alliance_id, current_user.id)
     await MatchupService.delete(session, alliance_id, rating_id)
 
 

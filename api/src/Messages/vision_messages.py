@@ -15,7 +15,6 @@ SCREEN_QUOTA_EXCEEDED = (
     "Too many screenshots in the last hour: {requested} requested, {remaining} left"
 )
 # --- Direct-to-storage upload (presigned) ---------------------------------
-IMPORT_NOT_AWAITING_UPLOAD = "This import is not awaiting an upload"
 SCREEN_NOT_UPLOADED = "Screenshot '{filename}' was never uploaded"
 SCREEN_TYPE_MISMATCH = (
     "Screenshot '{filename}' was uploaded as '{actual}' but declared as '{declared}'"

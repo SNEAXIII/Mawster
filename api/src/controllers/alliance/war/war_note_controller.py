@@ -36,9 +36,7 @@ async def upsert_war_fight_note(
     war: WarDep,
 ):
     """Create or update the note on a war combat node. Officers/owner only."""
-    account = await AllianceService.assert_officer_or_owner_by_id(
-        session, alliance_id, current_user.id
-    )
+    account = await AllianceService.require_officer_account(session, alliance_id, current_user.id)
     note = await WarFightNoteService.upsert_note(
         session,
         war=war,
@@ -73,7 +71,7 @@ async def delete_war_fight_note(
     war: WarDep,
 ):
     """Soft-delete the note on a war combat node, keeping its history. Officers/owner only."""
-    await AllianceService.assert_officer_or_owner_by_id(session, alliance_id, current_user.id)
+    await AllianceService.require_officer_account(session, alliance_id, current_user.id)
     await WarFightNoteService.delete_note(
         session,
         war=war,
