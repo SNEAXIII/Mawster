@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator, Sequence
+from functools import cache
 
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -25,6 +25,17 @@ Session = async_sessionmaker(
 _schema_ready = False
 
 
+@cache
+def _truncate_script() -> str:
+    # Built on first use, not at import: metadata only lists the models imported by then.
+    # The PRAGMAs sit outside BEGIN/COMMIT: SQLite ignores foreign_keys inside a transaction.
+    deletes = "".join(
+        f'DELETE FROM "{table.name}";'  # noqa: S608, the table names come from SQLModel.metadata
+        for table in reversed(SQLModel.metadata.sorted_tables)
+    )
+    return f"PRAGMA foreign_keys = OFF; BEGIN; {deletes} COMMIT; PRAGMA foreign_keys = ON;"
+
+
 def ensure_schema():
     """Create all tables once per process (idempotent)."""
     global _schema_ready  # noqa: PLW0603 — process-wide "schema created" memo, by design
@@ -34,24 +45,13 @@ def ensure_schema():
 
 
 def _truncate_all():
-    """Fast truncation: DELETE rows from every table + reset sequences.
-
-    Much faster than DROP ALL / CREATE ALL on every test.
-    """
-    with sqlite_sync_engine.begin() as conn:
-        # Disable FK checks for speed during truncation
-        conn.execute(text("PRAGMA foreign_keys = OFF"))
-        for table in reversed(SQLModel.metadata.sorted_tables):
-            # S608 ignored: the table names come from SQLModel.metadata, which we declare
-            # ourselves — no request data reaches this string.
-            conn.execute(text(f'DELETE FROM "{table.name}"'))  # noqa: S608
-        # Reset SQLite AUTOINCREMENT sequences
-        result = conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table' AND name='sqlite_sequence'")
-        )
-        if result.first():
-            conn.execute(text("DELETE FROM sqlite_sequence"))
-        conn.execute(text("PRAGMA foreign_keys = ON"))
+    """Fast truncation: DELETE rows from every table."""
+    # executescript runs the whole script in one call; SQLAlchemy's execute() takes one statement.
+    conn = sqlite_sync_engine.raw_connection()
+    try:
+        conn.driver_connection.executescript(_truncate_script())
+    finally:
+        conn.close()
 
 
 def reset_test_db():
