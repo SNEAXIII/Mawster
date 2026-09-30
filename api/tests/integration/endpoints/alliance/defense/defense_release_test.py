@@ -36,7 +36,7 @@ class TestRelease:
     @pytest.mark.asyncio
     async def test_kicked_member_leaves_the_champion_and_the_active_plan_turns_incomplete(self):
         bg = await setup_defense_bg()
-        plan = await push_plan(bg.alliance.id, fmt=SeasonFormat.big_thing, active=True)
+        plan = await push_plan(bg.alliance.id, fmt=SeasonFormat.BIG_THING, active=True)
         await push_plan_node(plan, 1, bg.owner_spider)
         await push_plan_node(plan, 2, bg.member_iron_man)
         resp = await execute_delete_request(

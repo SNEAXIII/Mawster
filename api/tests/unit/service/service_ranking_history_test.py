@@ -15,7 +15,7 @@ def _war(
         alliance_id=uuid.uuid4(),
         opponent_name=opponent,
         created_by_id=uuid.uuid4(),
-        status=WarStatus.ended,
+        status=WarStatus.ENDED,
         elo_change=elo_change,
         win=win,
         tier=tier,

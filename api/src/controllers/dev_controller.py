@@ -481,7 +481,7 @@ async def batch_setup(specs: list[SetupUserSpec], session: SessionDep):
                     created_by_id=acc.id,
                     season_id=uuid.UUID(season_id) if season_id else None,
                     tier=records.tier,
-                    status=WarStatus.ended,
+                    status=WarStatus.ENDED,
                     snapshotted_at=utcnow(),
                 )
                 session.add(war)

@@ -30,7 +30,7 @@ async def push_ended_war(
         created_by_id=created_by_id,
         season_id=season_id,
         tier=tier,
-        status=WarStatus.ended,
+        status=WarStatus.ENDED,
         snapshotted_at=utcnow(),
     )
     await load_objects([war])

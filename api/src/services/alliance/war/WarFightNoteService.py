@@ -32,7 +32,7 @@ class WarFightNoteService:
     async def _assert_can_edit(session: SessionDep, war: War, editor_user_id: uuid.UUID) -> None:
         if await ModerationService.is_user_muted(session, editor_user_id):
             raise USER_MUTED
-        if war.status == WarStatus.ended:
+        if war.status == WarStatus.ENDED:
             raise WAR_ENDED_NOTE_LOCKED
 
     @classmethod

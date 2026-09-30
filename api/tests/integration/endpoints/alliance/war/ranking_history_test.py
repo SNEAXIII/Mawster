@@ -37,7 +37,7 @@ async def _base_setup():
 
 
 async def _setup_wars(
-    alliance, owner, elo_changes: list[int | None], season_status=SeasonStatus.active
+    alliance, owner, elo_changes: list[int | None], season_status=SeasonStatus.ACTIVE
 ):
     season = Season(number=64, status=season_status)
     await load_objects([season])
@@ -49,7 +49,7 @@ async def _setup_wars(
             opponent_name=f"Enemy{i + 1}",
             created_by_id=owner.id,
             season_id=season.id,
-            status=WarStatus.ended,
+            status=WarStatus.ENDED,
             elo_change=change,
             tier=5,
             win=change is not None and change > 0,
@@ -106,7 +106,7 @@ class TestRankingHistoryData:
     @pytest.mark.anyio
     async def test_active_season_no_wars_returns_empty(self):
         alliance, _ = await _base_setup()
-        season = Season(number=64, status=SeasonStatus.active)
+        season = Season(number=64, status=SeasonStatus.ACTIVE)
         await load_objects([season])
         resp = await execute_get_request(_url(alliance.id), headers=OWNER_HEADERS)
         data = resp.json()
@@ -135,14 +135,14 @@ class TestRankingHistoryData:
     @pytest.mark.anyio
     async def test_active_war_excluded(self):
         alliance, owner = await _base_setup()
-        season = Season(number=64, status=SeasonStatus.active)
+        season = Season(number=64, status=SeasonStatus.ACTIVE)
         active_war = War(
             id=uuid.uuid4(),
             alliance_id=alliance.id,
             opponent_name="Ongoing",
             created_by_id=owner.id,
             season_id=season.id,
-            status=WarStatus.active,
+            status=WarStatus.ACTIVE,
         )
         await load_objects([season, active_war])
         resp = await execute_get_request(_url(alliance.id), headers=OWNER_HEADERS)
@@ -152,7 +152,7 @@ class TestRankingHistoryData:
     @pytest.mark.anyio
     async def test_preseason_returns_ended_season_number_and_status(self):
         alliance, owner = await _base_setup()
-        await _setup_wars(alliance, owner, [50, -30], season_status=SeasonStatus.ended)
+        await _setup_wars(alliance, owner, [50, -30], season_status=SeasonStatus.ENDED)
         resp = await execute_get_request(_url(alliance.id), headers=OWNER_HEADERS)
         assert resp.status_code == 200
         body = resp.json()

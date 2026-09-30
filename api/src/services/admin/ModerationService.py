@@ -71,7 +71,7 @@ class ModerationService:
                 select(NoteReport).where(
                     NoteReport.note_id == note_id,
                     NoteReport.reporter_game_account_id == reporter_account_id,
-                    NoteReport.status == NoteReportStatus.pending,
+                    NoteReport.status == NoteReportStatus.PENDING,
                 )
             )
         ).first()
@@ -82,7 +82,7 @@ class ModerationService:
             note_id=note_id,
             reporter_game_account_id=reporter_account_id,
             reason=body.reason,
-            status=NoteReportStatus.pending,
+            status=NoteReportStatus.PENDING,
         )
         session.add(report)
         await session.commit()
@@ -100,7 +100,7 @@ class ModerationService:
         if body.action == "delete":
             note.deleted_at = now
             note.deleted_by_id = admin_user_id
-            new_status = NoteReportStatus.resolved
+            new_status = NoteReportStatus.RESOLVED
             # Persist a deletion snapshot in the note history so it stays visible even if
             # the note is later reactivated by a new edit.
             session.add(
@@ -115,12 +115,12 @@ class ModerationService:
         else:  # dismiss -> whitelist
             note.whitelisted_at = now
             note.whitelisted_by_id = admin_user_id
-            new_status = NoteReportStatus.dismissed
+            new_status = NoteReportStatus.DISMISSED
 
         pending = (
             await session.exec(
                 select(NoteReport).where(
-                    NoteReport.note_id == note.id, NoteReport.status == NoteReportStatus.pending
+                    NoteReport.note_id == note.id, NoteReport.status == NoteReportStatus.PENDING
                 )
             )
         ).all()
@@ -174,7 +174,7 @@ class ModerationService:
             await session.exec(
                 select(NoteReport.note_id, func.count())
                 .where(
-                    NoteReport.note_id.in_(note_ids), NoteReport.status == NoteReportStatus.pending
+                    NoteReport.note_id.in_(note_ids), NoteReport.status == NoteReportStatus.PENDING
                 )
                 .group_by(NoteReport.note_id)
             )

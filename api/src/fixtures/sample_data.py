@@ -550,8 +550,8 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
             for number in range(60, 68):
                 season = Season(
                     number=number,
-                    status=SeasonStatus.active if number == 67 else SeasonStatus.ended,
-                    format=SeasonFormat.regular,
+                    status=SeasonStatus.ACTIVE if number == 67 else SeasonStatus.ENDED,
+                    format=SeasonFormat.REGULAR,
                 )
                 session.add(season)
                 session.flush()
@@ -567,9 +567,9 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
 
             war_specs = [
                 # (opponent, status, season, win, elo_change, tier, days_ago, layout)
-                ("ABI58", WarStatus.ended, 66, True, 33, 3, 40, WAR_ENDED_NODE_LAYOUT),
-                ("XMN.M", WarStatus.ended, 67, False, -19, 1, 6, WAR_ENDED_NODE_LAYOUT),
-                ("U.KR", WarStatus.active, 67, None, None, 1, 1, WAR_ACTIVE_NODE_LAYOUT),
+                ("ABI58", WarStatus.ENDED, 66, True, 33, 3, 40, WAR_ENDED_NODE_LAYOUT),
+                ("XMN.M", WarStatus.ENDED, 67, False, -19, 1, 6, WAR_ENDED_NODE_LAYOUT),
+                ("U.KR", WarStatus.ACTIVE, 67, None, None, 1, 1, WAR_ACTIVE_NODE_LAYOUT),
             ]
             wars = []
             for opponent, wstatus, season_no, win, elo_change, tier, days_ago, layout in war_specs:
@@ -593,7 +593,7 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
                 for i, (bg, node, stars, rank, ascension, ko) in enumerate(_valid_layout(layout)):
                     defender = defender_pool[i % len(defender_pool)]
                     champ = champ_by_id[defender.champion_id]
-                    combat_done = wstatus == WarStatus.ended or ko > 0
+                    combat_done = wstatus == WarStatus.ENDED or ko > 0
                     attacker = attacker_pool[i % len(attacker_pool)] if combat_done else None
                     session.add(
                         WarDefensePlacement(

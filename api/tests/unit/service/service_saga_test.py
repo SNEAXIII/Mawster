@@ -29,7 +29,7 @@ def _mock_session(mocker):
 async def test_upsert_then_resolve_current(mocker):
     session = _mock_session(mocker)
     champion_id = uuid.uuid4()
-    season = Season(id=uuid.uuid4(), number=42, format=SeasonFormat.regular)
+    season = Season(id=uuid.uuid4(), number=42, format=SeasonFormat.REGULAR)
     mocker.patch.object(SeasonService, "get_current_season", return_value=season)
 
     # upsert_role: no existing role -> create

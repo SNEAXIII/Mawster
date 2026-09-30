@@ -11,7 +11,7 @@ from src.utils.db import SessionDep
 class FightRecordAdminService:
     @classmethod
     async def force_snapshot_all(cls, session: SessionDep) -> dict:
-        stmt = select(War).where(War.status == WarStatus.ended)
+        stmt = select(War).where(War.status == WarStatus.ENDED)
         result = await session.exec(stmt)
         wars = result.all()
 

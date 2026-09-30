@@ -537,7 +537,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        season = Season(number=64, status=SeasonStatus.ended)
+        season = Season(number=64, status=SeasonStatus.ENDED)
         await load_objects([season])
 
         async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
@@ -645,8 +645,8 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        older_season = Season(number=70, status=SeasonStatus.ended)
-        newer_season = Season(number=71, status=SeasonStatus.ended)
+        older_season = Season(number=70, status=SeasonStatus.ENDED)
+        newer_season = Season(number=71, status=SeasonStatus.ENDED)
         await load_objects([older_season, newer_season])
 
         await _push_fights_in_two_wars(data, older_season.id, newer_season.id)
@@ -684,7 +684,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        season = Season(number=65, status=SeasonStatus.ended)
+        season = Season(number=65, status=SeasonStatus.ENDED)
         await load_objects([season])
 
         await _push_fights_in_two_wars(data, season.id, None)
@@ -703,7 +703,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        season = Season(number=66, status=SeasonStatus.ended)
+        season = Season(number=66, status=SeasonStatus.ENDED)
         await load_objects([season])
 
         await _push_fights_in_two_wars(data, season.id, None)
@@ -722,8 +722,8 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        active_season = Season(number=67, status=SeasonStatus.active)
-        old_season = Season(number=66, status=SeasonStatus.ended)
+        active_season = Season(number=67, status=SeasonStatus.ACTIVE)
+        old_season = Season(number=66, status=SeasonStatus.ENDED)
         await load_objects([active_season, old_season])
 
         await _push_fights_in_two_wars(data, active_season.id, old_season.id)
@@ -739,7 +739,7 @@ class TestListFightRecords:
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
 
-        season = Season(number=68, status=SeasonStatus.ended)
+        season = Season(number=68, status=SeasonStatus.ENDED)
         await load_objects([season])
 
         await _push_fights_in_two_wars(data, season.id, None)
@@ -770,7 +770,7 @@ class TestFightRecordReadsTheWar:
         """The map correction requires the war to still be within the Latest Season."""
         data = await _setup_war_with_fight()
         headers = create_auth_headers(user_id=str(USER_ID))
-        season = Season(number=80, status=SeasonStatus.active)
+        season = Season(number=80, status=SeasonStatus.ACTIVE)
         await load_objects([season])
         async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
             war = await session.get(War, data["war"].id)
@@ -975,7 +975,7 @@ class TestAdminSnapshotEndpoints:
         # Instead, directly set war status to ended without calling snapshot_war.
 
         war = await session.get(War, data["war"].id)
-        war.status = WarStatus.ended
+        war.status = WarStatus.ENDED
         war.tier = 1
         session.add(war)
         await session.commit()

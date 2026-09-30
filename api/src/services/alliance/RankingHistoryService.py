@@ -60,7 +60,7 @@ class RankingHistoryService:
                 .where(
                     War.alliance_id == alliance_id,
                     War.season_id == display_season.id,
-                    War.status == WarStatus.ended,
+                    War.status == WarStatus.ENDED,
                 )
                 .order_by(War.created_at)
             )

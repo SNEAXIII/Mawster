@@ -292,7 +292,7 @@ class TestDevBatchSetup:
             await session.exec(
                 join_fight_context(
                     select(War.id, War.snapshotted_at, WarDefensePlacement.battlegroup)
-                ).where(War.season_id == season_id, War.status == WarStatus.ended)
+                ).where(War.season_id == season_id, War.status == WarStatus.ENDED)
             )
         ).all()
         assert len(rows) == 51

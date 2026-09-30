@@ -179,13 +179,13 @@ class FightRecordService:
     @classmethod
     def _season_conditions(cls, model, season_selector, season_id):
         """Return season filter conditions for any model with a season_id column."""
-        if season_selector == SeasonSelectorType.AllSeasons:
+        if season_selector == SeasonSelectorType.ALL_SEASONS:
             return [model.season_id.isnot(None)]
-        if season_selector == SeasonSelectorType.OffSeason:
+        if season_selector == SeasonSelectorType.OFF_SEASON:
             return [model.season_id.is_(None)]
-        if season_selector == SeasonSelectorType.Current:
+        if season_selector == SeasonSelectorType.CURRENT:
             return [
-                model.season_id.in_(select(Season.id).where(Season.status == SeasonStatus.active))
+                model.season_id.in_(select(Season.id).where(Season.status == SeasonStatus.ACTIVE))
             ]
         if season_id:
             return [model.season_id == season_id]
@@ -198,7 +198,7 @@ class FightRecordService:
         cls,
         session: SessionDep,
         accessible_alliance_ids: list[uuid.UUID],
-        source: FightRecordSource = FightRecordSource.NonImported,
+        source: FightRecordSource = FightRecordSource.NON_IMPORTED,
         champion_id: uuid.UUID | None = None,
         defender_champion_id: uuid.UUID | None = None,
         node_number: int | None = None,
@@ -217,8 +217,8 @@ class FightRecordService:
         if not accessible_alliance_ids:
             return PaginatedFightRecordsResponse(items=[], total=0, page=page, size=size, pages=1)
 
-        include_reg = source in (FightRecordSource.NonImported, FightRecordSource.All)
-        include_imp = source in (FightRecordSource.Imported, FightRecordSource.All)
+        include_reg = source in (FightRecordSource.NON_IMPORTED, FightRecordSource.ALL)
+        include_imp = source in (FightRecordSource.IMPORTED, FightRecordSource.ALL)
 
         sub_queries = []
 

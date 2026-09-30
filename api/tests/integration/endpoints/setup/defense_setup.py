@@ -71,7 +71,7 @@ async def push_other_alliance() -> Alliance:
 
 async def push_template(
     alliance_id: uuid.UUID,
-    fmt: SeasonFormat = SeasonFormat.regular,
+    fmt: SeasonFormat = SeasonFormat.REGULAR,
     name: str = "Template",
     champions: dict[int, Champion] | None = None,
 ) -> DefenseTemplate:
@@ -87,7 +87,7 @@ async def push_template(
 async def push_plan(
     alliance_id: uuid.UUID,
     battlegroup: int = 1,
-    fmt: SeasonFormat = SeasonFormat.regular,
+    fmt: SeasonFormat = SeasonFormat.REGULAR,
     name: str = "Plan",
     active: bool = False,
 ) -> DefensePlan:

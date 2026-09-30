@@ -150,7 +150,7 @@ class TestTemplateNodes:
     @pytest.mark.asyncio
     async def test_node_beyond_the_format_map_is_refused(self):
         bg = await setup_defense_bg()
-        template = await push_template(bg.alliance.id, fmt=SeasonFormat.big_thing)
+        template = await push_template(bg.alliance.id, fmt=SeasonFormat.BIG_THING)
         resp = await execute_put_request(
             _templates(bg.alliance.id, f"/{template.id}/nodes/11"),
             {"champion_id": str(bg.spider.id)},
