@@ -197,8 +197,10 @@ release-please then counts a second time alongside the real commits, duplicating
   stashing them silently.
 - Check the branch before the first commit: on `main`, `release` or `staging`, branch first,
   whatever the size of the change.
-- `git push` belongs to the user: end on the exact command in a code block. `/make-pr`,
-  `/commit push`, or an explicit go in reply to that command authorise you to push.
+- `git push` belongs to the user: end on the exact command in a code block. `/git:make-pr`,
+  `/git:commit push`, or an explicit go in reply to that command authorise you to push.
+- Git skills — `/git:commit`, `/git:make-pr`, `/git:merge-pr` — come from the `git` plugin of the
+  `sneaxiii-plugins` marketplace. Only `/release-pr` (promotion to `release` / `staging`) lives here.
 
 ### Worktrees
 
