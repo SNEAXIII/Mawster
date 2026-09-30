@@ -10,5 +10,8 @@ def sanitize_text(value: str) -> str:
     Entities introduced by escaping are unescaped back to readable characters so normal text
     like ``Cap & Thor`` is preserved without artifacts. The result is trimmed.
     """
-    stripped = nh3.clean(value, tags=set())
-    return html.unescape(stripped).strip()
+    # Repeat until stable: unescaping can reveal entity-encoded markup that the next pass strips.
+    previous = None
+    while value != previous:
+        previous, value = value, html.unescape(nh3.clean(value, tags=set()))
+    return value.strip()
