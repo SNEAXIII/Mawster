@@ -3,6 +3,15 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.22.2](https://github.com/SNEAXIII/Mawster/compare/v1.22.1...v1.22.2) (2026-09-30)
+
+
+### Corrigé
+
+* keep the backend JWT out of the client session ([#630](https://github.com/SNEAXIII/Mawster/issues/630)) ([fdce228](https://github.com/SNEAXIII/Mawster/commit/fdce228e4f7d0d5beb969305cb174cd0749e9341))
+* refuse OAuth login on a disabled or deleted account ([#629](https://github.com/SNEAXIII/Mawster/issues/629)) ([db9f395](https://github.com/SNEAXIII/Mawster/commit/db9f3959cfec1b841e636563aa7050f9358297bc))
+* strip entity-encoded markup from sanitized text ([#628](https://github.com/SNEAXIII/Mawster/issues/628)) ([060ed3a](https://github.com/SNEAXIII/Mawster/commit/060ed3a84064fd50cdeef68c893b791ab6beb459))
+
 ## [1.22.1](https://github.com/SNEAXIII/Mawster/compare/v1.22.0...v1.22.1) (2026-09-29)
 
 
