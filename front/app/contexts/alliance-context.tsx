@@ -182,7 +182,7 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
 
   useEffect(() => {
     if (status === 'loading') return
-    refresh()
+    void refresh()
   }, [refresh, status])
 
   const applyAlliance = useCallback((updated: Alliance) => {

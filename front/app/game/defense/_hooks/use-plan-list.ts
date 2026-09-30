@@ -44,7 +44,7 @@ export function usePlanList(
   useEffect(() => {
     setSelectedPlanId(null)
     setListLoaded(false)
-    refreshPlans()
+    void refreshPlans()
   }, [refreshPlans])
 
   return { plans, quota, selectedPlanId, setSelectedPlanId, refreshPlans, listLoaded }

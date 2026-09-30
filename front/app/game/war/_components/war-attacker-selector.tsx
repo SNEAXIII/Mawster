@@ -94,7 +94,7 @@ export default function WarAttackerSelector({
 
   useEffect(() => {
     if (open) {
-      if (canAssign) fetchAvailable()
+      if (canAssign) void fetchAvailable()
       setPlayerFilter('')
       setChampionSearch('')
       setClassFilter('')

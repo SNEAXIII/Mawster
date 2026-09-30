@@ -25,7 +25,7 @@ export function useSnapshotStatsViewModel() {
   }, [t])
 
   useEffect(() => {
-    load()
+    void load()
   }, [load])
 
   const handleRefresh = async () => {

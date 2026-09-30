@@ -39,7 +39,7 @@ def _wait_for_mariadb() -> None:
     print(f"🚀 Waiting for MariaDB at {target}")
     while True:
         try:
-            with _root_connect() as conn, conn.cursor() as cursor:
+            with _root_connect() as conn, conn.cursor() as cursor:  # NOSONAR S9408 false positive
                 cursor.execute("SELECT 1")
             print("✅ MariaDB is up")
             return
@@ -59,7 +59,7 @@ def _ensure_database() -> None:
     """
     database = SECRET.MARIADB_DATABASE
     user = SECRET.MARIADB_USER
-    with _root_connect() as conn, conn.cursor() as cursor:
+    with _root_connect() as conn, conn.cursor() as cursor:  # NOSONAR S9408 false positive
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{database}`")
         cursor.execute(f"GRANT ALL PRIVILEGES ON `{database}`.* TO '{user}'@'%'")
         cursor.execute("FLUSH PRIVILEGES")
