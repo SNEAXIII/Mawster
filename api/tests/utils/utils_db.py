@@ -1,8 +1,4 @@
-import os
-import time
 from collections.abc import AsyncGenerator, Sequence
-from pathlib import Path
-from uuid import uuid4
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -12,21 +8,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 IS_ECHO = False
 IS_ECHO_ASYNC = False
 
-# ── Per-worker DB name (pytest-xdist support) ──────────────────────────
-# Each xdist worker gets PYTEST_XDIST_WORKER env var (gw0, gw1, …).
-# When running without xdist the var is absent → single "test.db".
-Path("temp").mkdir(exist_ok=True)
-_worker = os.environ.get("PYTEST_XDIST_WORKER", "")
-DB_NAME = f"temp/test_{_worker}_{uuid4()}.db" if _worker else "temp/test.db"
+# Named shared-cache memory DB: the sync and async engines see the same tables. Each
+# xdist worker is its own process, so each gets its own instance.
+DB_URL = "/file:mawster_test?mode=memory&cache=shared&uri=true"
 
-sqlite_sync_engine = create_engine(
-    f"sqlite:///{DB_NAME}",
-    echo=IS_ECHO,
-)
-sqlite_async_engine = create_async_engine(
-    url=f"sqlite+aiosqlite:///{DB_NAME}",
-    echo=IS_ECHO_ASYNC,
-)
+sqlite_sync_engine = create_engine(f"sqlite://{DB_URL}", echo=IS_ECHO)
+sqlite_async_engine = create_async_engine(f"sqlite+aiosqlite://{DB_URL}", echo=IS_ECHO_ASYNC)
 
 Session = async_sessionmaker(
     bind=sqlite_async_engine,
@@ -36,19 +23,6 @@ Session = async_sessionmaker(
 
 # Track whether the schema has already been created in this process.
 _schema_ready = False
-
-
-def delete_db(retries: int = 20, delay: float = 0.2):
-    """Delete the DB file on disk (opt-in via TEST_DELETE_DB env var)."""
-    db_path = Path(DB_NAME)
-    if os.getenv("TEST_DELETE_DB") in ("1", "true", "True") and db_path.exists():
-        for _ in range(retries):
-            try:
-                db_path.unlink()
-                return
-            except PermissionError:
-                time.sleep(delay)
-        db_path.unlink()
 
 
 def ensure_schema():
