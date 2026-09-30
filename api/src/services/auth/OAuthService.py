@@ -151,6 +151,8 @@ class OAuthService(ABC):
     async def _login_existing(
         cls, session: SessionDep, user: User, email: str | None, email_verified: bool
     ) -> User:
+        if user.deleted_at is not None or user.disabled_at is not None:
+            raise ACCOUNT_UNAVAILABLE_EXCEPTION
         user.set_last_login_date(utcnow())
         # Two guards, both load-bearing: only refresh a hash that already exists
         # (writing a new one here would index an address that never went through
