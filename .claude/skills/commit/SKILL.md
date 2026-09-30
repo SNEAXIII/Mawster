@@ -45,15 +45,7 @@ Tout autre argument est une consigne de groupement en langage naturel
 
 ## Conventional Commit Types
 
-| Prefix | Quand |
-|--------|-------|
-| `feat:` | Nouvelle fonctionnalité |
-| `fix:` | Correction de bug |
-| `refactor:` | Changement sans effet de bord |
-| `test:` | Ajout ou mise à jour de tests |
-| `docs:` | Documentation uniquement |
-| `chore:` | Dépendances, config, tooling |
-| `style:` | Formatage, pas de logique |
+Voir « Commit types » dans `CLAUDE.md` — le type se choisit d'après ce que voit le joueur.
 
 ## Règles
 
