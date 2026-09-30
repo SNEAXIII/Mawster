@@ -4,6 +4,7 @@ import type { RefObject } from 'react'
 import { FiUserMinus } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
+import { FullPageSpinner } from '@/components/full-page-spinner'
 import type { AllianceWithVisitorFlag } from '@/app/services/game'
 import DefenseGrid from './defense-grid'
 import PlanToolbar from './plan-toolbar'
@@ -31,6 +32,8 @@ export default function PlanWorkspace({
     plan && plan.id === vm.selectedPlan?.id
       ? { assigned: plan.nodes.filter((n) => n.champion_user_id).length, total: plan.node_count }
       : undefined
+  const waitingForList = vm.userCanPlace && !vm.planList.listLoaded
+  const noPlan = vm.userCanPlace && vm.planList.listLoaded && vm.planList.selectedPlanId === null
 
   return (
     <>
@@ -67,14 +70,16 @@ export default function PlanWorkspace({
           {t.game.defense.plans.noActive}
         </p>
       )}
-      {vm.userCanPlace && vm.planList.listLoaded && vm.planList.selectedPlanId === null ? (
+      {waitingForList && <FullPageSpinner />}
+      {noPlan && (
         <p
           className='text-sm text-muted-foreground'
           data-cy='defense-no-plan'
         >
           {t.game.defense.plans.createFirst}
         </p>
-      ) : (
+      )}
+      {!waitingForList && !noPlan && (
         <DefenseGrid
           onNodeClick={vm.handleNodeClick}
           canManage={vm.userCanPlace}
