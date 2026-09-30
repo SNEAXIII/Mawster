@@ -3,6 +3,20 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.22.3](https://github.com/SNEAXIII/Mawster/compare/v1.22.2...v1.22.3) (2026-09-30)
+
+
+### Corrigé
+
+* speed up roster import and hold the alliance member cap ([#644](https://github.com/SNEAXIII/Mawster/issues/644)) ([82ed162](https://github.com/SNEAXIII/Mawster/commit/82ed162e84300ac5663700bba12f11a24de2fe53))
+
+
+### Modifié
+
+* remove dead backend code and merge duplicate permission helpers ([#643](https://github.com/SNEAXIII/Mawster/issues/643)) ([4b01bac](https://github.com/SNEAXIII/Mawster/commit/4b01bac5afa086e9e700e6bd2ee038dc4de7437e))
+* tidy API bootstrap, openapi version and shared bounds ([#642](https://github.com/SNEAXIII/Mawster/issues/642)) ([2604e0e](https://github.com/SNEAXIII/Mawster/commit/2604e0ec178bc0f863b5c6d8e3bf67f54aa366e9))
+* uppercase every enum member name ([#639](https://github.com/SNEAXIII/Mawster/issues/639)) ([81e1a22](https://github.com/SNEAXIII/Mawster/commit/81e1a22921a9f2e3dc9363c8a73ebd1e09571f03))
+
 ## [1.22.2](https://github.com/SNEAXIII/Mawster/compare/v1.22.1...v1.22.2) (2026-09-30)
 
 
