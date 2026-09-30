@@ -2,7 +2,7 @@ import uuid
 from collections.abc import Callable
 
 from fastapi import HTTPException
-from sqlalchemy import func
+from sqlalchemy import exists, func, or_
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from starlette import status
@@ -161,6 +161,31 @@ class AllianceService:
         )
         return result.first() is not None
 
+    @staticmethod
+    async def _holds_rank(
+        session: SessionDep,
+        user_id: uuid.UUID,
+        alliance_id: uuid.UUID,
+        *ranks: type[AllianceOfficer] | type[AllianceStrategist],
+    ) -> bool:
+        """True if a live account of the user owns the live alliance or holds a row in `ranks`."""
+        holds = [Alliance.owner_id == GameAccount.id] + [
+            exists().where(rank.alliance_id == alliance_id, rank.game_account_id == GameAccount.id)
+            for rank in ranks
+        ]
+        result = await session.exec(
+            select(GameAccount.id)
+            .join(Alliance, Alliance.id == alliance_id)
+            .where(
+                GameAccount.user_id == user_id,
+                GameAccount.deleted_at.is_(None),
+                Alliance.deleted_at.is_(None),  # type: ignore[union-attr]
+                or_(*holds),
+            )
+            .limit(1)
+        )
+        return result.first() is not None
+
     @classmethod
     async def is_officer(
         cls,
@@ -169,27 +194,7 @@ class AllianceService:
         alliance_id: uuid.UUID,
     ) -> bool:
         """True if the user is an officer OR owner of the alliance."""
-        alliance = await cls._load_alliance_with_relations(session, alliance_id)
-        if alliance is None:
-            return False
-        user_account_ids = await cls._get_user_account_ids(session, user_id)
-        if alliance.owner_id in user_account_ids:
-            return True
-        officer_ids = {off.game_account_id for off in alliance.officers}
-        return bool(user_account_ids & officer_ids)
-
-    @classmethod
-    async def _get_strategist_ids(
-        cls,
-        session: SessionDep,
-        alliance_id: uuid.UUID,
-    ) -> set[uuid.UUID]:
-        """Game account ids holding a strategist row — the exact rank, with the
-        owner and the officers excluded."""
-        result = await session.exec(
-            select(AllianceStrategist).where(AllianceStrategist.alliance_id == alliance_id)
-        )
-        return {row.game_account_id for row in result.all()}
+        return await cls._holds_rank(session, user_id, alliance_id, AllianceOfficer)
 
     @classmethod
     async def can_place(
@@ -204,11 +209,9 @@ class AllianceService:
         Deliberately wider than `is_officer` and never a substitute for it —
         `can_manage` stays owner-or-officer so the strategist gains nothing else.
         """
-        if await cls.is_officer(session, user_id, alliance_id):
-            return True
-        user_account_ids = await cls._get_user_account_ids(session, user_id)
-        strategist_ids = await cls._get_strategist_ids(session, alliance_id)
-        return bool(user_account_ids & strategist_ids)
+        return await cls._holds_rank(
+            session, user_id, alliance_id, AllianceOfficer, AllianceStrategist
+        )
 
     @classmethod
     async def is_owner(
@@ -218,11 +221,7 @@ class AllianceService:
         alliance_id: uuid.UUID,
     ) -> bool:
         """True if the user owns a game account that is the alliance owner."""
-        alliance = await cls._load_alliance_with_relations(session, alliance_id)
-        if alliance is None:
-            return False
-        user_account_ids = await cls._get_user_account_ids(session, user_id)
-        return alliance.owner_id in user_account_ids
+        return await cls._holds_rank(session, user_id, alliance_id)
 
     @classmethod
     async def is_visitor(
@@ -663,9 +662,16 @@ class AllianceService:
 
     @staticmethod
     async def assert_room_for_member(session: SessionDep, alliance_id: uuid.UUID) -> None:
-        """Raise 409 once the alliance holds MAX_MEMBERS_PER_ALLIANCE members."""
+        """Raise 409 once the alliance holds MAX_MEMBERS_PER_ALLIANCE members.
+
+        Locks the alliance row until the caller commits, so concurrent joins queue up.
+        """
+        await session.exec(select(Alliance.id).where(Alliance.id == alliance_id).with_for_update())
+        # A locking read: REPEATABLE READ's snapshot would miss a join committed while we waited.
         count = await session.exec(
-            select(func.count(GameAccount.id)).where(GameAccount.alliance_id == alliance_id)
+            select(func.count(GameAccount.id))
+            .where(GameAccount.alliance_id == alliance_id)
+            .with_for_update(read=True)
         )
         if count.one() >= MAX_MEMBERS_PER_ALLIANCE:
             raise HTTPException(

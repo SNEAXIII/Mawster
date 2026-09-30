@@ -154,16 +154,27 @@ class UpgradeRequestService:
         cls, session: SessionDep, champion_user: ChampionUser
     ) -> None:
         """Mark pending upgrade requests as done if the champion has reached the requested rarity."""
-        stmt = select(RequestedUpgrade).where(
-            RequestedUpgrade.champion_user_id == champion_user.id,
-            RequestedUpgrade.done_at.is_(None),
-            or_(
-                RequestedUpgrade.requested_stars < champion_user.stars,
-                and_(
-                    RequestedUpgrade.requested_stars == champion_user.stars,
-                    RequestedUpgrade.requested_rank <= champion_user.rank,
+        await cls.auto_complete_for_champion_users(session, [champion_user.id])
+
+    @classmethod
+    async def auto_complete_for_champion_users(
+        cls, session: SessionDep, champion_user_ids: list[uuid.UUID]
+    ) -> None:
+        """Same, for many committed entries in one query: compares against their stored rarity."""
+        stmt = (
+            select(RequestedUpgrade)
+            .join(ChampionUser, RequestedUpgrade.champion_user_id == ChampionUser.id)
+            .where(
+                ChampionUser.id.in_(champion_user_ids),  # type: ignore[attr-defined]
+                RequestedUpgrade.done_at.is_(None),
+                or_(
+                    RequestedUpgrade.requested_stars < ChampionUser.stars,
+                    and_(
+                        RequestedUpgrade.requested_stars == ChampionUser.stars,
+                        RequestedUpgrade.requested_rank <= ChampionUser.rank,
+                    ),
                 ),
-            ),
+            )
         )
         requests = (await session.exec(stmt)).all()
         for req in requests:

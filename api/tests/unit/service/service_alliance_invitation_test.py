@@ -134,7 +134,7 @@ class TestCreateInvitation:
             inviter_accounts_mock.all.return_value = [inviter_acc]
 
             session.exec = mocker.AsyncMock(
-                side_effect=[count_mock, pending_mock, inviter_accounts_mock]
+                side_effect=[mocker.MagicMock(), count_mock, pending_mock, inviter_accounts_mock]
             )
 
         alliance = _make_alliance(alliance_id=alliance_id)
@@ -296,7 +296,13 @@ class TestAcceptInvitation:
         other_pending_mock.all.return_value = []
 
         session.exec = mocker.AsyncMock(
-            side_effect=[accounts_mock, count_mock, visitor_mock, other_pending_mock]
+            side_effect=[
+                accounts_mock,
+                mocker.MagicMock(),
+                count_mock,
+                visitor_mock,
+                other_pending_mock,
+            ]
         )
 
         if expected_status is not None:
