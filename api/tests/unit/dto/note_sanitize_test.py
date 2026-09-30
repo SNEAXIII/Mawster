@@ -22,6 +22,18 @@ def test_sanitize_text_preserves_ampersand():
     assert sanitize_text("Cap & Thor") == "Cap & Thor"
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        "&lt;script&gt;alert(1)&lt;/script&gt;",
+        "&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;",
+        "&lt;img src=x onerror=alert(1)&gt;",
+    ],
+)
+def test_sanitize_text_strips_entity_encoded_markup(value):
+    assert sanitize_text(value) == ""
+
+
 def test_note_content_is_sanitized():
     req = WarFightNoteUpsertRequest(content="<b>danger</b> on node")
     assert req.content == "danger on node"
