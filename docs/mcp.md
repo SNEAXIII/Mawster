@@ -8,6 +8,6 @@ Un seul serveur est chargé, `context-mode`, et il vient du **plugin** déclaré
 exemplaires de chaque outil (`mcp__context-mode__*` **et**
 `mcp__plugin_context-mode_context-mode__*`).
 
-GitHub passe par le CLI `gh`, authentifié une fois via `gh auth login` (`/make-pr`, `/release-pr`).
+GitHub passe par le CLI `gh`, authentifié une fois via `gh auth login` (`/git:make-pr`, `/release-pr`).
 
 Si un serveur MCP est un jour ajouté : **redémarrer Claude Code**, ils sont chargés au démarrage.

@@ -15,6 +15,15 @@
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
     "context-mode@context-mode": true,
-    "ponytail@ponytail": true
+    "ponytail@ponytail": true,
+    "git@sneaxiii-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "sneaxiii-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "SNEAXIII/sneaxiii-plugins"
+      }
+    }
   }
 }
