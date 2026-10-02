@@ -18,7 +18,11 @@ _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT / "api"))
 from src.enums.ChampionClass import ChampionClass  # noqa: E402
 
-WIKI_URL = "https://marvel-contestofchampions.fandom.com/wiki/List_of_Champions"
+WIKI_BASE = "https://marvel-contestofchampions.fandom.com"
+# /wiki/ pages sit behind a Cloudflare challenge; the MediaWiki API serves the same rendered HTML.
+WIKI_API_URL = (
+    f"{WIKI_BASE}/api.php?action=parse&page=List_of_Champions&prop=text&format=json&formatversion=2"
+)
 OUTPUT_DIR = _ROOT / "static-assets" / "static" / "champions"
 JSON_OUTPUT = _ROOT / "api" / "src" / "fixtures" / "champions.json"
 
@@ -35,28 +39,16 @@ VALID_CLASSES = {c.value for c in ChampionClass}
 
 REVISION_LATEST = "/revision/latest"
 
-# Fandom's bot protection rejects most profiles; tried in order until one gets through.
-IMPERSONATE_PROFILES = ["safari", "chrome", "firefox135"]
-# Mutable holder: the profile that works is reused for the hundreds of image downloads.
-_WORKING_PROFILE: dict[str, str | None] = {"name": None}
+# The image CDN challenges requests without a wiki Referer; browser impersonation gets challenged too.
+HEADERS = {"Referer": f"{WIKI_BASE}/"}
 
 
 def _fetch(url: str, timeout: int):
-    """GET a URL, trying impersonation profiles until one is not blocked."""
     from curl_cffi import requests as cffi_requests
 
-    known_good = _WORKING_PROFILE["name"]
-    profiles = [known_good] if known_good else IMPERSONATE_PROFILES
-    last_error = None
-    for profile in profiles:
-        try:
-            resp = cffi_requests.get(url, impersonate=profile, timeout=timeout)
-            resp.raise_for_status()
-            _WORKING_PROFILE["name"] = profile
-            return resp
-        except Exception as e:
-            last_error = e
-    raise last_error
+    resp = cffi_requests.get(url, headers=HEADERS, timeout=timeout)
+    resp.raise_for_status()
+    return resp
 
 
 def clean_image_url(url: str) -> str:
@@ -209,12 +201,11 @@ def scrape_champions_list() -> list[dict]:
     """Scrape the wiki and return a list of champion dicts."""
     from bs4 import BeautifulSoup
 
-    print(f"Fetching {WIKI_URL} ...")
-    resp = _fetch(WIKI_URL, timeout=60)
-    print(f"  [DEBUG] Response status: {resp.status_code}, length: {len(resp.text)}")
-    print(f"  [DEBUG] Impersonation profile: {_WORKING_PROFILE['name']}")
+    print(f"Fetching {WIKI_API_URL} ...")
+    html = _fetch(WIKI_API_URL, timeout=60).json()["parse"]["text"]
+    print(f"  [DEBUG] HTML length: {len(html)}")
 
-    soup = BeautifulSoup(resp.text, "lxml")
+    soup = BeautifulSoup(html, "lxml")
 
     champions = []
     seen_names = set()
@@ -222,7 +213,7 @@ def scrape_champions_list() -> list[dict]:
     tables = _find_champion_tables(soup)
     if not tables:
         print("  [ERROR] No tables found at all!")
-        print(f"  [DEBUG] Page start:\n{resp.text[:2000]}")
+        print(f"  [DEBUG] Page start:\n{html[:2000]}")
         return champions
 
     for table_idx, table in enumerate(tables):
