@@ -1,11 +1,10 @@
-# Root Makefile — E2E test orchestration + backup operations
-.PHONY: help e2e e2e-open e2e-parallel e2e-parallel-quiet e2e-db e2e-stop \
+# Root Makefile — dev stack, Cypress UI, deploy + backup operations
+.PHONY: help e2e-open e2e-db e2e-stop \
         backup-now backup-now-staging backup-list backup-list-staging backup-restore backup-restore-staging backup-restore-remote deploy db \
         migrate migrate-staging vision-up vision-down worker-up worker-logs db-dev db-dev-all panic db-access
 
 NEXTAUTH_SECRET ?= e2e-local-nextauth-secret
 NEXTAUTH_URL    ?= http://localhost:3000
-SPEC            ?=
 
 ifeq ($(OS),Windows_NT)
 # ── Windows (PowerShell) ─────────────────────────────────────────────────────
@@ -27,15 +26,12 @@ HELP_LINES := \
 	"worker-logs            --> suivre les logs du worker vision", \
 	"all                    --> ouvrir tous les terminaux de dev (Windows Terminal)", \
 	"", \
-	"=== E2E ===", \
-	"e2e                    --> demarrer les services + lancer Cypress headless", \
+	"=== E2E (UI Cypress locale, la suite tourne en CI) ===", \
 	"e2e-open               --> demarrer les services + ouvrir l'UI Cypress", \
-	"e2e-parallel           --> lancer les tests E2E en parallele (N=3 par defaut, max 8)", \
-	"e2e-parallel-quiet     --> lancer les tests E2E en parallele en mode silencieux", \
 	"e2e-db                 --> demarrer uniquement mariadb-test", \
 	"e2e-stop               --> arreter l'API et le frontend de test", \
 	"Logs      : .e2e-api.log  .e2e-front.log", \
-	"Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=...", \
+	"Variables : NEXTAUTH_SECRET=...", \
 	"", \
 	"=== Prod / Swarm ===", \
 	"deploy                 --> builder les images et (re)demarrer tous les containers de production", \
@@ -74,25 +70,12 @@ e2e-stop:
 	if (Test-Path .e2e-api.pid) { Stop-Process -Id (Get-Content .e2e-api.pid) -Force -ErrorAction SilentlyContinue; Remove-Item .e2e-api.pid -Force -ErrorAction SilentlyContinue }
 	if (Test-Path .e2e-front.pid) { Stop-Process -Id (Get-Content .e2e-front.pid) -Force -ErrorAction SilentlyContinue; Remove-Item .e2e-front.pid -Force -ErrorAction SilentlyContinue }
 
-e2e: e2e-db
-	$$env:MODE = 'testing'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c uv run app_testing.py 2>&1' -WorkingDirectory api -RedirectStandardOutput ../.e2e-api.log).Id | Out-File -Encoding ascii .e2e-api.pid
-	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c npm run testing 2>&1' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
-	@echo 'Attente de l API (port 8001)...'; for ($$i = 0; $$i -lt 30; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 8001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
-	@echo 'Attente du frontend (port 3001)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
-	@echo 'Lancement de Cypress...'; Set-Location front; npx cypress run $(if $(SPEC),--spec $(SPEC),); $$EXIT = $$LASTEXITCODE; Set-Location ..; if (Test-Path .e2e-api.pid) { Stop-Process -Id (Get-Content .e2e-api.pid) -Force -EA SilentlyContinue; Remove-Item .e2e-api.pid -Force -EA SilentlyContinue }; if (Test-Path .e2e-front.pid) { Stop-Process -Id (Get-Content .e2e-front.pid) -Force -EA SilentlyContinue; Remove-Item .e2e-front.pid -Force -EA SilentlyContinue }; exit $$EXIT
-
 e2e-open: e2e-db
 	$$env:MODE = 'testing'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c uv run app_testing.py 2>&1' -WorkingDirectory api -RedirectStandardOutput ../.e2e-api.log).Id | Out-File -Encoding ascii .e2e-api.pid
 	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c npm run testing 2>&1' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
 	@echo 'Attente de l API (port 8001)...'; for ($$i = 0; $$i -lt 30; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 8001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@echo 'Attente du frontend (port 3001)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@echo 'Lancement de Cypress...'; Set-Location front; npx cypress open
-
-e2e-parallel: e2e-db
-	python scripts/e2e/e2e_parallel.py --workers $(if $(N),$(N),3) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
-
-e2e-parallel-quiet: e2e-db
-	python scripts/e2e/e2e_parallel.py --workers $(if $(N),$(N),3) $(if $(SPEC),--spec $(SPEC),) --quiet
 
 backup-list:
 	Get-ChildItem backups\mawster_*.sql.gz -ErrorAction SilentlyContinue | Select-Object Length,Name | Format-Table -AutoSize; if (-not (Test-Path 'backups\mawster_*.sql.gz')) { Write-Host '(no local backups)' }
@@ -128,15 +111,12 @@ help:
 	echo "worker-up              --> (re)builder et demarrer le worker vision" ; \
 	echo "worker-logs            --> suivre les logs du worker vision" ; \
 	echo "" ; \
-	echo "=== E2E ===" ; \
-	echo "e2e                    --> demarrer les services + lancer Cypress headless" ; \
+	echo "=== E2E (UI Cypress locale, la suite tourne en CI) ===" ; \
 	echo "e2e-open               --> demarrer les services + ouvrir l'UI Cypress" ; \
-	echo "e2e-parallel           --> lancer les tests E2E en parallele (N=4 par defaut, max 8)" ; \
-	echo "e2e-parallel-quiet     --> lancer les tests E2E en parallele en mode silencieux" ; \
 	echo "e2e-db                 --> demarrer uniquement mariadb-test" ; \
 	echo "e2e-stop               --> arreter l'API et le frontend de test" ; \
 	echo "Logs      : .e2e-api.log  .e2e-front.log" ; \
-	echo "Variables : N=4  SPEC=war/war-management.cy.ts  Q=1  NEXTAUTH_SECRET=..." ; \
+	echo "Variables : NEXTAUTH_SECRET=..." ; \
 	echo "" ; \
 	echo "=== Tier dev public (stack Swarm mawster-dev) ===" ; \
 	echo "dev-build              --> builder les images api/migrate/front/static en :local" ; \
@@ -177,16 +157,6 @@ e2e-stop:
 		rm -f .e2e-front.pid; \
 	fi
 
-e2e: e2e-db
-	cd api && MODE=testing uv run app_testing.py > /dev/null 2>&1 & echo $$! > .e2e-api.pid
-	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing > /dev/null 2>&1 & echo $$! > .e2e-front.pid
-	@echo "Attente de l'API (port 8001)..."; \
-	for i in $$(seq 1 30); do curl -s http://localhost:8001 >/dev/null 2>&1 && break || sleep 2; done
-	@echo "Attente du frontend (port 3001)..."; \
-	for i in $$(seq 1 60); do curl -s http://localhost:3001 >/dev/null 2>&1 && break || sleep 2; done
-	@echo "Lancement de Cypress..."
-	(cd front && npx cypress run $(if $(SPEC),--spec $(SPEC),)); STATUS=$$?; $(MAKE) e2e-stop; exit $$STATUS
-
 e2e-open: e2e-db
 	cd api && MODE=testing uv run app_testing.py > /dev/null 2>&1 & echo $$! > .e2e-api.pid
 	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing > /dev/null 2>&1 & echo $$! > .e2e-front.pid
@@ -196,12 +166,6 @@ e2e-open: e2e-db
 	for i in $$(seq 1 60); do curl -s http://localhost:3001 >/dev/null 2>&1 && break || sleep 2; done
 	@echo "Lancement de Cypress..."
 	(cd front && npx cypress open)
-
-e2e-parallel: e2e-db ## Run E2E tests in parallel (N=4 by default, max 8)
-	python3 scripts/e2e/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) $(if $(Q),--quiet,)
-
-e2e-parallel-quiet: e2e-db ## Run E2E tests in parallel, hide server logs (N=4 by default, max 8)
-	python3 scripts/e2e/e2e_parallel.py --workers $(if $(N),$(N),4) $(if $(SPEC),--spec $(SPEC),) --quiet
 
 backup-list:
 	ls -lh backups/mawster_*.sql.gz 2>/dev/null || echo "(no local backups)"

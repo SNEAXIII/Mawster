@@ -18,9 +18,8 @@ Next.js 16 App Router, React 19, Tailwind CSS 4, shadcn/ui (Radix), TypeScript s
 ## E2E tests
 
 The **full Cypress suite is run only by the CI pipeline** — never run it locally.
-Still write or update the corresponding spec in `front/cypress/e2e/`. If you want to
-run a **targeted** spec locally to sanity-check your change (`python3 scripts/e2e/e2e_parallel.py
---spec "<spec>"`), **ask the user for confirmation first** — do not run it unprompted.
+Still write or update the corresponding spec in `front/cypress/e2e/`. A spec is debugged by
+hand with `make e2e-open` (Cypress UI) — suggest it to the user, never run it yourself.
 
 ## Implementation rules
 

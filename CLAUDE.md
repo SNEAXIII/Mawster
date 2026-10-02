@@ -37,9 +37,8 @@ file for review-level corrections.
 raises-arity, zizmor, oxlint, prettier, cypress `tsc`. The app `tsc` is not in there and still needs
 a manual run.
 
-**E2E** runs in CI: launch it only when asked. **Never** `npx cypress run` — the runner is
-`scripts/e2e/e2e_parallel.py --spec "roster/foo.cy.ts"` (needs Docker, mariadb-test). Never pass
-`--include-vision` from `/root/Mawster`: `fake-vision-worker` would consume the prod worker's queue.
+**E2E** runs in CI only (`scripts/e2e/e2e_parallel.py` is CI-only). To debug one spec by hand,
+the user runs `make e2e-open` (Cypress UI) — never launch it yourself.
 
 **Servers**: `docker compose -f compose-dev.yaml up -d`, then `make run-dev` (`api/`) and
 `npm run dev` (`front/`).
@@ -75,7 +74,7 @@ in-memory SQLite, one per xdist worker, not MariaDB. Update tests alongside code
 - `data-cy` + `cy.getByCy('...')` — never CSS classes or text; `ConfirmationDialog` confirm is
   `confirmation-dialog-confirm`
 - `cy.apiLoadChampion(adminToken, name, class)` returns an array — chain `.then(champs => ...)`
-- After fixes, re-run only the failing specs with `--spec`
+- After fixes, re-run only the failed CI jobs (`gh run rerun <id> --failed`)
 - A list that reloads is asserted with `should(($els) => ...)` on `cy.get('[data-cy^="..."]')`:
   `.then()` runs once and a `getByCy` subject stays on detached nodes.
 - Admin endpoints → the admin token, never the owner's.

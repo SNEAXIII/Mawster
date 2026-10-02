@@ -1,24 +1,20 @@
 #!/usr/bin/env python3
 """
-E2E parallel test runner for Mawster.
+E2E parallel test runner for Mawster — CI only (.github/workflows/_test.yaml).
 
 Usage:
-    python scripts/e2e/e2e_parallel.py --workers 4
+    python3 scripts/e2e/e2e_parallel.py --spec "<lanes from spec_planner.py>"
 
-Each worker N gets:
+Each lane N gets its own worker:
   - Backend on port 8010+N  (MariaDB DB: mawster_test_N)
-  - Frontend on port 3010+N (next start serving shared .next-e2e build)
-  - Cypress instance with split=total,splitIndex=N
+  - Frontend on port 3010+N (next start serving the .next-e2e build from the e2e-build job)
+  - Cypress instance running that lane's specs
 """
 
 import argparse
-import atexit
 import json
 import os
-import platform as _platform
 import re
-import shutil
-import signal
 import subprocess
 import sys
 import threading
@@ -28,13 +24,7 @@ import urllib.request
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-# Force UTF-8 stdout on Windows to handle Cypress box-drawing characters (┌─┐│)
-# Without this, print() raises UnicodeEncodeError on cp1252 systems, killing pipe_output.
-if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-
 sys.path.insert(0, str(Path(__file__).parent))
-import contextlib
 
 from config import (  # pylint: disable=import-error,wrong-import-position
     API_DIR,
@@ -48,18 +38,8 @@ from config import (  # pylint: disable=import-error,wrong-import-position
     STATIC_PORT,
     log,
 )
-from IOsModel import IOsModel  # pylint: disable=import-error,wrong-import-position
-from linux_model import (  # pylint: disable=import-error,wrong-import-position
-    LinuxHeadlessModel,
-    LinuxModel,
-)
 from spec_planner import (  # pylint: disable=import-error,wrong-import-position
-    distribute_specs,
-    get_spec_files,
     resolve_spec_lanes,
-)
-from windows_model import (
-    WindowsModel,  # pylint: disable=import-error,wrong-import-position
 )
 
 # Matches the final summary line printed by Cypress after all specs:
@@ -85,17 +65,6 @@ class WorkerFailure:
     backend_logs: list[str]
 
 
-def _get_os_model() -> IOsModel:
-    if _platform.system() == "Windows":
-        return WindowsModel()
-    if os.environ.get("CI") == "true":
-        return LinuxHeadlessModel()
-    return LinuxModel()
-
-
-OS = _get_os_model()
-NPM = OS.npm
-NPX = OS.npx
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[mKHFABCDJG]")
 RESULTS_DIR = FRONT_DIR / "cypress" / "results"
 # Next build output for E2E, separate from the dev .next. The same value
@@ -347,7 +316,7 @@ def parse_cypress_stats(cypress_log: Path) -> dict:
     return {}
 
 
-def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subprocess.Popen:
+def start_backend(worker: int, base_env: dict) -> None:
     api_port = BASE_API_PORT + worker
     db = get_db_name(worker)
     env = {
@@ -371,64 +340,29 @@ def start_backend(worker: int, base_env: dict, quiet: bool = False) -> subproces
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        start_new_session=OS.start_new_session,
     )
     prefix = f"[W{worker}|api:{api_port}]"
     threading.Thread(
         target=pipe_output,
-        args=(proc.stdout, prefix, quiet),
+        args=(proc.stdout, prefix, True),
         kwargs={"log_file": log_dir / "backend.log"},
         daemon=True,
     ).start()
-    return proc
 
 
-def build_frontend(base_env: dict) -> None:
-    """Run a single `next build` before launching workers.
-
-    The build uses NEXT_PUBLIC_DEV_MODE=true so the dev user-picker is
-    included in the bundle.  All workers then share this output via
-    NEXT_DIST_DIR=.next-e2e.
-    """
-    log("Building frontend (single shared build)...")
-    env = {
-        **base_env,
-        "PORT": "3000",
-        "API_PORT": str(BASE_API_PORT),  # placeholder — rewrites are runtime-read anyway
-        "API_SERVER_HOST": "localhost",
-        "STATIC_SERVER_HOST": "127.0.0.1",
-        "STATIC_PORT": str(STATIC_PORT),
-        "NEXT_PUBLIC_DEV_MODE": "true",
-        "NEXT_DIST_DIR": NEXT_E2E_DIST,
-        "NEXT_E2E_BUILD": "true",
-        "PYTHONIOENCODING": "utf-8",
-    }
-    result = subprocess.run(
-        [NPX, "next", "build"],
-        cwd=str(FRONT_DIR),
-        env=env,
-        check=False,  # the returncode is checked right below, with a clearer message
-    )
-    if result.returncode != 0:
-        msg = "next build failed"
-        raise RuntimeError(msg)
-    log("Frontend build complete.")
-
-
-def start_static_server() -> subprocess.Popen:
+def start_static_server() -> None:
     """Serve static-assets/ locally: otherwise the /static rewrite targets the Docker-only
     `static` host, and every image stalls `next start` on a DNS lookup that never succeeds."""
     log(f"Starting static assets server — PORT={STATIC_PORT}")
-    return subprocess.Popen(
+    subprocess.Popen(
         [sys.executable, "-m", "http.server", str(STATIC_PORT), "--bind", "127.0.0.1"],
         cwd=str(ROOT / "static-assets"),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
-        start_new_session=OS.start_new_session,
     )
 
 
-def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subprocess.Popen:
+def start_frontend(worker: int, base_env: dict) -> None:
     api_port = BASE_API_PORT + worker
     front_port = BASE_FRONT_PORT + worker
     env = {
@@ -449,21 +383,19 @@ def start_frontend(worker: int, base_env: dict, quiet: bool = False) -> subproce
     log_dir = worker_log_dir(worker)
     log_dir.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(
-        [NPX, "next", "start", "--port", str(front_port)],
+        ["npx", "next", "start", "--port", str(front_port)],
         cwd=str(FRONT_DIR),
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        start_new_session=OS.start_new_session,
     )
     prefix = f"[W{worker}|front:{front_port}]"
     threading.Thread(
         target=pipe_output,
-        args=(proc.stdout, prefix, quiet),
+        args=(proc.stdout, prefix, True),
         kwargs={"log_file": log_dir / "frontend.log"},
         daemon=True,
     ).start()
-    return proc
 
 
 def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
@@ -483,7 +415,9 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     spec_arg = ",".join(str(s) for s in specs)
 
     cmd = [
-        NPX,
+        "xvfb-run",
+        "-a",
+        "npx",
         "cypress",
         "run",
         "--spec",
@@ -495,7 +429,6 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     ]
     log(f"Worker {worker}: launching Cypress ({spec_count} spec(s))...")
 
-    cmd = OS.cypress_cmd(cmd)
     proc = subprocess.Popen(
         cmd,
         cwd=str(FRONT_DIR),
@@ -532,234 +465,51 @@ def run_parallel(threads: list[threading.Thread]) -> None:
         t.join()
 
 
-def kill_ports(ports: list[int]) -> None:
-    """Kill any process currently listening on the given ports (parallel)."""
-    kill_threads = [threading.Thread(target=OS.kill_port, args=(p,)) for p in ports]
-    run_parallel(kill_threads)
-
-
-def kill_probably_used_ports(worker_number: int) -> None:
-    ports_to_free = [
-        *[BASE_API_PORT + i for i in range(worker_number)],
-        *[BASE_FRONT_PORT + i for i in range(worker_number)],
-        STATIC_PORT,
-    ]
-    log(f"Freeing ports: {ports_to_free}")
-    kill_ports(ports_to_free)
-
-
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run Mawster E2E tests in parallel.")
-    parser.add_argument(
-        "--workers",
-        type=int,
-        default=2,
-        metavar="N",
-        choices=range(1, 9),
-        help="Number of parallel workers (1-8, default: 2)",
-    )
+    parser = argparse.ArgumentParser(description="Run Mawster E2E tests in parallel (CI only).")
     parser.add_argument(
         "--spec",
-        type=str,
-        default=None,
-        metavar="PATTERN",
+        required=True,
+        metavar="LANES",
         help=(
-            "Comma-separated specs or glob (relative to front/cypress/e2e/, or absolute). "
-            "Caps --workers at one worker per spec."
-        ),
-    )
-    parser.add_argument(
-        "--quiet",
-        "-q",
-        action="store_true",
-        help="Hide backend and frontend logs (Cypress output still shown)",
-    )
-    parser.add_argument(
-        "--skip-build",
-        action="store_true",
-        help="Skip the Next.js build step; assume .next-e2e already exists.",
-    )
-    parser.add_argument(
-        "--include-vision",
-        action="store_true",
-        help=(
-            "Include the vision specs, excluded by default. They need RabbitMQ, "
-            "RustFS and exactly one vision worker consuming vision.jobs; without "
-            "that stack they time out rather than fail cleanly."
+            "One runner's lanes from spec_planner.py: specs comma-separated, lanes "
+            "separated by '|'. Each lane gets its own worker."
         ),
     )
     args = parser.parse_args()
 
-    quiet = args.quiet
-
-    # Lanes come pre-balanced from spec_planner, which plans one lane per worker
-    # across the whole matrix. Re-splitting them here would undo that, so a value
-    # carrying several lanes dictates the worker count.
-    planned_lanes: list[list[Path]] = []
-    resolved_specs: set[Path] = set()
-    worker_number = args.workers
-    if args.spec:
-        planned_lanes = resolve_spec_lanes(args.spec)
-        resolved_specs = {spec for lane in planned_lanes for spec in lane}
-        log(f"--spec provided: {len(resolved_specs)} spec(s) in {len(planned_lanes)} lane(s)")
-    if len(planned_lanes) > 1:
-        worker_number = len(planned_lanes)
-    elif resolved_specs:
-        worker_number = min(worker_number, len(resolved_specs))
-
+    spec_buckets = resolve_spec_lanes(args.spec)
+    worker_number = len(spec_buckets)
     start_time = time.time()
     log(f"Starting E2E parallel run with {worker_number} worker(s)...")
 
-    kill_probably_used_ports(worker_number)
-
     base_env = os.environ.copy()
     base_env.setdefault("NEXTAUTH_SECRET", "e2e-local-nextauth-secret")
-    procs: list[subprocess.Popen] = []
-    lock = threading.Lock()
 
-    def cleanup() -> None:
-        log("Shutting down all servers...")
-        for p in procs:
-            with contextlib.suppress(Exception):
-                OS.terminate_proc(p)
-        for p in procs:
-            try:
-                p.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                with contextlib.suppress(Exception):
-                    OS.kill_proc(p)
-        # Remove the shared e2e build dir (only if we built it)
-        if not args.skip_build:
-            next_dir = FRONT_DIR / NEXT_E2E_DIST
-            if next_dir.exists():
-                shutil.rmtree(next_dir, ignore_errors=True)
-                log(f"Removed {next_dir.name}")
+    # Each backend waits for MariaDB and creates its own database (app_testing.py).
+    start_static_server()
+    for worker in range(worker_number):
+        start_backend(worker, base_env)
+        start_frontend(worker, base_env)
 
-    atexit.register(cleanup)
-
-    def handle_sigint(sig, frame) -> None:
-        log("Interrupted — cleaning up...")
-        cleanup()
-        sys.exit(1)
-
-    signal.signal(signal.SIGINT, handle_sigint)
-    if hasattr(signal, "SIGTERM"):
-        signal.signal(signal.SIGTERM, handle_sigint)
-
-    # Phase 0+1 in parallel:
-    #   - build the frontend once (shared across all workers), unless --skip-build
-    #   - create DBs and start backends (don't need the build)
-    # Frontends start after the build completes.
-    procs.append(start_static_server())
-    errors: list[str] = []
-    build_event = threading.Event()
-    build_error: list[str] = []
-
-    def run_build() -> None:
-        try:
-            build_frontend(base_env)
-            build_event.set()
-        except RuntimeError as exc:
-            build_error.append(str(exc))
-            build_event.set()  # unblock waiting workers
-
-    if args.skip_build:
-        log("--skip-build: skipping Next.js build, using existing .next-e2e directory.")
-        build_event.set()  # unblock workers immediately
-
-    def setup_worker(worker: int) -> None:
-        try:
-            # Spawns immediately: the backend waits for MariaDB and creates its own
-            # database on its side, so nothing blocks here while the server boots.
-            backend = start_backend(worker, base_env, quiet)
-            with lock:
-                procs.append(backend)
-            # Wait for the build before launching `next start`
-            build_event.wait()
-            if build_error:
-                return
-            frontend = start_frontend(worker, base_env, quiet)
-            with lock:
-                procs.append(frontend)
-        except Exception as exc:
-            with lock:
-                errors.append(f"Worker {worker}: {exc}")
-
-    all_threads = [threading.Thread(target=setup_worker, args=(i,)) for i in range(worker_number)]
-    if not args.skip_build:
-        all_threads.append(threading.Thread(target=run_build))
-    run_parallel(all_threads)
-
-    if build_error:
-        log(f"ERROR: {build_error[0]}")
-        sys.exit(1)
-    if errors:
-        for err in errors:
-            log(f"ERROR: {err}")
-        sys.exit(1)
-
-    # Phase 2: health checks in parallel
     log("Waiting for all servers to be ready...")
-    health_errors: list[str] = []
+    wait_for_http(localhost_url(STATIC_PORT, "/static/"), "Static assets")
+    for worker in range(worker_number):
+        wait_for_http(localhost_url(BASE_API_PORT + worker), f"Backend {worker}")
+        wait_for_http(
+            localhost_url(BASE_FRONT_PORT + worker, "/api/auth/providers"), f"Frontend {worker}"
+        )
 
-    def health_check_worker(worker: int) -> None:
-        try:
-            wait_for_http(
-                localhost_url(BASE_API_PORT + worker),
-                f"Backend {worker}",
-            )
-            wait_for_http(
-                localhost_url(BASE_FRONT_PORT + worker, "/api/auth/providers"),
-                f"Frontend {worker}",
-            )
-        except TimeoutError as exc:
-            with lock:
-                health_errors.append(str(exc))
-
-    def health_check_static() -> None:
-        try:
-            wait_for_http(localhost_url(STATIC_PORT, "/static/"), "Static assets")
-        except TimeoutError as exc:
-            with lock:
-                health_errors.append(str(exc))
-
-    health_threads = [
-        threading.Thread(target=health_check_worker, args=(i,)) for i in range(worker_number)
-    ]
-    health_threads.append(threading.Thread(target=health_check_static))
-    run_parallel(health_threads)
-
-    if health_errors:
-        for err in health_errors:
-            log(f"ERROR: {err}")
-        sys.exit(1)
-
-    # Phase 3: run Cypress workers in parallel
     log("All servers ready. Launching Cypress workers...")
-    if len(planned_lanes) > 1:
-        spec_buckets = planned_lanes
-        for i, lane in enumerate(planned_lanes):
-            log(f"Worker {i} lane: {[str(s.relative_to(FRONT_DIR)) for s in lane]}")
-    else:
-        if resolved_specs:
-            specs = sorted(resolved_specs)
-            log(f"Running {len(specs)} spec(s): {[str(s.relative_to(FRONT_DIR)) for s in specs]}")
-        else:
-            specs = get_spec_files(include_vision=args.include_vision)
-            log(f"Found {len(specs)} spec file(s) to distribute across {worker_number} worker(s).")
-            if not args.include_vision:
-                log("Vision specs excluded — pass --include-vision to run them.")
-        spec_buckets = distribute_specs(specs, worker_number)
+    for i, lane in enumerate(spec_buckets):
+        log(f"Worker {i} lane: {[str(s.relative_to(FRONT_DIR)) for s in lane]}")
     results: list[int] = [0] * worker_number
     worker_stats: list[dict] = [{} for _ in range(worker_number)]
 
     def cypress_worker(worker: int) -> None:
         results[worker] = run_cypress(worker, spec_buckets[worker], worker_stats[worker])
 
-    cypress_threads = [
-        threading.Thread(target=cypress_worker, args=(i,)) for i in range(worker_number)
-    ]
-    run_parallel(cypress_threads)
+    run_parallel([threading.Thread(target=cypress_worker, args=(i,)) for i in range(worker_number)])
 
     # Merge and print combined results
     merged: dict[str, int] = {}
