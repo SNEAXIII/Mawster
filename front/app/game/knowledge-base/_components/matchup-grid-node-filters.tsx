@@ -31,7 +31,7 @@ export default function MatchupGridNodeFilters({
     1: kb.tier1,
     2: kb.tier2,
     3: kb.miniBoss,
-    4: kb.boss,
+    4: kb.bossZone,
   }
 
   const handleSection = (value: string) => {
