@@ -98,6 +98,8 @@ describe('boardFilename', () => {
   it.each([
     ['My AW Board!', 'my-aw-board-2026-10-04.json'],
     ['  --AW & co--  ', 'aw-co-2026-10-04.json'],
+    ['Équipe défense', 'equipe-defense-2026-10-04.json'],
+    ['Ægon', 'aegon-2026-10-04.json'],
     ['', 'tier-list-2026-10-04.json'],
     ['!!!', 'tier-list-2026-10-04.json'],
   ])('slugs %j as %s', (title, expected) => {
