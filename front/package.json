@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "oxlint --type-aware --fix",
-    "lint:check": "oxlint --type-aware"
+    "lint:check": "oxlint --type-aware",
+    "test": "vitest run"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -63,6 +64,7 @@
     "eslint-plugin-sonarjs": "^4.2.1",
     "oxlint": "^1.85.0",
     "oxlint-tsgolint": "^7.0.2003",
-    "prettier": "^3.9.9"
+    "prettier": "^3.9.9",
+    "vitest": "^5.0.3"
   }
 }
