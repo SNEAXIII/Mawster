@@ -120,6 +120,9 @@ jobs:
       - name: Typecheck Cypress specs
         working-directory: ./front
         run: npx --no-install tsc -p cypress/tsconfig.json --noEmit
+      - name: Run unit tests
+        working-directory: ./front
+        run: npm test
 
   e2e-plan:
     name: E2E — Plan spec distribution
