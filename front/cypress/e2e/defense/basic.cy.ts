@@ -67,11 +67,11 @@ describe('Defense – Basic page rendering', () => {
     });
   });
 
-  it('shows section labels (Boss, Mini Boss, Tier 2, Tier 1)', () => {
+  it('shows section labels (Boss Zone, Mini Boss, Tier 2, Tier 1)', () => {
     setupOwnerWithPlan('def-basic-sections', 'SectionPlyr', 'SectionAlliance', 'SE').then(({ userData }) => {
       cy.apiLogin(userData.user_id, 'defense');
 
-      cy.contains('Boss').should('exist');
+      cy.contains('Boss Zone').should('exist');
       cy.contains('Mini Boss').should('exist');
       cy.contains('Tier 2').should('exist');
       cy.contains('Tier 1').should('exist');

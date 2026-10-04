@@ -933,7 +933,7 @@ const fr: Translations = {
       tier1: 'Tier 1',
       tier2: 'Tier 2',
       miniBoss: 'Mini-boss',
-      boss: 'Boss',
+      bossZone: 'Zone du boss',
       pathLabel: 'Chemin',
       allTiers: 'Tous les tiers',
       allPaths: 'Tous les chemins',
