@@ -1880,10 +1880,12 @@ export function submitNameDialog(name: string): void {
   cy.getByCy('name-dialog-submit').click();
 }
 
-// War/defense map nodes sit inside a scroll container, so scroll them into
-// view first and let the click wait for the node to be actionable.
+// War/defense map nodes sit inside a scroll container, so scroll them into view first.
+// The click hangs off a fresh cy.get: only queries are re-run when a re-render detaches the node.
 export function openWarNode(node: number): void {
-  cy.getByCy(`war-node-${node}`).scrollIntoView().should('be.visible').click();
+  const selector = `[data-cy="war-node-${node}"]`;
+  cy.get(selector).scrollIntoView();
+  cy.get(selector).should('be.visible').click();
 }
 
 // Give a champion to a game account and place it as a defender in one step —
