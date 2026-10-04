@@ -1,3 +1,4 @@
+import { fold } from './filters'
 import { NO_TAGS, hasAnyTag, type BoardState, type ChampionTags } from './types'
 /** Shape of a board written to a file. Versioned so a future one can be read. */
 interface BoardExport {
@@ -16,9 +17,7 @@ interface BoardExport {
  */
 export function boardFilename(title: string, extension: string): string {
   const slug =
-    title
-      .trim()
-      .toLowerCase()
+    fold(title.trim())
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '') || 'tier-list'
   return `${slug}-${new Date().toISOString().slice(0, 10)}.${extension}`
