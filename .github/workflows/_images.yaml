@@ -1,6 +1,6 @@
 name: Images
 
-# Called by ci.yaml, which resolves the tags once so all five images match.
+# Called by ci-cd.yaml, which resolves the tags once so all five images match.
 on:
   workflow_call:
     inputs:

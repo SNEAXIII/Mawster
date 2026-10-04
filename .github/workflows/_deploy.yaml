@@ -1,6 +1,6 @@
 name: Deploy
 
-# Called by ci.yaml. Both jobs stay together because they are the same step of the
+# Called by ci-cd.yaml. Both jobs stay together because they are the same step of the
 # pipeline pointed at two environments, and they share the `mawster-deploy`
 # concurrency group — only one of them ever runs for a given event.
 on:
