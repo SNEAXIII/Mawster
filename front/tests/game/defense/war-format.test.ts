@@ -27,4 +27,14 @@ describe('map sections', () => {
 
     expect(nodes).toEqual(Array.from({ length: count }, (_, i) => i + 1))
   })
+
+  it.each([
+    ['Mini Boss', 37, 49],
+    ['Boss', 50, 50],
+  ])('regular map %s section holds nodes %i to %i', (label, from, to) => {
+    const section = REGULAR_MAP_SECTIONS.filter((s) => s.label === label)
+    const nodes = nodeNumbers(section).toSorted((a, b) => a - b)
+
+    expect(nodes).toEqual(Array.from({ length: to - from + 1 }, (_, i) => from + i))
+  })
 })
