@@ -29,8 +29,8 @@ describe('map sections', () => {
   })
 
   it.each([
-    ['Mini Boss', 37, 49],
-    ['Boss', 50, 50],
+    ['Mini Boss', 37, 45],
+    ['Boss', 46, 50],
   ])('regular map %s section holds nodes %i to %i', (label, from, to) => {
     const section = REGULAR_MAP_SECTIONS.filter((s) => s.label === label)
     const nodes = nodeNumbers(section).toSorted((a, b) => a - b)
