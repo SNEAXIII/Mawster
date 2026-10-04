@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from config import (  # pylint: disable=import-error,wrong-import-position
     API_DIR,
     BASE_API_PORT,
+    BASE_CDP_PORT,
     BASE_FRONT_PORT,
     DB_PREFIX,
     FRONT_DIR,
@@ -429,9 +430,14 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     ]
     log(f"Worker {worker}: launching Cypress ({spec_count} spec(s))...")
 
+    env = {
+        **os.environ,
+        "ELECTRON_EXTRA_LAUNCH_ARGS": f"--remote-debugging-port={BASE_CDP_PORT + worker}",
+    }
     proc = subprocess.Popen(
         cmd,
         cwd=str(FRONT_DIR),
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
