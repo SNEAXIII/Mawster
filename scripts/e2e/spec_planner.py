@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """Spec discovery, weighting and distribution for the Cypress E2E suite.
 
-CI calls this for the matrix; e2e_parallel.py imports the same functions to
-resolve the lanes it is handed.
+CI calls this for the matrix; e2e_parallel.py imports resolve_spec_lanes to
+split the lanes it is handed.
 
 Specs are balanced across `runners * workers` lanes rather than across runners:
 a runner is done when its slowest worker is done, so the lane — one worker's
 share — is the unit worth balancing.
 
-    python3 scripts/e2e/spec_planner.py --runners 8 --workers 2            # matrix JSON, as CI consumes it
-    python3 scripts/e2e/spec_planner.py --runners 8 --workers 2 --weights  # readable weight report
+    python3 scripts/e2e/spec_planner.py --runners 8 --workers 2  # matrix JSON, as CI consumes it
 """
 
 import argparse
@@ -38,9 +37,7 @@ LANE_SEPARATOR = "|"
 # RustFS and a vision worker running, and only ONE worker may consume
 # `vision.jobs` at a time or message delivery stops being deterministic.
 #
-# Ordinary runners have none of that, so they are excluded by default and opted
-# into with --include-vision. They are meant to land on a single dedicated
-# runner with the full stack, never spread across the parallel matrix.
+# CI runners have none of that, so they are never planned.
 VISION_SPEC_MARKER = "vision"
 
 
@@ -48,15 +45,9 @@ def is_vision_spec(spec: Path) -> bool:
     return VISION_SPEC_MARKER in spec.name
 
 
-def get_spec_files(include_vision: bool = False) -> list[Path]:
-    """Return Cypress spec files sorted by path.
-
-    Vision specs are excluded unless asked for: see VISION_SPEC_MARKER.
-    """
-    specs = sorted(E2E_DIR.rglob(SPEC_GLOB))
-    if include_vision:
-        return specs
-    return [s for s in specs if not is_vision_spec(s)]
+def get_spec_files() -> list[Path]:
+    """Return Cypress spec files sorted by path, vision specs excluded: see VISION_SPEC_MARKER."""
+    return [s for s in sorted(E2E_DIR.rglob(SPEC_GLOB)) if not is_vision_spec(s)]
 
 
 def count_tests(spec: Path) -> int:
@@ -67,15 +58,8 @@ def count_tests(spec: Path) -> int:
         return 1
 
 
-def distribute_specs(
-    specs: list[Path], n_buckets: int, *, label: str = "worker"
-) -> list[list[Path]]:
-    """Greedy bin-packing: assign heaviest specs first to the lightest bucket.
-
-    Called at both levels of the split — across CI runners by build_matrix, then
-    across the workers of one runner by e2e_parallel — hence `label`, so the log
-    line says which one it is talking about.
-    """
+def distribute_specs(specs: list[Path], n_buckets: int) -> list[list[Path]]:
+    """Greedy bin-packing: assign heaviest specs first to the lightest bucket."""
     weighted = sorted(((s, count_tests(s)) for s in specs), key=lambda x: x[1], reverse=True)
     buckets: list[list[Path]] = [[] for _ in range(n_buckets)]
     totals = [0] * n_buckets
@@ -83,15 +67,14 @@ def distribute_specs(
         i = min(range(n_buckets), key=lambda i: totals[i])
         buckets[i].append(spec)
         totals[i] += w
-    log(f"Spec distribution (estimated tests per {label}): {totals}")
+    log(f"Spec distribution (estimated tests per lane): {totals}")
     return buckets
 
 
 def resolve_spec_lanes(raw_specs: str) -> list[list[Path]]:
     """Split a --spec value into the per-worker lanes the planner laid out.
 
-    A value without LANE_SEPARATOR is a single lane — a hand-typed --spec keeps
-    working untouched.
+    A value without LANE_SEPARATOR is a single lane.
     """
     return [
         sorted(resolve_spec_paths(part)) for part in raw_specs.split(LANE_SEPARATOR) if part.strip()
@@ -147,7 +130,7 @@ def _relative(spec: Path) -> str:
     return str(spec.relative_to(FRONT_DIR)).replace("\\", "/")
 
 
-def build_matrix(runners: int, workers: int = 1, include_vision: bool = False) -> list[dict]:
+def build_matrix(runners: int, workers: int = 1) -> list[dict]:
     """Return the GitHub Actions matrix entries, one per non-empty runner.
 
     Specs are balanced across `runners * workers` lanes, not across runners: a
@@ -156,9 +139,7 @@ def build_matrix(runners: int, workers: int = 1, include_vision: bool = False) -
     relative to FRONT_DIR (forward-slash, cross-platform), lanes separated by
     LANE_SEPARATOR so e2e_parallel hands each worker the lane planned for it.
     """
-    lanes = distribute_specs(
-        get_spec_files(include_vision=include_vision), runners * workers, label="lane"
-    )
+    lanes = distribute_specs(get_spec_files(), runners * workers)
     return [
         {
             "runner": str(i),
@@ -169,32 +150,6 @@ def build_matrix(runners: int, workers: int = 1, include_vision: bool = False) -
         for i, runner_lanes in enumerate(_group_lanes(lanes, runners, workers))
         if any(runner_lanes)
     ]
-
-
-def plan(runners: int, workers: int = 1, include_vision: bool = False) -> None:
-    print(json.dumps(build_matrix(runners, workers, include_vision=include_vision)))
-    sys.exit(0)
-
-
-def report_weights(runners: int, workers: int = 1, include_vision: bool = False) -> None:
-    specs = get_spec_files(include_vision=include_vision)
-    weights = sorted(((count_tests(s), s) for s in specs), reverse=True)
-    total = sum(w for w, _ in weights)
-
-    print(f"{len(specs)} specs, {total} tests\n")
-    print(f"{'tests':>5}  spec")
-    for weight, spec in weights:
-        print(f"{weight:>5}  {spec.relative_to(E2E_DIR)}")
-
-    lanes = distribute_specs(specs, runners * workers, label="lane")
-    grouped = _group_lanes(lanes, runners, workers)
-    print(f"\n{runners} runners x {workers} worker(s) = {runners * workers} lanes:")
-    for i, runner_lanes in enumerate(grouped):
-        detail = "  ".join(
-            f"lane {_lane_weight(lane):>3} ({len(lane)} specs)" for lane in runner_lanes
-        )
-        slowest = max(_lane_weight(lane) for lane in runner_lanes)
-        print(f"  runner {i}: {detail}   -> slowest lane {slowest}")
 
 
 def main() -> None:
@@ -213,22 +168,8 @@ def main() -> None:
         metavar="N",
         help="Workers per runner (default: 1). Specs are balanced across runners * workers lanes.",
     )
-    parser.add_argument(
-        "--weights",
-        action="store_true",
-        help="Print a readable weight report instead of the matrix JSON.",
-    )
-    parser.add_argument(
-        "--include-vision",
-        action="store_true",
-        help="Include the vision specs, excluded by default.",
-    )
     args = parser.parse_args()
-
-    if args.weights:
-        report_weights(args.runners, args.workers, include_vision=args.include_vision)
-        return
-    plan(args.runners, args.workers, include_vision=args.include_vision)
+    print(json.dumps(build_matrix(args.runners, args.workers)))
 
 
 if __name__ == "__main__":
