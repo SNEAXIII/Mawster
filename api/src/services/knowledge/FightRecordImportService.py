@@ -6,9 +6,11 @@ from sqlalchemy import tuple_
 from sqlmodel import select
 from starlette import status
 
+from src.Messages.war_messages import ko_count_exceeds_format
 from src.models.war.Season import Season
 from src.models.war.WarFightRecordImport import WarFightRecordImport
 from src.services.alliance.AllianceService import AllianceService
+from src.services.alliance.war.WarFormatConfig import for_format
 from src.utils.db import SessionDep
 
 
@@ -22,7 +24,7 @@ class FightRecordImportService:
             return None
 
     @classmethod
-    async def resolve_season(cls, session: SessionDep, season_name: str) -> uuid.UUID:
+    async def resolve_season(cls, session: SessionDep, season_name: str) -> Season:
         number = cls._parse_season_number(season_name)
         if number is None:
             raise HTTPException(
@@ -34,7 +36,7 @@ class FightRecordImportService:
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_CONTENT, f"Season not found: '{season_name}'"
             )
-        return season.id
+        return season
 
     @classmethod
     async def import_records(
@@ -47,9 +49,16 @@ class FightRecordImportService:
         account = await AllianceService.require_officer_account(
             session, alliance_id, current_user_id
         )
-        season_map = {
+        seasons = {
             name: await cls.resolve_season(session, name) for name in {r.season_name for r in rows}
         }
+        for row in rows:
+            max_ko = for_format(seasons[row.season_name].format).max_ko_count
+            if row.ko_count > max_ko:
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_CONTENT, ko_count_exceeds_format(max_ko)
+                )
+        season_map = {name: season.id for name, season in seasons.items()}
         # A fight is identified by who fought whom, where, and in which season.
         key_cols = (
             WarFightRecordImport.champion_id,

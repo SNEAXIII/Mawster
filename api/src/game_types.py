@@ -27,8 +27,8 @@ Rank = Annotated[int, Field(ge=1, le=6)]
 Ascension = Annotated[int, Field(ge=0, le=2)]
 Signature = Annotated[int, Field(ge=0, le=200)]
 
-# A defender cannot take more than 3 attacker KOs before the node is exhausted.
-KoCount = Annotated[int, Field(ge=0, le=3)]
+# Widest per-format KO cap (Big Thing); WarFormatConfig narrows it per format.
+KoCount = Annotated[int, Field(ge=0, le=10)]
 
 # Defense template and plan name length limit.
 DEFENSE_NAME_MAX_LENGTH = 50

@@ -59,3 +59,7 @@ def member_max_attackers_reached(max_attackers: int) -> str:  # pragma: no cover
 
 def node_exceeds_map(max_node: int) -> str:  # pragma: no cover
     return f"Node number must be between 1 and {max_node} for the current format"
+
+
+def ko_count_exceeds_format(max_ko: int) -> str:
+    return f"KO count must be between 0 and {max_ko} for the current format"

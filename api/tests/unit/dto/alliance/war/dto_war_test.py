@@ -473,11 +473,11 @@ def test_war_response_includes_win_elo_change_tier():
 
 
 class TestWarKoUpdateRequest:
-    @pytest.mark.parametrize("ko_count", [0, 1, 2, 3])
+    @pytest.mark.parametrize("ko_count", [0, 3, 10])
     def test_within_bounds(self, ko_count):
         assert WarKoUpdateRequest(ko_count=ko_count).ko_count == ko_count
 
-    @pytest.mark.parametrize("ko_count", [-1, 4, 99])
+    @pytest.mark.parametrize("ko_count", [-1, 11, 99])
     def test_out_of_bounds_rejected(self, ko_count):
         with pytest.raises(ValidationError):
             WarKoUpdateRequest(ko_count=ko_count)
