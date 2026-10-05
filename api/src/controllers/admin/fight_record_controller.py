@@ -6,6 +6,7 @@ from starlette import status as http_status
 
 from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
 from src.enums.FightRecordSource import FightRecordSource
+from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonSelectorType import SeasonSelectorType
 from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordService import FightRecordService
@@ -43,6 +44,7 @@ async def list_fight_records(
     tier: Annotated[int | None, Query()] = None,
     season_selector: Annotated[SeasonSelectorType | None, Query()] = None,
     season_id: Annotated[uuid.UUID | None, Query()] = None,
+    season_format: Annotated[SeasonFormat | None, Query()] = None,
     alliance_id: Annotated[uuid.UUID | None, Query()] = None,
     battlegroup: Annotated[int | None, Query(ge=1, le=3)] = None,
     game_account_pseudo: Annotated[str | None, Query()] = None,
@@ -72,6 +74,7 @@ async def list_fight_records(
         tier=tier,
         season_selector=season_selector,
         season_id=season_id,
+        season_format=season_format,
         alliance_id=alliance_id,
         battlegroup=battlegroup,
         game_account_pseudo=game_account_pseudo,

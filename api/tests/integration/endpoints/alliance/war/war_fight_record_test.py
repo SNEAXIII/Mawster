@@ -8,6 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
 from src.enums.Roles import Roles
+from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarBoost import WarBoost
 from src.enums.WarStatus import WarStatus
@@ -715,6 +716,30 @@ class TestListFightRecords:
         assert resp.json()["total"] == 1
         assert resp.json()["items"][0]["node_number"] == 11
         assert resp.json()["items"][0]["season_number"] is None
+
+    @pytest.mark.asyncio
+    async def test_filter_by_season_format(self):
+        """season_format must keep only records whose season has that format."""
+        data = await _setup_war_with_fight()
+        headers = create_auth_headers(user_id=str(USER_ID))
+
+        regular = Season(number=67, status=SeasonStatus.ENDED)
+        big_thing = Season(number=68, status=SeasonStatus.ENDED, format=SeasonFormat.BIG_THING)
+        await load_objects([regular, big_thing])
+
+        await _push_fights_in_two_wars(data, regular.id, big_thing.id)
+
+        resp = await execute_get_request("/fight-records?season_format=big_thing", headers=headers)
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 1
+        assert resp.json()["items"][0]["season_number"] == 68
+        assert resp.json()["items"][0]["season_format"] == "big_thing"
+
+        resp = await execute_get_request("/fight-records?season_format=regular", headers=headers)
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 1
+        assert resp.json()["items"][0]["season_number"] == 67
+        assert resp.json()["items"][0]["season_format"] == "regular"
 
     @pytest.mark.asyncio
     async def test_filter_by_season_selector_current(self):
