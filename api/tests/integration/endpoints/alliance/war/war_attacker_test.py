@@ -7,8 +7,10 @@ import pytest
 
 from src.enums.Roles import Roles
 from src.enums.SeasonFormat import SeasonFormat
+from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarBoost import WarBoost
 from src.models import User
+from src.models.war.Season import Season
 from src.models.war.War import War
 from tests.integration.endpoints.setup.defense_setup import push_plan, push_plan_node
 from tests.integration.endpoints.setup.game_setup import (
@@ -648,17 +650,26 @@ class TestUpdateKo:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_update_ko_above_max_rejected(self):
-        """A KO count over the 3 cap is refused before reaching the service."""
+    @pytest.mark.parametrize(
+        ("fmt", "ko_count", "expected"),
+        [
+            (SeasonFormat.REGULAR, 4, 422),
+            (SeasonFormat.BIG_THING, 10, 200),
+            (SeasonFormat.BIG_THING, 11, 422),
+        ],
+    )
+    async def test_update_ko_capped_by_war_format(self, fmt, ko_count, expected):
+        """Regular caps KOs at 3, Big Thing at 10."""
+        await load_objects([Season(number=99, status=SeasonStatus.ACTIVE, format=fmt)])
         data = await _setup_attacker_scenario()
-        headers = create_auth_headers(user_id=str(USER_ID))
+        assert (await _assign(data)).status_code == 200
 
         response = await execute_patch_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/ko",
-            payload={"ko_count": 4},
-            headers=headers,
+            payload={"ko_count": ko_count},
+            headers=create_auth_headers(user_id=str(USER2_ID)),
         )
-        assert response.status_code == 422
+        assert response.status_code == expected
 
     @pytest.mark.asyncio
     async def test_update_ko_node_not_found(self):

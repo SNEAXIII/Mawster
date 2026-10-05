@@ -61,6 +61,7 @@ from src.Messages.war_messages import (
     TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER,
     WAR_NOT_FOUND,
     champion_with_id_not_found,
+    ko_count_exceeds_format,
     member_max_attackers_reached,
     node_exceeds_map,
 )
@@ -256,6 +257,7 @@ class WarService:
                 "format": war_format,
                 "node_count": params.node_count,
                 "max_attackers_per_member": params.max_attackers_per_member,
+                "max_ko_count": params.max_ko_count,
             }
         )
 
@@ -904,6 +906,13 @@ class WarService:
         placement = await cls._require_active_attacker(
             session, war_id, battlegroup, node_number, KO_COUNT_NO_ATTACKER_ASSIGNED
         )
+        max_ko = for_format(
+            await cls._war_format(session, await cls._load_war(session, war_id))
+        ).max_ko_count
+        if ko_count > max_ko:
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, ko_count_exceeds_format(max_ko)
+            )
         placement.ko_count = ko_count
         await session.commit()
         return await cls._placement_response(session, placement.id)

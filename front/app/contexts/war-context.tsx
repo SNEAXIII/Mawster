@@ -616,7 +616,7 @@ export function WarProvider({
     const key = koKey(activeWarId, nodeNumber)
     const base =
       pending[key]?.value ?? placements.find((p) => p.node_number === nodeNumber)?.ko_count ?? 0
-    const koCount = Math.min(Math.max(base + delta, 0), MAX_KO_COUNT)
+    const koCount = Math.min(Math.max(base + delta, 0), currentWar?.max_ko_count ?? MAX_KO_COUNT)
     if (koCount === base) return
 
     patchPlacement(nodeNumber, { ko_count: koCount })

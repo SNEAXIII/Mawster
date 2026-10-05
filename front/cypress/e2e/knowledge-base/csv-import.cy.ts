@@ -43,7 +43,7 @@ describe('Knowledge Base – CSV Import', () => {
     });
   });
 
-  it('rejects a ko_count above the three-KO cap', () => {
+  it('rejects a ko_count above the ten-KO cap', () => {
     setupWarOwner('csv-kocap', 'CapUser', 'CapAlliance', 'CAP').then(({ adminData, ownerData }) => {
       cy.apiCreateSeason(adminData.access_token, 1).then(() => {
         cy.apiLoadChampion(adminData.access_token, 'Magik', 'Mystic').then(() => {
@@ -51,7 +51,7 @@ describe('Knowledge Base – CSV Import', () => {
             cy.apiLogin(ownerData.user_id, 'knowledge-base-import');
 
             const csv = `attacker,defender,node,season,ko_count
-Magik,Serpent,15,S1,4
+Magik,Serpent,15,S1,11
 `;
             cy.getByCy('csv-file-input').selectFile({
               contents: Cypress.Buffer.from(csv),

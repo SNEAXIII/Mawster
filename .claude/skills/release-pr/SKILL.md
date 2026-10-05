@@ -41,8 +41,9 @@ Toujours `git fetch origin --tags --prune` d'abord.
    gh run list --workflow "Release Please" --branch main -L 1 --json status,conclusion,url
    ```
 
-   - `in_progress` / `queued` : attendre par pauses de 5 s tant que le statut évolue, **plafond
-     dur 10 min**. Au-delà, prévenir (run coincé : queue ou token) et s'arrêter.
+   - `in_progress` / `queued` : poser un **watch** en tâche de fond (`gh run watch <id>
+     --exit-status`, `run_in_background`) et **continuer à travailler** ; la notification reprend
+     le pré-vol ici.
    - `conclusion` ≠ `success` : s'arrêter en donnant l'URL du run. Un release-please rouge veut
      dire tag ou CHANGELOG manquants — c'est la cause racine d'un contenu non taggé.
 
@@ -101,7 +102,8 @@ s'appliquent pas : staging n'exige aucun tag — c'est là qu'on teste avant de 
 
 Avant d'agir, afficher : le mode, la branche cible, la version promue, les contrôles passés, et
 ce qui va être mergé (PR release-please + PR de promotion). Une fois confirmé, tout s'enchaîne
-sans redemander.
+sans redemander : chaque attente (tag, run de déploiement) est un watch en tâche de fond pendant
+lequel le travail continue, et sa notification enchaîne l'étape suivante.
 
 ## Déroulé — prod
 
@@ -126,7 +128,7 @@ sans redemander.
    Tant que `git describe --exact-match` ne renvoie pas `vX.Y.Z`, ne pas promouvoir : le job
    `changes` de la CI résout `LAST_TAG` sur le checkout de `release`, verrait encore le tag
    précédent, poserait `released=false` et `deploy` échouerait sur « the content promoted to
-   release does not match the latest tag ». Plafond dur 10 min, puis s'arrêter.
+   release does not match the latest tag ». Le `gh run watch` part en tâche de fond.
 
 3. **PR de promotion** :
 
@@ -172,7 +174,8 @@ gh run watch <id> --exit-status
 ```
 
 Rapporter la conclusion du job `deploy` (ou `deploy-staging`) et l'URL du run. En cas d'échec :
-nommer le job rouge et donner l'URL. **Ne pas diagnostiquer ni corriger** — la release s'arrête là.
+diagnostiquer (`gh run view <id> --log-failed` : job, étape, erreur exacte) et rapporter avec
+l'URL. **Ne rien corriger** — sur `release`, un correctif repasse par une PR de feature.
 
 ## Règles
 
