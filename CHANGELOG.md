@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.23.1](https://github.com/SNEAXIII/Mawster/compare/v1.23.0...v1.23.1) (2026-10-05)
+
+
+### Corrigé
+
+* allow up to 10 KOs per node in Big Thing wars ([#669](https://github.com/SNEAXIII/Mawster/issues/669)) ([11b7070](https://github.com/SNEAXIII/Mawster/commit/11b707096e8b63463157599f86ab2714c417984c))
+
 ## [1.23.0](https://github.com/SNEAXIII/Mawster/compare/v1.22.4...v1.23.0) (2026-10-05)
 
 
