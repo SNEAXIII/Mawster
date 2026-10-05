@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.23.0](https://github.com/SNEAXIII/Mawster/compare/v1.22.4...v1.23.0) (2026-10-05)
+
+
+### Ajouté
+
+* filter the knowledge base by season format ([3c1127a](https://github.com/SNEAXIII/Mawster/commit/3c1127aadb1b951f729faa2e08c95e491e001468))
+
 ## [1.22.4](https://github.com/SNEAXIII/Mawster/compare/v1.22.3...v1.22.4) (2026-10-04)
 
 
