@@ -68,6 +68,7 @@ class WarResponse(BaseModel):
     format: SeasonFormat = SeasonFormat.REGULAR
     node_count: int = 50
     max_attackers_per_member: int = 3
+    max_ko_count: int = 3
 
     @model_validator(mode="before")
     @classmethod

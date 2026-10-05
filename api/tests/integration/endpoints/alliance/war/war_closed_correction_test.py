@@ -371,8 +371,16 @@ class TestClosedWarFormat:
         wars = {w["id"]: w for w in response.json()}
         closed = wars[str(data["war"].id)]
         running = wars[created.json()["id"]]
-        assert (closed["format"], closed["node_count"]) == ("regular", 50)
-        assert (running["format"], running["node_count"]) == ("big_thing", 10)
+        assert (closed["format"], closed["node_count"], closed["max_ko_count"]) == (
+            "regular",
+            50,
+            3,
+        )
+        assert (running["format"], running["node_count"], running["max_ko_count"]) == (
+            "big_thing",
+            10,
+            10,
+        )
 
 
 class TestWarListExposesCorrectability:

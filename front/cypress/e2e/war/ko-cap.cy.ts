@@ -1,7 +1,8 @@
 import { BACKEND, setupAssignedAttacker } from '../../support/e2e';
 
-/** A defender is exhausted after 3 attacker KOs, so nothing may record more. */
+/** A defender is exhausted after 3 attacker KOs in Regular, 10 in Big Thing. */
 const MAX_KO = 3;
+const BIG_THING_MAX_KO = 10;
 
 describe('War – KO cap', () => {
   beforeEach(() => {
@@ -32,6 +33,20 @@ describe('War – KO cap', () => {
 
       cy.getByCy('ko-value-node-10').should('have.text', '2');
       cy.getByCy('ko-inc-node-10').should('not.be.disabled');
+    });
+  });
+
+  it('lets a Big Thing war go up to ten KOs', () => {
+    setupAssignedAttacker('ko-cap-bt').then(({ adminToken, ownerData, allianceId, warId }) => {
+      cy.apiRequest(adminToken, 'POST', '/admin/seasons', { number: 73, format: 'big_thing' }).then((res) => {
+        cy.apiOpenSeason(adminToken, res.body.id);
+      });
+      cy.apiUpdateWarKo(ownerData.access_token, allianceId, warId, 1, 10, BIG_THING_MAX_KO - 1);
+      cy.openWarAttackerPanel(ownerData.user_id);
+
+      cy.getByCy('ko-inc-node-10').should('not.be.disabled').click();
+      cy.getByCy('ko-value-node-10').should('have.text', String(BIG_THING_MAX_KO));
+      cy.getByCy('ko-inc-node-10').should('be.disabled');
     });
   });
 

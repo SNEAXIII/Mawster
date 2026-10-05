@@ -67,7 +67,9 @@ export default function AttackerEntryRow({
     isMapReadOnly,
     isMine,
     prefights,
+    currentWar,
   } = useWar()
+  const maxKo = currentWar?.max_ko_count ?? MAX_KO_COUNT
   // When assisted, only the assistor (or an officer) can toggle combat complete
   const assistorCanManage =
     placement.is_assisted && isMine(placement.assistor_game_account_id ?? '')
@@ -262,12 +264,12 @@ export default function AttackerEntryRow({
                     className={cn(
                       'rounded flex items-center justify-center text-xs bg-muted hover:bg-accent transition-colors',
                       btnSize,
-                      placement.ko_count >= MAX_KO_COUNT && 'opacity-40 cursor-not-allowed'
+                      placement.ko_count >= maxKo && 'opacity-40 cursor-not-allowed'
                     )}
                     onClick={() =>
-                      placement.ko_count < MAX_KO_COUNT && handleAdjustKo(placement.node_number, 1)
+                      placement.ko_count < maxKo && handleAdjustKo(placement.node_number, 1)
                     }
-                    disabled={placement.ko_count >= MAX_KO_COUNT}
+                    disabled={placement.ko_count >= maxKo}
                     data-cy={`ko-inc-node-${placement.node_number}`}
                   >
                     <Plus className={cn(iconSize)} />
