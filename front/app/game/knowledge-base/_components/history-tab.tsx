@@ -50,6 +50,7 @@ export default function HistoryTab() {
           planningErrorOnly={vm.planningErrorOnly}
           seasonSelector={vm.seasonSelector}
           seasonId={vm.seasonId}
+          seasonFormat={vm.seasonFormat}
           seasons={vm.seasons}
           allianceId={vm.allianceId}
           accessibleAlliances={vm.accessibleAlliances}
@@ -57,6 +58,7 @@ export default function HistoryTab() {
           onTogglePlanningError={vm.handleTogglePlanningError}
           onSeasonSelectorChange={vm.handleSeasonSelectorChange}
           onSeasonIdChange={vm.handleSeasonIdChange}
+          onSeasonFormatChange={vm.handleSeasonFormatChange}
           onAllianceChange={vm.handleAllianceChange}
           source={vm.source}
           onSourceChange={vm.handleSourceChange}

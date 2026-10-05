@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import BaseModel, Field, model_validator
 
 from src.dto.mixins import ChampionRef
+from src.enums.SeasonFormat import SeasonFormat
 from src.enums.WarBoost import WarBoost
 
 
@@ -40,6 +41,7 @@ class WarFightRecordResponse(ChampionRef):
     alliance_id: uuid.UUID
     season_id: uuid.UUID | None = None
     season_number: int | None = None
+    season_format: SeasonFormat | None = None
     game_account_pseudo: str | None = None
     battlegroup: int | None = None
     node_number: int
