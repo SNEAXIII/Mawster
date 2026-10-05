@@ -733,11 +733,13 @@ class TestListFightRecords:
         assert resp.status_code == 200
         assert resp.json()["total"] == 1
         assert resp.json()["items"][0]["season_number"] == 68
+        assert resp.json()["items"][0]["season_format"] == "big_thing"
 
         resp = await execute_get_request("/fight-records?season_format=regular", headers=headers)
         assert resp.status_code == 200
         assert resp.json()["total"] == 1
         assert resp.json()["items"][0]["season_number"] == 67
+        assert resp.json()["items"][0]["season_format"] == "regular"
 
     @pytest.mark.asyncio
     async def test_filter_by_season_selector_current(self):

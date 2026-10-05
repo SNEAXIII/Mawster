@@ -113,6 +113,14 @@ export default function KnowledgeBaseTableRow({
         data-cy='fight-record-season'
       >
         {r.season_number != null ? `S${r.season_number}` : '—'}
+        {r.season_format && (
+          <div
+            className='text-xs text-muted-foreground'
+            data-cy='fight-record-season-format'
+          >
+            {r.season_format === 'big_thing' ? kb.seasonFormatBigThing : kb.seasonFormatRegular}
+          </div>
+        )}
       </td>
       {!exporting && <td className={cn(COMPACT_COL, 'py-2')}>{r.tier}</td>}
       {!exporting && (
