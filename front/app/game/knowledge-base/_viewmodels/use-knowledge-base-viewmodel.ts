@@ -11,6 +11,7 @@ import {
   type Season,
   type AccessibleAlliance,
 } from '@/app/services/fight-records'
+import type { SeasonFormat } from '@/app/services/season'
 import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { reportNote } from '@/app/services/moderation'
 import { withToast } from '@/app/lib/with-toast'
@@ -75,6 +76,9 @@ export function useKnowledgeBaseViewModel() {
     () => getInitialParams().get('season_selector') ?? 'all_seasons'
   )
   const [seasonId, setSeasonId] = useState<string | null>(() => getInitialParams().get('season_id'))
+  const [seasonFormat, setSeasonFormat] = useState<SeasonFormat | 'all'>(
+    () => (getInitialParams().get('season_format') as SeasonFormat | null) ?? 'all'
+  )
   const [seasons, setSeasons] = useState<Season[]>([])
   const [allianceId, setAllianceId] = useState<string | null>(() =>
     getInitialParams().get('alliance_id')
@@ -124,6 +128,7 @@ export function useKnowledgeBaseViewModel() {
     if (planningErrorOnly !== null) params.set('planning_error_only', String(planningErrorOnly))
     if (seasonSelector !== 'all_seasons') params.set('season_selector', seasonSelector)
     if (seasonId) params.set('season_id', seasonId)
+    if (seasonFormat !== 'all') params.set('season_format', seasonFormat)
     if (allianceId) params.set('alliance_id', allianceId)
     if (source !== DEFAULT_SOURCE) params.set('source', source)
     if (page !== 1) params.set('page', String(page))
@@ -137,6 +142,7 @@ export function useKnowledgeBaseViewModel() {
     planningErrorOnly,
     seasonSelector,
     seasonId,
+    seasonFormat,
     allianceId,
     source,
     page,
@@ -160,6 +166,7 @@ export function useKnowledgeBaseViewModel() {
         planning_error_only: planningErrorOnly ?? undefined,
         season_selector: seasonSelector,
         season_id: seasonId ?? undefined,
+        season_format: seasonFormat === 'all' ? undefined : seasonFormat,
         alliance_id: allianceId ?? undefined,
         source,
         page,
@@ -183,6 +190,7 @@ export function useKnowledgeBaseViewModel() {
     planningErrorOnly,
     seasonSelector,
     seasonId,
+    seasonFormat,
     allianceId,
     source,
     page,
@@ -239,6 +247,7 @@ export function useKnowledgeBaseViewModel() {
     setPlanningErrorOnly(null)
     setSeasonSelector('all_seasons')
     setSeasonId(null)
+    setSeasonFormat('all')
     setAllianceId(null)
     setSource(DEFAULT_SOURCE)
     setPage(1)
@@ -251,6 +260,11 @@ export function useKnowledgeBaseViewModel() {
     } else {
       setSeasonId(null)
     }
+    setPage(1)
+  }
+
+  const handleSeasonFormatChange = (value: string) => {
+    setSeasonFormat(value as SeasonFormat | 'all')
     setPage(1)
   }
 
@@ -273,6 +287,7 @@ export function useKnowledgeBaseViewModel() {
     filters.game_account_pseudo ||
     planningErrorOnly !== null ||
     seasonSelector !== 'all_seasons' ||
+    seasonFormat !== 'all' ||
     allianceId !== null
   )
 
@@ -288,6 +303,7 @@ export function useKnowledgeBaseViewModel() {
     planningErrorOnly,
     seasonSelector,
     seasonId,
+    seasonFormat,
     seasons,
     allianceId,
     accessibleAlliances,
@@ -298,6 +314,7 @@ export function useKnowledgeBaseViewModel() {
     handleTogglePlanningError,
     handleSeasonSelectorChange,
     handleSeasonIdChange,
+    handleSeasonFormatChange,
     handleAllianceChange,
     handleSourceChange,
     handleSort,

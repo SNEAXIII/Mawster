@@ -15,6 +15,7 @@ from src.dto.admin.dto_fight_record import (
     WarFightSynergyResponse,
 )
 from src.enums.FightRecordSource import FightRecordSource
+from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonSelectorType import SeasonSelectorType
 from src.enums.SeasonStatus import SeasonStatus
 from src.models.alliance.Alliance import Alliance
@@ -177,8 +178,17 @@ class FightRecordService:
         return list(member_ids | visitor_ids)
 
     @classmethod
-    def _season_conditions(cls, model, season_selector, season_id):
+    def _season_conditions(cls, model, season_selector, season_id, season_format=None):
         """Return season filter conditions for any model with a season_id column."""
+        conds = cls._season_selector_conditions(model, season_selector, season_id)
+        if season_format:
+            conds.append(
+                model.season_id.in_(select(Season.id).where(Season.format == season_format))
+            )
+        return conds
+
+    @classmethod
+    def _season_selector_conditions(cls, model, season_selector, season_id):
         if season_selector == SeasonSelectorType.ALL_SEASONS:
             return [model.season_id.isnot(None)]
         if season_selector == SeasonSelectorType.OFF_SEASON:
@@ -205,6 +215,7 @@ class FightRecordService:
         tier: int | None = None,
         season_selector: SeasonSelectorType | None = None,
         season_id: uuid.UUID | None = None,
+        season_format: SeasonFormat | None = None,
         alliance_id: uuid.UUID | None = None,
         battlegroup: int | None = None,
         game_account_pseudo: str | None = None,
@@ -240,7 +251,7 @@ class FightRecordService:
                 reg_conds.append(GameAccount.game_pseudo.ilike(f"%{game_account_pseudo}%"))
             if alliance_id:
                 reg_conds.append(War.alliance_id == alliance_id)
-            reg_conds.extend(cls._season_conditions(War, season_selector, season_id))
+            reg_conds.extend(cls._season_conditions(War, season_selector, season_id, season_format))
 
             reg_sub = (
                 join_fight_context(
@@ -303,7 +314,9 @@ class FightRecordService:
             if alliance_id:
                 imp_conds.append(WarFightRecordImport.alliance_id == alliance_id)
             imp_conds.extend(
-                cls._season_conditions(WarFightRecordImport, season_selector, season_id)
+                cls._season_conditions(
+                    WarFightRecordImport, season_selector, season_id, season_format
+                )
             )
 
             imp_sub = (
