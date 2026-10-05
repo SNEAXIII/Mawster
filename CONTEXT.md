@@ -251,6 +251,10 @@ _Avoid_: placement, war defense placement.
 The enemy defender on a War Node is entered by an Officer to mirror what the game
 shows. Nobody on your side placed it — `placed_by` reads "recorded by".
 
+The regular 50-node map has four quarters: tier 1 (1-18), tier 2 (19-36), mini boss
+(37-45) and boss (46-50). The defense map and the grid filters follow the quarters; the war
+stats count nodes 37-49 as **Mini Bosses** and node 50 as the **Boss**.
+
 **Defense Template**:
 A reusable composition of Champions on the nodes of one Season format, owned by the
 Alliance and tied to no Battlegroup and no Player. Names a Champion, never a copy of it —

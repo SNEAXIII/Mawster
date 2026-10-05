@@ -925,7 +925,7 @@ const en = {
       tier1: 'Tier 1',
       tier2: 'Tier 2',
       miniBoss: 'Mini boss',
-      boss: 'Boss',
+      bossZone: 'Boss zone',
       pathLabel: 'Path',
       allTiers: 'All tiers',
       allPaths: 'All paths',

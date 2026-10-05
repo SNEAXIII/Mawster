@@ -13,7 +13,7 @@ export interface MapSection {
 // Regular 50-node AW map (boss at top → start at bottom).
 export const REGULAR_MAP_SECTIONS: MapSection[] = [
   {
-    label: 'Boss',
+    label: 'Boss Zone',
     color: 'text-yellow-400',
     borderColor: 'border-yellow-600',
     nodeColor: 'border-yellow-500 bg-yellow-950/40',

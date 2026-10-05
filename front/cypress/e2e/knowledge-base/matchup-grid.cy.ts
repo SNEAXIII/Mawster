@@ -133,7 +133,7 @@ describe('Knowledge Base — matchup grid node filters', () => {
       // Tier-1 node 5 is present before filtering.
       cy.get('[data-cy="matchup-grid-cell"][data-cy-node="5"]').should('exist');
 
-      // Pick "Mini boss" (tier 3, nodes 37-46): the tier-1 column disappears.
+      // Pick "Mini boss" (tier 3, nodes 37-45): the tier-1 column disappears.
       cy.getByCy('matchup-grid-section').click();
       cy.getByCy('matchup-grid-section-3').click();
 
