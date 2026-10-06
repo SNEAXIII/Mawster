@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { getChampionImageUrl } from '@/app/services/champions'
+import { getChampionImageUrl, THUMBNAIL_SIZES } from '@/app/services/champions'
 import { getStarFrameUrl } from '@/app/services/roster'
 import SynergyBadge from '@/components/synergy-badge'
 import PrefightBadge from '@/components/prefight-badge'
@@ -45,9 +45,6 @@ export const FRAME_WINDOWS: Record<string, FrameWindow> = {
   '6': { left: 0.1274, top: 0.0747, width: 0.7264, height: 0.8046, focusY: 0 },
   '7': { left: 0.1132, top: 0.0345, width: 0.7547, height: 0.8276, focusY: 0 },
 }
-
-/** Pre-resized champion thumbnails that exist on the static server. */
-const THUMBNAIL_SIZES = [32, 40, 60]
 
 /**
  * Smallest pre-resized thumbnail that covers `cssPx`, or `undefined` for the

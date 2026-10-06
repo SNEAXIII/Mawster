@@ -174,17 +174,22 @@ export const setChampionSagaRole = async (
   )
 }
 
+// Portraits render at ≤54 CSS px, so 110 stays sharp at 2x; bigger falls back to the 256px source.
+// Keep in sync with resize_sizes (static-assets/pyproject.toml) and IMAGE_SIZES (static-assets/server).
+export const THUMBNAIL_SIZES = [110]
+
 /**
  * Build a sized champion image URL.
  * Converts e.g. "/static/champions/cyclops_blue_team.png"
- * into "/static/champions/cyclops_blue_team_40x40.png" when size=40.
- * If no size is given or imageUrl is null, returns the original URL.
+ * into "/static/champions/cyclops_blue_team_110x110.png" when size ≤ 110.
+ * A size bigger than every thumbnail, or no size, returns the original URL.
  */
 export function getChampionImageUrl(
   imageUrl: string | null | undefined,
-  size?: number
+  requestedSize?: number
 ): string | null {
   if (!imageUrl) return null
+  const size = requestedSize && THUMBNAIL_SIZES.find((s) => s >= requestedSize)
   if (!size) return imageUrl
   // Insert _NxN before the file extension
   const dotIndex = imageUrl.lastIndexOf('.')
