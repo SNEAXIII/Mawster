@@ -59,11 +59,13 @@ impl FolderConverter {
         static_dir: &Path,
         output_dir: &Path,
     ) -> anyhow::Result<()> {
-        for image_path in images {
+        for (index, image_path) in images.iter().enumerate() {
+            eprint!("\r{}/{} files converted", index+1, images.len());
             let output_path = output_dir
                 .join(image_path.strip_prefix(static_dir)?)
                 .with_extension("webp");
             fs::create_dir_all(output_path.parent().context("Should have a parent")?)?;
+            Self::convert_image(image_path, &output_path, None)?;
             if image_path.iter().any(|part| part == "champions") {
                 let stem = output_path.file_stem().context("Should have a stem")?;
                 for &size in &self.sizes {
@@ -71,10 +73,9 @@ impl FolderConverter {
                     name.push(format!("_{size}x{size}.webp"));
                     Self::convert_image(image_path, &output_path.with_file_name(name), Some(size))?;
                 }
-            } else {
-                Self::convert_image(image_path, &output_path, None)?;
             }
         }
+        println!("\nSuccessfully converted {} PNG to JPEG!", images.len());
         Ok(())
     }
 }
@@ -86,6 +87,5 @@ fn main() -> anyhow::Result<()> {
     let converter = FolderConverter::new(regex, config.sizes);
     let images = converter.list_base_images(&config.static_dir)?;
     converter.convert_all_image_to_webp(&images, &config.static_dir, &config.output_dir)?;
-    println!("Successfully converted PNG to JPEG!");
     Ok(())
 }

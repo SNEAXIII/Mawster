@@ -40,7 +40,7 @@ impl Config {
                 .parse()
                 .context("BIND_ADDR is not a valid socket address")?,
             sizes: get("IMAGE_SIZES")
-                .unwrap_or_else(|| "110".to_owned())
+                .unwrap_or_else(|| "110,256".to_owned())
                 .split(',')
                 .map(|size| size.trim().parse())
                 .collect::<Result<_, _>>()
@@ -59,7 +59,7 @@ impl Config {
             static_dir: PathBuf::from("../static"),
             output_dir: PathBuf::from("output"),
             bind_url: SocketAddr::from(([0, 0, 0, 0], 8005)),
-            sizes: vec![110],
+            sizes: vec![110, 256],
         }
     }
 }
