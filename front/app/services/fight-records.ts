@@ -1,3 +1,4 @@
+import type { SeasonFormat } from '@/app/services/season'
 import { api, jsonBody } from '@/app/services/utils'
 import type { WarBoost } from '@/app/services/war'
 
@@ -38,6 +39,7 @@ export interface FightRecord {
   alliance_tag?: string | null
   season_id: string | null
   season_number?: number | null
+  season_format?: SeasonFormat | null
   game_account_pseudo?: string | null
   node_number: number
   tier?: number | null
@@ -97,6 +99,7 @@ export interface FightRecordFilters {
   tier?: number
   season_selector?: string
   season_id?: string
+  season_format?: SeasonFormat
   alliance_id?: string
   game_account_pseudo?: string
   planning_error_only?: boolean

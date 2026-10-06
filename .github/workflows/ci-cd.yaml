@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 # The pipeline graph lives here and nowhere else: `needs:` cannot cross workflow
 # files, so every dependency between stages has to be expressed at this level.

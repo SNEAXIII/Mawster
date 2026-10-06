@@ -3,8 +3,8 @@ import type { SeasonFormat } from '@/app/services/season'
 
 // ─── War Service ─────────────────────────────────────────
 
-// Mirrors the KoCount bound in api/src/game_types.py.
-export const MAX_KO_COUNT = 3
+// Mirrors the KoCount bound in api/src/game_types.py; a War narrows it via `max_ko_count`.
+export const MAX_KO_COUNT = 10
 
 export interface BannedChampion {
   id: string
@@ -35,6 +35,7 @@ export interface War {
   format: SeasonFormat
   node_count: number
   max_attackers_per_member: number
+  max_ko_count: number
 }
 
 // The three are mutually exclusive in-game, hence one slot rather than three flags.

@@ -4,6 +4,7 @@ import uuid
 
 import pytest
 
+from src.enums.SeasonFormat import SeasonFormat
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.war.Season import Season
@@ -134,6 +135,19 @@ class TestImportFightRecords:
         url = f"/alliances/{alliance_id}/fight-records/import"
         response = await execute_post_request(url, payload, HEADERS_USER2)
         assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(("ko_count", "expected"), [(10, 201), (11, 422)])
+    async def test_big_thing_season_caps_ko_count_at_10(
+        self, officer_with_champions, ko_count, expected
+    ):
+        alliance_id, _officer_acc_id, champ_id, defender_id, _season_id = officer_with_champions
+        await load_objects([Season(number=2, format=SeasonFormat.BIG_THING)])
+        payload = {"rows": [_row(champ_id, defender_id, season_name="S2", ko_count=ko_count)]}
+        response = await execute_post_request(
+            f"/alliances/{alliance_id}/fight-records/import", payload, HEADERS_USER2
+        )
+        assert response.status_code == expected
 
     @pytest.mark.asyncio
     async def test_wrong_alliance_returns_404(self, officer_with_champions):

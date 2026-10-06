@@ -1,6 +1,6 @@
 // War-map node grouping for the grid column filters (client-side only).
-// Tiers split the 50 nodes contiguously; minibosses sit at 39-43 (inside "Mini boss"),
-// bosses at 47-50. Paths run through tiers 1-2 only, 4 nodes each:
+// Tiers are the four map quarters: tier 1, tier 2, mini boss (37-45), boss (46-50).
+// Paths run through tiers 1-2 only, 4 nodes each:
 // path p = p, p+9, p+18, p+27 (e.g. path 1 = 1,10,19,28; path 9 = 9,18,27,36).
 
 export const SECTIONS = [1, 2, 3, 4] as const
@@ -9,8 +9,8 @@ export const PATHS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 const SECTION_RANGES: Record<number, [number, number]> = {
   1: [1, 18],
   2: [19, 36],
-  3: [37, 46],
-  4: [47, 50],
+  3: [37, 45],
+  4: [46, 50],
 }
 
 // Paths only make sense inside tiers 1-2 (nodes 1-36), so the path filter is offered only

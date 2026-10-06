@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { WarPlacement } from '@/app/services/war'
+import type { SeasonFormat } from '@/app/services/season'
 import { useWar } from '@/app/contexts/war-context'
 import PrefightEntryRow from './prefight-entry-row'
 import AssistAssignmentRow from './assist-assignment-row'
@@ -38,6 +39,22 @@ interface WarAttackerPanelProps {
   exportRef?: RefObject<HTMLDivElement | null>
   nodeCount?: number
   maxAttackers?: number
+  format?: SeasonFormat
+}
+
+// Members with no node (prefight/assist only) sort after those who fight one.
+function firstNode(group: MemberGroup): number {
+  return Math.min(Infinity, ...group.entries.map((e) => e.node_number))
+}
+
+function compareGroups(a: MemberGroup, b: MemberGroup, format: SeasonFormat, exporting: boolean) {
+  if (format === 'big_thing') {
+    const nodeDiff = firstNode(a) - firstNode(b)
+    if (nodeDiff !== 0 && !Number.isNaN(nodeDiff)) return nodeDiff
+  } else if (exporting) {
+    return b.entries.length - a.entries.length
+  }
+  return a.pseudo.localeCompare(b.pseudo)
 }
 
 export default function WarAttackerPanel({
@@ -49,6 +66,7 @@ export default function WarAttackerPanel({
   exportRef,
   nodeCount = 50,
   maxAttackers = 3,
+  format = 'regular',
 }: Readonly<WarAttackerPanelProps>) {
   const { t } = useI18n()
   const {
@@ -107,7 +125,7 @@ export default function WarAttackerPanel({
   ].sort((a, b) => a.localeCompare(b))
 
   const groups = Array.from(groupMap.values()).sort((a, b) =>
-    exporting ? b.entries.length - a.entries.length : a.pseudo.localeCompare(b.pseudo)
+    compareGroups(a, b, format, exporting)
   )
 
   return (

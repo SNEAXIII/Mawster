@@ -41,7 +41,7 @@ export function hasActiveFilters(filters: FilterState): boolean {
 }
 
 /** Fold accents and punctuation so "aegon" finds "Ægon" and "abo" finds "Abomination". */
-function fold(value: string): string {
+export function fold(value: string): string {
   return value
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')

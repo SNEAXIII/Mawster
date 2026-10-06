@@ -3,6 +3,29 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.23.1](https://github.com/SNEAXIII/Mawster/compare/v1.23.0...v1.23.1) (2026-10-05)
+
+
+### Corrigé
+
+* allow up to 10 KOs per node in Big Thing wars ([#669](https://github.com/SNEAXIII/Mawster/issues/669)) ([11b7070](https://github.com/SNEAXIII/Mawster/commit/11b707096e8b63463157599f86ab2714c417984c))
+
+## [1.23.0](https://github.com/SNEAXIII/Mawster/compare/v1.22.4...v1.23.0) (2026-10-05)
+
+
+### Ajouté
+
+* filter the knowledge base by season format ([3c1127a](https://github.com/SNEAXIII/Mawster/commit/3c1127aadb1b951f729faa2e08c95e491e001468))
+
+## [1.22.4](https://github.com/SNEAXIII/Mawster/compare/v1.22.3...v1.22.4) (2026-10-04)
+
+
+### Corrigé
+
+* count war nodes 46 to 49 as mini bosses on the defense map and grid filter ([43e67f7](https://github.com/SNEAXIII/Mawster/commit/43e67f719eacd90946012d52dd7d8c4f14c60e2c))
+* keep accented letters in exported tier list file names ([742ea1c](https://github.com/SNEAXIII/Mawster/commit/742ea1cc7d9cc30dd4ec37130a30a9b011a2129b))
+* show nodes 46 to 49 in the boss zone on the defense map and grid filter ([f05a091](https://github.com/SNEAXIII/Mawster/commit/f05a091a718c42a78c14f328dfeb83eea371b29f))
+
 ## [1.22.3](https://github.com/SNEAXIII/Mawster/compare/v1.22.2...v1.22.3) (2026-09-30)
 
 

@@ -27,11 +27,13 @@ interface Props {
   planningErrorOnly: boolean | null
   seasonSelector: string
   seasonId: string | null
+  seasonFormat: string
   seasons: Season[]
   onChange: (key: keyof Filters, value: string | null) => void
   onTogglePlanningError: () => void
   onSeasonSelectorChange: (value: string) => void
   onSeasonIdChange: (value: string | null) => void
+  onSeasonFormatChange: (value: string) => void
   allianceId: string | null
   accessibleAlliances: AccessibleAlliance[]
   onAllianceChange: (value: string | null) => void
@@ -45,6 +47,7 @@ export default function KnowledgeBaseFilters({
   planningErrorOnly,
   seasonSelector,
   seasonId,
+  seasonFormat,
   seasons,
   allianceId,
   accessibleAlliances,
@@ -53,6 +56,7 @@ export default function KnowledgeBaseFilters({
   onTogglePlanningError,
   onSeasonSelectorChange,
   onSeasonIdChange,
+  onSeasonFormatChange,
   onAllianceChange,
   onSourceChange,
   onClear,
@@ -157,6 +161,24 @@ export default function KnowledgeBaseFilters({
           data-cy='filter-season-id'
         />
       )}
+
+      <Select
+        value={seasonFormat}
+        onValueChange={onSeasonFormatChange}
+        data-cy='filter-season-format'
+      >
+        <SelectTrigger
+          className='w-36'
+          data-cy='filter-season-format-trigger'
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value='all'>{kb.seasonFormatAll}</SelectItem>
+          <SelectItem value='regular'>{kb.seasonFormatRegular}</SelectItem>
+          <SelectItem value='big_thing'>{kb.seasonFormatBigThing}</SelectItem>
+        </SelectContent>
+      </Select>
 
       <Select
         value={source}

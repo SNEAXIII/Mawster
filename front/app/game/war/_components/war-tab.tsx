@@ -356,6 +356,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
                   currentSeason?.max_attackers_per_member ??
                   3
                 }
+                format={currentWar?.format ?? currentSeason?.format ?? 'regular'}
               />
             </div>
           </div>
