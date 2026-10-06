@@ -75,7 +75,7 @@ impl FolderConverter {
                 }
             }
         }
-        println!("\nSuccessfully converted {} PNG to JPEG!", images.len());
+        println!("\nSuccessfully converted {} PNG to WebP!", images.len());
         Ok(())
     }
 }
