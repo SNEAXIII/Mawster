@@ -9,7 +9,7 @@ export default function SagaBadge({
 }: Readonly<{ additionalClasses?: string; size: number }>) {
   const exporting = useExportMode()
   // 32px asset on screen, 128px original while exporting (same artwork).
-  const src = exporting ? '/static/frame/current_saga.png' : '/static/frame/current_saga_mini.png'
+  const src = exporting ? '/static/frame/current_saga.webp' : '/static/frame/current_saga_mini.webp'
   return (
     <div
       className={cn(

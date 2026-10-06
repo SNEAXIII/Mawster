@@ -17,7 +17,7 @@ export default function AscensionBadge({
       style={{ translate: Math.round(size / 2.5) }}
     >
       <img
-        src={`/static/frame/ascended_${level}.png`}
+        src={`/static/frame/ascended_${level}.webp`}
         alt=''
         width={size}
         height={size}
