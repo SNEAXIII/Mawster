@@ -177,7 +177,7 @@ services:
   static:
     build:
       context: .
-      dockerfile: static-assets/static.Dockerfile
+      dockerfile: static-assets/museum/nginx/static.Dockerfile
     container_name: static-dev
     ports:
       - "8002:80"

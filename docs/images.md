@@ -33,7 +33,7 @@ docker push sneaxiii/mawster-backup:latest
 ## Static
 
 ```bash
-docker build -t sneaxiii/mawster-static:latest -f static-assets/static.Dockerfile .
+docker build -t sneaxiii/mawster-static:latest -f static-assets/museum/nginx/static.Dockerfile .
 docker push sneaxiii/mawster-static:latest
 ```
 

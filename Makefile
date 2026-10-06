@@ -203,7 +203,7 @@ dev-build:
 	docker build -t mawster-api-dev:local -f api/api.Dockerfile api
 	docker build -t mawster-migrate-dev:local -f api/migrate.Dockerfile api
 	docker build -t mawster-front-dev:local -f front/front.Dockerfile front
-	docker build -t mawster-static-dev:local -f static-assets/static.Dockerfile .
+	docker build -t mawster-static-dev:local -f static-assets/museum/nginx/static.Dockerfile .
 
 dev-up: dev-build
 	set -a; . ./$(DEV_ENV); set +a; \

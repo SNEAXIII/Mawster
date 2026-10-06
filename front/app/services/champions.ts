@@ -175,7 +175,7 @@ export const setChampionSagaRole = async (
 }
 
 // Portraits render at ≤54 CSS px, so 110 stays sharp at 2x; 256 covers the large tool cards.
-// Keep in sync with resize_sizes (static-assets/pyproject.toml) and IMAGE_SIZES (static-assets/server).
+// Keep in sync with resize_sizes (static-assets/museum/scrap/pyproject.toml) and IMAGE_SIZES (static-assets/server).
 export const THUMBNAIL_SIZES = [110, 256]
 
 /**

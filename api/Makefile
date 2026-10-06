@@ -81,7 +81,7 @@ test-cov:
 	uv run pytest tests --cov --cov-report term-missing -v -n 5 --dist=loadscope
 
 scrape-champions:
-	cd ../static-assets && uv run python scrape_champions.py
+	cd ../static-assets/museum/scrap && uv run python scrape_champions.py
 
 repopulate-db:
 	make reset-db
