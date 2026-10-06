@@ -27,31 +27,31 @@ export const CHAMPION_ATTRIBUTES: ChampionAttributeMeta[] = [
   {
     key: 'is_7_stars_available',
     name: 'sevenStars',
-    icon: `${FRAME_DIR}/7_stars.png`,
+    icon: `${FRAME_DIR}/7_stars.webp`,
     requiresSeason: false,
   },
   {
     key: 'is_ascendable',
     name: 'ascendable',
-    icon: `${FRAME_DIR}/ascended_1.png`,
+    icon: `${FRAME_DIR}/ascended_1.webp`,
     requiresSeason: false,
   },
   {
     key: 'has_prefight',
     name: 'prefight',
-    icon: `${ICON_DIR}/prefight.png`,
+    icon: `${ICON_DIR}/prefight.webp`,
     requiresSeason: false,
   },
   {
     key: 'is_saga_attacker',
     name: 'sagaAttacker',
-    icon: `${ICON_DIR}/atk-sword.png`,
+    icon: `${ICON_DIR}/atk-sword.webp`,
     requiresSeason: true,
   },
   {
     key: 'is_saga_defender',
     name: 'sagaDefender',
-    icon: `${ICON_DIR}/def-shield.png`,
+    icon: `${ICON_DIR}/def-shield.webp`,
     requiresSeason: true,
   },
 ]

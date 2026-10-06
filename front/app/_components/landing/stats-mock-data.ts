@@ -261,7 +261,7 @@ function champ(name: string, kos: number): ChampionUsageItem {
     champion_name: name,
     fight_count: kos,
     total_kos: kos,
-    image_url: `/static/champions/${slug}.png`,
+    image_url: `/static/champions/${slug}.webp`,
   }
 }
 

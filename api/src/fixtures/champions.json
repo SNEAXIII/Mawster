@@ -2,1671 +2,1671 @@
   {
     "name": "Groot",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/groot.png"
+    "image_url": "/static/champions/groot.webp"
   },
   {
     "name": "Spider-Man (Miles Morales)",
     "champion_class": "Science",
-    "image_url": "/static/champions/spider-man_miles_morales.png"
+    "image_url": "/static/champions/spider-man_miles_morales.webp"
   },
   {
     "name": "Cyclops (Blue Team)",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/cyclops_blue_team.png"
+    "image_url": "/static/champions/cyclops_blue_team.webp"
   },
   {
     "name": "Old Man Logan",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/old_man_logan.png"
+    "image_url": "/static/champions/old_man_logan.webp"
   },
   {
     "name": "Venompool",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/venompool.png"
+    "image_url": "/static/champions/venompool.webp"
   },
   {
     "name": "She-Hulk",
     "champion_class": "Science",
-    "image_url": "/static/champions/she-hulk.png"
+    "image_url": "/static/champions/she-hulk.webp"
   },
   {
     "name": "Wolverine (X-23)",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/wolverine_x-23.png"
+    "image_url": "/static/champions/wolverine_x-23.webp"
   },
   {
     "name": "Ms. Marvel (Kamala Khan)",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/ms_marvel_kamala_khan.png"
+    "image_url": "/static/champions/ms_marvel_kamala_khan.webp"
   },
   {
     "name": "Agent Venom",
     "champion_class": "Skill",
-    "image_url": "/static/champions/agent_venom.png"
+    "image_url": "/static/champions/agent_venom.webp"
   },
   {
     "name": "Red Hulk",
     "champion_class": "Science",
-    "image_url": "/static/champions/red_hulk.png"
+    "image_url": "/static/champions/red_hulk.webp"
   },
   {
     "name": "Crossbones",
     "champion_class": "Skill",
-    "image_url": "/static/champions/crossbones.png"
+    "image_url": "/static/champions/crossbones.webp"
   },
   {
     "name": "Black Panther (Civil War)",
     "champion_class": "Skill",
-    "image_url": "/static/champions/black_panther_civil_war.png"
+    "image_url": "/static/champions/black_panther_civil_war.webp"
   },
   {
     "name": "Falcon",
     "champion_class": "Skill",
-    "image_url": "/static/champions/falcon.png"
+    "image_url": "/static/champions/falcon.webp"
   },
   {
     "name": "Civil Warrior",
     "champion_class": "Tech",
-    "image_url": "/static/champions/civil_warrior.png"
+    "image_url": "/static/champions/civil_warrior.webp"
   },
   {
     "name": "Nightcrawler",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/nightcrawler.png"
+    "image_url": "/static/champions/nightcrawler.webp"
   },
   {
     "name": "Iron Fist (Immortal)",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/iron_fist_immortal.png"
+    "image_url": "/static/champions/iron_fist_immortal.webp"
   },
   {
     "name": "Loki",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/loki.png"
+    "image_url": "/static/champions/loki.webp"
   },
   {
     "name": "Gambit",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/gambit.png"
+    "image_url": "/static/champions/gambit.webp"
   },
   {
     "name": "Karnak",
     "champion_class": "Skill",
-    "image_url": "/static/champions/karnak.png"
+    "image_url": "/static/champions/karnak.webp"
   },
   {
     "name": "Rogue",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/rogue.png"
+    "image_url": "/static/champions/rogue.webp"
   },
   {
     "name": "Quake",
     "champion_class": "Science",
-    "image_url": "/static/champions/quake.png"
+    "image_url": "/static/champions/quake.webp"
   },
   {
     "name": "Ultron (Classic)",
     "champion_class": "Tech",
-    "image_url": "/static/champions/ultron_classic.png"
+    "image_url": "/static/champions/ultron_classic.webp"
   },
   {
     "name": "Phoenix",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/phoenix.png"
+    "image_url": "/static/champions/phoenix.webp"
   },
   {
     "name": "Ghost Rider",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/ghost_rider.png"
+    "image_url": "/static/champions/ghost_rider.webp"
   },
   {
     "name": "Mordo",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/mordo.png"
+    "image_url": "/static/champions/mordo.webp"
   },
   {
     "name": "Doctor Voodoo",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/doctor_voodoo.png"
+    "image_url": "/static/champions/doctor_voodoo.webp"
   },
   {
     "name": "Hyperion",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/hyperion.png"
+    "image_url": "/static/champions/hyperion.webp"
   },
   {
     "name": "Howard the Duck",
     "champion_class": "Tech",
-    "image_url": "/static/champions/howard_the_duck.png"
+    "image_url": "/static/champions/howard_the_duck.webp"
   },
   {
     "name": "Gwenpool",
     "champion_class": "Skill",
-    "image_url": "/static/champions/gwenpool.png"
+    "image_url": "/static/champions/gwenpool.webp"
   },
   {
     "name": "Cable",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/cable.png"
+    "image_url": "/static/champions/cable.webp"
   },
   {
     "name": "The Hood",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/the_hood.png"
+    "image_url": "/static/champions/the_hood.webp"
   },
   {
     "name": "Iceman",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/iceman.png"
+    "image_url": "/static/champions/iceman.webp"
   },
   {
     "name": "Dormammu",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/dormammu.png"
+    "image_url": "/static/champions/dormammu.webp"
   },
   {
     "name": "Archangel",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/archangel.png"
+    "image_url": "/static/champions/archangel.webp"
   },
   {
     "name": "Spider-Man (Stark Enhanced)",
     "champion_class": "Tech",
-    "image_url": "/static/champions/spider-man_stark_enhanced.png"
+    "image_url": "/static/champions/spider-man_stark_enhanced.webp"
   },
   {
     "name": "Vulture",
     "champion_class": "Tech",
-    "image_url": "/static/champions/vulture.png"
+    "image_url": "/static/champions/vulture.webp"
   },
   {
     "name": "Nebula",
     "champion_class": "Tech",
-    "image_url": "/static/champions/nebula.png"
+    "image_url": "/static/champions/nebula.webp"
   },
   {
     "name": "Angela",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/angela.png"
+    "image_url": "/static/champions/angela.webp"
   },
   {
     "name": "Carnage",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/carnage.png"
+    "image_url": "/static/champions/carnage.webp"
   },
   {
     "name": "King Groot",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/king_groot.png"
+    "image_url": "/static/champions/king_groot.webp"
   },
   {
     "name": "Medusa",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/medusa.png"
+    "image_url": "/static/champions/medusa.webp"
   },
   {
     "name": "Morningstar",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/morningstar.png"
+    "image_url": "/static/champions/morningstar.webp"
   },
   {
     "name": "M.O.D.O.K.",
     "champion_class": "Science",
-    "image_url": "/static/champions/m_o_d_o_k.png"
+    "image_url": "/static/champions/m_o_d_o_k.webp"
   },
   {
     "name": "Mephisto",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/mephisto.png"
+    "image_url": "/static/champions/mephisto.webp"
   },
   {
     "name": "Psylocke",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/psylocke.png"
+    "image_url": "/static/champions/psylocke.webp"
   },
   {
     "name": "Kingpin",
     "champion_class": "Skill",
-    "image_url": "/static/champions/kingpin.png"
+    "image_url": "/static/champions/kingpin.webp"
   },
   {
     "name": "Hela",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/hela.png"
+    "image_url": "/static/champions/hela.webp"
   },
   {
     "name": "Thor (Ragnarok)",
     "champion_class": "Skill",
-    "image_url": "/static/champions/thor_ragnarok.png"
+    "image_url": "/static/champions/thor_ragnarok.webp"
   },
   {
     "name": "Hulk (Ragnarok)",
     "champion_class": "Science",
-    "image_url": "/static/champions/hulk_ragnarok.png"
+    "image_url": "/static/champions/hulk_ragnarok.webp"
   },
   {
     "name": "Sabretooth",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/sabretooth.png"
+    "image_url": "/static/champions/sabretooth.webp"
   },
   {
     "name": "Doctor Octopus",
     "champion_class": "Tech",
-    "image_url": "/static/champions/doctor_octopus.png"
+    "image_url": "/static/champions/doctor_octopus.webp"
   },
   {
     "name": "Bishop",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/bishop.png"
+    "image_url": "/static/champions/bishop.webp"
   },
   {
     "name": "Taskmaster",
     "champion_class": "Skill",
-    "image_url": "/static/champions/taskmaster.png"
+    "image_url": "/static/champions/taskmaster.webp"
   },
   {
     "name": "Yondu",
     "champion_class": "Tech",
-    "image_url": "/static/champions/yondu.png"
+    "image_url": "/static/champions/yondu.webp"
   },
   {
     "name": "Captain America (Infinity War)",
     "champion_class": "Science",
-    "image_url": "/static/champions/captain_america_infinity_war.png"
+    "image_url": "/static/champions/captain_america_infinity_war.webp"
   },
   {
     "name": "Green Goblin",
     "champion_class": "Tech",
-    "image_url": "/static/champions/green_goblin.png"
+    "image_url": "/static/champions/green_goblin.webp"
   },
   {
     "name": "Yellowjacket",
     "champion_class": "Science",
-    "image_url": "/static/champions/yellowjacket.png"
+    "image_url": "/static/champions/yellowjacket.webp"
   },
   {
     "name": "Ant-Man",
     "champion_class": "Science",
-    "image_url": "/static/champions/ant-man.png"
+    "image_url": "/static/champions/ant-man.webp"
   },
   {
     "name": "Domino",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/domino.png"
+    "image_url": "/static/champions/domino.webp"
   },
   {
     "name": "Deadpool",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/deadpool.png"
+    "image_url": "/static/champions/deadpool.webp"
   },
   {
     "name": "Colossus",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/colossus.png"
+    "image_url": "/static/champions/colossus.webp"
   },
   {
     "name": "Cyclops (New Xavier School)",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/cyclops_new_xavier_school.png"
+    "image_url": "/static/champions/cyclops_new_xavier_school.webp"
   },
   {
     "name": "Wolverine",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/wolverine.png"
+    "image_url": "/static/champions/wolverine.webp"
   },
   {
     "name": "Magneto",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/magneto.png"
+    "image_url": "/static/champions/magneto.webp"
   },
   {
     "name": "Deadpool (X-Force)",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/deadpool_x-force.png"
+    "image_url": "/static/champions/deadpool_x-force.webp"
   },
   {
     "name": "Symbioid",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/symbioid.png"
+    "image_url": "/static/champions/symbioid.webp"
   },
   {
     "name": "Goldpool",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/goldpool.png"
+    "image_url": "/static/champions/goldpool.webp"
   },
   {
     "name": "Magik",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/magik.png"
+    "image_url": "/static/champions/magik.webp"
   },
   {
     "name": "Blade",
     "champion_class": "Skill",
-    "image_url": "/static/champions/blade.png"
+    "image_url": "/static/champions/blade.webp"
   },
   {
     "name": "Winter Soldier",
     "champion_class": "Skill",
-    "image_url": "/static/champions/winter_soldier.png"
+    "image_url": "/static/champions/winter_soldier.webp"
   },
   {
     "name": "Black Panther",
     "champion_class": "Skill",
-    "image_url": "/static/champions/black_panther.png"
+    "image_url": "/static/champions/black_panther.webp"
   },
   {
     "name": "Daredevil (Classic)",
     "champion_class": "Skill",
-    "image_url": "/static/champions/daredevil_classic.png"
+    "image_url": "/static/champions/daredevil_classic.webp"
   },
   {
     "name": "Moon Knight",
     "champion_class": "Skill",
-    "image_url": "/static/champions/moon_knight.png"
+    "image_url": "/static/champions/moon_knight.webp"
   },
   {
     "name": "Elektra",
     "champion_class": "Skill",
-    "image_url": "/static/champions/elektra.png"
+    "image_url": "/static/champions/elektra.webp"
   },
   {
     "name": "Wasp",
     "champion_class": "Science",
-    "image_url": "/static/champions/wasp.png"
+    "image_url": "/static/champions/wasp.webp"
   },
   {
     "name": "Captain America",
     "champion_class": "Science",
-    "image_url": "/static/champions/captain_america.png"
+    "image_url": "/static/champions/captain_america.webp"
   },
   {
     "name": "Electro",
     "champion_class": "Science",
-    "image_url": "/static/champions/electro.png"
+    "image_url": "/static/champions/electro.webp"
   },
   {
     "name": "Joe Fixit",
     "champion_class": "Science",
-    "image_url": "/static/champions/joe_fixit.png"
+    "image_url": "/static/champions/joe_fixit.webp"
   },
   {
     "name": "Killmonger",
     "champion_class": "Skill",
-    "image_url": "/static/champions/killmonger.png"
+    "image_url": "/static/champions/killmonger.webp"
   },
   {
     "name": "Black Bolt",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/black_bolt.png"
+    "image_url": "/static/champions/black_bolt.webp"
   },
   {
     "name": "Gamora",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/gamora.png"
+    "image_url": "/static/champions/gamora.webp"
   },
   {
     "name": "Ronan",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/ronan.png"
+    "image_url": "/static/champions/ronan.webp"
   },
   {
     "name": "Thanos",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/thanos.png"
+    "image_url": "/static/champions/thanos.webp"
   },
   {
     "name": "Ms. Marvel",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/ms_marvel.png"
+    "image_url": "/static/champions/ms_marvel.webp"
   },
   {
     "name": "Spider-Man (Symbiote)",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/spider-man_symbiote.png"
+    "image_url": "/static/champions/spider-man_symbiote.webp"
   },
   {
     "name": "Iron Fist",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/iron_fist.png"
+    "image_url": "/static/champions/iron_fist.webp"
   },
   {
     "name": "Unstoppable Colossus",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/unstoppable_colossus.png"
+    "image_url": "/static/champions/unstoppable_colossus.webp"
   },
   {
     "name": "Guillotine",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/guillotine.png"
+    "image_url": "/static/champions/guillotine.webp"
   },
   {
     "name": "Thor (Jane Foster)",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/thor_jane_foster.png"
+    "image_url": "/static/champions/thor_jane_foster.webp"
   },
   {
     "name": "Iron Man",
     "champion_class": "Tech",
-    "image_url": "/static/champions/iron_man.png"
+    "image_url": "/static/champions/iron_man.webp"
   },
   {
     "name": "Vision",
     "champion_class": "Tech",
-    "image_url": "/static/champions/vision.png"
+    "image_url": "/static/champions/vision.webp"
   },
   {
     "name": "Star-Lord",
     "champion_class": "Tech",
-    "image_url": "/static/champions/star-lord.png"
+    "image_url": "/static/champions/star-lord.webp"
   },
   {
     "name": "Ultron",
     "champion_class": "Tech",
-    "image_url": "/static/champions/ultron.png"
+    "image_url": "/static/champions/ultron.webp"
   },
   {
     "name": "Hulkbuster",
     "champion_class": "Tech",
-    "image_url": "/static/champions/hulkbuster.png"
+    "image_url": "/static/champions/hulkbuster.webp"
   },
   {
     "name": "Iron Patriot",
     "champion_class": "Tech",
-    "image_url": "/static/champions/iron_patriot.png"
+    "image_url": "/static/champions/iron_patriot.webp"
   },
   {
     "name": "Vision (Age of Ultron)",
     "champion_class": "Tech",
-    "image_url": "/static/champions/vision_age_of_ultron.png"
+    "image_url": "/static/champions/vision_age_of_ultron.webp"
   },
   {
     "name": "War Machine",
     "champion_class": "Tech",
-    "image_url": "/static/champions/war_machine.png"
+    "image_url": "/static/champions/war_machine.webp"
   },
   {
     "name": "Ghost",
     "champion_class": "Tech",
-    "image_url": "/static/champions/ghost.png"
+    "image_url": "/static/champions/ghost.webp"
   },
   {
     "name": "Sentinel",
     "champion_class": "Tech",
-    "image_url": "/static/champions/sentinel.png"
+    "image_url": "/static/champions/sentinel.webp"
   },
   {
     "name": "Masacre",
     "champion_class": "Skill",
-    "image_url": "/static/champions/masacre.png"
+    "image_url": "/static/champions/masacre.webp"
   },
   {
     "name": "Iron Man (Infinity War)",
     "champion_class": "Tech",
-    "image_url": "/static/champions/iron_man_infinity_war.png"
+    "image_url": "/static/champions/iron_man_infinity_war.webp"
   },
   {
     "name": "Corvus Glaive",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/corvus_glaive.png"
+    "image_url": "/static/champions/corvus_glaive.webp"
   },
   {
     "name": "Proxima Midnight",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/proxima_midnight.png"
+    "image_url": "/static/champions/proxima_midnight.webp"
   },
   {
     "name": "Wolverine (Weapon X)",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/wolverine_weapon_x.png"
+    "image_url": "/static/champions/wolverine_weapon_x.webp"
   },
   {
     "name": "Heimdall",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/heimdall.png"
+    "image_url": "/static/champions/heimdall.webp"
   },
   {
     "name": "Korg",
     "champion_class": "Skill",
-    "image_url": "/static/champions/korg.png"
+    "image_url": "/static/champions/korg.webp"
   },
   {
     "name": "Red Skull",
     "champion_class": "Tech",
-    "image_url": "/static/champions/red_skull.png"
+    "image_url": "/static/champions/red_skull.webp"
   },
   {
     "name": "Omega Red",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/omega_red.png"
+    "image_url": "/static/champions/omega_red.webp"
   },
   {
     "name": "Ægon",
     "champion_class": "Skill",
-    "image_url": "/static/champions/gon.png"
+    "image_url": "/static/champions/gon.webp"
   },
   {
     "name": "Thing",
     "champion_class": "Science",
-    "image_url": "/static/champions/thing.png"
+    "image_url": "/static/champions/thing.webp"
   },
   {
     "name": "Diablo",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/diablo.png"
+    "image_url": "/static/champions/diablo.webp"
   },
   {
     "name": "Captain Marvel (Classic)",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/captain_marvel_classic.png"
+    "image_url": "/static/champions/captain_marvel_classic.webp"
   },
   {
     "name": "Captain Marvel",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/captain_marvel.png"
+    "image_url": "/static/champions/captain_marvel.webp"
   },
   {
     "name": "Venom",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/venom.png"
+    "image_url": "/static/champions/venom.webp"
   },
   {
     "name": "Ronin",
     "champion_class": "Skill",
-    "image_url": "/static/champions/ronin.png"
+    "image_url": "/static/champions/ronin.webp"
   },
   {
     "name": "Cull Obsidian",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/cull_obsidian.png"
+    "image_url": "/static/champions/cull_obsidian.webp"
   },
   {
     "name": "Ebony Maw",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/ebony_maw.png"
+    "image_url": "/static/champions/ebony_maw.webp"
   },
   {
     "name": "Human Torch",
     "champion_class": "Science",
-    "image_url": "/static/champions/human_torch.png"
+    "image_url": "/static/champions/human_torch.webp"
   },
   {
     "name": "Annihilus",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/annihilus.png"
+    "image_url": "/static/champions/annihilus.webp"
   },
   {
     "name": "Nick Fury",
     "champion_class": "Skill",
-    "image_url": "/static/champions/nick_fury.png"
+    "image_url": "/static/champions/nick_fury.webp"
   },
   {
     "name": "Havok",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/havok.png"
+    "image_url": "/static/champions/havok.webp"
   },
   {
     "name": "Mister Sinister",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/mister_sinister.png"
+    "image_url": "/static/champions/mister_sinister.webp"
   },
   {
     "name": "Punisher 2099",
     "champion_class": "Tech",
-    "image_url": "/static/champions/punisher_2099.png"
+    "image_url": "/static/champions/punisher_2099.webp"
   },
   {
     "name": "Invisible Woman",
     "champion_class": "Science",
-    "image_url": "/static/champions/invisible_woman.png"
+    "image_url": "/static/champions/invisible_woman.webp"
   },
   {
     "name": "Namor",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/namor.png"
+    "image_url": "/static/champions/namor.webp"
   },
   {
     "name": "Mysterio",
     "champion_class": "Tech",
-    "image_url": "/static/champions/mysterio.png"
+    "image_url": "/static/champions/mysterio.webp"
   },
   {
     "name": "Spider-Man (Stealth Suit)",
     "champion_class": "Skill",
-    "image_url": "/static/champions/spider-man_stealth_suit.png"
+    "image_url": "/static/champions/spider-man_stealth_suit.webp"
   },
   {
     "name": "Spider-Man (Classic)",
     "champion_class": "Science",
-    "image_url": "/static/champions/spider-man_classic.png"
+    "image_url": "/static/champions/spider-man_classic.webp"
   },
   {
     "name": "Sunspot",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/sunspot.png"
+    "image_url": "/static/champions/sunspot.webp"
   },
   {
     "name": "Warlock",
     "champion_class": "Tech",
-    "image_url": "/static/champions/warlock.png"
+    "image_url": "/static/champions/warlock.webp"
   },
   {
     "name": "Vision (Aarkus)",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/vision_aarkus.png"
+    "image_url": "/static/champions/vision_aarkus.webp"
   },
   {
     "name": "Emma Frost",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/emma_frost.png"
+    "image_url": "/static/champions/emma_frost.webp"
   },
   {
     "name": "Beast",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/beast.png"
+    "image_url": "/static/champions/beast.webp"
   },
   {
     "name": "Black Widow (Claire Voyant)",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/black_widow_claire_voyant.png"
+    "image_url": "/static/champions/black_widow_claire_voyant.webp"
   },
   {
     "name": "Doctor Doom",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/doctor_doom.png"
+    "image_url": "/static/champions/doctor_doom.webp"
   },
   {
     "name": "Elsa Bloodstone",
     "champion_class": "Skill",
-    "image_url": "/static/champions/elsa_bloodstone.png"
+    "image_url": "/static/champions/elsa_bloodstone.webp"
   },
   {
     "name": "Man-Thing",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/man-thing.png"
+    "image_url": "/static/champions/man-thing.webp"
   },
   {
     "name": "Mister Fantastic",
     "champion_class": "Science",
-    "image_url": "/static/champions/mister_fantastic.png"
+    "image_url": "/static/champions/mister_fantastic.webp"
   },
   {
     "name": "Guillotine 2099",
     "champion_class": "Tech",
-    "image_url": "/static/champions/guillotine_2099.png"
+    "image_url": "/static/champions/guillotine_2099.webp"
   },
   {
     "name": "Silver Surfer",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/silver_surfer.png"
+    "image_url": "/static/champions/silver_surfer.webp"
   },
   {
     "name": "Squirrel Girl",
     "champion_class": "Skill",
-    "image_url": "/static/champions/squirrel_girl.png"
+    "image_url": "/static/champions/squirrel_girl.webp"
   },
   {
     "name": "Nova",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/nova.png"
+    "image_url": "/static/champions/nova.webp"
   },
   {
     "name": "Longshot",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/longshot.png"
+    "image_url": "/static/champions/longshot.webp"
   },
   {
     "name": "Mojo",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/mojo.png"
+    "image_url": "/static/champions/mojo.webp"
   },
   {
     "name": "Mole Man",
     "champion_class": "Skill",
-    "image_url": "/static/champions/mole_man.png"
+    "image_url": "/static/champions/mole_man.webp"
   },
   {
     "name": "Terrax",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/terrax.png"
+    "image_url": "/static/champions/terrax.webp"
   },
   {
     "name": "Storm (Pyramid X)",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/storm_pyramid_x.png"
+    "image_url": "/static/champions/storm_pyramid_x.webp"
   },
   {
     "name": "Sorcerer Supreme",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/sorcerer_supreme.png"
+    "image_url": "/static/champions/sorcerer_supreme.webp"
   },
   {
     "name": "Red Guardian",
     "champion_class": "Science",
-    "image_url": "/static/champions/red_guardian.png"
+    "image_url": "/static/champions/red_guardian.webp"
   },
   {
     "name": "Black Widow (Deadly Origin)",
     "champion_class": "Skill",
-    "image_url": "/static/champions/black_widow_deadly_origin.png"
+    "image_url": "/static/champions/black_widow_deadly_origin.webp"
   },
   {
     "name": "Tigra",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/tigra.png"
+    "image_url": "/static/champions/tigra.webp"
   },
   {
     "name": "Hit-Monkey",
     "champion_class": "Skill",
-    "image_url": "/static/champions/hit-monkey.png"
+    "image_url": "/static/champions/hit-monkey.webp"
   },
   {
     "name": "Guardian",
     "champion_class": "Tech",
-    "image_url": "/static/champions/guardian.png"
+    "image_url": "/static/champions/guardian.webp"
   },
   {
     "name": "Sasquatch",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/sasquatch.png"
+    "image_url": "/static/champions/sasquatch.webp"
   },
   {
     "name": "Dragon Man",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/dragon_man.png"
+    "image_url": "/static/champions/dragon_man.webp"
   },
   {
     "name": "Platinumpool",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/platinumpool.png"
+    "image_url": "/static/champions/platinumpool.webp"
   },
   {
     "name": "Air-Walker",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/air-walker.png"
+    "image_url": "/static/champions/air-walker.webp"
   },
   {
     "name": "Magneto (House of X)",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/magneto_house_of_x.png"
+    "image_url": "/static/champions/magneto_house_of_x.webp"
   },
   {
     "name": "Professor X",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/professor_x.png"
+    "image_url": "/static/champions/professor_x.webp"
   },
   {
     "name": "Apocalypse",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/apocalypse.png"
+    "image_url": "/static/champions/apocalypse.webp"
   },
   {
     "name": "Cosmic Ghost Rider",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/cosmic_ghost_rider.png"
+    "image_url": "/static/champions/cosmic_ghost_rider.webp"
   },
   {
     "name": "Red Goblin",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/red_goblin.png"
+    "image_url": "/static/champions/red_goblin.webp"
   },
   {
     "name": "Hulk (Immortal)",
     "champion_class": "Science",
-    "image_url": "/static/champions/hulk_immortal.png"
+    "image_url": "/static/champions/hulk_immortal.webp"
   },
   {
     "name": "Abomination (Immortal)",
     "champion_class": "Science",
-    "image_url": "/static/champions/abomination_immortal.png"
+    "image_url": "/static/champions/abomination_immortal.webp"
   },
   {
     "name": "Daredevil (Hell's Kitchen)",
     "champion_class": "Skill",
-    "image_url": "/static/champions/daredevil_hell_s_kitchen.png"
+    "image_url": "/static/champions/daredevil_hell_s_kitchen.webp"
   },
   {
     "name": "Scarlet Witch (Classic)",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/scarlet_witch_classic.png"
+    "image_url": "/static/champions/scarlet_witch_classic.webp"
   },
   {
     "name": "Spider-Ham",
     "champion_class": "Science",
-    "image_url": "/static/champions/spider-ham.png"
+    "image_url": "/static/champions/spider-ham.webp"
   },
   {
     "name": "Jubilee",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/jubilee.png"
+    "image_url": "/static/champions/jubilee.webp"
   },
   {
     "name": "Stryfe",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/stryfe.png"
+    "image_url": "/static/champions/stryfe.webp"
   },
   {
     "name": "Jessica Jones",
     "champion_class": "Science",
-    "image_url": "/static/champions/jessica_jones.png"
+    "image_url": "/static/champions/jessica_jones.webp"
   },
   {
     "name": "Psycho-Man",
     "champion_class": "Tech",
-    "image_url": "/static/champions/psycho-man.png"
+    "image_url": "/static/champions/psycho-man.webp"
   },
   {
     "name": "Super-Skrull",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/super-skrull.png"
+    "image_url": "/static/champions/super-skrull.webp"
   },
   {
     "name": "Mangog",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/mangog.png"
+    "image_url": "/static/champions/mangog.webp"
   },
   {
     "name": "Odin",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/odin.png"
+    "image_url": "/static/champions/odin.webp"
   },
   {
     "name": "Scarlet Witch",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/scarlet_witch.png"
+    "image_url": "/static/champions/scarlet_witch.webp"
   },
   {
     "name": "Jabari Panther",
     "champion_class": "Skill",
-    "image_url": "/static/champions/jabari_panther.png"
+    "image_url": "/static/champions/jabari_panther.webp"
   },
   {
     "name": "Silver Centurion",
     "champion_class": "Tech",
-    "image_url": "/static/champions/silver_centurion.png"
+    "image_url": "/static/champions/silver_centurion.webp"
   },
   {
     "name": "Shang-Chi",
     "champion_class": "Skill",
-    "image_url": "/static/champions/shang-chi.png"
+    "image_url": "/static/champions/shang-chi.webp"
   },
   {
     "name": "Mister Negative",
     "champion_class": "Science",
-    "image_url": "/static/champions/mister_negative.png"
+    "image_url": "/static/champions/mister_negative.webp"
   },
   {
     "name": "Purgatory",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/purgatory.png"
+    "image_url": "/static/champions/purgatory.webp"
   },
   {
     "name": "The Overseer",
     "champion_class": "Science",
-    "image_url": "/static/champions/the_overseer.png"
+    "image_url": "/static/champions/the_overseer.webp"
   },
   {
     "name": "America Chavez",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/america_chavez.png"
+    "image_url": "/static/champions/america_chavez.webp"
   },
   {
     "name": "Hercules",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/hercules.png"
+    "image_url": "/static/champions/hercules.webp"
   },
   {
     "name": "Spider-Man 2099",
     "champion_class": "Science",
-    "image_url": "/static/champions/spider-man_2099.png"
+    "image_url": "/static/champions/spider-man_2099.webp"
   },
   {
     "name": "Peni Parker",
     "champion_class": "Tech",
-    "image_url": "/static/champions/peni_parker.png"
+    "image_url": "/static/champions/peni_parker.webp"
   },
   {
     "name": "Nimrod",
     "champion_class": "Tech",
-    "image_url": "/static/champions/nimrod.png"
+    "image_url": "/static/champions/nimrod.webp"
   },
   {
     "name": "Kitty Pryde",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/kitty_pryde.png"
+    "image_url": "/static/champions/kitty_pryde.webp"
   },
   {
     "name": "Knull",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/knull.png"
+    "image_url": "/static/champions/knull.webp"
   },
   {
     "name": "Anti-Venom",
     "champion_class": "Science",
-    "image_url": "/static/champions/anti-venom.png"
+    "image_url": "/static/champions/anti-venom.webp"
   },
   {
     "name": "Sersi",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/sersi.png"
+    "image_url": "/static/champions/sersi.webp"
   },
   {
     "name": "Ikaris",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/ikaris.png"
+    "image_url": "/static/champions/ikaris.webp"
   },
   {
     "name": "Kraven",
     "champion_class": "Skill",
-    "image_url": "/static/champions/kraven.png"
+    "image_url": "/static/champions/kraven.webp"
   },
   {
     "name": "Toad",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/toad.png"
+    "image_url": "/static/champions/toad.webp"
   },
   {
     "name": "Sauron",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/sauron.png"
+    "image_url": "/static/champions/sauron.webp"
   },
   {
     "name": "Captain America (Sam Wilson)",
     "champion_class": "Tech",
-    "image_url": "/static/champions/captain_america_sam_wilson.png"
+    "image_url": "/static/champions/captain_america_sam_wilson.webp"
   },
   {
     "name": "Misty Knight",
     "champion_class": "Skill",
-    "image_url": "/static/champions/misty_knight.png"
+    "image_url": "/static/champions/misty_knight.webp"
   },
   {
     "name": "Captain Britain",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/captain_britain.png"
+    "image_url": "/static/champions/captain_britain.webp"
   },
   {
     "name": "Omega Sentinel",
     "champion_class": "Tech",
-    "image_url": "/static/champions/omega_sentinel.png"
+    "image_url": "/static/champions/omega_sentinel.webp"
   },
   {
     "name": "Black Cat",
     "champion_class": "Skill",
-    "image_url": "/static/champions/black_cat.png"
+    "image_url": "/static/champions/black_cat.webp"
   },
   {
     "name": "Scorpion",
     "champion_class": "Science",
-    "image_url": "/static/champions/scorpion.png"
+    "image_url": "/static/champions/scorpion.webp"
   },
   {
     "name": "Wong",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/wong.png"
+    "image_url": "/static/champions/wong.webp"
   },
   {
     "name": "Rintrah",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/rintrah.png"
+    "image_url": "/static/champions/rintrah.webp"
   },
   {
     "name": "Hulkling",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/hulkling.png"
+    "image_url": "/static/champions/hulkling.webp"
   },
   {
     "name": "Wiccan",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/wiccan.png"
+    "image_url": "/static/champions/wiccan.webp"
   },
   {
     "name": "Valkyrie",
     "champion_class": "Skill",
-    "image_url": "/static/champions/valkyrie.png"
+    "image_url": "/static/champions/valkyrie.webp"
   },
   {
     "name": "Gorr",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/gorr.png"
+    "image_url": "/static/champions/gorr.webp"
   },
   {
     "name": "Galan",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/galan.png"
+    "image_url": "/static/champions/galan.webp"
   },
   {
     "name": "Quicksilver",
     "champion_class": "Science",
-    "image_url": "/static/champions/quicksilver.png"
+    "image_url": "/static/champions/quicksilver.webp"
   },
   {
     "name": "Titania",
     "champion_class": "Science",
-    "image_url": "/static/champions/titania.png"
+    "image_url": "/static/champions/titania.webp"
   },
   {
     "name": "Iron Man (Infamous)",
     "champion_class": "Tech",
-    "image_url": "/static/champions/iron_man_infamous.png"
+    "image_url": "/static/champions/iron_man_infamous.webp"
   },
   {
     "name": "Spider-Man (Supreme)",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/spider-man_supreme.png"
+    "image_url": "/static/champions/spider-man_supreme.webp"
   },
   {
     "name": "Spot",
     "champion_class": "Science",
-    "image_url": "/static/champions/spot.png"
+    "image_url": "/static/champions/spot.webp"
   },
   {
     "name": "Shuri",
     "champion_class": "Tech",
-    "image_url": "/static/champions/shuri.png"
+    "image_url": "/static/champions/shuri.webp"
   },
   {
     "name": "Attuma",
     "champion_class": "Skill",
-    "image_url": "/static/champions/attuma.png"
+    "image_url": "/static/champions/attuma.webp"
   },
   {
     "name": "Mantis",
     "champion_class": "Skill",
-    "image_url": "/static/champions/mantis.png"
+    "image_url": "/static/champions/mantis.webp"
   },
   {
     "name": "Absorbing Man",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/absorbing_man.png"
+    "image_url": "/static/champions/absorbing_man.webp"
   },
   {
     "name": "Baron Zemo",
     "champion_class": "Skill",
-    "image_url": "/static/champions/baron_zemo.png"
+    "image_url": "/static/champions/baron_zemo.webp"
   },
   {
     "name": "Cassie Lang",
     "champion_class": "Science",
-    "image_url": "/static/champions/cassie_lang.png"
+    "image_url": "/static/champions/cassie_lang.webp"
   },
   {
     "name": "Ant-Man (Future)",
     "champion_class": "Tech",
-    "image_url": "/static/champions/ant-man_future.png"
+    "image_url": "/static/champions/ant-man_future.webp"
   },
   {
     "name": "Viv Vision",
     "champion_class": "Tech",
-    "image_url": "/static/champions/viv_vision.png"
+    "image_url": "/static/champions/viv_vision.webp"
   },
   {
     "name": "Kate Bishop",
     "champion_class": "Skill",
-    "image_url": "/static/champions/kate_bishop.png"
+    "image_url": "/static/champions/kate_bishop.webp"
   },
   {
     "name": "Darkhawk",
     "champion_class": "Tech",
-    "image_url": "/static/champions/darkhawk.png"
+    "image_url": "/static/champions/darkhawk.webp"
   },
   {
     "name": "Doctor Strange",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/doctor_strange.png"
+    "image_url": "/static/champions/doctor_strange.webp"
   },
   {
     "name": "Shocker",
     "champion_class": "Tech",
-    "image_url": "/static/champions/shocker.png"
+    "image_url": "/static/champions/shocker.webp"
   },
   {
     "name": "Drax",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/drax.png"
+    "image_url": "/static/champions/drax.webp"
   },
   {
     "name": "Sandman",
     "champion_class": "Science",
-    "image_url": "/static/champions/sandman.png"
+    "image_url": "/static/champions/sandman.webp"
   },
   {
     "name": "Black Widow",
     "champion_class": "Skill",
-    "image_url": "/static/champions/black_widow.png"
+    "image_url": "/static/champions/black_widow.webp"
   },
   {
     "name": "Hawkeye",
     "champion_class": "Skill",
-    "image_url": "/static/champions/hawkeye.png"
+    "image_url": "/static/champions/hawkeye.webp"
   },
   {
     "name": "Hulk",
     "champion_class": "Science",
-    "image_url": "/static/champions/hulk.png"
+    "image_url": "/static/champions/hulk.webp"
   },
   {
     "name": "Moondragon",
     "champion_class": "Skill",
-    "image_url": "/static/champions/moondragon.png"
+    "image_url": "/static/champions/moondragon.webp"
   },
   {
     "name": "Punisher",
     "champion_class": "Skill",
-    "image_url": "/static/champions/punisher.png"
+    "image_url": "/static/champions/punisher.webp"
   },
   {
     "name": "Luke Cage",
     "champion_class": "Science",
-    "image_url": "/static/champions/luke_cage.png"
+    "image_url": "/static/champions/luke_cage.webp"
   },
   {
     "name": "Juggernaut",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/juggernaut.png"
+    "image_url": "/static/champions/juggernaut.webp"
   },
   {
     "name": "Kang the Conqueror",
     "champion_class": "Tech",
-    "image_url": "/static/champions/kang_the_conqueror.png"
+    "image_url": "/static/champions/kang_the_conqueror.webp"
   },
   {
     "name": "Adam Warlock",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/adam_warlock.png"
+    "image_url": "/static/champions/adam_warlock.webp"
   },
   {
     "name": "Dani Moonstar",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/dani_moonstar.png"
+    "image_url": "/static/champions/dani_moonstar.webp"
   },
   {
     "name": "Lady Deathstrike",
     "champion_class": "Tech",
-    "image_url": "/static/champions/lady_deathstrike.png"
+    "image_url": "/static/champions/lady_deathstrike.webp"
   },
   {
     "name": "Night Thrasher",
     "champion_class": "Skill",
-    "image_url": "/static/champions/night_thrasher.png"
+    "image_url": "/static/champions/night_thrasher.webp"
   },
   {
     "name": "Spider-Gwen",
     "champion_class": "Science",
-    "image_url": "/static/champions/spider-gwen.png"
+    "image_url": "/static/champions/spider-gwen.webp"
   },
   {
     "name": "Silk",
     "champion_class": "Science",
-    "image_url": "/static/champions/silk.png"
+    "image_url": "/static/champions/silk.webp"
   },
   {
     "name": "Kindred",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/kindred.png"
+    "image_url": "/static/champions/kindred.webp"
   },
   {
     "name": "Vox",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/vox.png"
+    "image_url": "/static/champions/vox.webp"
   },
   {
     "name": "Gladiator",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/gladiator.png"
+    "image_url": "/static/champions/gladiator.webp"
   },
   {
     "name": "Photon",
     "champion_class": "Science",
-    "image_url": "/static/champions/photon.png"
+    "image_url": "/static/champions/photon.webp"
   },
   {
     "name": "Werewolf By Night",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/werewolf_by_night.png"
+    "image_url": "/static/champions/werewolf_by_night.webp"
   },
   {
     "name": "Morbius",
     "champion_class": "Science",
-    "image_url": "/static/champions/morbius.png"
+    "image_url": "/static/champions/morbius.webp"
   },
   {
     "name": "Maestro (Cosmic)",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/maestro_cosmic.png"
+    "image_url": "/static/champions/maestro_cosmic.webp"
   },
   {
     "name": "Kushala",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/kushala.png"
+    "image_url": "/static/champions/kushala.webp"
   },
   {
     "name": "Chee'ilth",
     "champion_class": "Skill",
-    "image_url": "/static/champions/chee_ilth.png"
+    "image_url": "/static/champions/chee_ilth.webp"
   },
   {
     "name": "Bullseye",
     "champion_class": "Skill",
-    "image_url": "/static/champions/bullseye.png"
+    "image_url": "/static/champions/bullseye.webp"
   },
   {
     "name": "White Tiger",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/white_tiger.png"
+    "image_url": "/static/champions/white_tiger.webp"
   },
   {
     "name": "Onslaught",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/onslaught.png"
+    "image_url": "/static/champions/onslaught.webp"
   },
   {
     "name": "Guillotine (Deathless)",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/guillotine_deathless.png"
+    "image_url": "/static/champions/guillotine_deathless.webp"
   },
   {
     "name": "Dust",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/dust.png"
+    "image_url": "/static/champions/dust.webp"
   },
   {
     "name": "Ironheart",
     "champion_class": "Tech",
-    "image_url": "/static/champions/ironheart.png"
+    "image_url": "/static/champions/ironheart.webp"
   },
   {
     "name": "The Serpent",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/the_serpent.png"
+    "image_url": "/static/champions/the_serpent.webp"
   },
   {
     "name": "The Destroyer",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/the_destroyer.png"
+    "image_url": "/static/champions/the_destroyer.webp"
   },
   {
     "name": "King Groot (Deathless)",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/king_groot_deathless.png"
+    "image_url": "/static/champions/king_groot_deathless.webp"
   },
   {
     "name": "Spider-Punk",
     "champion_class": "Science",
-    "image_url": "/static/champions/spider-punk.png"
+    "image_url": "/static/champions/spider-punk.webp"
   },
   {
     "name": "Prowler",
     "champion_class": "Tech",
-    "image_url": "/static/champions/prowler.png"
+    "image_url": "/static/champions/prowler.webp"
   },
   {
     "name": "Negasonic Teenage Warhead",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/negasonic_teenage_warhead.png"
+    "image_url": "/static/champions/negasonic_teenage_warhead.webp"
   },
   {
     "name": "Silver Sable",
     "champion_class": "Skill",
-    "image_url": "/static/champions/silver_sable.png"
+    "image_url": "/static/champions/silver_sable.webp"
   },
   {
     "name": "Arcade",
     "champion_class": "Tech",
-    "image_url": "/static/champions/arcade.png"
+    "image_url": "/static/champions/arcade.webp"
   },
   {
     "name": "Northstar",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/northstar.png"
+    "image_url": "/static/champions/northstar.webp"
   },
   {
     "name": "Patriot",
     "champion_class": "Skill",
-    "image_url": "/static/champions/patriot.png"
+    "image_url": "/static/champions/patriot.webp"
   },
   {
     "name": "The Leader",
     "champion_class": "Science",
-    "image_url": "/static/champions/the_leader.png"
+    "image_url": "/static/champions/the_leader.webp"
   },
   {
     "name": "Beta Ray Bill",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/beta_ray_bill.png"
+    "image_url": "/static/champions/beta_ray_bill.webp"
   },
   {
     "name": "Enchantress",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/enchantress.png"
+    "image_url": "/static/champions/enchantress.webp"
   },
   {
     "name": "Count Nefaria",
     "champion_class": "Science",
-    "image_url": "/static/champions/count_nefaria.png"
+    "image_url": "/static/champions/count_nefaria.webp"
   },
   {
     "name": "Shathra",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/shathra.png"
+    "image_url": "/static/champions/shathra.webp"
   },
   {
     "name": "Scream",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/scream.png"
+    "image_url": "/static/champions/scream.webp"
   },
   {
     "name": "Jack O'Lantern",
     "champion_class": "Tech",
-    "image_url": "/static/champions/jack_o_lantern.png"
+    "image_url": "/static/champions/jack_o_lantern.webp"
   },
   {
     "name": "She-Hulk (Deathless)",
     "champion_class": "Science",
-    "image_url": "/static/champions/she-hulk_deathless.png"
+    "image_url": "/static/champions/she-hulk_deathless.webp"
   },
   {
     "name": "Dazzler",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/dazzler.png"
+    "image_url": "/static/champions/dazzler.webp"
   },
   {
     "name": "Spiral",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/spiral.png"
+    "image_url": "/static/champions/spiral.webp"
   },
   {
     "name": "Henchpool",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/henchpool.png"
+    "image_url": "/static/champions/henchpool.webp"
   },
   {
     "name": "Isophyne",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/isophyne.png"
+    "image_url": "/static/champions/isophyne.webp"
   },
   {
     "name": "Thanos (Deathless)",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/thanos_deathless.png"
+    "image_url": "/static/champions/thanos_deathless.webp"
   },
   {
     "name": "Okoye",
     "champion_class": "Skill",
-    "image_url": "/static/champions/okoye.png"
+    "image_url": "/static/champions/okoye.webp"
   },
   {
     "name": "Gentle",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/gentle.png"
+    "image_url": "/static/champions/gentle.webp"
   },
   {
     "name": "Arnim Zola",
     "champion_class": "Tech",
-    "image_url": "/static/champions/arnim_zola.png"
+    "image_url": "/static/champions/arnim_zola.webp"
   },
   {
     "name": "Falcon (Joaquín Torres)",
     "champion_class": "Science",
-    "image_url": "/static/champions/falcon_joaqu_n_torres.png"
+    "image_url": "/static/champions/falcon_joaqu_n_torres.webp"
   },
   {
     "name": "Jean Grey",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/jean_grey.png"
+    "image_url": "/static/champions/jean_grey.webp"
   },
   {
     "name": "Bastion",
     "champion_class": "Tech",
-    "image_url": "/static/champions/bastion.png"
+    "image_url": "/static/champions/bastion.webp"
   },
   {
     "name": "Spider-Woman (Jessica Drew)",
     "champion_class": "Science",
-    "image_url": "/static/champions/spider-woman_jessica_drew.png"
+    "image_url": "/static/champions/spider-woman_jessica_drew.webp"
   },
   {
     "name": "Lumatrix",
     "champion_class": "Skill",
-    "image_url": "/static/champions/lumatrix.png"
+    "image_url": "/static/champions/lumatrix.webp"
   },
   {
     "name": "Dark Phoenix",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/dark_phoenix.png"
+    "image_url": "/static/champions/dark_phoenix.webp"
   },
   {
     "name": "Yelena Belova",
     "champion_class": "Skill",
-    "image_url": "/static/champions/yelena_belova.png"
+    "image_url": "/static/champions/yelena_belova.webp"
   },
   {
     "name": "Vision (Deathless)",
     "champion_class": "Tech",
-    "image_url": "/static/champions/vision_deathless.png"
+    "image_url": "/static/champions/vision_deathless.webp"
   },
   {
     "name": "Symbiote Supreme",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/symbiote_supreme.png"
+    "image_url": "/static/champions/symbiote_supreme.webp"
   },
   {
     "name": "Abomination",
     "champion_class": "Science",
-    "image_url": "/static/champions/abomination.png"
+    "image_url": "/static/champions/abomination.webp"
   },
   {
     "name": "Rhino",
     "champion_class": "Science",
-    "image_url": "/static/champions/rhino.png"
+    "image_url": "/static/champions/rhino.webp"
   },
   {
     "name": "Superior Iron Man",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/superior_iron_man.png"
+    "image_url": "/static/champions/superior_iron_man.webp"
   },
   {
     "name": "Nico Minoru",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/nico_minoru.png"
+    "image_url": "/static/champions/nico_minoru.webp"
   },
   {
     "name": "Karolina Dean",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/karolina_dean.png"
+    "image_url": "/static/champions/karolina_dean.webp"
   },
   {
     "name": "Captain America (WWII)",
     "champion_class": "Science",
-    "image_url": "/static/champions/captain_america_wwii.png"
+    "image_url": "/static/champions/captain_america_wwii.webp"
   },
   {
     "name": "The Maker",
     "champion_class": "Tech",
-    "image_url": "/static/champions/the_maker.png"
+    "image_url": "/static/champions/the_maker.webp"
   },
   {
     "name": "High Evolutionary",
     "champion_class": "Science",
-    "image_url": "/static/champions/high_evolutionary.png"
+    "image_url": "/static/champions/high_evolutionary.webp"
   },
   {
     "name": "Solvarch",
     "champion_class": "Tech",
-    "image_url": "/static/champions/solvarch.png"
+    "image_url": "/static/champions/solvarch.webp"
   },
   {
     "name": "Cassandra Nova",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/cassandra_nova.png"
+    "image_url": "/static/champions/cassandra_nova.webp"
   },
   {
     "name": "Silver Samurai",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/silver_samurai.png"
+    "image_url": "/static/champions/silver_samurai.webp"
   },
   {
     "name": "Mr. Knight",
     "champion_class": "Skill",
-    "image_url": "/static/champions/mr_knight.png"
+    "image_url": "/static/champions/mr_knight.webp"
   },
   {
     "name": "Anti-Venomoid",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/anti-venomoid.png"
+    "image_url": "/static/champions/anti-venomoid.webp"
   },
   {
     "name": "Dracula",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/dracula.png"
+    "image_url": "/static/champions/dracula.webp"
   },
   {
     "name": "Franken-Castle",
     "champion_class": "Skill",
-    "image_url": "/static/champions/franken-castle.png"
+    "image_url": "/static/champions/franken-castle.webp"
   },
   {
     "name": "Rocket Raccoon",
     "champion_class": "Tech",
-    "image_url": "/static/champions/rocket_raccoon.png"
+    "image_url": "/static/champions/rocket_raccoon.webp"
   },
   {
     "name": "Sentinelbot",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/sentinelbot.png"
+    "image_url": "/static/champions/sentinelbot.webp"
   },
   {
     "name": "Sentry",
     "champion_class": "Science",
-    "image_url": "/static/champions/sentry.png"
+    "image_url": "/static/champions/sentry.webp"
   },
   {
     "name": "Lizard",
     "champion_class": "Science",
-    "image_url": "/static/champions/lizard.png"
+    "image_url": "/static/champions/lizard.webp"
   },
   {
     "name": "Spider-Man (Pavitr Prabhakar)",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/spider-man_pavitr_prabhakar.png"
+    "image_url": "/static/champions/spider-man_pavitr_prabhakar.webp"
   },
   {
     "name": "Imperiosa",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/imperiosa.png"
+    "image_url": "/static/champions/imperiosa.webp"
   },
   {
     "name": "Spider-Slayer (J. Jonah Jameson)",
     "champion_class": "Tech",
-    "image_url": "/static/champions/spider-slayer_j_jonah_jameson.png"
+    "image_url": "/static/champions/spider-slayer_j_jonah_jameson.webp"
   },
   {
     "name": "Star-Lord (Stellar-Forged)",
     "champion_class": "Skill",
-    "image_url": "/static/champions/star-lord_stellar-forged.png"
+    "image_url": "/static/champions/star-lord_stellar-forged.webp"
   },
   {
     "name": "Storm",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/storm.png"
+    "image_url": "/static/champions/storm.webp"
   },
   {
     "name": "The Champion",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/the_champion.png"
+    "image_url": "/static/champions/the_champion.webp"
   },
   {
     "name": "M'Baku",
     "champion_class": "Skill",
-    "image_url": "/static/champions/m_baku.png"
+    "image_url": "/static/champions/m_baku.webp"
   },
   {
     "name": "Blue Marvel",
     "champion_class": "Science",
-    "image_url": "/static/champions/blue_marvel.png"
+    "image_url": "/static/champions/blue_marvel.webp"
   },
   {
     "name": "Thor",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/thor.png"
+    "image_url": "/static/champions/thor.webp"
   },
   {
     "name": "Venom the Duck",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/venom_the_duck.png"
+    "image_url": "/static/champions/venom_the_duck.webp"
   },
   {
     "name": "Madelyne Pryor",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/madelyne_pryor.png"
+    "image_url": "/static/champions/madelyne_pryor.webp"
   },
   {
     "name": "Pixie",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/pixie.png"
+    "image_url": "/static/champions/pixie.webp"
   },
   {
     "name": "Void",
     "champion_class": "Science",
-    "image_url": "/static/champions/void.png"
+    "image_url": "/static/champions/void.webp"
   },
   {
     "name": "Doctor Bong",
     "champion_class": "Skill",
-    "image_url": "/static/champions/doctor_bong.png"
+    "image_url": "/static/champions/doctor_bong.webp"
   },
   {
     "name": "Ruby Thursday",
     "champion_class": "Tech",
-    "image_url": "/static/champions/ruby_thursday.png"
+    "image_url": "/static/champions/ruby_thursday.webp"
   },
   {
     "name": "Blade (Stellar-Forged)",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/blade_stellar-forged.png"
+    "image_url": "/static/champions/blade_stellar-forged.webp"
   },
   {
     "name": "Wave",
     "champion_class": "Science",
-    "image_url": "/static/champions/wave.png"
+    "image_url": "/static/champions/wave.webp"
   },
   {
     "name": "Phyla-Vell",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/phyla-vell.png"
+    "image_url": "/static/champions/phyla-vell.webp"
   },
   {
     "name": "Shatterstar",
     "champion_class": "Mutant",
-    "image_url": "/static/champions/shatterstar.png"
+    "image_url": "/static/champions/shatterstar.webp"
   },
   {
     "name": "Hobgoblin (Phil Urich)",
     "champion_class": "Tech",
-    "image_url": "/static/champions/hobgoblin_phil_urich.png"
+    "image_url": "/static/champions/hobgoblin_phil_urich.webp"
   },
   {
     "name": "Black Tarantula",
     "champion_class": "Skill",
-    "image_url": "/static/champions/black_tarantula.png"
+    "image_url": "/static/champions/black_tarantula.webp"
   },
   {
     "name": "Agatha Harkness",
     "champion_class": "Mystic",
-    "image_url": "/static/champions/agatha_harkness.png"
+    "image_url": "/static/champions/agatha_harkness.webp"
   },
   {
     "name": "Green Goblin (Stellar-Forged)",
     "champion_class": "Science",
-    "image_url": "/static/champions/green_goblin_stellar-forged.png"
+    "image_url": "/static/champions/green_goblin_stellar-forged.webp"
   },
   {
     "name": "Gwenom",
     "champion_class": "Cosmic",
-    "image_url": "/static/champions/gwenom.png"
+    "image_url": "/static/champions/gwenom.webp"
   },
   {
     "name": "Spider-Man Noir",
     "champion_class": "Skill",
-    "image_url": "/static/champions/spider-man_noir.png"
+    "image_url": "/static/champions/spider-man_noir.webp"
   }
 ]

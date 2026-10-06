@@ -68,7 +68,7 @@ export function getClassColors(championClass: string) {
 /** Class icons sit next to the frames on the static server. */
 export function getClassIconUrl(championClass: string): string | null {
   if (!(championClass in CLASS_COLORS)) return null
-  return `/static/icons/class-${championClass.toLowerCase()}.png`
+  return `/static/icons/class-${championClass.toLowerCase()}.webp`
 }
 
 /** Sort an arbitrary class list into CLASS_ORDER, unknown values last, alphabetically. */

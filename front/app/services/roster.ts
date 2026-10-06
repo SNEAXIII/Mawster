@@ -31,7 +31,7 @@ export const SIGNATURE_PRESETS = [0, 20, 100, 200]
 /** Frame image URL per star level */
 export function getStarFrameUrl(rarity: string): string {
   const stars = rarity.charAt(0) // '6' or '7'
-  return `/static/frame/${stars}_stars.png`
+  return `/static/frame/${stars}_stars.webp`
 }
 
 export function splitRarity(rarity: string): { stars: number; rank: number } | null {

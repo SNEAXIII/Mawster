@@ -64,7 +64,7 @@ describe('Defense – templates', () => {
         cy.getByCy('defense-current-placement')
           .find('img')
           .first()
-          .should('have.attr', 'src', '/static/frame/7_stars.png');
+          .should('have.attr', 'src', '/static/frame/7_stars.webp');
       },
     );
   });
