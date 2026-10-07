@@ -182,15 +182,15 @@ export const THUMBNAIL_SIZES = [110, 256]
  * Build a sized champion image URL.
  * Converts e.g. "/static/champions/cyclops_blue_team.webp"
  * into "/static/champions/cyclops_blue_team_110x110.webp" when size ≤ 110 (_256x256 up to 256).
- * A size bigger than 256, or no size, returns the original URL.
+ * No size, or one bigger than 256, gets the 256 variant: the original is not served.
  */
 export function getChampionImageUrl(
   imageUrl: string | null | undefined,
   requestedSize?: number
 ): string | null {
   if (!imageUrl) return null
-  const size = requestedSize && THUMBNAIL_SIZES.find((s) => s >= requestedSize)
-  if (!size) return imageUrl
+  const largest = THUMBNAIL_SIZES[THUMBNAIL_SIZES.length - 1]
+  const size = THUMBNAIL_SIZES.find((s) => s >= (requestedSize ?? largest)) ?? largest
   // Insert _NxN before the file extension
   const dotIndex = imageUrl.lastIndexOf('.')
   if (dotIndex === -1) return `${imageUrl}_${size}x${size}.webp`
