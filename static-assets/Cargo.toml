@@ -6,16 +6,13 @@ publish = false
 description = "Rust Web server for static asset, ngninx like"
 
 [dependencies]
-axum = { version = "0.8", features = ["macros"] }
-tokio = { version = "1.53.2", features = ["rt-multi-thread", "macros", "signal"] }
-validator = { version = "0.21.0", features = ["derive"] }
-thiserror = "2"
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio", "tracing"] }
+tokio = { version = "1.53.2", features = ["rt-multi-thread", "macros"] }
 anyhow = "1"
-uuid = { version = "1", features = ["v4", "serde"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tower-http = { version = "0.7.1", features = ["fs"] }
-image = "0.25.10"
+tower-http = { version = "0.7.1", features = ["fs", "set-header"] }
+image = { version = "0.25.10", default-features = false, features = ["png", "webp"] }
 regex = "1.13.1"
 
 [profile.dev.package."*"]

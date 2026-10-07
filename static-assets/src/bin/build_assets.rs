@@ -60,7 +60,7 @@ impl FolderConverter {
         output_dir: &Path,
     ) -> anyhow::Result<()> {
         for (index, image_path) in images.iter().enumerate() {
-            eprint!("\r{}/{} files converted", index+1, images.len());
+            eprint!("\r{}/{} files converted", index + 1, images.len());
             let output_path = output_dir
                 .join(image_path.strip_prefix(static_dir)?)
                 .with_extension("webp");

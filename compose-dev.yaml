@@ -176,8 +176,8 @@ services:
     restart: unless-stopped
   static:
     build:
-      context: .
-      dockerfile: static-assets/static.Dockerfile
+      context: static-assets
+      dockerfile: static.Dockerfile
     container_name: static-dev
     ports:
       - "8002:80"

@@ -1,7 +1,12 @@
-use axum::{Router, routing::get, serve::ListenerExt};
+use axum::{
+    Router,
+    http::{HeaderValue, header},
+    routing::get,
+    serve::ListenerExt,
+};
 use mawster_static_files::config::Config;
 use tokio::net::{TcpListener, TcpStream};
-use tower_http::services::ServeDir;
+use tower_http::{services::ServeDir, set_header::SetResponseHeader};
 use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::EnvFilter;
 
@@ -29,7 +34,11 @@ async fn main() -> anyhow::Result<()> {
     let config = Config::from_env()?;
     setup_logger();
 
-    let service_serve = ServeDir::new(config.static_dir);
+    let service_serve = SetResponseHeader::overriding(
+        ServeDir::new(config.static_dir),
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("public, max-age=2592000"),
+    );
 
     let app = Router::new()
         .route("/health", get(|| async { info!("health check") }))

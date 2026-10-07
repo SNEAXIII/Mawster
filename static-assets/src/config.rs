@@ -21,7 +21,7 @@ impl Config {
     pub fn from_source(lookup: impl Fn(&str) -> Option<String>) -> Result<Self> {
         let get = |key: &str| lookup(key).filter(|value| !value.is_empty());
         let static_dir: PathBuf = get("STATIC_DIR")
-            .unwrap_or_else(|| "../static".to_owned())
+            .unwrap_or_else(|| "static".to_owned())
             .parse()
             .context("STATIC_DIR is not a valid folder path")?;
         anyhow::ensure!(
@@ -56,8 +56,8 @@ impl Config {
     // Public because the integration tests are a separate crate.
     pub fn for_tests() -> Self {
         Self {
-            static_dir: PathBuf::from("../static"),
-            output_dir: PathBuf::from("output"),
+            static_dir: PathBuf::from("static"),
+            output_dir: PathBuf::from("build"),
             bind_url: SocketAddr::from(([0, 0, 0, 0], 8005)),
             sizes: vec![110, 256],
         }
