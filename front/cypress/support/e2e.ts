@@ -356,7 +356,7 @@ Cypress.Commands.add(
 
 // ── Defense plans & templates (direct backend calls) ────────────────────────
 
-function putPlanNode(
+export function putPlanNode(
   token: string,
   allianceId: string,
   planId: string,
