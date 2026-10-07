@@ -35,7 +35,10 @@ export default function ProfileContent() {
   ]
 
   return (
-    <PageContainer className='max-w-5xl mx-auto space-y-4 sm:space-y-6'>
+    <PageContainer
+      stack
+      className='max-w-5xl mx-auto'
+    >
       <TabBar
         tabs={tabs}
         value={activeTab}

@@ -37,7 +37,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
   }
 
   return (
-    <PageContainer>
+    <PageContainer stack>
       <TabBar
         tabs={tabs}
         value={vm.activeTab}

@@ -49,6 +49,7 @@ export default function RosterContent() {
           tabs={tabs}
           value={vm.activeTab}
           onChange={vm.setActiveTab}
+          className='mb-4 align-top'
         />
 
         {vm.activeTab !== RosterTab.Accounts && (

@@ -113,6 +113,7 @@ export default function DefenseGrid({
                 canManage={canManage}
                 playerFilter={playerFilter}
                 onPlayerChange={setPlayerFilter}
+                format={format}
               />
             </CardContent>
           </Card>
