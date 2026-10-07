@@ -14,15 +14,15 @@ COPY src src
 
 FROM builded-deps AS assets
 COPY static static
-RUN cargo run --release --bin build_assets
+RUN cargo run --release --locked --bin build_assets
 
 FROM builded-deps AS server
-RUN cargo build --release --bin mawster-static-files
+RUN cargo build --release --locked --bin mawster-static-files
 
 FROM scratch AS runtime
 WORKDIR /app
 COPY --from=server /app/target/release/mawster-static-files /mawster-static-files
 COPY --from=assets /app/build /app/static
-ENV BIND_URL=0.0.0.0:80
-EXPOSE 80
+USER 65534:65534
+EXPOSE 8005
 ENTRYPOINT ["/mawster-static-files"]
