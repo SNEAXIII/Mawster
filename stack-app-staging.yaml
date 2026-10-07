@@ -182,7 +182,7 @@ services:
         - traefik.http.routers.static-staging.entrypoints=websecure
         - traefik.http.routers.static-staging.tls.certresolver=letsencrypt
         - traefik.http.routers.static-staging.service=static-staging
-        - traefik.http.services.static-staging.loadbalancer.server.port=80
+        - traefik.http.services.static-staging.loadbalancer.server.port=8005
         - traefik.docker.network=traefik-public
     logging:
       driver: json-file

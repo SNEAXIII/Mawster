@@ -41,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
     );
 
     let app = Router::new()
-        .route("/health", get(|| async { info!("health check") }))
+        .route("/health", get(|| async {}))
         .nest_service("/static", service_serve);
 
     let listener = TcpListener::bind(config.bind_url)
