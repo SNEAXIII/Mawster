@@ -34,11 +34,11 @@ impl Config {
             output_dir: get("OUTPUT_DIR")
                 .unwrap_or_else(|| "build".to_owned())
                 .parse()
-                .context("STATIC_DIR is not a valid folder path")?,
+                .context("OUTPUT_DIR is not a valid folder path")?,
             bind_url: get("BIND_URL")
                 .unwrap_or_else(|| "0.0.0.0:8005".to_owned())
                 .parse()
-                .context("BIND_ADDR is not a valid socket address")?,
+                .context("BIND_URL is not a valid socket address")?,
             sizes: get("IMAGE_SIZES")
                 .unwrap_or_else(|| "110,256".to_owned())
                 .split(',')
