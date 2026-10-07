@@ -1,10 +1,12 @@
 use anyhow::Context;
 use image::{ImageReader, imageops::FilterType};
 use mawster_static_files::config::Config;
+use rayon::prelude::*;
 use std::{
     fs::{self},
     io::{self},
     path::{Path, PathBuf},
+    sync::atomic::{AtomicUsize, Ordering},
 };
 fn is_png(path: &Path) -> bool {
     path.extension().is_some_and(|ext| ext == "png")
@@ -63,17 +65,21 @@ fn convert_all_image_to_webp(
     output_dir: &Path,
     sizes: &[u32],
 ) -> anyhow::Result<()> {
-    eprint!("Conversion of {} files started", images.len());
-    for (index, image_path) in images.iter().enumerate() {
-        eprint!("\r{}/{} files converted", index + 1, images.len());
-        let output_path = create_output_path(image_path, output_dir, static_dir)?;
-        create_folder_for_asset(&output_path)?;
-        if is_champion_asset(image_path) {
-            convert_image(image_path, &output_path, Some(sizes))?;
-        } else {
-            convert_image(image_path, &output_path, None)?;
-        }
-    }
+    let done = AtomicUsize::new(0);
+    images
+        .par_iter()
+        .try_for_each(|image_path| -> anyhow::Result<()> {
+            let output_path = create_output_path(image_path, output_dir, static_dir)?;
+            create_folder_for_asset(&output_path)?;
+            convert_image(
+                image_path,
+                &output_path,
+                is_champion_asset(image_path).then_some(sizes),
+            )?;
+            let count = done.fetch_add(1, Ordering::Relaxed) + 1;
+            eprint!("\r{count}/{} files converted", images.len());
+            Ok(())
+        })?;
     println!("\nSuccessfully converted {} PNG to WebP!", images.len());
     Ok(())
 }
