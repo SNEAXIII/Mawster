@@ -12,4 +12,4 @@ dependencies = [
 
 [tool.scraper]
 # Keep in sync with THUMBNAIL_SIZES (front/app/services/champions.ts).
-resize_sizes = [110]
+resize_sizes = [60, 110]

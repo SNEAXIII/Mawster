@@ -174,14 +174,14 @@ export const setChampionSagaRole = async (
   )
 }
 
-// Portraits render at ≤54 CSS px, so 110 stays sharp at 2x; 256 covers the large tool cards.
-// Keep in sync with resize_sizes (static-assets/pyproject.toml) and IMAGE_SIZES (static-assets/server).
-export const THUMBNAIL_SIZES = [110, 256]
+// 60 covers the ≤54 CSS px portraits, 110 the mid-size ones, 256 the large tool cards.
+// Keep in sync with resize_sizes (static-assets/pyproject.toml) and IMAGE_SIZES (static-assets/src/config.rs).
+export const THUMBNAIL_SIZES = [60, 110, 256]
 
 /**
  * Build a sized champion image URL.
  * Converts e.g. "/static/champions/cyclops_blue_team.webp"
- * into "/static/champions/cyclops_blue_team_110x110.webp" when size ≤ 110 (_256x256 up to 256).
+ * into "/static/champions/cyclops_blue_team_60x60.webp" when size ≤ 60 (_110x110 up to 110, _256x256 up to 256).
  * No size, or one bigger than 256, gets the 256 variant: the original is not served.
  */
 export function getChampionImageUrl(
