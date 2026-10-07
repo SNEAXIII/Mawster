@@ -6,30 +6,18 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  # Both run from the project's own node_modules rather than a pinned mirror, so a hook and its
-  # npm script counterpart can never disagree on the same file.
-  #
-  # oxlint --fix runs before prettier so that formatting has the last word. It has to `cd front`
-  # first: oxlint resolves .oxlintrc.json and tsconfig.json from the working directory, and the
-  # repo root has neither — hence the prefix stripping on the staged paths pre-commit hands over.
-  #
-  # prettier is invoked through `node` on its real entry point rather than node_modules/.bin/prettier:
-  # that wrapper is a `#!/bin/sh` script, and a pre-commit running under a native Windows Python
-  # cannot resolve that shebang ("Executable /bin/sh not found"). Going through node works the same
-  # on Windows and in CI.
+  # Front tools run from front/node_modules, never a pinned mirror: hook and npm script can't disagree.
   - repo: local
     hooks:
-      # Ruff's PT012 rejects a `pytest.raises` block holding several statements, but it
-      # does not look inside the statement — `_init(s, [_declaration(...)])` is one
+      # PT012 counts statements, not throwing calls: `_init(s, [_declaration(...)])` slips past it.
       - id: raises-arity
         name: one throwing call per pytest.raises
-        # uv run, not python3: no python3 on Windows. --no-project skips resolving api/.
+        # uv, not python3: Windows has no python3.
         entry: uv run --no-project python scripts/check_raises_arity.py
         language: system
         files: ^api/tests/.*\.py$
 
-      # Accepted trade-offs are listed in .github/zizmor.yml so a new finding stands out.
-      # --min-severity low: informational findings should not block a commit.
+      # Accepted findings live in .github/zizmor.yml.
       - id: zizmor
         name: GitHub Actions audit
         entry: uvx --no-build zizmor --config .github/zizmor.yml --min-severity low .github/workflows/
@@ -37,16 +25,13 @@ repos:
         pass_filenames: false
         files: ^\.github/(workflows/.*|zizmor\.yml)$
 
+      # Runs from front/ (where .oxlintrc.json and tsconfig.json live), hence the stripped prefix.
+      # Unmatched patterns are fine: a cypress-only commit hands over paths .oxlintrc.json ignores.
       - id: oxlint
         name: oxlint (front)
-        # --type-aware pulls in the rules that need a TS program (prefer-nullish-coalescing and
-        # friends); it needs oxlint-tsgolint, which package.json carries.
-        # --no-error-on-unmatched-pattern: a commit touching only cypress/ hands over paths that
-        # .oxlintrc.json ignores, and without it oxlint exits 1 on "No files found to lint".
-        entry: "bash -c 'cd front && exec node_modules/.bin/oxlint --type-aware --fix --no-error-on-unmatched-pattern \"${@#front/}\"' --"
+        entry: 'bash -c ''cd front && exec node_modules/.bin/oxlint --type-aware --fix --no-error-on-unmatched-pattern "${@#front/}"'' --'
         language: system
         files: ^front/.*\.(ts|tsx|js|jsx|mjs|cjs)$
-        exclude: ^front/(node_modules|\.next)/
 
       # Own TS project: the app tsconfig and oxlint both exclude cypress/.
       - id: tsc-cypress
@@ -56,9 +41,25 @@ repos:
         pass_filenames: false
         files: ^front/cypress/.*\.ts$
 
+      # After oxlint --fix so formatting has the last word. Through node: Windows can't run the
+      # node_modules/.bin `#!/bin/sh` wrapper.
       - id: prettier
         name: prettier (front)
         entry: node front/node_modules/prettier/bin/prettier.cjs --write --ignore-path front/.prettierignore
         language: system
         files: ^front/.*\.(ts|tsx|js|jsx|mjs|cjs|css|json|md)$
-        exclude: ^front/(node_modules|\.next)/
+
+      - id: cargo-fmt
+        name: rustfmt (static-assets)
+        entry: cargo fmt --manifest-path static-assets/Cargo.toml
+        language: system
+        pass_filenames: false
+        files: ^static-assets/src/.*\.rs$
+
+      # CI runs no cargo step: this is the only Rust lint gate.
+      - id: cargo-clippy
+        name: clippy (static-assets)
+        entry: cargo clippy --manifest-path static-assets/Cargo.toml --all-targets
+        language: system
+        pass_filenames: false
+        files: ^static-assets/(src/.*\.rs|Cargo\.(toml|lock))$

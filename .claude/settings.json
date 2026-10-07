@@ -23,7 +23,8 @@
       "source": {
         "source": "github",
         "repo": "SNEAXIII/sneaxiii-plugins"
-      }
+      },
+      "autoUpdate": true
     }
   }
 }

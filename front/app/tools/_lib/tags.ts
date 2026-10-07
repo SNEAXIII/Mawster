@@ -29,15 +29,15 @@ export const TAG_DISPLAY: Record<TagKey, TagDisplay> = {
 const ICON_DIR = '/static/icons'
 
 export const TAG_ICON: Record<TagKey, string> = {
-  is_attacker: `${ICON_DIR}/atk-sword.png`,
-  is_defender: `${ICON_DIR}/def-shield.png`,
-  is_alliance_war: `${ICON_DIR}/aw-flame.png`,
-  is_battlegrounds: `${ICON_DIR}/bg-helmet.png`,
-  is_awakened: `${ICON_DIR}/awk-gem.png`,
+  is_attacker: `${ICON_DIR}/atk-sword.webp`,
+  is_defender: `${ICON_DIR}/def-shield.webp`,
+  is_alliance_war: `${ICON_DIR}/aw-flame.webp`,
+  is_battlegrounds: `${ICON_DIR}/bg-helmet.webp`,
+  is_awakened: `${ICON_DIR}/awk-gem.webp`,
 }
 
 /** Shown in place of the attacker and defender glyphs when a champion has both. */
-export const DUAL_ICON = `${ICON_DIR}/dual-sword-shield.png`
+export const DUAL_ICON = `${ICON_DIR}/dual-sword-shield.webp`
 
 /** Signature levels players actually stop at. */
 export const SIGNATURE_PRESETS = [20, 60, 100, 200]

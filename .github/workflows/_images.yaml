@@ -60,7 +60,7 @@ jobs:
             file: ./backup/Dockerfile
           - name: Static
             image: mawster-static
-            context: .
+            context: ./static-assets
             file: ./static-assets/static.Dockerfile
     steps:
       - name: Checkout repository

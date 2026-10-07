@@ -8,7 +8,8 @@ interface MainMawsterLogoProps {
 export function MawsterLogo(): JSX.Element {
   return (
     <Image
-      src='/logos/main_logo.png'
+      src='/static/logos/main_logo.webp'
+      unoptimized
       alt='Logo Mawster'
       width={40}
       height={40}

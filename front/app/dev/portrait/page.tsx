@@ -11,14 +11,14 @@ import { cn } from '@/app/lib/utils'
 
 // Static assets, no auth needed — served through the /static rewrite.
 const CHAMPIONS = [
-  { name: 'Thanos', imageUrl: '/static/champions/thanos.png' },
-  { name: 'Absorbing Man', imageUrl: '/static/champions/absorbing_man.png' },
-  { name: 'Black Panther', imageUrl: '/static/champions/black_panther.png' },
-  { name: 'Sentinel', imageUrl: '/static/champions/sentinel.png' },
-  { name: 'Lumatrix', imageUrl: '/static/champions/lumatrix.png' },
-  { name: 'Groot', imageUrl: '/static/champions/groot.png' },
-  { name: 'Hercules', imageUrl: '/static/champions/hercules.png' },
-  { name: 'Onslaught', imageUrl: '/static/champions/onslaught.png' },
+  { name: 'Thanos', imageUrl: '/static/champions/thanos.webp' },
+  { name: 'Absorbing Man', imageUrl: '/static/champions/absorbing_man.webp' },
+  { name: 'Black Panther', imageUrl: '/static/champions/black_panther.webp' },
+  { name: 'Sentinel', imageUrl: '/static/champions/sentinel.webp' },
+  { name: 'Lumatrix', imageUrl: '/static/champions/lumatrix.webp' },
+  { name: 'Groot', imageUrl: '/static/champions/groot.webp' },
+  { name: 'Hercules', imageUrl: '/static/champions/hercules.webp' },
+  { name: 'Onslaught', imageUrl: '/static/champions/onslaught.webp' },
 ] as const
 
 const SIZES = Array.from({ length: 14 }, (_, i) => 20 + i * 10) // 20 → 150, step 10

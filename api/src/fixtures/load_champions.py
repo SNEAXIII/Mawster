@@ -7,7 +7,7 @@ JSON format expected (array of objects):
       {
         "name": "Spider-Man (Classic)",
         "champion_class": "Science",
-        "image_url": "/static/champions/spider-man_classic.png",
+        "image_url": "/static/champions/spider-man_classic.webp",
         "alias": null
       },
       ...

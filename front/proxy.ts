@@ -59,6 +59,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
   matcher: [
-    '/((?!api|_next/static|_next/image|manifest\\.webmanifest$|robots\\.txt$|sitemap\\.xml$|opengraph-image|.*\\.png$|.*\\.ico$).*)',
+    '/((?!api|_next/static|_next/image|manifest\\.webmanifest$|robots\\.txt$|sitemap\\.xml$|opengraph-image|.*\\.png$|.*\\.webp$|.*\\.ico$).*)',
   ],
 }
