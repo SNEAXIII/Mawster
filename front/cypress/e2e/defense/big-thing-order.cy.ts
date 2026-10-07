@@ -8,11 +8,11 @@ describe('Defense – Big Thing member order', () => {
   it('sorts members by their first node instead of their role', () => {
     // By role ZuluOwner leads; by node, AlphaMember (node 1) must lead ZuluOwner (node 3).
     setupDefenseOwnerAndMember('def-bt-order', 'ZuluOwner', 'AlphaMember', 'BTOrderAll', 'BO').then(
-      ({ adminData, ownerData, allianceId, ownerAccId, memberAccId }) => {
+      ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         const admin = adminData.access_token;
         const owner = ownerData.access_token;
         cy.apiCreatePlan(owner, allianceId, 1, 'BT plan', 'big_thing').then((plan) => {
-          cy.apiGiveChampion(admin, owner, memberAccId, 'Storm', 'Mutant').then(({ championUser }) =>
+          cy.apiGiveChampion(admin, memberData.access_token, memberAccId, 'Storm', 'Mutant').then(({ championUser }) =>
             putPlanNode(owner, allianceId, plan.id, 1, championUser.id),
           );
           cy.apiGiveChampion(admin, owner, ownerAccId, 'Spider-Man', 'Cosmic').then(({ championUser }) =>
