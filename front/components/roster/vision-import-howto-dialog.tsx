@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { useI18n } from '@/app/i18n'
 
-const EXAMPLE_SRC = '/vision/import-example.png'
+const EXAMPLE_SRC = '/static/vision/import-example.webp'
 
 interface VisionImportHowtoDialogProps {
   open: boolean
@@ -54,6 +54,7 @@ export default function VisionImportHowtoDialog({
         {imageOk ? (
           <Image
             src={EXAMPLE_SRC}
+            unoptimized
             alt={howto.exampleAlt}
             width={640}
             height={360}

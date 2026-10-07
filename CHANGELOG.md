@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.23.2](https://github.com/SNEAXIII/Mawster/compare/v1.23.1...v1.23.2) (2026-10-07)
+
+
+### Corrigé
+
+* serve the web manifest without auth redirect ([945e800](https://github.com/SNEAXIII/Mawster/commit/945e800802986bdca347c6c363da7e1bd317c9e4))
+
 ## [1.23.1](https://github.com/SNEAXIII/Mawster/compare/v1.23.0...v1.23.1) (2026-10-05)
 
 

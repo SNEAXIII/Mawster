@@ -31,7 +31,7 @@ describe('champion class', () => {
   })
 
   it.each([
-    ['Cosmic', '/static/icons/class-cosmic.png'],
+    ['Cosmic', '/static/icons/class-cosmic.webp'],
     ['Unknown', null],
   ])('icon of %s → %s', (championClass, expected) => {
     expect(getClassIconUrl(championClass)).toBe(expected)

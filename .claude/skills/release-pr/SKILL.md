@@ -169,7 +169,7 @@ Le run part au push sur la branche cible. ~15-20 min (E2E sur 8 runners + 5 imag
 le lancer **en tâche de fond**.
 
 ```bash
-gh run list --branch release -L 1 --json databaseId --jq '.[0].databaseId'
+gh run list --workflow "CI/CD Pipeline" --branch release -L 1 --json databaseId --jq '.[0].databaseId'
 gh run watch <id> --exit-status
 ```
 
