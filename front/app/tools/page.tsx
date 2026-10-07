@@ -23,7 +23,10 @@ function ToolsContent() {
   ]
 
   return (
-    <PageContainer className='mx-auto'>
+    <PageContainer
+      stack
+      className='mx-auto'
+    >
       <TabBar
         tabs={tabs}
         value={activeTab}

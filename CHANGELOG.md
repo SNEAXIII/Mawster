@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.23.3](https://github.com/SNEAXIII/Mawster/compare/v1.23.2...v1.23.3) (2026-10-07)
+
+
+### Corrigé
+
+* **defense:** sort Big Thing defense members by node ([a539bc0](https://github.com/SNEAXIII/Mawster/commit/a539bc0f2797fe69355e1fc6d757412f0e4f9bf1))
+
 ## [1.23.2](https://github.com/SNEAXIII/Mawster/compare/v1.23.1...v1.23.2) (2026-10-07)
 
 

@@ -46,7 +46,7 @@ export default function AllianceContent() {
     <AllianceRoleProvider>
       <PageContainer
         stack
-        className='w-full sm:gap-6'
+        className='w-full'
       >
         {vm.myInvitations.length > 0 && (
           <InvitationsSection

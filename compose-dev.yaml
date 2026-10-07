@@ -180,7 +180,7 @@ services:
       dockerfile: static.Dockerfile
     container_name: static-dev
     ports:
-      - "8002:80"
+      - "8005:8005"
     networks:
       - internal-dev
     environment:

@@ -1,91 +1,101 @@
 use anyhow::Context;
 use image::{ImageReader, imageops::FilterType};
 use mawster_static_files::config::Config;
-use regex::Regex;
 use std::{
     fs::{self},
     io::{self},
     path::{Path, PathBuf},
 };
-struct FolderConverter {
-    regex: Regex,
-    sizes: Vec<u32>,
+fn is_png(path: &Path) -> bool {
+    path.extension().is_some_and(|ext| ext == "png")
 }
-impl FolderConverter {
-    const fn new(regex: Regex, sizes: Vec<u32>) -> Self {
-        Self { regex, sizes }
-    }
 
-    fn list_base_images(&self, dir: &Path) -> io::Result<Vec<PathBuf>> {
-        let mut images: Vec<PathBuf> = Vec::new();
-        for entry in fs::read_dir(dir)? {
-            let path = entry?.path();
-            if path.is_dir() {
-                images.extend(self.list_base_images(&path)?);
-            } else if self.is_valid_png_asset(&path) {
-                images.push(path);
+fn is_champion_asset(path: &Path) -> bool {
+    path.iter().any(|part| part == "champions")
+}
+
+fn create_folder_for_asset(output_path: &Path) -> anyhow::Result<()> {
+    fs::create_dir_all(output_path.parent().context("Should have a parent")?)?;
+    Ok(())
+}
+
+fn list_png_assets(dir: &Path) -> io::Result<Vec<PathBuf>> {
+    let mut images: Vec<PathBuf> = Vec::new();
+    for entry in fs::read_dir(dir)? {
+        let path = entry?.path();
+        if path.is_dir() {
+            images.extend(list_png_assets(&path)?);
+        } else if is_png(&path) {
+            images.push(path);
+        }
+    }
+    Ok(images)
+}
+
+fn convert_image(
+    image_path: &Path,
+    output_path: &Path,
+    sizes: Option<&[u32]>,
+) -> anyhow::Result<()> {
+    let image = ImageReader::open(image_path)?
+        .with_guessed_format()?
+        .decode()?;
+
+    match sizes {
+        Some(sizes) => {
+            let stem = output_path.file_stem().context("Should have a stem")?;
+            for &size in sizes {
+                let mut file_name = stem.to_owned();
+                file_name.push(format!("_{size}x{size}.webp"));
+                image
+                    .resize(size, size, FilterType::Lanczos3)
+                    .save(output_path.with_file_name(file_name))?;
             }
         }
-        Ok(images)
+        None => image.save(output_path)?,
     }
-
-    fn convert_image(
-        image_path: &Path,
-        output_path: &Path,
-        size: Option<u32>,
-    ) -> anyhow::Result<()> {
-        let image = ImageReader::open(image_path)?
-            .with_guessed_format()?
-            .decode()?;
-        let image = match size {
-            Some(value) => image.resize(value, value, FilterType::Lanczos3),
-            None => image,
-        };
-        image.save(output_path)?;
-        Ok(())
-    }
-
-    fn is_valid_png_asset(&self, path: &Path) -> bool {
-        path.extension().is_some_and(|ext| ext == "png")
-            && path
-                .file_name()
-                .and_then(|name| name.to_str())
-                .is_some_and(|file_name| !self.regex.is_match(file_name))
-    }
-
-    fn convert_all_image_to_webp(
-        &self,
-        images: &[PathBuf],
-        static_dir: &Path,
-        output_dir: &Path,
-    ) -> anyhow::Result<()> {
-        for (index, image_path) in images.iter().enumerate() {
-            eprint!("\r{}/{} files converted", index + 1, images.len());
-            let output_path = output_dir
-                .join(image_path.strip_prefix(static_dir)?)
-                .with_extension("webp");
-            fs::create_dir_all(output_path.parent().context("Should have a parent")?)?;
-            Self::convert_image(image_path, &output_path, None)?;
-            if image_path.iter().any(|part| part == "champions") {
-                let stem = output_path.file_stem().context("Should have a stem")?;
-                for &size in &self.sizes {
-                    let mut name = stem.to_owned();
-                    name.push(format!("_{size}x{size}.webp"));
-                    Self::convert_image(image_path, &output_path.with_file_name(name), Some(size))?;
-                }
-            }
-        }
-        println!("\nSuccessfully converted {} PNG to WebP!", images.len());
-        Ok(())
-    }
+    Ok(())
 }
+
+fn convert_all_image_to_webp(
+    images: &[PathBuf],
+    static_dir: &Path,
+    output_dir: &Path,
+    sizes: &[u32],
+) -> anyhow::Result<()> {
+    eprint!("Conversion of {} files started", images.len());
+    for (index, image_path) in images.iter().enumerate() {
+        eprint!("\r{}/{} files converted", index + 1, images.len());
+        let output_path = create_output_path(image_path, output_dir, static_dir)?;
+        create_folder_for_asset(&output_path)?;
+        if is_champion_asset(image_path) {
+            convert_image(image_path, &output_path, Some(sizes))?;
+        } else {
+            convert_image(image_path, &output_path, None)?;
+        }
+    }
+    println!("\nSuccessfully converted {} PNG to WebP!", images.len());
+    Ok(())
+}
+
+fn create_output_path(
+    image_path: &Path,
+    output_dir: &Path,
+    static_dir: &Path,
+) -> anyhow::Result<PathBuf> {
+    Ok(output_dir
+        .join(image_path.strip_prefix(static_dir)?)
+        .with_extension("webp"))
+}
+
 fn main() -> anyhow::Result<()> {
-    eprintln!("cwd: {}", std::env::current_dir()?.display());
     let config = Config::from_env()?;
-    eprintln!("target: {}", config.static_dir.display());
-    let regex = Regex::new(r"[\w_-]+\d+x\d+")?;
-    let converter = FolderConverter::new(regex, config.sizes);
-    let images = converter.list_base_images(&config.static_dir)?;
-    converter.convert_all_image_to_webp(&images, &config.static_dir, &config.output_dir)?;
+    let images = list_png_assets(&config.static_dir)?;
+    convert_all_image_to_webp(
+        &images,
+        &config.static_dir,
+        &config.output_dir,
+        &config.sizes,
+    )?;
     Ok(())
 }

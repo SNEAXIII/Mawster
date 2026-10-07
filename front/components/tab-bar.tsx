@@ -12,17 +12,22 @@ interface TabBarProps<T extends string | number> {
   tabs: TabItem<T>[]
   value: T
   onChange: (tab: T) => void
+  className?: string
 }
 
 export default function TabBar<T extends string | number>({
   tabs,
   value,
   onChange,
+  className,
 }: Readonly<TabBarProps<T>>) {
   return (
     <div
       role='tablist'
-      className='inline-flex h-9 max-w-full self-start items-center gap-1 overflow-x-auto rounded-lg bg-muted p-0.75 text-muted-foreground'
+      className={cn(
+        'inline-flex h-9 max-w-full self-start items-center gap-0.75 overflow-x-auto rounded-lg bg-muted p-0.75 text-muted-foreground',
+        className
+      )}
     >
       {tabs.map((tab) => {
         const isActive = value === tab.value

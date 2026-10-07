@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Card, CardContent } from '@/components/ui/card'
 import type { DefensePlacement, BgMember } from '@/app/services/defense'
+import type { SeasonFormat } from '@/app/services/season'
 import { cn } from '@/app/lib/utils'
 import ChampionPortrait from '@/components/champion-portrait'
 import UsernameEnriched, { getMemberRole } from '@/components/username-enriched'
@@ -20,6 +21,7 @@ interface DefenseSidePanelProps {
   canManage: boolean
   playerFilter: string
   onPlayerChange: (v: string) => void
+  format?: SeasonFormat
 }
 
 // (rarity + role helpers imported from ./defense-utils)
@@ -31,6 +33,7 @@ export default function DefenseSidePanel({
   canManage,
   playerFilter,
   onPlayerChange,
+  format = 'regular',
 }: Readonly<DefenseSidePanelProps>) {
   const { t } = useI18n()
   const { isMine } = useAllianceRole()
@@ -38,16 +41,6 @@ export default function DefenseSidePanel({
     gameAccountId: string
     pseudo: string
   } | null>(null)
-
-  const sortedMembers = [...members].sort((a, b) => {
-    const rDiff = memberRoleOrder(a) - memberRoleOrder(b)
-    if (rDiff !== 0) return rDiff
-    return a.game_pseudo.localeCompare(b.game_pseudo)
-  })
-
-  const visibleMembers = playerFilter
-    ? sortedMembers.filter((m) => m.game_pseudo === playerFilter)
-    : sortedMembers
 
   // Group placements by game_account_id
   const placementsByPlayer = new Map<string, DefensePlacement[]>()
@@ -63,6 +56,24 @@ export default function DefenseSidePanel({
   for (const [, pList] of placementsByPlayer) {
     pList.sort((a, b) => a.node_number - b.node_number)
   }
+
+  // Members with no defender sort after those who hold a node.
+  const firstNode = (member: BgMember) =>
+    placementsByPlayer.get(member.game_account_id)?.[0]?.node_number ?? Infinity
+
+  const sortedMembers = [...members].sort((a, b) => {
+    if (format === 'big_thing') {
+      const nodeDiff = firstNode(a) - firstNode(b)
+      if (nodeDiff !== 0 && !Number.isNaN(nodeDiff)) return nodeDiff
+    }
+    const rDiff = memberRoleOrder(a) - memberRoleOrder(b)
+    if (rDiff !== 0) return rDiff
+    return a.game_pseudo.localeCompare(b.game_pseudo)
+  })
+
+  const visibleMembers = playerFilter
+    ? sortedMembers.filter((m) => m.game_pseudo === playerFilter)
+    : sortedMembers
 
   return (
     <div className='flex flex-col gap-3'>

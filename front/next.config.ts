@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next'
 const STATIC_SERVER_HOST =
   process.env.STATIC_SERVER_HOST ?? (process.env.NODE_ENV === 'production' ? 'static' : 'localhost')
-const STATIC_PORT = process.env.STATIC_PORT ?? '8002'
+const STATIC_PORT = process.env.STATIC_PORT ?? '8005'
 const port = process.env.PORT ?? '3000'
 
 // A deploy cannot push code into an already-open tab, so the front detects the
