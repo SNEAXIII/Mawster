@@ -3,7 +3,7 @@ LOGIN ?=
 ROLE ?= user
 DISCORD_ID ?=
 
-.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions load-masteries reset-db delete-db init-db seed-user cancel-last test test-cov scrape-champions repopulate-db check fix fix-unsafe format
+.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions load-masteries reset-db delete-db init-db seed-user cancel-last mld test test-cov scrape-champions repopulate-db check fix fix-unsafe format
 
 help:
 	@echo "run-dev      --> run the server in dev mode with auto reload"
@@ -16,6 +16,7 @@ help:
 	@echo "init-db      --> load one user and basic bdd"
 	@echo "seed-user    --> create or promote a dev user: LOGIN=x [ROLE=admin] [DISCORD_ID=y]"
 	@echo "cancel-last  --> cancel last executed migration"
+	@echo "mld          --> regenerate docs/mld.puml from the models"
 	@echo "test         --> run the whole suite (5 xdist workers)"
 	@echo "test-cov     --> run the suite with coverage (5 xdist workers, loadscope)"
 	@echo "install      --> install prod dependencies only"
@@ -70,6 +71,9 @@ init-db:
 seed-user:
 	@test -n "$(LOGIN)" || (echo "usage: make seed-user LOGIN=Sneaxiii [ROLE=admin] [DISCORD_ID=...]"; exit 1)
 	uv run python -m src.fixtures.seed_user --login "$(LOGIN)" --role "$(ROLE)" $(if $(DISCORD_ID),--discord-id "$(DISCORD_ID)",)
+
+mld:
+	uv run python -m docs.gen_mld
 
 cancel-last:
 	uv run alembic downgrade -1
