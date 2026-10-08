@@ -3,6 +3,18 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.24.0](https://github.com/SNEAXIII/Mawster/compare/v1.23.3...v1.24.0) (2026-10-08)
+
+
+### Ajouté
+
+* let the alliance owner rename its name and tag ([#685](https://github.com/SNEAXIII/Mawster/issues/685)) ([294bd90](https://github.com/SNEAXIII/Mawster/commit/294bd90033ebf79a66988522081b3aa1ab58d028))
+
+
+### Corrigé
+
+* block an invalid or unchanged game pseudo as it is typed ([#686](https://github.com/SNEAXIII/Mawster/issues/686)) ([5e13bf1](https://github.com/SNEAXIII/Mawster/commit/5e13bf1ea0d6d31a4e10e16e33d6444b4a213d95))
+
 ## [1.23.3](https://github.com/SNEAXIII/Mawster/compare/v1.23.2...v1.23.3) (2026-10-07)
 
 
