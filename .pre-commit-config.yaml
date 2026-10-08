@@ -59,7 +59,7 @@ repos:
       # CI runs no cargo step: this is the only Rust lint gate.
       - id: cargo-clippy
         name: clippy (static-assets)
-        entry: cargo clippy --manifest-path static-assets/Cargo.toml --all-targets
+        entry: cargo clippy --manifest-path static-assets/Cargo.toml --all-targets --all-features
         language: system
         pass_filenames: false
         files: ^static-assets/(src/.*\.rs|Cargo\.(toml|lock))$

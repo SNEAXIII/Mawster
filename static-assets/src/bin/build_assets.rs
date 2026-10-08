@@ -1,13 +1,15 @@
 use anyhow::Context;
 use image::{ImageReader, imageops::FilterType};
+use indicatif::{ParallelProgressIterator, ProgressStyle};
 use mawster_static_files::config::Config;
 use rayon::prelude::*;
 use std::{
     fs::{self},
     io::{self},
     path::{Path, PathBuf},
-    sync::atomic::{AtomicUsize, Ordering},
 };
+const TEMPLATE_PROGRESS_BAR: &str = "[{elapsed_precise}] {bar:40.cyan/blue} {pos:>2}/{len:2} {msg}";
+
 fn is_png(path: &Path) -> bool {
     path.extension().is_some_and(|ext| ext == "png")
 }
@@ -65,10 +67,9 @@ fn convert_all_image_to_webp(
     output_dir: &Path,
     sizes: &[u32],
 ) -> anyhow::Result<()> {
-    let done = AtomicUsize::new(0);
-    images
-        .par_iter()
-        .try_for_each(|image_path| -> anyhow::Result<()> {
+    let style = ProgressStyle::with_template(TEMPLATE_PROGRESS_BAR)?;
+    images.par_iter().progress_with_style(style).try_for_each(
+        |image_path| -> anyhow::Result<()> {
             let output_path = create_output_path(image_path, output_dir, static_dir)?;
             create_folder_for_asset(&output_path)?;
             convert_image(
@@ -76,10 +77,9 @@ fn convert_all_image_to_webp(
                 &output_path,
                 is_champion_asset(image_path).then_some(sizes),
             )?;
-            let count = done.fetch_add(1, Ordering::Relaxed) + 1;
-            eprint!("\r{count}/{} files converted", images.len());
             Ok(())
-        })?;
+        },
+    )?;
     println!("\nSuccessfully converted {} PNG to WebP!", images.len());
     Ok(())
 }
