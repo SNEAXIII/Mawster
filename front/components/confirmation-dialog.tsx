@@ -32,6 +32,7 @@ type ConfirmationDialogProps = Readonly<{
   children?: ReactNode
   trigger?: ReactNode
   requireConfirmText?: string
+  confirmDisabled?: boolean
   dataCy?: string
 }>
 
@@ -48,6 +49,7 @@ export function ConfirmationDialog({
   children,
   trigger,
   requireConfirmText,
+  confirmDisabled = false,
   dataCy,
 }: ConfirmationDialogProps) {
   const { t } = useI18n()
@@ -58,7 +60,7 @@ export function ConfirmationDialog({
     onOpenChange(next)
   }
 
-  const canConfirm = !requireConfirmText || typedValue === requireConfirmText
+  const canConfirm = !confirmDisabled && (!requireConfirmText || typedValue === requireConfirmText)
 
   return (
     <AlertDialog

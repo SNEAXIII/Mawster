@@ -15,6 +15,7 @@ import AllianceMemberRow from './alliance-member-row'
 import UsernameEnriched from '@/components/username-enriched'
 import AllianceVisitorsSection from './alliance-visitors-section'
 import AllianceDeleteButton from './alliance-delete-button'
+import AllianceRenameButton from './alliance-rename-button'
 import AllianceLeaveVisitButton from './alliance-leave-visit-button'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 import type { AllianceActions } from '../_viewmodels/use-alliance-actions'
@@ -261,6 +262,10 @@ export default function AllianceCard({
                 actions={actions}
               />
             )}
+            <AllianceRenameButton
+              alliance={alliance}
+              actions={actions}
+            />
             <AllianceDeleteButton
               alliance={alliance}
               actions={actions}

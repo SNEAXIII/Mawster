@@ -188,15 +188,42 @@ class TestUpdateAlliance:
     @pytest.mark.asyncio
     async def test_owner_can_update(self):
         await _setup_2_users()
-        alliance, owner = await push_alliance_with_owner(user_id=USER_ID)
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
 
         response = await execute_put_request(
             f"{ENDPOINT}/{alliance.id}",
-            {"name": "NewName", "tag": "NEW", "owner_id": str(owner.id)},
+            {"name": "Ŧhé-Ållîance ★", "tag": "Ø★_é"},
             headers=HEADERS_USER1,
         )
         assert response.status_code == 200
-        assert response.json()["name"] == "NewName"
+        assert response.json()["name"] == "Ŧhé-Ållîance ★"
+        assert response.json()["tag"] == "Ø★_é"
+
+    @pytest.mark.asyncio
+    async def test_officer_cannot_update(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        officer = await push_member(alliance, user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+        await push_officer(alliance, officer)
+
+        response = await execute_put_request(
+            f"{ENDPOINT}/{alliance.id}",
+            {"name": "Hacked", "tag": "H"},
+            headers=HEADERS_USER2,
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_invalid_tag_is_rejected(self):
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+
+        response = await execute_put_request(
+            f"{ENDPOINT}/{alliance.id}",
+            {"name": "NewName", "tag": "TOOLONG"},
+            headers=HEADERS_USER1,
+        )
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_outsider_cannot_update(self):
@@ -207,7 +234,7 @@ class TestUpdateAlliance:
 
         response = await execute_put_request(
             f"{ENDPOINT}/{alliance.id}",
-            {"name": "Hacked", "tag": "H", "owner_id": str(uuid.uuid4())},
+            {"name": "Hacked", "tag": "H"},
             headers=HEADERS_USER2,
         )
         assert response.status_code == 404
@@ -221,7 +248,7 @@ class TestUpdateAlliance:
 
         response = await execute_put_request(
             f"{ENDPOINT}/{alliance.id}",
-            {"name": "Hacked", "tag": "H", "owner_id": str(uuid.uuid4())},
+            {"name": "Hacked", "tag": "H"},
             headers=HEADERS_USER2,
         )
         assert response.status_code == 403
@@ -571,7 +598,7 @@ class TestAllianceNotFound:
         await _setup_2_users()
         resp = await execute_put_request(
             f"{ENDPOINT}/{self.FAKE_ID}",
-            {"name": "NotFound", "tag": "NF", "owner_id": str(uuid.uuid4())},
+            {"name": "NotFound", "tag": "NF"},
             headers=HEADERS_USER1,
         )
         assert resp.status_code == 404

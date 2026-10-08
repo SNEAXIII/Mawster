@@ -11,6 +11,7 @@ from src.dto.alliance.dto_alliance import (
     AllianceMyRolesResponse,
     AllianceResponse,
     AllianceUpdateEloRequest,
+    AllianceUpdateRequest,
     AllianceUpdateTierRequest,
 )
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
@@ -167,11 +168,11 @@ async def get_alliance(
 @alliance_core_controller.put("/{alliance_id}", response_model=AllianceResponse)
 async def update_alliance(
     alliance_id: uuid.UUID,
-    body: AllianceCreateRequest,
+    body: AllianceUpdateRequest,
     session: SessionDep,
     current_user: CurrentUser,
 ):
-    """Update an alliance. Only the owner can update."""
+    """Rename an alliance (name and tag). Only the owner can update."""
     alliance = await AllianceService.get_alliance(session, alliance_id)
     if alliance is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=ALLIANCE_NOT_FOUND)
