@@ -55,7 +55,6 @@ mod tests {
 
     use super::*;
 
-    /// A lookup over a fixed list, standing in for the environment.
     fn source(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
         move |key| {
             pairs
@@ -76,7 +75,6 @@ mod tests {
         })
     }
 
-    /// Nothing set: every field but STATIC_DIR keeps its default.
     #[test]
     fn defaults_apply_when_nothing_is_set() {
         let config = config_with(&[]).unwrap();
@@ -97,7 +95,6 @@ mod tests {
         assert_eq!(config.sizes, vec![60, 110]);
     }
 
-    /// `"60,abc"`, `"60,,110"` and `"60,110,"` each fail, and the message names IMAGE_SIZES.
     #[rstest]
     #[case::not_a_number("60,abc")]
     #[case::empty_middle("60,,110")]
@@ -133,7 +130,6 @@ mod tests {
         );
     }
 
-    /// Every variable the case sets replaces its default.
     #[rstest]
     #[case::all_custom(
         &[
