@@ -8,8 +8,6 @@ pub struct Config {
     pub bind_url: SocketAddr,
     // Keep in sync with THUMBNAIL_SIZES (front/app/services/champions.ts).
     pub sizes: Vec<u32>,
-    // pub cors_allowed_origin: String,
-    // pub environment: String,
 }
 
 impl Config {
@@ -45,11 +43,6 @@ impl Config {
                 .map(|size| size.trim().parse())
                 .collect::<Result<_, _>>()
                 .context("IMAGE_SIZES must be comma-separated integers, e.g. 60,110")?,
-            // cors_allowed_origin: get("CORS_ALLOWED_ORIGIN")
-            //     .unwrap_or_else(|| "http://localhost:3000".to_owned()),
-            // environment: match get("ENV").as_deref() {
-            //     Some("prod" | "production") => Environment::Prod,
-            //     _ => Environment::Dev,
         })
     }
 
@@ -63,17 +56,6 @@ impl Config {
         }
     }
 }
-
-// fn required(get: &impl Fn(&str) -> Option<String>, key: &str) -> Result<String> {
-//     get(key).with_context(|| format!("missing environment variable {key}"))
-// }
-
-// fn parse_or(get: &impl Fn(&str) -> Option<String>, key: &str, default: u64) -> Result<u64> {
-//     get(key).map_or(Ok(default), |raw| {
-//         raw.parse()
-//             .with_context(|| format!("{key} must be a positive integer, got {raw:?}"))
-//     })
-// }
 
 // #[cfg(test)]
 // mod tests {
