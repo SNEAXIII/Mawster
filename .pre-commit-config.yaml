@@ -17,6 +17,13 @@ repos:
         language: system
         files: ^api/tests/.*\.py$
 
+      - id: sync-coverage-exclusions
+        name: sync coverage exclusions (pyproject ↔ sonar)
+        entry: uv run --no-project python scripts/sync_python_exclusions.py
+        language: system
+        pass_filenames: false
+        files: ^(api/pyproject\.toml|sonar-project\.properties|scripts/sync_python_exclusions\.py)$
+
       # Accepted findings live in .github/zizmor.yml.
       - id: zizmor
         name: GitHub Actions audit
