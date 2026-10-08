@@ -45,16 +45,6 @@ impl Config {
                 .context("IMAGE_SIZES must be comma-separated integers, e.g. 60,110")?,
         })
     }
-
-    // Public because the integration tests are a separate crate.
-    pub fn for_tests() -> Self {
-        Self {
-            static_dir: PathBuf::from("static"),
-            output_dir: PathBuf::from("build"),
-            bind_url: SocketAddr::from(([0, 0, 0, 0], 8005)),
-            sizes: vec![60, 110, 256],
-        }
-    }
 }
 
 #[cfg(test)]
