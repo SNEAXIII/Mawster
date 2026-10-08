@@ -57,6 +57,7 @@ export default function AllianceRenameButton({
         description={t.game.alliances.renameDesc}
         confirmText={t.common.save}
         onConfirm={() => void actions.rename(alliance.id, name.trim(), tag.trim())}
+        confirmDisabled={name.trim() === alliance.name && tag.trim() === alliance.tag}
         dataCy='alliance-rename-dialog'
       >
         <div className='flex flex-col gap-3 pt-2 text-left'>

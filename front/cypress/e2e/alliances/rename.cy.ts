@@ -12,6 +12,7 @@ describe('Alliances – Renaming', () => {
       cy.getByCy('alliance-card-OldName').within(() => {
         cy.getByCy('alliance-rename-toggle').click();
       });
+      cy.getByCy('confirmation-dialog-confirm').should('be.disabled');
       cy.getByCy('alliance-rename-name-input').clear();
       cy.getByCy('alliance-rename-name-input').type('NewName');
       cy.getByCy('alliance-rename-tag-input').clear();
