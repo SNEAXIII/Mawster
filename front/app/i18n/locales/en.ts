@@ -278,7 +278,7 @@ const en = {
       description: 'Manage your Marvel Contest of Champions game accounts.',
       pseudo: 'Game Pseudo',
       pseudoPlaceholder: 'Enter your in-game name',
-      pseudoInvalid: '2-16 characters, letters, numbers and spaces only',
+      pseudoInvalid: '2-16 characters: letters without accents, numbers and spaces only',
       isPrimary: 'Primary account',
       createTitle: 'Add a Game Account',
       createButton: 'Add account',

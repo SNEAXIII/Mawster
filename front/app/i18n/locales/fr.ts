@@ -282,7 +282,7 @@ const fr: Translations = {
       description: 'Gérez vos comptes Marvel Contest of Champions.',
       pseudo: 'Pseudo en jeu',
       pseudoPlaceholder: 'Entrez votre nom en jeu',
-      pseudoInvalid: '2 à 16 caractères, lettres, chiffres et espaces uniquement',
+      pseudoInvalid: '2 à 16 caractères : lettres sans accents, chiffres et espaces uniquement',
       isPrimary: 'Compte principal',
       createTitle: 'Ajouter un compte de jeu',
       createButton: 'Ajouter le compte',
