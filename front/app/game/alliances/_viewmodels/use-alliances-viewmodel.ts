@@ -21,7 +21,7 @@ import { useTabParam } from '@/hooks/use-tab-param'
 import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { useGameAccounts } from '@/app/contexts/game-accounts-context'
 import { getCurrentSeasonStatistics, type PlayerSeasonStats } from '@/app/services/statistics'
-import { useAllianceActions } from './use-alliance-actions'
+import { ALLIANCE_NAME_REGEX, ALLIANCE_TAG_REGEX, useAllianceActions } from './use-alliance-actions'
 
 export enum AllianceTab {
   Create = 'create',
@@ -208,9 +208,6 @@ export function useAlliancesViewModel() {
     if (!statsAllianceId) return
     await loadSeasonStats(statsAllianceId, statsWarId, statsSeasonId)
   }
-
-  const ALLIANCE_NAME_REGEX = /^[a-zA-Z0-9 ]{3,50}$/
-  const ALLIANCE_TAG_REGEX = /^[a-zA-Z0-9]{1,5}$/
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()

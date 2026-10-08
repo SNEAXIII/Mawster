@@ -66,35 +66,50 @@ describe('Alliances – Creation', () => {
   // Validation
   // =========================================================================
 
-  it('shows validation error when alliance name contains invalid characters', () => {
+  it('shows validation error when alliance name is too short', () => {
     setupUser('alliance-nameinv-token').then(({ user_id, access_token }: UserSetupData) => {
       cy.apiCreateGameAccount(access_token, 'LeaderNameInv', true);
 
       cy.apiLogin(user_id, 'alliances');
 
       cy.getByCy('tab-create').click();
-      cy.getByCy('alliance-name-input').type('Bad-Alliance!');
+      cy.getByCy('alliance-name-input').type('AB');
       cy.getByCy('alliance-tag-input').type('BA');
       cy.getByCy('alliance-create-btn').click();
 
-      cy.contains('3-50 characters, letters, numbers and spaces only').should('be.visible');
+      cy.contains('Invalid name: 3 to 25 characters, no emoji').should('be.visible');
       cy.contains('Alliance created').should('not.exist');
     });
   });
 
-  it('shows validation error when alliance tag contains invalid characters', () => {
-    setupUser('alliance-taginv-token').then(({ user_id, access_token }: UserSetupData) => {
-      cy.apiCreateGameAccount(access_token, 'LeaderTagInv', true);
+  it('caps the name at 25 characters and the tag at 5', () => {
+    setupUser('alliance-max-token').then(({ user_id, access_token }: UserSetupData) => {
+      cy.apiCreateGameAccount(access_token, 'LeaderMax', true);
 
       cy.apiLogin(user_id, 'alliances');
 
       cy.getByCy('tab-create').click();
-      cy.getByCy('alliance-name-input').type('Good Alliance');
-      cy.getByCy('alliance-tag-input').type('B A');
+      cy.getByCy('alliance-name-input').type('A'.repeat(30));
+      cy.getByCy('alliance-name-input').should('have.value', 'A'.repeat(25));
+      cy.getByCy('alliance-tag-input').type('ABCDEFG');
+      cy.getByCy('alliance-tag-input').should('have.value', 'ABCDE');
+    });
+  });
+
+  it('creates an alliance whose name and tag hold special characters and spaces', () => {
+    setupUser('alliance-special-token').then(({ user_id, access_token }: UserSetupData) => {
+      cy.apiCreateGameAccount(access_token, 'LeaderSpecial', true);
+
+      cy.apiLogin(user_id, 'alliances');
+
+      cy.getByCy('tab-create').click();
+      cy.getByCy('alliance-name-input').type('Ŧhé-Ållîance ★');
+      cy.getByCy('alliance-tag-input').type('Ø ★');
       cy.getByCy('alliance-create-btn').click();
 
-      cy.contains('1-5 characters, letters and numbers only').should('be.visible');
-      cy.contains('Alliance created').should('not.exist');
+      cy.getByCy('alliance-card-Ŧhé-Ållîance ★').within(() => {
+        cy.getByCy('alliance-tag').should('contain', '[Ø ★]');
+      });
     });
   });
 

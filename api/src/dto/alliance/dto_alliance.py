@@ -7,14 +7,31 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from src.dto.mixins import PlayerIdentity
 from src.game_types import Battlegroup, Tier
 
+# Control chars and emoji; FE0F and 20E3 turn a text symbol into one (❤️, 1️⃣),
+# 200D joins emoji sequences (👨‍👩‍👧).
+_FORBIDDEN = r"\x00-\x1f\x7f\p{Emoji_Presentation}\x{200D}\x{FE0F}\x{20E3}"
 
-class AllianceCreateRequest(BaseModel):
-    """DTO to create a new alliance. The owner is the game account that creates it."""
+
+class AllianceUpdateRequest(BaseModel):
+    """DTO to rename an alliance: its name and tag."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
 
     name: str = Field(
-        ..., min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9 ]+$", examples=["My Alliance"]
+        ...,
+        min_length=3,
+        max_length=25,
+        pattern=rf"^[^{_FORBIDDEN}]+$",
+        examples=["Ŧhé Ållîance ★"],
     )
-    tag: str = Field(..., min_length=1, max_length=5, pattern=r"^[a-zA-Z0-9]+$", examples=["ALLY"])
+    tag: str = Field(
+        ..., min_length=1, max_length=5, pattern=rf"^[^{_FORBIDDEN}]+$", examples=["Ø★X"]
+    )
+
+
+class AllianceCreateRequest(AllianceUpdateRequest):
+    """DTO to create a new alliance. The owner is the game account that creates it."""
+
     owner_id: uuid.UUID = Field(..., examples=["550e8400-e29b-41d4-a716-446655440000"])
 
 
