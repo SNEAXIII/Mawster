@@ -69,3 +69,6 @@ doc_markdown = "allow"
 module_name_repetitions = "allow"
 # Comes entirely from transitive dependencies; nothing to act on here.
 multiple_crate_versions = "allow"
+
+[dev-dependencies]
+rstest = "0.27.0"
