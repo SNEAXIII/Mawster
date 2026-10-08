@@ -250,6 +250,10 @@ export async function createAlliance(
   )
 }
 
+export async function updateAlliance(id: string, name: string, tag: string): Promise<Alliance> {
+  return api(`/alliances/${id}`, 'Failed to rename alliance', jsonBody('PUT', { name, tag }))
+}
+
 /**
  * Disband an alliance. `name` is the retyped alliance name: the backend refuses
  * the call unless it matches exactly, so the confirmation is not UI-only.

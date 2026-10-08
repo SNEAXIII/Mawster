@@ -20,23 +20,46 @@ class TestAllianceCreateRequest:
         dto = AllianceCreateRequest(name="MyAlliance", tag="MAW", owner_id=uuid.uuid4())
         assert dto.name == "MyAlliance"
 
-    def test_name_rejects_special_chars(self):
+    def test_accepts_special_chars(self):
+        dto = AllianceCreateRequest(name="Ŧhé-Ållîance ★!", tag="Ø★_é", owner_id=uuid.uuid4())
+        assert dto.name == "Ŧhé-Ållîance ★!"
+        assert dto.tag == "Ø★_é"
+
+    def test_strips_surrounding_whitespace(self):
+        dto = AllianceCreateRequest(name="  MyAlliance ", tag=" MAW ", owner_id=uuid.uuid4())
+        assert (dto.name, dto.tag) == ("MyAlliance", "MAW")
+
+    def test_name_rejects_more_than_25_chars(self):
         owner_id = uuid.uuid4()
 
         with pytest.raises(ValidationError):
-            AllianceCreateRequest(name="My-Alliance!", tag="ALLY", owner_id=owner_id)
+            AllianceCreateRequest(name="A" * 26, tag="ALLY", owner_id=owner_id)
 
-    def test_tag_rejects_special_chars(self):
+    @pytest.mark.parametrize(
+        ("name", "tag"),
+        [
+            ("My🔥Alliance", "ALLY"),
+            ("MyAlliance", "A❤️"),
+            ("MyAlliance", "🇫🇷"),
+            ("MyAlliance", "1️⃣"),
+            ("MyAlliance", "A\u200dB"),
+        ],
+    )
+    def test_rejects_emoji(self, name, tag):
         owner_id = uuid.uuid4()
 
         with pytest.raises(ValidationError):
-            AllianceCreateRequest(name="MyAlliance", tag="AL-Y!", owner_id=owner_id)
+            AllianceCreateRequest(name=name, tag=tag, owner_id=owner_id)
 
-    def test_tag_rejects_spaces(self):
+    def test_name_rejects_control_chars(self):
         owner_id = uuid.uuid4()
 
         with pytest.raises(ValidationError):
-            AllianceCreateRequest(name="MyAlliance", tag="AL Y", owner_id=owner_id)
+            AllianceCreateRequest(name="My\nAlliance", tag="ALLY", owner_id=owner_id)
+
+    def test_tag_accepts_spaces(self):
+        dto = AllianceCreateRequest(name="MyAlliance", tag="AL Y", owner_id=uuid.uuid4())
+        assert dto.tag == "AL Y"
 
 
 def _make_alliance(elo: int = 1500, tier: int = 8):

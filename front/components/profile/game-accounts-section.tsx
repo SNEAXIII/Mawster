@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
-import { toast } from 'sonner'
 import type { GameAccount, AllianceRoleEntry, DeletedGameAccount } from '@/app/services/game'
 import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { useGameAccounts } from '@/app/contexts/game-accounts-context'
@@ -30,6 +29,9 @@ import {
 } from 'lucide-react'
 
 const MAX_ACCOUNTS = 10
+// ASCII only, as the API: accented letters are refused.
+const PSEUDO_REGEX = /^[a-zA-Z0-9 ]{2,16}$/
+const isPseudoInvalid = (value: string) => value.trim() !== '' && !PSEUDO_REGEX.test(value.trim())
 /** Mirrors RESTORE_WINDOW_DAYS in GameAccountService — how long a deleted account lives on. */
 const RESTORE_WINDOW_DAYS = 7
 
@@ -74,15 +76,12 @@ export default function GameAccountsSection() {
   // Form state
   const [pseudo, setPseudo] = useState('')
 
-  const PSEUDO_REGEX = /^[a-zA-Z0-9 ]{2,16}$/
+  const createInvalid = isPseudoInvalid(pseudo)
+  const editInvalid = isPseudoInvalid(editPseudo)
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!pseudo.trim()) return
-    if (!PSEUDO_REGEX.test(pseudo.trim())) {
-      toast.error(t.game.accounts.pseudoInvalid)
-      return
-    }
+    if (!pseudo.trim() || createInvalid) return
 
     setCreating(true)
     if (await create(pseudo.trim())) setPseudo('')
@@ -113,11 +112,7 @@ export default function GameAccountsSection() {
   }
 
   const handleEdit = async (account: GameAccount) => {
-    if (!editPseudo.trim()) return
-    if (!PSEUDO_REGEX.test(editPseudo.trim())) {
-      toast.error(t.game.accounts.pseudoInvalid)
-      return
-    }
+    if (!editPseudo.trim() || editInvalid || editPseudo.trim() === account.game_pseudo) return
     if (await update(account, editPseudo.trim(), account.is_primary)) {
       setEditingId(null)
       setEditPseudo('')
@@ -183,11 +178,20 @@ export default function GameAccountsSection() {
                     minLength={2}
                     required
                     disabled={creating}
+                    aria-invalid={createInvalid}
                   />
+                  {createInvalid && (
+                    <p
+                      className='text-xs text-destructive'
+                      data-cy='account-pseudo-error'
+                    >
+                      {t.game.accounts.pseudoInvalid}
+                    </p>
+                  )}
                 </div>
                 <Button
                   type='submit'
-                  disabled={creating || !pseudo.trim()}
+                  disabled={creating || !pseudo.trim() || createInvalid}
                   data-cy='account-create-btn'
                 >
                   {creating ? (
@@ -232,41 +236,57 @@ export default function GameAccountsSection() {
                   >
                     <div className='flex items-center gap-1 flex-1 min-w-0'>
                       {editingId === account.id ? (
-                        <form
-                          className='flex items-center gap-2 flex-1'
-                          onSubmit={(e) => {
-                            e.preventDefault()
-                            void handleEdit(account)
-                          }}
-                        >
-                          <Input
-                            value={editPseudo}
-                            onChange={(e) => setEditPseudo(e.target.value)}
-                            maxLength={16}
-                            minLength={2}
-                            className='h-8 text-sm'
-                            autoFocus
-                          />
-                          <Button
-                            type='submit'
-                            variant='ghost'
-                            size='icon'
-                            className='text-green-600 hover:text-green-700 hover:bg-green-500/10 shrink-0'
-                            disabled={!editPseudo.trim()}
-                            data-cy='account-edit-confirm'
+                        <div className='flex flex-col gap-1 flex-1'>
+                          <form
+                            className='flex items-center gap-2'
+                            onSubmit={(e) => {
+                              e.preventDefault()
+                              void handleEdit(account)
+                            }}
                           >
-                            <Check className='h-4 w-4' />
-                          </Button>
-                          <Button
-                            type='button'
-                            variant='ghost'
-                            size='icon'
-                            className='text-muted-foreground hover:text-foreground shrink-0'
-                            onClick={cancelEditing}
-                          >
-                            <X className='h-4 w-4' />
-                          </Button>
-                        </form>
+                            <Input
+                              value={editPseudo}
+                              onChange={(e) => setEditPseudo(e.target.value)}
+                              maxLength={16}
+                              minLength={2}
+                              className='h-8 text-sm'
+                              autoFocus
+                              aria-invalid={editInvalid}
+                              data-cy='account-edit-input'
+                            />
+                            <Button
+                              type='submit'
+                              variant='ghost'
+                              size='icon'
+                              className='text-green-600 hover:text-green-700 hover:bg-green-500/10 shrink-0'
+                              disabled={
+                                !editPseudo.trim() ||
+                                editInvalid ||
+                                editPseudo.trim() === account.game_pseudo
+                              }
+                              data-cy='account-edit-confirm'
+                            >
+                              <Check className='h-4 w-4' />
+                            </Button>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='icon'
+                              className='text-muted-foreground hover:text-foreground shrink-0'
+                              onClick={cancelEditing}
+                            >
+                              <X className='h-4 w-4' />
+                            </Button>
+                          </form>
+                          {editInvalid && (
+                            <p
+                              className='text-xs text-destructive'
+                              data-cy='account-edit-error'
+                            >
+                              {t.game.accounts.pseudoInvalid}
+                            </p>
+                          )}
+                        </div>
                       ) : (
                         <>
                           <p className='font-medium text-sm text-foreground'>

@@ -21,7 +21,22 @@ import {
   removeStrategist,
   setMemberGroup,
   transferOwnership,
+  updateAlliance,
 } from '@/app/services/game'
+
+// Mirrors the API DTO: no control chars nor emoji.
+const FORBIDDEN = String.raw`\x00-\x1f\x7f\p{Emoji_Presentation}\u{200D}\u{FE0F}\u{20E3}`
+const NAME_MAX = 25
+const TAG_MAX = 5
+export const ALLIANCE_NAME_REGEX = new RegExp(`^[^${FORBIDDEN}]{3,${NAME_MAX}}$`, 'u')
+export const ALLIANCE_TAG_REGEX = new RegExp(`^[^${FORBIDDEN}]{1,${TAG_MAX}}$`, 'u')
+const STRIP = new RegExp(`[${FORBIDDEN}]`, 'gu')
+
+// Spread counts code points like the API, where `maxLength` counts UTF-16 units.
+const clip = (value: string, max: number) => [...value].slice(0, max).join('')
+export const cleanAllianceName = (value: string) => clip(value.replace(STRIP, ''), NAME_MAX)
+export const cleanAllianceTag = (value: string) =>
+  clip(value.replace(STRIP, '').toUpperCase(), TAG_MAX)
 
 export const AllianceMemberAction = {
   PROMOTE: 'promote',
@@ -123,6 +138,17 @@ export function useAllianceActions(refreshMembership: () => Promise<unknown>) {
     }
   }
 
+  const rename = async (allianceId: string, name: string, tag: string) => {
+    if (!ALLIANCE_NAME_REGEX.test(name)) return void toast.error(t.game.alliances.nameInvalid)
+    if (!ALLIANCE_TAG_REGEX.test(tag)) return void toast.error(t.game.alliances.tagInvalid)
+    try {
+      applyAlliance(await updateAlliance(allianceId, name, tag))
+      toast.success(t.game.alliances.renameSuccess)
+    } catch (err: unknown) {
+      toast.error(errorMessage(err, t.game.alliances.renameError))
+    }
+  }
+
   const disband = async (alliance: Alliance) => {
     try {
       await deleteAlliance(alliance.id, alliance.name)
@@ -180,6 +206,7 @@ export function useAllianceActions(refreshMembership: () => Promise<unknown>) {
     changeMemberGroup,
     updateElo,
     updateTier,
+    rename,
     disband,
     leaveVisit,
     loadVisitors,

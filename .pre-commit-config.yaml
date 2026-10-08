@@ -17,6 +17,13 @@ repos:
         language: system
         files: ^api/tests/.*\.py$
 
+      - id: sync-coverage-exclusions
+        name: sync coverage exclusions (pyproject ↔ sonar)
+        entry: uv run --no-project python scripts/sync_python_exclusions.py
+        language: system
+        pass_filenames: false
+        files: ^(api/pyproject\.toml|sonar-project\.properties|scripts/sync_python_exclusions\.py)$
+
       # Accepted findings live in .github/zizmor.yml.
       - id: zizmor
         name: GitHub Actions audit
@@ -59,7 +66,7 @@ repos:
       # CI runs no cargo step: this is the only Rust lint gate.
       - id: cargo-clippy
         name: clippy (static-assets)
-        entry: cargo clippy --manifest-path static-assets/Cargo.toml --all-targets
+        entry: cargo clippy --manifest-path static-assets/Cargo.toml --all-targets --all-features
         language: system
         pass_filenames: false
         files: ^static-assets/(src/.*\.rs|Cargo\.(toml|lock))$

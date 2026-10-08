@@ -13,6 +13,8 @@ docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yam
 docker pull sneaxiii/mawster-api:latest
 docker pull sneaxiii/mawster-front:latest
 docker pull sneaxiii/mawster-backup:latest
+docker pull sneaxiii/mawster-static:latest
+docker pull sneaxiii/mawster-migrate:latest
 ```
 
 ## État des services
@@ -38,7 +40,7 @@ Voir [`docs/logs.md`](logs.md).
 
 ## Migration de base de données
 
-Voir [`docs/migration.md`](migration.md).
+`make migrate` (`make migrate-staging`) — la CI le lance déjà à chaque deploy.
 
 ## Rollback
 

@@ -37,12 +37,4 @@ docker build -t sneaxiii/mawster-static:latest -f static-assets/static.Dockerfil
 docker push sneaxiii/mawster-static:latest
 ```
 
-## Pull sur le serveur
-
-```bash
-docker pull sneaxiii/mawster-api:latest
-docker pull sneaxiii/mawster-front:latest
-docker pull sneaxiii/mawster-migrate:latest
-docker pull sneaxiii/mawster-backup:latest
-docker pull sneaxiii/mawster-static:latest
-```
+Pull sur le serveur : voir [`swarm.md`](swarm.md#déploiement).

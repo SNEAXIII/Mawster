@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select'
 import { Loader } from 'lucide-react'
 import type { GameAccount } from '@/app/services/game'
+import { cleanAllianceName, cleanAllianceTag } from '../_viewmodels/use-alliance-actions'
 
 interface CreateAllianceFormProps {
   hasAnyAccounts: boolean
@@ -57,9 +58,8 @@ export default function CreateAllianceForm({
                 id='name'
                 data-cy='alliance-name-input'
                 value={name}
-                onChange={(e) => onNameChange(e.target.value)}
+                onChange={(e) => onNameChange(cleanAllianceName(e.target.value))}
                 placeholder={t.game.alliances.namePlaceholder}
-                maxLength={50}
                 minLength={3}
                 required
                 disabled={creating}
@@ -71,9 +71,8 @@ export default function CreateAllianceForm({
                 id='tag'
                 data-cy='alliance-tag-input'
                 value={tag}
-                onChange={(e) => onTagChange(e.target.value.toUpperCase())}
+                onChange={(e) => onTagChange(cleanAllianceTag(e.target.value))}
                 placeholder={t.game.alliances.tagPlaceholder}
-                maxLength={5}
                 required
                 disabled={creating}
               />

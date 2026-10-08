@@ -65,30 +65,33 @@ describe('Game Accounts – UI', () => {
   // Validation
   // =========================================================================
 
-  it('shows validation error when pseudo contains invalid characters', () => {
+  it('blocks an accented pseudo with a message under the input', () => {
     setupUser('ga-invalid-token').then(({ user_id }) => {
       cy.apiLogin(user_id, 'profile');
 
-      cy.getByCy('account-pseudo-input').scrollIntoView().type('bad-pseudo!');
-      cy.getByCy('account-create-btn').click();
+      cy.getByCy('account-pseudo-input').scrollIntoView().type('Pséudo');
 
-      cy.contains('2-16 characters, letters, numbers and spaces only').should('be.visible');
-      cy.contains('Game account created').should('not.exist');
+      cy.getByCy('account-pseudo-error').should('contain', 'letters without accents');
+      cy.getByCy('account-create-btn').should('be.disabled');
+
+      cy.getByCy('account-pseudo-input').clear().type('Pseudo');
+      cy.get('[data-cy="account-pseudo-error"]').should('not.exist');
+      cy.getByCy('account-create-btn').should('be.enabled');
     });
   });
 
-  it('shows validation error when editing pseudo with invalid characters', () => {
+  it('blocks renaming to an accented pseudo with a message under the input', () => {
     setupUser('ga-edit-invalid-token').then(({ user_id, access_token }) => {
       cy.apiCreateGameAccount(access_token, 'ValidPseudo', true);
 
       cy.apiLogin(user_id, 'profile');
 
       cy.getByCy('account-row-ValidPseudo').find('[data-cy="account-edit-btn-0"]').should('be.visible').click();
-      cy.get('input[maxlength="16"]').clear().type('bad-name!');
-      cy.getByCy('account-edit-confirm').first().should('be.enabled').click();
+      cy.getByCy('account-edit-confirm').should('be.disabled');
+      cy.getByCy('account-edit-input').clear().type('Nàme');
 
-      cy.contains('2-16 characters, letters, numbers and spaces only').should('be.visible');
-      cy.contains('Game account renamed').should('not.exist');
+      cy.getByCy('account-edit-error').should('contain', 'letters without accents');
+      cy.getByCy('account-edit-confirm').should('be.disabled');
     });
   });
 
