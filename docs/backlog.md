@@ -29,3 +29,10 @@ criTIQUE
     corriger la vérification d'audience oauth (discord + google)
         un token émis pour une autre application authentifie son porteur ici -> prise de compte
         plan prêt : docs/superpowers/plans/2026-09-03-oauth-audience-verification.md
+
+plans de défense:
+    bouton auto-assign — remplir chaque node Champion-only avec son meilleur propriétaire dispo
+        (7★ avant 6★, puis rang, puis le moins de défenseurs), en respectant le cap de défenseurs
+        et la règle un-Champion-par-map ; le Strategist corrige ensuite à la main
+    édition temps réel d'un plan en WebSocket — deux Strategists voient leurs placements en direct
+        d'ici là : écritures par node, last write wins, pas de verrou

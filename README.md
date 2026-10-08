@@ -2,7 +2,7 @@
 
 Mawster — outil de gestion d'alliance pour **MCOC (Marvel Contest of Champions)**.
 
-- **Backend** : FastAPI + SQLModel + MariaDB (async), Python 3.12, uv
+- **Backend** : FastAPI + SQLModel + MariaDB (async), Python 3.14, uv
 - **Frontend** : Next.js App Router, React 19, Tailwind CSS 4, shadcn/ui
 - **Auth** : Discord OAuth2 → NextAuth 5 → JWT backend (HS256)
 
