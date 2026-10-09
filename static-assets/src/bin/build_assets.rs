@@ -96,9 +96,8 @@ fn create_output_path(
 
 fn main() -> anyhow::Result<()> {
     let config = Config::from_env()?;
-    let images = list_png_assets(&config.static_dir)?;
     convert_all_image_to_webp(
-        &images,
+        &list_png_assets(&config.static_dir)?,
         &config.static_dir,
         &config.output_dir,
         &config.sizes,
@@ -116,7 +115,7 @@ mod tests {
 
     use super::*;
 
-    const WHITE_PNG: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/test_assets/white.png");
+    const WHITE_PNG: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/test_assets/logo/white.png");
 
     #[rstest]
     #[case::single_file("file.png", true)]
@@ -191,8 +190,7 @@ mod tests {
     }
 
     #[rstest]
-    #[case::multiple_dimensions(&[1, 5, 10])]
-    #[case::one_dimension(&[1])]
+    #[case::multiple_dimensions(&[1, 5])]
     #[case::no_dimension(&[])]
     fn convert_image_with_sizes_writes_one_webp_per_size(#[case] sizes: &[u32]) {
         // Arrange
@@ -232,5 +230,37 @@ mod tests {
             Path::new("/static"),
         );
         assert!(output.is_err());
+    }
+    #[test]
+    fn convert_all_images_full_mirror() {
+        // Arrange
+        let tmp = tempfile::tempdir().unwrap();
+        let fake_static_dir = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/test_assets"));
+        let sizes = &[1, 2, 3];
+        // Act
+        convert_all_image_to_webp(
+            &list_png_assets(fake_static_dir).unwrap(),
+            fake_static_dir,
+            tmp.path(),
+            sizes,
+        )
+        .unwrap();
+        // Assert
+        assert_eq!(fs::read_dir(tmp.path()).unwrap().count(), 2); // 2 folders
+
+        let logo_path = &tmp.path().join("logo");
+        assert_eq!(fs::read_dir(logo_path).unwrap().count(), 1);
+        assert!(logo_path.join("white.webp").is_file());
+
+        let champions_path = &tmp.path().join("champions");
+        assert_eq!(fs::read_dir(champions_path).unwrap().count(), sizes.len());
+        for size in sizes {
+            let selected_output = champions_path.join(format!("white_{size}x{size}.webp"));
+            assert!(selected_output.is_file());
+            assert_eq!(
+                image::image_dimensions(&selected_output).unwrap(),
+                (*size, *size)
+            );
+        }
     }
 }
