@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.25.1](https://github.com/SNEAXIII/Mawster/compare/v1.25.0...v1.25.1) (2026-10-09)
+
+
+### Corrigé
+
+* seed new champions on production deploy ([138aa09](https://github.com/SNEAXIII/Mawster/commit/138aa09aa49395be5f7d31839a60ee541c1243ee))
+
 ## [1.25.0](https://github.com/SNEAXIII/Mawster/compare/v1.24.0...v1.25.0) (2026-10-09)
 
 
