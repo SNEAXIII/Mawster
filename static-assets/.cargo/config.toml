@@ -1,0 +1,6 @@
+[alias]
+t = "test --all-features"
+lint = "clippy --all-targets --all-features"
+cov = "llvm-cov --all-features --show-missing-lines"
+serve = "run --bin mawster-static-files --features server"
+assets = "run --release --bin build_assets --features assets"

@@ -1,6 +1,8 @@
 {
     "oxc.configPath": "front/.oxlintrc.json",
     "oxc.tsConfigPath": "front/tsconfig.json",
+    "rust-analyzer.cargo.features": "all",
+    "rust-analyzer.linkedProjects": ["static-assets/Cargo.toml"],
     "sonarlint.connectedMode.project": {
         "connectionId": "sneaxiii",
         "projectKey": "SNEAXIII_Mawster"

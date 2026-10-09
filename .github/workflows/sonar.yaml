@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  coverage:
+  coverage-backend:
     name: Backend coverage
     permissions:
       contents: read
@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
           enable-cache: true
-      - name: Install dev dependencies
+      - name: Install backend dependencies
         run: uv sync --all-groups --locked --no-build --no-install-project
       - name: Run backend tests with coverage
         env:
@@ -40,12 +40,49 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  coverage-static-assets:
+    name: Static-assets coverage
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./static-assets
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Cache cargo dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            static-assets/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('static-assets/Cargo.lock') }}
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0 # v2.87.24
+        with:
+          tool: cargo-llvm-cov
+      - name: Install llvm-tools
+        run: rustup component add llvm-tools-preview
+      - name: Run static-assets tests with coverage
+        run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
+      - name: Upload static-assets coverage
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: static-assets-coverage
+          path: static-assets/lcov.info
+          retention-days: 1
+          if-no-files-found: error
+
   sonar:
     name: Sonar
     permissions:
       contents: read
       pull-requests: read
-    needs: coverage
+    needs: [coverage-backend, coverage-static-assets]
     uses: $/.github/workflows/_sonar.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
