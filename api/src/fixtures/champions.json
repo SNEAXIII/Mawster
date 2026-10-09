@@ -1668,5 +1668,15 @@
     "name": "Spider-Man Noir",
     "champion_class": "Skill",
     "image_url": "/static/champions/spider-man_noir.webp"
+  },
+  {
+    "name": "Colossus (Age of Apocalypse)",
+    "champion_class": "Mutant",
+    "image_url": "/static/champions/colossus_age_of_apocalypse.webp"
+  },
+  {
+    "name": "Ghost Rider (Robbie Reyes)",
+    "champion_class": "Mystic",
+    "image_url": "/static/champions/ghost_rider_robbie_reyes.webp"
   }
 ]
