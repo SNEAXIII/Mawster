@@ -36,9 +36,6 @@ required-features = ["server"]
 name = "build_assets"
 required-features = ["assets"]
 
-[profile.dev.package.image]
-opt-level = 3
-
 [lints.rust]
 unsafe_code = "forbid"
 unused_qualifications = "deny"
