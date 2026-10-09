@@ -100,8 +100,6 @@ jobs:
               -c stack-app.yaml \
               mawster
 
-            make seed-champions
-
       # After the deploy, not on release creation: what players care about is the moment the
       # version is actually live.
       - name: Announce the deploy on Discord
