@@ -1,6 +1,6 @@
 [package]
 name = "mawster-static-files"
-version = "0.1.0"
+version = "1.25.0"
 edition = "2024"
 publish = false
 description = "Rust Web server for static asset, ngninx like"
@@ -36,9 +36,6 @@ required-features = ["server"]
 name = "build_assets"
 required-features = ["assets"]
 
-[profile.dev.package.image]
-opt-level = 3
-
 [lints.rust]
 unsafe_code = "forbid"
 unused_qualifications = "deny"
@@ -69,3 +66,7 @@ doc_markdown = "allow"
 module_name_repetitions = "allow"
 # Comes entirely from transitive dependencies; nothing to act on here.
 multiple_crate_versions = "allow"
+
+[dev-dependencies]
+rstest = "0.27.0"
+tempfile = "3.27.0"

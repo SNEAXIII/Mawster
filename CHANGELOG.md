@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.25.0](https://github.com/SNEAXIII/Mawster/compare/v1.24.0...v1.25.0) (2026-10-09)
+
+
+### Ajouté
+
+* add Colossus (Age of Apocalypse) and Ghost Rider (Robbie Reyes) champions ([c6dce77](https://github.com/SNEAXIII/Mawster/commit/c6dce77d60005afb1a5ce1492c94ee1557bff425))
+
 ## [1.24.0](https://github.com/SNEAXIII/Mawster/compare/v1.23.3...v1.24.0) (2026-10-08)
 
 

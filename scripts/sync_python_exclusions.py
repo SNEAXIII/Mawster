@@ -19,7 +19,8 @@ EXCLUSIONS = [
 # zero-coverage sensor report it as 0% and sink the new-code gate.
 SONAR_EXTRA = [
     "front/**",
-    "static-assets/**",
+    "static-assets/museum/**",
+    "static-assets/src/main.rs",
     ".claude/**",
     "scripts/**",
     "api/main.py",
