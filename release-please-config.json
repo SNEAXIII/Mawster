@@ -6,7 +6,15 @@
     ".": {
       "package-name": "mawster",
       "changelog-path": "CHANGELOG.md",
-      "extra-files": ["api/main.py"]
+      "extra-files": [
+        "api/main.py",
+        { "type": "toml", "path": "static-assets/Cargo.toml", "jsonpath": "$.package.version" },
+        {
+          "type": "toml",
+          "path": "static-assets/Cargo.lock",
+          "jsonpath": "$.package[?(@.name=='mawster-static-files')].version"
+        }
+      ]
     }
   },
   "changelog-sections": [
