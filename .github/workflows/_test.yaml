@@ -124,6 +124,32 @@ jobs:
         working-directory: ./front
         run: npm test
 
+  test-rust:
+    name: Lint & Test for static-assets
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./static-assets
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Cache cargo dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            static-assets/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('static-assets/Cargo.lock') }}
+      - name: Run clippy
+        run: cargo clippy --locked --all-targets --all-features
+      - name: Run unit tests
+        run: cargo test --locked --all-features
+
   e2e-plan:
     name: E2E — Plan spec distribution
     permissions:
