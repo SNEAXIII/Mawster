@@ -1,6 +1,6 @@
 [package]
 name = "mawster-static-files"
-version = "1.25.0"
+version = "1.25.1"
 edition = "2024"
 publish = false
 description = "Rust Web server for static asset, ngninx like"
