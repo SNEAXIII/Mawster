@@ -503,8 +503,10 @@ class WarService:
         old_placement = await cls._get_placement_by_node(
             session, war_id, battlegroup, placement_request.node_number
         )
+        old_attacker_id = None
         if old_placement:
             await cls._assert_attacker_unlocked(session, old_placement)
+            old_attacker_id = old_placement.attacker_champion_user_id
             await FightRecordService.drop_node_record(session, old_placement.id)
             await session.delete(old_placement)
             await session.flush()
@@ -521,52 +523,67 @@ class WarService:
         )
         session.add(placement)
         await session.commit()
+        if old_placement:
+            await cls._cleanup_attacker_associations(
+                session, war_id, battlegroup, placement_request.node_number, old_attacker_id
+            )
         return await cls._placement_response(session, placement.id)
 
     @staticmethod
+    async def _orphan_synergies(
+        session: SessionDep, war_id: uuid.UUID, battlegroup: int, champion_user_id: uuid.UUID
+    ) -> Sequence[WarSynergyAttacker]:
+        """Synergy rows of a champion that no longer attacks any node of this battlegroup."""
+        remaining = await session.exec(
+            select(WarDefensePlacement).where(
+                WarDefensePlacement.war_id == war_id,
+                WarDefensePlacement.battlegroup == battlegroup,
+                WarDefensePlacement.attacker_champion_user_id == champion_user_id,
+            )
+        )
+        if remaining.first():
+            return []
+        return (
+            await session.exec(
+                select(WarSynergyAttacker).where(
+                    WarSynergyAttacker.war_id == war_id,
+                    WarSynergyAttacker.battlegroup == battlegroup,
+                    or_(
+                        WarSynergyAttacker.champion_user_id == champion_user_id,
+                        WarSynergyAttacker.target_champion_user_id == champion_user_id,
+                    ),
+                )
+            )
+        ).all()
+
+    @classmethod
     async def _cleanup_attacker_associations(
+        cls,
         session: SessionDep,
         war_id: uuid.UUID,
         battlegroup: int,
-        node_number: int,
+        node_number: int | None,
         attacker_champion_user_id: uuid.UUID | None,
     ) -> None:
         """Drop the node's prefights and, if the attacker holds no other node, its synergy rows.
 
-        Call *after* the attacker is detached / the placement deleted.
+        Call *after* the attacker is detached / the placement deleted. ``node_number=None`` keeps the prefights.
         """
         stale: list[WarSynergyAttacker | WarPrefightAttacker] = []
         if attacker_champion_user_id is not None:
-            remaining = await session.exec(
-                select(WarDefensePlacement).where(
-                    WarDefensePlacement.war_id == war_id,
-                    WarDefensePlacement.battlegroup == battlegroup,
-                    WarDefensePlacement.attacker_champion_user_id == attacker_champion_user_id,
-                )
+            stale += await cls._orphan_synergies(
+                session, war_id, battlegroup, attacker_champion_user_id
             )
-            if not remaining.first():
-                stale += (
-                    await session.exec(
-                        select(WarSynergyAttacker).where(
-                            WarSynergyAttacker.war_id == war_id,
-                            WarSynergyAttacker.battlegroup == battlegroup,
-                            or_(
-                                WarSynergyAttacker.champion_user_id == attacker_champion_user_id,
-                                WarSynergyAttacker.target_champion_user_id
-                                == attacker_champion_user_id,
-                            ),
-                        )
+        if node_number is not None:
+            stale += (
+                await session.exec(
+                    select(WarPrefightAttacker).where(
+                        WarPrefightAttacker.war_id == war_id,
+                        WarPrefightAttacker.battlegroup == battlegroup,
+                        WarPrefightAttacker.target_node_number == node_number,
                     )
-                ).all()
-        stale += (
-            await session.exec(
-                select(WarPrefightAttacker).where(
-                    WarPrefightAttacker.war_id == war_id,
-                    WarPrefightAttacker.battlegroup == battlegroup,
-                    WarPrefightAttacker.target_node_number == node_number,
                 )
-            )
-        ).all()
+            ).all()
         for row in stale:
             await session.delete(row)
         await session.commit()
@@ -600,6 +617,12 @@ class WarService:
         ).all()
         for p in placements:
             await session.delete(p)
+        for model in (WarSynergyAttacker, WarPrefightAttacker):
+            rows = await session.exec(
+                select(model).where(model.war_id == war_id, model.battlegroup == battlegroup)
+            )
+            for row in rows.all():
+                await session.delete(row)
         await session.commit()
         return len(placements)
 
@@ -828,11 +851,17 @@ class WarService:
             session, war, alliance_id, battlegroup, champion_user, exclude_node=node_number
         )
 
-        attacker_changed = placement.attacker_champion_user_id != champion_user_id
+        previous_attacker_id = placement.attacker_champion_user_id
+        attacker_changed = previous_attacker_id != champion_user_id
         placement.attacker_champion_user_id = champion_user_id
         await session.commit()
         session.expire(placement, ["attacker_champion_user"])
         await FightRecordService.sync_node(session, placement.id, refreeze=attacker_changed)
+        if attacker_changed:
+            # The node's prefights still apply to the new attacker; only the old one's synergies go.
+            await cls._cleanup_attacker_associations(
+                session, war_id, battlegroup, None, previous_attacker_id
+            )
         return await cls._placement_response(session, placement.id)
 
     @classmethod
