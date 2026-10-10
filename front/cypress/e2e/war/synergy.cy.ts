@@ -1,4 +1,4 @@
-import { setupAttackerScenario } from '../../support/e2e';
+import { setupAttackerScenario, openWarNode } from '../../support/e2e';
 
 function loadTwoChampsAddToRoster(
   adminToken: string,
@@ -166,6 +166,31 @@ describe('War Synergy', () => {
               expect(res.status).to.eq(200);
               expect(res.body).to.have.length(0);
             });
+          });
+        });
+      },
+    );
+  });
+
+  it('replacing the node attacker removes the synergy that targeted it', () => {
+    setupAttackerScenario('syn-repl').then(
+      ({ adminToken, ownerData, memberData, allianceId, memberAccId, warId, championUserId }) => {
+        const token = memberData.access_token;
+        cy.apiAssignWarAttacker(token, allianceId, warId, 1, 10, championUserId);
+        loadTwoChampsAddToRoster(adminToken, token, memberAccId, 'Deadpool', 'Mutant', 'Storm', 'Mutant', ({ cu1 }) => {
+          cy.apiAddWarSynergy(token, allianceId, warId, 1, cu1.id, championUserId);
+
+          cy.apiLogin(ownerData.user_id, 'war');
+          cy.getByCy('war-mode-attackers').click();
+          cy.getByCy('champion-portrait-Deadpool-synergy').scrollIntoView().should('be.visible');
+
+          openWarNode(10);
+          cy.getByCy('attacker-card-Storm').should('be.visible').click();
+
+          cy.getByCy('champion-portrait-Deadpool-synergy').should('not.exist');
+          cy.apiRequest(token, 'GET', `/alliances/${allianceId}/wars/${warId}/bg/1/synergy`).then((res) => {
+            expect(res.status).to.eq(200);
+            expect(res.body).to.have.length(0);
           });
         });
       },
