@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useI18n } from '@/app/i18n'
-import type { BoolFilter } from '@/app/services/champions'
+import { BOOL_FILTERS, type BoolFilter } from '@/app/services/champions'
+import { isOneOf } from '@/app/lib/utils'
 import type { ChampionFiltersState } from '@/app/admin/_viewmodels/champion-filters'
 import {
   CHAMPION_ATTRIBUTES,
@@ -29,11 +30,11 @@ export default function ChampionsFilterPopover({
   const { t } = useI18n()
   const labels = useChampionAttributeLabels()
 
-  const choices: { value: BoolFilter; label: string }[] = [
-    { value: 'all', label: t.common.all },
-    { value: 'true', label: t.common.yes },
-    { value: 'false', label: t.common.no },
-  ]
+  const choiceLabels: Record<BoolFilter, string> = {
+    all: t.common.all,
+    true: t.common.yes,
+    false: t.common.no,
+  }
 
   return (
     <Popover>
@@ -70,18 +71,20 @@ export default function ChampionsFilterPopover({
                 size='sm'
                 value={filters[key]}
                 // Radix clears the value when the active item is re-clicked.
-                onValueChange={(value) => onChange(key, (value || 'all') as BoolFilter)}
+                onValueChange={(value) =>
+                  onChange(key, isOneOf(BOOL_FILTERS, value) ? value : 'all')
+                }
                 disabled={sagaDisabled && requiresSeason}
                 data-cy={`champions-filter-${key}`}
               >
-                {choices.map((choice) => (
+                {BOOL_FILTERS.map((choice) => (
                   <ToggleGroupItem
-                    key={choice.value}
-                    value={choice.value}
+                    key={choice}
+                    value={choice}
                     className='px-2 text-xs'
-                    aria-label={choice.label}
+                    aria-label={choiceLabels[choice]}
                   >
-                    {choice.label}
+                    {choiceLabels[choice]}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>

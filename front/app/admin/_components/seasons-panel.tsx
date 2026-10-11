@@ -12,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { Season, SeasonFormat } from '@/app/services/season'
+import { SEASON_FORMATS, type Season, type SeasonFormat } from '@/app/services/season'
+import { isOneOf } from '@/app/lib/utils'
 import { useSeasonsViewModel, type SeasonAction } from '../_viewmodels/use-seasons-viewmodel'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 
@@ -21,6 +22,10 @@ export default function SeasonsPanel() {
   const { seasons, error, create, runAction } = useSeasonsViewModel()
   const [newNumber, setNewNumber] = useState('')
   const [newFormat, setNewFormat] = useState<SeasonFormat>('regular')
+  const formatLabels: Record<SeasonFormat, string> = {
+    regular: t.game.season.format.regular,
+    big_thing: t.game.season.format.bigThing,
+  }
   const [confirm, setConfirm] = useState<{
     id: string
     action: SeasonAction
@@ -92,7 +97,9 @@ export default function SeasonsPanel() {
         />
         <Select
           value={newFormat}
-          onValueChange={(v) => setNewFormat(v as SeasonFormat)}
+          onValueChange={(v) => {
+            if (isOneOf(SEASON_FORMATS, v)) setNewFormat(v)
+          }}
         >
           <SelectTrigger
             className='w-40'
@@ -101,8 +108,14 @@ export default function SeasonsPanel() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value='regular'>{t.game.season.format.regular}</SelectItem>
-            <SelectItem value='big_thing'>{t.game.season.format.bigThing}</SelectItem>
+            {SEASON_FORMATS.map((format) => (
+              <SelectItem
+                key={format}
+                value={format}
+              >
+                {formatLabels[format]}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Button

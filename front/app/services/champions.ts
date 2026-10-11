@@ -29,7 +29,8 @@ export const championClasses = [
 ]
 
 // ─── API ─────────────────────────────────────────────────
-export type BoolFilter = 'all' | 'true' | 'false'
+export const BOOL_FILTERS = ['all', 'true', 'false'] as const
+export type BoolFilter = (typeof BOOL_FILTERS)[number]
 export type ChampionOrderBy = 'name' | 'champion_class'
 export type ChampionOrderDir = 'asc' | 'desc'
 

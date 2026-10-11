@@ -1,6 +1,7 @@
 import { api, jsonBody } from '@/app/services/utils'
 
-export type MatchupVerdict = 'discouraged' | 'ok' | 'good'
+export const MATCHUP_VERDICTS = ['discouraged', 'ok', 'good'] as const
+export type MatchupVerdict = (typeof MATCHUP_VERDICTS)[number]
 export type MatchupTargetType = 'defender' | 'node'
 
 export interface ChampionRef {

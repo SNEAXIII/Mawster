@@ -6,6 +6,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export const isOneOf = <T extends string>(values: readonly T[], value: unknown): value is T =>
+  typeof value === 'string' && (values as readonly string[]).includes(value)
+
 export const truncateString = (str: string, maxLength: number): string => {
   return str.length > maxLength ? `${str.slice(0, maxLength)}...` : str
 }
