@@ -271,14 +271,16 @@ export async function getEligibleOwners(): Promise<GameAccount[]> {
   return api('/alliances/eligible-owners', 'Erreur lors de la récupération des comptes éligibles')
 }
 
-export async function getEligibleMembers(allianceId: string): Promise<GameAccount[]> {
+export type InvitableAccount = Pick<GameAccount, 'id' | 'game_pseudo'>
+
+export async function getEligibleMembers(allianceId: string): Promise<InvitableAccount[]> {
   return api(
     `/alliances/${allianceId}/eligible-members`,
     'Erreur lors de la récupération des membres éligibles'
   )
 }
 
-export async function getEligibleVisitors(allianceId: string): Promise<GameAccount[]> {
+export async function getEligibleVisitors(allianceId: string): Promise<InvitableAccount[]> {
   return api(
     `/alliances/${allianceId}/eligible-visitors`,
     'Erreur lors de la récupération des visiteurs éligibles'
