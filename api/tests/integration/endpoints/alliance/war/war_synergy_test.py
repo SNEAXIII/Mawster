@@ -612,3 +612,74 @@ class TestRemoveDefenderCleansAssociations:
 
         after = await execute_get_request(url, headers=data["headers_member"])
         assert after.json() == []
+
+    @pytest.mark.asyncio
+    async def test_replace_defender_deletes_node_attacker_synergy(self):
+        data = await _setup_synergy_scenario()
+        alliance, war = data["alliance"], data["war"]
+        url = _synergy_url(alliance.id, war.id)
+        await _add_synergy_on_attacker(data)
+
+        new_def = await push_champion(name="Thor", champion_class="Cosmic")
+        replaced = await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/place",
+            payload={
+                "node_number": 10,
+                "champion_id": str(new_def.id),
+                "stars": 7,
+                "rank": 3,
+                "ascension": 0,
+            },
+            headers=data["headers_owner"],
+        )
+        assert replaced.status_code == 201
+
+        after = await execute_get_request(url, headers=data["headers_member"])
+        assert after.json() == []
+
+    @pytest.mark.asyncio
+    async def test_replace_attacker_deletes_old_attacker_synergy(self):
+        data = await _setup_synergy_scenario()
+        alliance, war = data["alliance"], data["war"]
+        url = _synergy_url(alliance.id, war.id)
+        await _add_synergy_on_attacker(data)
+
+        other = await push_champion(name="Hulk", champion_class="Science")
+        other_cu = await push_champion_user(data["member"], other, stars=7, rank=3)
+        assigned = await execute_post_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/node/10/attacker",
+            payload={"champion_user_id": str(other_cu.id)},
+            headers=data["headers_member"],
+        )
+        assert assigned.status_code == 200
+
+        after = await execute_get_request(url, headers=data["headers_member"])
+        assert after.json() == []
+
+    @pytest.mark.asyncio
+    async def test_clear_bg_deletes_synergies(self):
+        data = await _setup_synergy_scenario()
+        alliance, war = data["alliance"], data["war"]
+        url = _synergy_url(alliance.id, war.id)
+        await _add_synergy_on_attacker(data)
+
+        cleared = await execute_delete_request(
+            f"/alliances/{alliance.id}/wars/{war.id}/bg/1/clear",
+            headers=data["headers_owner"],
+        )
+        assert cleared.status_code == 200
+
+        after = await execute_get_request(url, headers=data["headers_member"])
+        assert after.json() == []
+
+
+async def _add_synergy_on_attacker(data):
+    add = await execute_post_request(
+        _synergy_url(data["alliance"].id, data["war"].id),
+        payload={
+            "champion_user_id": str(data["synergy_cu"].id),
+            "target_champion_user_id": str(data["attacker_cu"].id),
+        },
+        headers=data["headers_member"],
+    )
+    assert add.status_code == 201
