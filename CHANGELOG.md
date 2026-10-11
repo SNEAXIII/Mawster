@@ -3,6 +3,14 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.25.1](https://github.com/SNEAXIII/Mawster/compare/v1.25.0...v1.25.1) (2026-10-11)
+
+
+### Corrigé
+
+* drop war synergies left behind when an attacker is replaced or a BG cleared ([da861e6](https://github.com/SNEAXIII/Mawster/commit/da861e603fd89295a75acb9bcf20bf5beb66bb1c))
+* **i18n:** update death-related terminology in English and French translations ([#696](https://github.com/SNEAXIII/Mawster/issues/696)) ([037c696](https://github.com/SNEAXIII/Mawster/commit/037c696de35a7d7e0b4c4b28b8c2c3302bee1db0))
+
 ## [1.25.0](https://github.com/SNEAXIII/Mawster/compare/v1.24.0...v1.25.0) (2026-10-09)
 
 
