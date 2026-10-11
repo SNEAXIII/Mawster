@@ -6,6 +6,7 @@ import { useI18n } from '@/app/i18n'
 import { toast } from 'sonner'
 import {
   type GameAccount,
+  type InvitableAccount,
   getEligibleOwners,
   getEligibleMembers,
   getEligibleVisitors,
@@ -55,8 +56,8 @@ export function useAlliancesViewModel() {
   const router = useRouter()
 
   const [eligibleOwners, setEligibleOwners] = useState<GameAccount[]>([])
-  const [eligibleMembers, setEligibleMembers] = useState<GameAccount[]>([])
-  const [eligibleVisitors, setEligibleVisitors] = useState<GameAccount[]>([])
+  const [eligibleMembers, setEligibleMembers] = useState<InvitableAccount[]>([])
+  const [eligibleVisitors, setEligibleVisitors] = useState<InvitableAccount[]>([])
   const [creating, setCreating] = useState(false)
   const [statsAllianceId, setStatsAllianceId] = useState('')
   const [seasonStats, setSeasonStats] = useState<PlayerSeasonStats[]>([])

@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from src.dto.account.game.dto_game_account import GameAccountResponse
+from src.dto.account.game.dto_game_account import GameAccountResponse, InvitableAccountResponse
 from src.dto.alliance.dto_alliance import (
     AllianceCreateRequest,
     AllianceDeleteRequest,
@@ -42,7 +42,7 @@ async def get_eligible_owners(
 
 
 @alliance_core_controller.get(
-    "/{alliance_id}/eligible-members", response_model=list[GameAccountResponse]
+    "/{alliance_id}/eligible-members", response_model=list[InvitableAccountResponse]
 )
 async def get_eligible_members(
     alliance_id: uuid.UUID,
@@ -60,7 +60,7 @@ async def get_eligible_members(
 
 
 @alliance_core_controller.get(
-    "/{alliance_id}/eligible-visitors", response_model=list[GameAccountResponse]
+    "/{alliance_id}/eligible-visitors", response_model=list[InvitableAccountResponse]
 )
 async def get_eligible_visitors(
     alliance_id: uuid.UUID,

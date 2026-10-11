@@ -53,6 +53,15 @@ class GameAccountResponse(BaseModel):
         }
 
 
+class InvitableAccountResponse(BaseModel):
+    """DTO for an invitation candidate — never its user, alliance or battlegroup."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    game_pseudo: str
+
+
 class DeletedGameAccountResponse(BaseModel):
     """DTO for a logically deleted game account still awaiting restore."""
 

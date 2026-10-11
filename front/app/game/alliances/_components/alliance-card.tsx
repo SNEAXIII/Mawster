@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Shield, UserPlus, Users, X, Pencil, Check, Eye } from 'lucide-react'
 import InviteMemberCombo from './alliance-invite-member-combo'
-import type { GameAccount, AllianceInvitation } from '@/app/services/game'
+import type { InvitableAccount, AllianceInvitation } from '@/app/services/game'
 import { formatDate } from '@/app/lib/utils'
 import { useAllianceRole } from '@/hooks/use-alliance-role'
 import { CollapsibleSection } from '@/components/collapsible-section'
@@ -26,8 +26,8 @@ interface AllianceCardProps {
   /** Currently open invite-member form alliance id */
   memberAllianceId: string | null
   memberAccountId: string
-  eligibleMembers: GameAccount[]
-  eligibleVisitors: GameAccount[]
+  eligibleMembers: InvitableAccount[]
+  eligibleVisitors: InvitableAccount[]
   inviteType: 'member' | 'visitor'
   onInviteTypeChange: (type: 'member' | 'visitor') => void
   onMemberAccountChange: (value: string) => void

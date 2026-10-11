@@ -935,6 +935,22 @@ class TestEligibleEndpointsAuthorization:
         assert response.status_code == 200
         assert str(gone.id) not in [a["id"] for a in response.json()]
 
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("listing", ["eligible-members", "eligible-visitors"])
+    async def test_candidate_exposes_only_id_and_pseudo(self, listing):
+        """Becoming an officer only takes creating an alliance: a candidate must not
+        reveal its user, alliance or battlegroup."""
+        await _setup_2_users()
+        alliance, _ = await push_alliance_with_owner(user_id=USER_ID)
+        await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
+
+        response = await execute_get_request(
+            f"{ENDPOINT}/{alliance.id}/{listing}", headers=HEADERS_USER1
+        )
+        assert response.status_code == 200
+        assert response.json()
+        assert all(set(candidate) == {"id", "game_pseudo"} for candidate in response.json())
+
 
 # =========================================================================
 # The public facade
