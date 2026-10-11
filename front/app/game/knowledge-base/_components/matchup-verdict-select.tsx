@@ -8,9 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { MatchupVerdict } from '@/app/services/matchups'
-
-const VERDICTS: MatchupVerdict[] = ['discouraged', 'ok', 'good']
+import { MATCHUP_VERDICTS, type MatchupVerdict } from '@/app/services/matchups'
+import { isOneOf } from '@/app/lib/utils'
 
 interface Props {
   value: MatchupVerdict
@@ -36,7 +35,9 @@ export default function MatchupVerdictSelect({
   return (
     <Select
       value={value}
-      onValueChange={(v) => onChange(v as MatchupVerdict)}
+      onValueChange={(v) => {
+        if (isOneOf(MATCHUP_VERDICTS, v)) onChange(v)
+      }}
     >
       <SelectTrigger
         className='w-40'
@@ -45,7 +46,7 @@ export default function MatchupVerdictSelect({
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {VERDICTS.map((verdict) => (
+        {MATCHUP_VERDICTS.map((verdict) => (
           <SelectItem
             key={verdict}
             value={verdict}

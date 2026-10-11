@@ -90,7 +90,10 @@ export interface Season {
   status: 'upcoming' | 'active' | 'ended'
 }
 
-export type FightRecordSource = 'all' | 'imported' | 'non_imported'
+export const FIGHT_RECORD_SOURCES = ['all', 'imported', 'non_imported'] as const
+export type FightRecordSource = (typeof FIGHT_RECORD_SOURCES)[number]
+export const SORT_ORDERS = ['asc', 'desc'] as const
+export type SortOrder = (typeof SORT_ORDERS)[number]
 
 export interface FightRecordFilters {
   champion_id?: string
@@ -107,7 +110,7 @@ export interface FightRecordFilters {
   page?: number
   size?: number
   sort_by?: string
-  sort_order?: 'asc' | 'desc'
+  sort_order?: SortOrder
 }
 
 export interface AccessibleAlliance {

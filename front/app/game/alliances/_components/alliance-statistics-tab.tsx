@@ -24,6 +24,7 @@ import { MemberChampionChart } from '@/app/components/statistics/member-champion
 import { ChampionDetailModal } from '@/app/components/statistics/champion-detail-modal'
 import { useChampionStats } from '../_viewmodels/use-champion-stats'
 import { useAllianceSeasonHistory } from '../_viewmodels/use-alliance-season-history'
+import { isOneOf } from '@/app/lib/utils'
 
 interface AllianceStatisticsTabProps {
   alliances: AllianceWithVisitorFlag[]
@@ -40,7 +41,8 @@ interface AllianceStatisticsTabProps {
   onSeasonChange: (seasonId: string | null) => void
 }
 
-type MemberFilter = 'current' | 'all' | 'former'
+const MEMBER_FILTERS = ['current', 'all', 'former'] as const
+type MemberFilter = (typeof MEMBER_FILTERS)[number]
 
 const RATIO_OPTIONS = [-Infinity, 0, 50, 60, 70, 80, 90]
 
@@ -264,7 +266,9 @@ export default function AllianceStatisticsTab({
           <div className='flex flex-wrap items-center gap-3'>
             <Select
               value={memberFilter}
-              onValueChange={(v) => setMemberFilter(v as MemberFilter)}
+              onValueChange={(v) => {
+                if (isOneOf(MEMBER_FILTERS, v)) setMemberFilter(v)
+              }}
             >
               <SelectTrigger
                 className='w-44'
@@ -273,9 +277,14 @@ export default function AllianceStatisticsTab({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='current'>{stat.memberFilter.current}</SelectItem>
-                <SelectItem value='all'>{stat.memberFilter.all}</SelectItem>
-                <SelectItem value='former'>{stat.memberFilter.former}</SelectItem>
+                {MEMBER_FILTERS.map((filter) => (
+                  <SelectItem
+                    key={filter}
+                    value={filter}
+                  >
+                    {stat.memberFilter[filter]}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
