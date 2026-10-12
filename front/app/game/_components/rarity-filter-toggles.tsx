@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/app/lib/utils'
-import { RARITY_TIERS } from './use-rarity-filter'
+import { RARITIES } from '@/app/services/roster'
 
 interface RarityFilterTogglesProps {
   activeTiers: Set<string>
@@ -41,8 +41,8 @@ export default function RarityFilterToggles({
     )
   }
 
-  const sixStarTiers = RARITY_TIERS.filter((tier) => tier.startsWith('6'))
-  const sevenStarTiers = RARITY_TIERS.filter((tier) => tier.startsWith('7'))
+  const sixStarTiers = RARITIES.filter((tier) => tier.startsWith('6'))
+  const sevenStarTiers = RARITIES.filter((tier) => tier.startsWith('7'))
 
   return (
     <div className='flex flex-wrap items-center gap-1'>

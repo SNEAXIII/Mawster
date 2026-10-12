@@ -1,7 +1,7 @@
 """Admin read-only endpoints behind the AI-import dashboard."""
 
 import uuid
-from typing import Annotated, Literal
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
@@ -10,7 +10,9 @@ from src.dto.admin.dto_vision_stats import (
     PaginatedVisionUserStats,
     VisionStatsResponse,
 )
+from src.enums.SortOrder import SortOrder
 from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionUserSortField import VisionUserSortField
 from src.services.admin.VisionStatsService import VisionStatsService
 from src.services.auth.AuthService import AuthService
 from src.utils.db import SessionDep
@@ -37,18 +39,8 @@ async def get_vision_user_stats(
     days: int = DaysQuery,
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1, le=100)] = 20,
-    sort_by: Annotated[
-        Literal[
-            "imports_total",
-            "imports_confirmed",
-            "imports_cancelled",
-            "imports_failed",
-            "screens_total",
-            "last_import_at",
-        ],
-        Query(),
-    ] = "imports_total",
-    sort_order: Annotated[str, Query(pattern="^(asc|desc)$")] = "desc",
+    sort_by: Annotated[VisionUserSortField, Query()] = VisionUserSortField.IMPORTS_TOTAL,
+    sort_order: Annotated[SortOrder, Query()] = SortOrder.DESC,
 ):
     """Who runs AI imports, and how those imports end up."""
     return await VisionStatsService.get_user_stats(

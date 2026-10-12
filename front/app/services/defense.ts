@@ -60,7 +60,8 @@ export interface BgMember {
   is_strategist: boolean
 }
 
-export type PlanState = 'incomplete' | 'validated'
+export const DEFENSE_PLAN_STATES = ['incomplete', 'validated'] as const
+export type DefensePlanState = (typeof DEFENSE_PLAN_STATES)[number]
 
 export interface Quota {
   used: number
@@ -94,7 +95,7 @@ export interface DefensePlanSummary {
   name: string
   battlegroup: number
   format: SeasonFormat
-  state: PlanState
+  state: DefensePlanState
   is_active: boolean
   created_at: string
 }

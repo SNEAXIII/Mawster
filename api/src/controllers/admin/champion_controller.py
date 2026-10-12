@@ -6,12 +6,12 @@ from fastapi import APIRouter, Depends, Query
 from src.dto.admin.dto_champion import (
     ChampionFilters,
     ChampionLoadRequest,
-    ChampionOrderBy,
-    ChampionOrderDir,
     ChampionPaginatedResponse,
     ChampionResponse,
     ChampionUpdateAliasRequest,
 )
+from src.enums.ChampionOrderBy import ChampionOrderBy
+from src.enums.SortOrder import SortOrder
 from src.Messages.champion_messages import (
     CHAMPION_ALIAS_UPDATED,
     CHAMPION_ASCENDABLE_UPDATED,
@@ -58,8 +58,8 @@ async def get_champions(
     season_id: uuid.UUID | None = None,
     is_saga_attacker: bool | None = None,
     is_saga_defender: bool | None = None,
-    order_by: ChampionOrderBy = "name",
-    order_dir: ChampionOrderDir = "asc",
+    order_by: ChampionOrderBy = ChampionOrderBy.NAME,
+    order_dir: SortOrder = SortOrder.ASC,
 ):
     if season_id is None and (is_saga_attacker is not None or is_saga_defender is not None):
         raise CHAMPION_SAGA_FILTER_NEEDS_SEASON

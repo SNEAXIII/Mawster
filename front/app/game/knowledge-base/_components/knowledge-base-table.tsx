@@ -1,7 +1,7 @@
 'use client'
 import type { RefObject } from 'react'
 import { useI18n } from '@/app/i18n'
-import type { FightRecord } from '@/app/services/fight-records'
+import type { FightRecord, FightRecordSortField } from '@/app/services/fight-records'
 import { cn } from '@/app/lib/utils'
 import { buildKnowledgeBaseColumns } from './knowledge-base-columns'
 import KnowledgeBaseTableHead from './knowledge-base-table-head'
@@ -12,7 +12,7 @@ interface Props {
   readonly loading: boolean
   readonly sortBy: string
   readonly sortOrder: 'asc' | 'desc'
-  readonly onSort: (col: string) => void
+  readonly onSort: (col: FightRecordSortField) => void
   readonly onReportNote: (noteId: string) => Promise<boolean>
   /** True while the table is being captured as a PNG — see `useImageExport`. */
   readonly exporting?: boolean

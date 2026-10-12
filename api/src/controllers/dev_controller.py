@@ -17,6 +17,7 @@ from src.dto.admin.dto_champion import ChampionLoadRequest
 from src.dto.auth.dto_token import LoginResponse, TokenBody
 from src.dto.auth.dto_utilisateurs import UserProfile
 from src.enums.Roles import Roles
+from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarStatus import WarStatus
 from src.models import GameAccount, User
 from src.models.Base import utcnow
@@ -119,7 +120,7 @@ class SetupSeasonSpec(BaseModel):
     """
 
     number: int
-    status: Literal["upcoming", "active", "ended"] = "upcoming"
+    status: SeasonStatus = SeasonStatus.UPCOMING
 
 
 MAX_FIGHTS_PER_WAR = 150  # 3 battlegroups x 50 nodes
@@ -373,9 +374,9 @@ async def _create_batch_seasons(session: SessionDep, specs: list[SetupUserSpec])
     for spec in specs:
         for entry in spec.seasons:
             season = await SeasonService.create_season(session, entry.number)
-            if entry.status == "active":
+            if entry.status == SeasonStatus.ACTIVE:
                 await SeasonService.open_season(session, season.id)
-            elif entry.status == "ended":
+            elif entry.status == SeasonStatus.ENDED:
                 await SeasonService.close_season(session, season.id)
             created[str(entry.number)] = str(season.id)
     return created

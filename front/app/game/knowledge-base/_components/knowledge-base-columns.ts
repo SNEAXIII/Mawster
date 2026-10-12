@@ -3,6 +3,8 @@
  * row and the record rows so both stay in the same order.
  */
 
+import type { FightRecordSortField } from '@/app/services/fight-records'
+
 /** Labels the columns need — structurally satisfied by `t.game.knowledgeBase`. */
 export interface KnowledgeBaseColumnLabels {
   player: string
@@ -23,7 +25,7 @@ export interface KnowledgeBaseColumnLabels {
 export interface KnowledgeBaseColumn {
   id: string
   /** Backend sort key, or `null` for a column that cannot be sorted. */
-  col: string | null
+  col: FightRecordSortField | null
   label: string
   compact?: boolean
   /** Soaks up whatever width the compact columns left behind. */

@@ -1,7 +1,8 @@
 // ─── Admin AI-import stats service ───────────────────────
 // Read-only aggregates over the vision (AI) roster imports. Admin-only on the
 // backend; nothing here is reachable from a normal user session.
-import { api } from '@/app/services/utils'
+import { api, type SortOrder } from '@/app/services/utils'
+import type { VisionImportStatus } from '@/app/services/vision'
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ export interface VisionUserStat {
 export interface VisionImportRow {
   id: string
   created_at: string
-  status: string
+  status: VisionImportStatus
   user_id: string
   login: string
   game_account_id: string
@@ -91,13 +92,15 @@ export type PaginatedVisionImports = Paginated<VisionImportRow>
 
 // `imports_total` is the leaderboard default; the rest are the columns the
 // table lets an admin sort on. Kept in sync with the backend whitelist.
-export type VisionUserSort =
-  | 'imports_total'
-  | 'imports_confirmed'
-  | 'imports_cancelled'
-  | 'imports_failed'
-  | 'screens_total'
-  | 'last_import_at'
+export const VISION_USER_SORT_FIELDS = [
+  'imports_total',
+  'imports_confirmed',
+  'imports_cancelled',
+  'imports_failed',
+  'screens_total',
+  'last_import_at',
+] as const
+export type VisionUserSortField = (typeof VISION_USER_SORT_FIELDS)[number]
 
 // 0 means "all time" — the backend reads it that way too.
 export const ALL_TIME_DAYS = 0
@@ -112,8 +115,8 @@ export async function getVisionUserStats(params: {
   days: number
   page?: number
   size?: number
-  sortBy?: VisionUserSort
-  sortOrder?: 'asc' | 'desc'
+  sortBy?: VisionUserSortField
+  sortOrder?: SortOrder
 }): Promise<PaginatedVisionUsers> {
   const query = new URLSearchParams({
     days: String(params.days),
@@ -129,7 +132,7 @@ export async function getVisionImports(params: {
   days: number
   page?: number
   size?: number
-  status?: string
+  status?: VisionImportStatus
   userId?: string
 }): Promise<PaginatedVisionImports> {
   const query = new URLSearchParams({

@@ -12,13 +12,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import type { PaginatedVisionUsers, VisionUserSort } from '@/app/services/vision-stats'
+import type { PaginatedVisionUsers, VisionUserSortField } from '@/app/services/vision-stats'
 
 interface VisionStatsUsersProps {
   data: PaginatedVisionUsers
-  sortBy: VisionUserSort
+  sortBy: VisionUserSortField
   sortOrder: 'asc' | 'desc'
-  onSort: (column: VisionUserSort) => void
+  onSort: (column: VisionUserSortField) => void
   onPageChange: (page: number) => void
   onSelectUser: (user: { id: string; login: string }) => void
 }
@@ -34,7 +34,7 @@ export default function VisionStatsUsers({
   const { t } = useI18n()
   const s = t.admin.visionStats
 
-  const columns: { key: VisionUserSort; label: string }[] = [
+  const columns: { key: VisionUserSortField; label: string }[] = [
     { key: 'imports_total', label: s.colImports },
     { key: 'imports_confirmed', label: s.colConfirmed },
     { key: 'imports_cancelled', label: s.colCancelled },

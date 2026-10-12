@@ -3,13 +3,14 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useI18n } from '@/app/i18n'
-import type { Champion, ChampionOrderBy, ChampionOrderDir } from '@/app/services/champions'
+import type { Champion, ChampionOrderBy } from '@/app/services/champions'
+import type { SortOrder } from '@/app/services/utils'
 import type { ChampionAttribute } from '@/app/admin/_viewmodels/champion-attributes'
 import ChampionTableRow from './champion-table-row'
 
 interface SortState {
   orderBy: ChampionOrderBy
-  orderDir: ChampionOrderDir
+  orderDir: SortOrder
 }
 
 function SortIcon({ field, orderBy, orderDir }: Readonly<{ field: ChampionOrderBy } & SortState>) {
@@ -50,7 +51,7 @@ interface ChampionsTableProps {
   isLoading: boolean
   perPage: number
   orderBy: ChampionOrderBy
-  orderDir: ChampionOrderDir
+  orderDir: SortOrder
   onSort: (field: ChampionOrderBy) => void
   sagaDisabled?: boolean
   onToggleAttribute: (champion: Champion, attribute: ChampionAttribute) => void

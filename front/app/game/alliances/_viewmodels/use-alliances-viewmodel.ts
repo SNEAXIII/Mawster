@@ -16,6 +16,7 @@ import {
   acceptInvitation,
   declineInvitation,
   cancelInvitation,
+  type InvitationType,
 } from '@/app/services/game'
 import { useRequiredSession } from '@/hooks/use-required-session'
 import { useTabParam } from '@/hooks/use-tab-param'
@@ -88,7 +89,7 @@ export function useAlliancesViewModel() {
   const [ownerId, setOwnerId] = useState('')
   const [memberAllianceId, setMemberAllianceId] = useState<string | null>(null)
   const [memberAccountId, setMemberAccountId] = useState('')
-  const [inviteType, setInviteType] = useState<'member' | 'visitor'>('member')
+  const [inviteType, setInviteType] = useState<InvitationType>('member')
   const [rosterTarget, setRosterTarget] = useState<{
     gameAccountId: string
     pseudo: string
@@ -245,7 +246,7 @@ export function useAlliancesViewModel() {
     void Promise.all([fetchEligibleMembers(allianceId), fetchEligibleVisitors(allianceId)])
   }
 
-  const handleInviteTypeChange = (type: 'member' | 'visitor') => {
+  const handleInviteTypeChange = (type: InvitationType) => {
     setInviteType(type)
     setMemberAccountId('')
   }

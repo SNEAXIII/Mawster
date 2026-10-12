@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from src.enums.VisionJobStatus import VisionJobStatus
+
 
 class VisionCandidate(BaseModel):
     """One CLIP guess and its cosine similarity.
@@ -48,7 +50,7 @@ class VisionResultMessage(BaseModel):
 
     job_id: uuid.UUID
     import_id: uuid.UUID
-    status: Literal["done", "failed"]
+    status: Literal[VisionJobStatus.DONE, VisionJobStatus.FAILED]
     error: str | None = None
     result_key: str | None = None
     predictions: list[VisionPredictionMessage] = []

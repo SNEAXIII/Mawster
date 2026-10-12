@@ -9,8 +9,10 @@ import {
   type PaginatedVisionImports,
   type PaginatedVisionUsers,
   type VisionStats,
-  type VisionUserSort,
+  type VisionUserSortField,
 } from '@/app/services/vision-stats'
+import { isOneOf } from '@/app/lib/utils'
+import { VISION_IMPORT_STATUSES, type VisionImportStatus } from '@/app/services/vision'
 
 export const PERIOD_OPTIONS = [7, 30, 90, 365, ALL_TIME_DAYS] as const
 export const DEFAULT_PERIOD = 30
@@ -35,11 +37,11 @@ export function useVisionStatsViewModel() {
   const [error, setError] = useState(false)
 
   const [userPage, setUserPage] = useState(1)
-  const [sortBy, setSortBy] = useState<VisionUserSort>('imports_total')
+  const [sortBy, setSortBy] = useState<VisionUserSortField>('imports_total')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
   const [importPage, setImportPage] = useState(1)
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<VisionImportStatus | ''>('')
   const [userFilter, setUserFilter] = useState<UserFilter | null>(null)
 
   const load = useCallback(async () => {
@@ -71,7 +73,7 @@ export function useVisionStatsViewModel() {
   }, [load])
 
   /** Clicking a column header sorts by it, clicking it again flips the order. */
-  const toggleSort = (column: VisionUserSort) => {
+  const toggleSort = (column: VisionUserSortField) => {
     setUserPage(1)
     if (column === sortBy) {
       setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')
@@ -93,7 +95,7 @@ export function useVisionStatsViewModel() {
   }
 
   const changeStatus = (status: string) => {
-    setStatusFilter(status)
+    setStatusFilter(isOneOf(VISION_IMPORT_STATUSES, status) ? status : '')
     setImportPage(1)
   }
 
