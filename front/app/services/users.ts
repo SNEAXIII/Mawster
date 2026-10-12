@@ -1,10 +1,10 @@
-import { possibleRoles, possibleStatus } from '@/app/lib/constants'
+import { possibleRoles, possibleStatus, type Role } from '@/app/lib/constants'
 import { PROXY, api, jsonBody, jsonHeaders } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
 export interface User {
   login: string
-  role: string
+  role: Role
   id: string
   created_at: string
   last_login_date: string | null

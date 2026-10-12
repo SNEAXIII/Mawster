@@ -1,4 +1,5 @@
 import { api, jsonBody } from '@/app/services/utils'
+import type { SeasonStatus } from '@/app/services/season'
 
 // ─── Types ───────────────────────────────────────────────
 export interface GameAccount {
@@ -203,8 +204,6 @@ export interface RankingHistoryPoint {
   win: boolean | null
 }
 
-export type SeasonStatus = 'upcoming' | 'active' | 'ended'
-
 export interface RankingHistoryResponse {
   season_number: number | null
   season_status: SeasonStatus | null
@@ -271,14 +270,16 @@ export async function getEligibleOwners(): Promise<GameAccount[]> {
   return api('/alliances/eligible-owners', 'Erreur lors de la récupération des comptes éligibles')
 }
 
-export async function getEligibleMembers(allianceId: string): Promise<GameAccount[]> {
+export type InvitableAccount = Pick<GameAccount, 'id' | 'game_pseudo'>
+
+export async function getEligibleMembers(allianceId: string): Promise<InvitableAccount[]> {
   return api(
     `/alliances/${allianceId}/eligible-members`,
     'Erreur lors de la récupération des membres éligibles'
   )
 }
 
-export async function getEligibleVisitors(allianceId: string): Promise<GameAccount[]> {
+export async function getEligibleVisitors(allianceId: string): Promise<InvitableAccount[]> {
   return api(
     `/alliances/${allianceId}/eligible-visitors`,
     'Erreur lors de la récupération des visiteurs éligibles'
@@ -286,6 +287,11 @@ export async function getEligibleVisitors(allianceId: string): Promise<GameAccou
 }
 
 // ─── Invitations ─────────────────────────────────────────
+export const INVITATION_TYPES = ['member', 'visitor'] as const
+export type InvitationType = (typeof INVITATION_TYPES)[number]
+export const INVITATION_STATUSES = ['pending', 'accepted', 'declined'] as const
+export type InvitationStatus = (typeof INVITATION_STATUSES)[number]
+
 export interface AllianceInvitation {
   id: string
   alliance_id: string
@@ -295,8 +301,8 @@ export interface AllianceInvitation {
   game_account_pseudo: string
   invited_by_game_account_id: string
   invited_by_pseudo: string
-  type: 'member' | 'visitor'
-  status: 'pending' | 'accepted' | 'declined'
+  type: InvitationType
+  status: InvitationStatus
   created_at: string
   responded_at: string | null
 }

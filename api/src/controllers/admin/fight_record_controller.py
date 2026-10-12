@@ -1,13 +1,15 @@
 import uuid
-from typing import Annotated, Literal
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from starlette import status as http_status
 
 from src.dto.admin.dto_fight_record import PaginatedFightRecordsResponse
+from src.enums.FightRecordSortField import FightRecordSortField
 from src.enums.FightRecordSource import FightRecordSource
 from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonSelectorType import SeasonSelectorType
+from src.enums.SortOrder import SortOrder
 from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordService import FightRecordService
 from src.utils.auth_deps import CurrentUser
@@ -20,18 +22,6 @@ fight_record_controller = APIRouter(
         Depends(AuthService.get_current_user_in_jwt),
     ],
 )
-
-sort_literal = Literal[
-    "created_at",
-    "season_number",
-    "ko_count",
-    "tier",
-    "node_number",
-    "battlegroup",
-    "champion_name",
-    "defender_champion_name",
-    "alliance_name",
-]
 
 
 @fight_record_controller.get("", response_model=PaginatedFightRecordsResponse)
@@ -52,11 +42,8 @@ async def list_fight_records(
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1, le=100)] = 20,
     source: Annotated[FightRecordSource, Query()] = FightRecordSource.ALL,
-    sort_by: Annotated[
-        sort_literal,
-        Query(),
-    ] = "created_at",
-    sort_order: Annotated[str, Query(pattern="^(asc|desc)$")] = "desc",
+    sort_by: Annotated[FightRecordSortField, Query()] = FightRecordSortField.CREATED_AT,
+    sort_order: Annotated[SortOrder, Query()] = SortOrder.DESC,
 ):
     accessible_ids = await FightRecordService.get_accessible_alliance_ids(session, current_user.id)
     if not accessible_ids:

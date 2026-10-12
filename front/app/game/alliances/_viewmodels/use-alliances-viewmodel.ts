@@ -6,6 +6,7 @@ import { useI18n } from '@/app/i18n'
 import { toast } from 'sonner'
 import {
   type GameAccount,
+  type InvitableAccount,
   getEligibleOwners,
   getEligibleMembers,
   getEligibleVisitors,
@@ -15,6 +16,7 @@ import {
   acceptInvitation,
   declineInvitation,
   cancelInvitation,
+  type InvitationType,
 } from '@/app/services/game'
 import { useRequiredSession } from '@/hooks/use-required-session'
 import { useTabParam } from '@/hooks/use-tab-param'
@@ -55,8 +57,8 @@ export function useAlliancesViewModel() {
   const router = useRouter()
 
   const [eligibleOwners, setEligibleOwners] = useState<GameAccount[]>([])
-  const [eligibleMembers, setEligibleMembers] = useState<GameAccount[]>([])
-  const [eligibleVisitors, setEligibleVisitors] = useState<GameAccount[]>([])
+  const [eligibleMembers, setEligibleMembers] = useState<InvitableAccount[]>([])
+  const [eligibleVisitors, setEligibleVisitors] = useState<InvitableAccount[]>([])
   const [creating, setCreating] = useState(false)
   const [statsAllianceId, setStatsAllianceId] = useState('')
   const [seasonStats, setSeasonStats] = useState<PlayerSeasonStats[]>([])
@@ -87,7 +89,7 @@ export function useAlliancesViewModel() {
   const [ownerId, setOwnerId] = useState('')
   const [memberAllianceId, setMemberAllianceId] = useState<string | null>(null)
   const [memberAccountId, setMemberAccountId] = useState('')
-  const [inviteType, setInviteType] = useState<'member' | 'visitor'>('member')
+  const [inviteType, setInviteType] = useState<InvitationType>('member')
   const [rosterTarget, setRosterTarget] = useState<{
     gameAccountId: string
     pseudo: string
@@ -244,7 +246,7 @@ export function useAlliancesViewModel() {
     void Promise.all([fetchEligibleMembers(allianceId), fetchEligibleVisitors(allianceId)])
   }
 
-  const handleInviteTypeChange = (type: 'member' | 'visitor') => {
+  const handleInviteTypeChange = (type: InvitationType) => {
     setInviteType(type)
     setMemberAccountId('')
   }

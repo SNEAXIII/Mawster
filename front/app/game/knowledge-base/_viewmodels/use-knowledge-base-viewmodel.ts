@@ -7,11 +7,21 @@ import {
   getAccessibleAlliances,
   type PaginatedFightRecords,
   type FightRecordFilters,
+  FIGHT_RECORD_SORT_FIELDS,
+  FIGHT_RECORD_SOURCES,
+  type FightRecordSortField,
   type FightRecordSource,
   type Season,
   type AccessibleAlliance,
 } from '@/app/services/fight-records'
-import type { SeasonFormat } from '@/app/services/season'
+import {
+  SEASON_FORMAT_FILTERS,
+  SEASON_SELECTORS,
+  type SeasonFormatFilter,
+  type SeasonSelector,
+} from '@/app/services/season'
+import { SORT_ORDERS, type SortOrder } from '@/app/services/utils'
+import { isOneOf } from '@/app/lib/utils'
 import { useAllianceContext } from '@/app/contexts/alliance-context'
 import { reportNote } from '@/app/services/moderation'
 import { withToast } from '@/app/lib/with-toast'
@@ -33,7 +43,7 @@ const DEFAULT_FILTERS: Filters = {
   game_account_pseudo: '',
 }
 
-const DEFAULT_SOURCE: FightRecordSource = 'non_imported'
+const DEFAULT_SOURCE: FightRecordSource = 'all'
 
 function filtersFromParams(params: URLSearchParams): Filters {
   return {
@@ -68,24 +78,31 @@ export function useKnowledgeBaseViewModel() {
   )
   const [page, setPage] = useState(() => Number(getInitialParams().get('page') ?? '1'))
   const [size, setSize] = useState(() => Number(getInitialParams().get('size') ?? '20'))
-  const [sortBy, setSortBy] = useState(() => getInitialParams().get('sort_by') ?? 'created_at')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
-    () => (getInitialParams().get('sort_order') as 'asc' | 'desc') ?? 'desc'
-  )
-  const [seasonSelector, setSeasonSelector] = useState<string>(
-    () => getInitialParams().get('season_selector') ?? 'all_seasons'
-  )
+  const [sortBy, setSortBy] = useState<FightRecordSortField>(() => {
+    const value = getInitialParams().get('sort_by')
+    return isOneOf(FIGHT_RECORD_SORT_FIELDS, value) ? value : 'created_at'
+  })
+  const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
+    const value = getInitialParams().get('sort_order')
+    return isOneOf(SORT_ORDERS, value) ? value : 'desc'
+  })
+  const [seasonSelector, setSeasonSelector] = useState<SeasonSelector>(() => {
+    const value = getInitialParams().get('season_selector')
+    return isOneOf(SEASON_SELECTORS, value) ? value : 'all_seasons'
+  })
   const [seasonId, setSeasonId] = useState<string | null>(() => getInitialParams().get('season_id'))
-  const [seasonFormat, setSeasonFormat] = useState<SeasonFormat | 'all'>(
-    () => (getInitialParams().get('season_format') as SeasonFormat | null) ?? 'all'
-  )
+  const [seasonFormat, setSeasonFormat] = useState<SeasonFormatFilter>(() => {
+    const value = getInitialParams().get('season_format')
+    return isOneOf(SEASON_FORMAT_FILTERS, value) ? value : 'all'
+  })
   const [seasons, setSeasons] = useState<Season[]>([])
   const [allianceId, setAllianceId] = useState<string | null>(() =>
     getInitialParams().get('alliance_id')
   )
-  const [source, setSource] = useState<FightRecordSource>(
-    () => (getInitialParams().get('source') as FightRecordSource) ?? DEFAULT_SOURCE
-  )
+  const [source, setSource] = useState<FightRecordSource>(() => {
+    const value = getInitialParams().get('source')
+    return isOneOf(FIGHT_RECORD_SOURCES, value) ? value : DEFAULT_SOURCE
+  })
   const [accessibleAlliances, setAccessibleAlliances] = useState<AccessibleAlliance[]>([])
   const { roles } = useAllianceContext()
   const canImport = accessibleAlliances.some(
@@ -220,7 +237,7 @@ export function useKnowledgeBaseViewModel() {
     setPage(1)
   }
 
-  const handleSort = (col: string) => {
+  const handleSort = (col: FightRecordSortField) => {
     if (sortBy === col) {
       setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
     } else {
@@ -236,7 +253,8 @@ export function useKnowledgeBaseViewModel() {
   }
 
   const handleSourceChange = (v: string) => {
-    setSource(v as FightRecordSource)
+    if (!isOneOf(FIGHT_RECORD_SOURCES, v)) return
+    setSource(v)
     setPage(1)
   }
 
@@ -254,6 +272,7 @@ export function useKnowledgeBaseViewModel() {
   }
 
   const handleSeasonSelectorChange = (value: string) => {
+    if (!isOneOf(SEASON_SELECTORS, value)) return
     setSeasonSelector(value)
     if (value === 'specific') {
       setSeasonId(seasons[0]?.id ?? null)
@@ -264,7 +283,8 @@ export function useKnowledgeBaseViewModel() {
   }
 
   const handleSeasonFormatChange = (value: string) => {
-    setSeasonFormat(value as SeasonFormat | 'all')
+    if (!isOneOf(SEASON_FORMAT_FILTERS, value)) return
+    setSeasonFormat(value)
     setPage(1)
   }
 

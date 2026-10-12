@@ -34,6 +34,16 @@ def test_sanitize_text_strips_entity_encoded_markup(value):
     assert sanitize_text(value) == ""
 
 
+def test_sanitize_text_rejects_deep_entity_nesting():
+    with pytest.raises(ValueError):
+        sanitize_text("&" + "amp;" * 250_000)
+
+
+def test_note_content_with_deep_entity_nesting_is_rejected():
+    with pytest.raises(ValidationError):
+        WarFightNoteUpsertRequest(content="&" + "amp;" * 10)
+
+
 def test_note_content_is_sanitized():
     req = WarFightNoteUpsertRequest(content="<b>danger</b> on node")
     assert req.content == "danger on node"

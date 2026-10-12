@@ -129,21 +129,21 @@ describe('Knowledge Base', () => {
     });
   });
 
-  it('defaults the source filter to non-imported and restores it on clear', () => {
+  it('defaults the source filter to all sources and restores it on clear', () => {
     setupKnowledgeBaseFast('kb-fsrc').then(({ userData }) => {
       cy.apiLogin(userData.user_id, 'knowledge-base');
 
-      cy.getByCy('filter-source-trigger').should('contain.text', 'Non-imported');
+      cy.getByCy('filter-source-trigger').should('contain.text', 'All sources');
       cy.url().should('not.include', 'source=');
 
       cy.getByCy('filter-source-trigger').click();
-      cy.getByCy('filter-source-all').click();
-      cy.getByCy('filter-source-trigger').should('contain.text', 'All sources');
-      cy.url().should('include', 'source=all');
+      cy.getByCy('filter-source-non-imported').click();
+      cy.getByCy('filter-source-trigger').should('contain.text', 'Non-imported');
+      cy.url().should('include', 'source=non_imported');
       cy.getByCy('filter-planning-error').click();
 
       cy.getByCy('filter-clear').click();
-      cy.getByCy('filter-source-trigger').should('contain.text', 'Non-imported');
+      cy.getByCy('filter-source-trigger').should('contain.text', 'All sources');
       cy.url().should('not.include', 'source=');
     });
   });

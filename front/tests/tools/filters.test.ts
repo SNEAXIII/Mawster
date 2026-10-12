@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { ChampionClass } from '@/app/lib/champion-class'
 import { readableTextColor } from '@/app/tools/_lib/color'
 import {
   EMPTY_FILTERS,
@@ -23,7 +22,7 @@ describe('hasActiveFilters', () => {
   it.each<Partial<FilterState>>([
     { rarity: '7' },
     { query: 'herc' },
-    { classes: [ChampionClass.MYSTIC] },
+    { classes: ['Mystic'] },
     { ascendable: true },
     { sagaAttacker: true },
     { sagaDefender: true },
@@ -38,8 +37,8 @@ describe('matchesFilters', () => {
 
   it.each<[string, Partial<FilterState>, boolean]>([
     ['no filter', {}, true],
-    ['its class', { classes: [ChampionClass.COSMIC, ChampionClass.TECH] }, true],
-    ['another class', { classes: [ChampionClass.MYSTIC] }, false],
+    ['its class', { classes: ['Cosmic', 'Tech'] }, true],
+    ['another class', { classes: ['Mystic'] }, false],
     ['7-star rarity', { rarity: '7' }, true],
     ['6-star-only rarity', { rarity: '6' }, false],
     ['ascendable', { ascendable: true }, false],

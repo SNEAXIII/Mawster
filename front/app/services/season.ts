@@ -1,7 +1,13 @@
 import { PROXY, api, jsonBody, jsonHeaders } from '@/app/services/utils'
 
-export type SeasonFormat = 'regular' | 'big_thing'
-export type SeasonStatus = 'upcoming' | 'active' | 'ended'
+export const SEASON_FORMATS = ['regular', 'big_thing'] as const
+export type SeasonFormat = (typeof SEASON_FORMATS)[number]
+export const SEASON_FORMAT_FILTERS = ['all', ...SEASON_FORMATS] as const
+export type SeasonFormatFilter = (typeof SEASON_FORMAT_FILTERS)[number]
+export const SEASON_STATUSES = ['upcoming', 'active', 'ended'] as const
+export type SeasonStatus = (typeof SEASON_STATUSES)[number]
+export const SEASON_SELECTORS = ['all', 'all_seasons', 'current', 'off_season', 'specific'] as const
+export type SeasonSelector = (typeof SEASON_SELECTORS)[number]
 
 export interface Season {
   id: string

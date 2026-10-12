@@ -3,12 +3,30 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
-## [1.25.1](https://github.com/SNEAXIII/Mawster/compare/v1.25.0...v1.25.1) (2026-10-09)
+## [1.26.0](https://github.com/SNEAXIII/Mawster/compare/v1.25.1...v1.26.0) (2026-10-12)
+
+
+### Ajouté
+
+* knowledge base shows imported and non-imported fights by default ([#697](https://github.com/SNEAXIII/Mawster/issues/697)) ([addf8e3](https://github.com/SNEAXIII/Mawster/commit/addf8e39b6ac93fa15594c730e1fe58cd6c1bc95))
+
+### Corrigé
+
+* hide invitation candidates' alliance and battlegroup ([b86826e](https://github.com/SNEAXIII/Mawster/commit/b86826e9629348d71bdafed3024f32d8c2c218e1))
+* reject deeply nested entities in note and moderation text ([#702](https://github.com/SNEAXIII/Mawster/issues/702)) ([87536aa](https://github.com/SNEAXIII/Mawster/commit/87536aa64762e15ba61e9ac93890b310ef3541e3))
+
+### Modifié
+
+* align front and back enums ([#701](https://github.com/SNEAXIII/Mawster/issues/701)) ([aab2b9c](https://github.com/SNEAXIII/Mawster/commit/aab2b9c7f6e87676553884d082eeea7e604dfcb7))
+
+
+## [1.25.1](https://github.com/SNEAXIII/Mawster/compare/v1.25.0...v1.25.1) (2026-10-11)
 
 
 ### Corrigé
 
-* seed new champions on production deploy ([138aa09](https://github.com/SNEAXIII/Mawster/commit/138aa09aa49395be5f7d31839a60ee541c1243ee))
+* drop war synergies left behind when an attacker is replaced or a BG cleared ([da861e6](https://github.com/SNEAXIII/Mawster/commit/da861e603fd89295a75acb9bcf20bf5beb66bb1c))
+* **i18n:** update death-related terminology in English and French translations ([#696](https://github.com/SNEAXIII/Mawster/issues/696)) ([037c696](https://github.com/SNEAXIII/Mawster/commit/037c696de35a7d7e0b4c4b28b8c2c3302bee1db0))
 
 ## [1.25.0](https://github.com/SNEAXIII/Mawster/compare/v1.24.0...v1.25.0) (2026-10-09)
 

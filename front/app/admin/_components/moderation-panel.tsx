@@ -14,8 +14,9 @@ import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { useModerationViewModel } from '../_viewmodels/use-moderation-viewmodel'
 import RevisionHistoryDialog from './revision-history-dialog'
 import MutesWarnsSection from './mutes-warns-section'
+import { NOTE_REPORT_STATUSES } from '@/app/services/moderation'
 
-const STATUSES = ['all', 'pending', 'resolved', 'dismissed'] as const
+const STATUSES = ['all', ...NOTE_REPORT_STATUSES] as const
 
 export default function ModerationPanel() {
   const { t } = useI18n()

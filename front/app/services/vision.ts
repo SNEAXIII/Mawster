@@ -1,6 +1,25 @@
 import { PROXY, api, jsonBody } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
+export const VISION_JOB_STATUSES = [
+  'awaiting_upload',
+  'pending',
+  'running',
+  'done',
+  'failed',
+] as const
+export type VisionJobStatus = (typeof VISION_JOB_STATUSES)[number]
+export const VISION_IMPORT_STATUSES = [
+  'awaiting_upload',
+  'pending',
+  'running',
+  'done',
+  'failed',
+  'confirmed',
+  'cancelled',
+] as const
+export type VisionImportStatus = (typeof VISION_IMPORT_STATUSES)[number]
+
 export interface VisionImport {
   id: string
   screens_total: number
@@ -8,13 +27,13 @@ export interface VisionImport {
 
 export interface VisionJobDetail {
   id: string
-  status: string
+  status: VisionJobStatus
   error: string | null
 }
 
-export interface VisionImportStatus {
+export interface VisionImportProgress {
   id: string
-  status: string
+  status: VisionImportStatus
   screens_total: number
   screens_done: number
   jobs?: VisionJobDetail[]
@@ -209,7 +228,7 @@ export const createVisionImport = async (
   return commitVisionImport(import_id)
 }
 
-export const getVisionImport = async (importId: string): Promise<VisionImportStatus> => {
+export const getVisionImport = async (importId: string): Promise<VisionImportProgress> => {
   return api(`/vision/imports/${importId}`, "Erreur lors de la récupération de l'import")
 }
 

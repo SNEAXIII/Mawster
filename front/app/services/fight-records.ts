@@ -1,5 +1,5 @@
-import type { SeasonFormat } from '@/app/services/season'
-import { api, jsonBody } from '@/app/services/utils'
+import type { SeasonFormat, SeasonSelector, SeasonStatus } from '@/app/services/season'
+import { api, jsonBody, type SortOrder } from '@/app/services/utils'
 import type { WarBoost } from '@/app/services/war'
 
 export interface AllianceSnapshotStat {
@@ -87,17 +87,30 @@ export interface PaginatedFightRecords {
 export interface Season {
   id: string
   number: number
-  status: 'upcoming' | 'active' | 'ended'
+  status: SeasonStatus
 }
 
-export type FightRecordSource = 'all' | 'imported' | 'non_imported'
+export const FIGHT_RECORD_SOURCES = ['all', 'imported', 'non_imported'] as const
+export type FightRecordSource = (typeof FIGHT_RECORD_SOURCES)[number]
+export const FIGHT_RECORD_SORT_FIELDS = [
+  'created_at',
+  'season_number',
+  'ko_count',
+  'tier',
+  'node_number',
+  'battlegroup',
+  'champion_name',
+  'defender_champion_name',
+  'alliance_name',
+] as const
+export type FightRecordSortField = (typeof FIGHT_RECORD_SORT_FIELDS)[number]
 
 export interface FightRecordFilters {
   champion_id?: string
   defender_champion_id?: string
   node_number?: number
   tier?: number
-  season_selector?: string
+  season_selector?: SeasonSelector
   season_id?: string
   season_format?: SeasonFormat
   alliance_id?: string
@@ -106,8 +119,8 @@ export interface FightRecordFilters {
   source?: FightRecordSource
   page?: number
   size?: number
-  sort_by?: string
-  sort_order?: 'asc' | 'desc'
+  sort_by?: FightRecordSortField
+  sort_order?: SortOrder
 }
 
 export interface AccessibleAlliance {

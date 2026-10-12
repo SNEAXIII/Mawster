@@ -15,7 +15,7 @@ on:
 
 env:
   NODE_VERSION: '24'
-  E2E_RUNNERS: '8'
+  E2E_RUNNERS: '10'
   # Read by the planner and by the runner command below: specs are balanced
   # across E2E_RUNNERS * E2E_WORKERS lanes, so the two must stay in step.
   E2E_WORKERS: '2'

@@ -12,7 +12,13 @@ import {
 } from '@/components/ui/select'
 import SeasonSelect from '@/app/components/season-select'
 import ChampionFilterSelect from './champion-filter-select'
-import type { Season, AccessibleAlliance, FightRecordSource } from '@/app/services/fight-records'
+import {
+  FIGHT_RECORD_SOURCES,
+  type Season,
+  type AccessibleAlliance,
+  type FightRecordSource,
+} from '@/app/services/fight-records'
+import { SEASON_FORMAT_FILTERS, type SeasonFormatFilter } from '@/app/services/season'
 
 interface Filters {
   champion_id: string | null
@@ -27,7 +33,7 @@ interface Props {
   planningErrorOnly: boolean | null
   seasonSelector: string
   seasonId: string | null
-  seasonFormat: string
+  seasonFormat: SeasonFormatFilter
   seasons: Season[]
   onChange: (key: keyof Filters, value: string | null) => void
   onTogglePlanningError: () => void
@@ -63,6 +69,16 @@ export default function KnowledgeBaseFilters({
 }: Readonly<Props>) {
   const { t } = useI18n()
   const kb = t.game.knowledgeBase
+  const seasonFormatLabels: Record<SeasonFormatFilter, string> = {
+    all: kb.seasonFormatAll,
+    regular: kb.seasonFormatRegular,
+    big_thing: kb.seasonFormatBigThing,
+  }
+  const sourceLabels: Record<FightRecordSource, string> = {
+    all: kb.sourceAll,
+    imported: kb.sourceImported,
+    non_imported: kb.sourceNonImported,
+  }
 
   return (
     <div className='flex flex-wrap gap-2 items-center'>
@@ -174,9 +190,14 @@ export default function KnowledgeBaseFilters({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value='all'>{kb.seasonFormatAll}</SelectItem>
-          <SelectItem value='regular'>{kb.seasonFormatRegular}</SelectItem>
-          <SelectItem value='big_thing'>{kb.seasonFormatBigThing}</SelectItem>
+          {SEASON_FORMAT_FILTERS.map((format) => (
+            <SelectItem
+              key={format}
+              value={format}
+            >
+              {seasonFormatLabels[format]}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
@@ -192,24 +213,15 @@ export default function KnowledgeBaseFilters({
           <SelectValue placeholder={kb.sourceFilter} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            value='non_imported'
-            data-cy='filter-source-non-imported'
-          >
-            {kb.sourceNonImported}
-          </SelectItem>
-          <SelectItem
-            value='all'
-            data-cy='filter-source-all'
-          >
-            {kb.sourceAll}
-          </SelectItem>
-          <SelectItem
-            value='imported'
-            data-cy='filter-source-imported'
-          >
-            {kb.sourceImported}
-          </SelectItem>
+          {FIGHT_RECORD_SOURCES.map((s) => (
+            <SelectItem
+              key={s}
+              value={s}
+              data-cy={`filter-source-${s.replace('_', '-')}`}
+            >
+              {sourceLabels[s]}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 

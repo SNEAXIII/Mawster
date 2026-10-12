@@ -545,6 +545,10 @@ export function WarProvider({
   const handleAssignAttacker = async (attacker: AvailableAttacker) => {
     if (!selectedAllianceId || !activeWarId || attackerSelectorNode === null) return
     const nodeNumber = attackerSelectorNode
+    const previous = warSummary?.placements.find((p) => p.node_number === nodeNumber)
+    const replaced =
+      !!previous?.attacker_champion_user_id &&
+      previous.attacker_champion_user_id !== attacker.champion_user_id
     await withToast(
       () =>
         write(() =>
@@ -561,7 +565,10 @@ export function WarProvider({
           .replace('{name}', attacker.champion_name)
           .replace('{node}', String(nodeNumber)),
         error: t.game.war.assignError,
-        onSuccess: setPlacement,
+        onSuccess: async (placement) => {
+          setPlacement(placement)
+          if (replaced) await reloadSynergies()
+        },
       }
     )
   }

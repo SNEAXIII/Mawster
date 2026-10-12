@@ -28,25 +28,16 @@ from src.dto.admin.dto_vision_stats import (
     VisionStatsResponse,
     VisionUserStat,
 )
+from src.enums.SortOrder import SortOrder
 from src.enums.VisionImportStatus import VisionImportStatus
 from src.enums.VisionJobStatus import VisionJobStatus
+from src.enums.VisionUserSortField import VisionUserSortField
 from src.models.Base import utcnow
 from src.models.user.GameAccount import GameAccount
 from src.models.user.User import User
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
-
-# The leaderboard columns an admin may sort on. A whitelist rather than a
-# free-form column name: the value lands in an ORDER BY.
-USER_SORT_COLUMNS = (
-    "imports_total",
-    "imports_confirmed",
-    "imports_cancelled",
-    "imports_failed",
-    "screens_total",
-    "last_import_at",
-)
 
 TOP_ERRORS_LIMIT = 5
 
@@ -337,12 +328,9 @@ class VisionStatsService:
         days: int,
         page: int = 1,
         size: int = 20,
-        sort_by: str = "imports_total",
-        sort_order: str = "desc",
+        sort_by: VisionUserSortField = VisionUserSortField.IMPORTS_TOTAL,
+        sort_order: SortOrder = SortOrder.DESC,
     ) -> PaginatedVisionUserStats:
-        if sort_by not in USER_SORT_COLUMNS:
-            sort_by = "imports_total"
-
         status = col(VisionImport.status)
         aggregates = {
             "imports_total": func.count(col(VisionImport.id)),
@@ -381,7 +369,7 @@ class VisionStatsService:
 
         order = aggregates[sort_by]
         ordered = base.order_by(
-            order.asc() if sort_order == "asc" else desc(order), col(User.login)
+            order.asc() if sort_order == SortOrder.ASC else desc(order), col(User.login)
         )
         rows = (await session.exec(ordered.offset((page - 1) * size).limit(size))).all()
 

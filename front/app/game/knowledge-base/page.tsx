@@ -2,13 +2,14 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useI18n } from '@/app/i18n'
+import { isOneOf } from '@/app/lib/utils'
 import TabBar, { type TabItem } from '@/components/tab-bar'
 import { PageContainer } from '@/components/page-container'
 import HistoryTab from './_components/history-tab'
 import MatchupsTab from './_components/matchups-tab'
 
-type KnowledgeBaseTab = 'history' | 'matchups'
-const TABS = new Set<KnowledgeBaseTab>(['history', 'matchups'])
+const KNOWLEDGE_BASE_TABS = ['history', 'matchups'] as const
+type KnowledgeBaseTab = (typeof KNOWLEDGE_BASE_TABS)[number]
 
 function KnowledgeBaseContent() {
   const { t } = useI18n()
@@ -16,9 +17,9 @@ function KnowledgeBaseContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const initialTab = searchParams.get('tab') as KnowledgeBaseTab
+  const initialTab = searchParams.get('tab')
   const [activeTab, setActiveTab] = useState<KnowledgeBaseTab>(
-    TABS.has(initialTab) ? initialTab : 'history'
+    isOneOf(KNOWLEDGE_BASE_TABS, initialTab) ? initialTab : 'history'
   )
 
   const isFirstRender = useRef(true)

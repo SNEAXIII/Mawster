@@ -43,6 +43,29 @@ describe('War Fight Notes', () => {
     });
   });
 
+  it('strips markup from a saved note', () => {
+    setupAssignedAttacker('wfn4').then(({ ownerData, memberData }) => {
+      cy.openWarAttackerPanel(ownerData.user_id);
+      writeNote('<b>danger</b> on node');
+
+      cy.openWarAttackerPanel(memberData.user_id);
+      cy.getByCy('node-actions-trigger-node-10').click();
+      cy.getByCy('war-note-readonly').should('have.text', 'danger on node');
+    });
+  });
+
+  it('rejects a note made only of markup', () => {
+    setupAssignedAttacker('wfn5').then(({ ownerData }) => {
+      cy.openWarAttackerPanel(ownerData.user_id);
+      cy.intercept('PUT', '**/nodes/*/*/note').as('saveNote');
+      writeNote('<img src=x onerror=alert(1)>');
+      cy.wait('@saveNote').its('response.statusCode').should('eq', 422);
+
+      reopenNotePopover();
+      cy.getByCy('war-note-delete').should('not.exist');
+    });
+  });
+
   it('non-officer member sees the note read-only', () => {
     setupAssignedAttacker('wfn2').then(({ ownerData, memberData }) => {
       // Officer writes the note first
