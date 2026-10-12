@@ -11,6 +11,8 @@ from src.dto.admin.dto_champion import (
     ChampionResponse,
 )
 from src.enums.ChampionClass import ChampionClass
+from src.enums.ChampionOrderBy import ChampionOrderBy
+from src.enums.SortOrder import SortOrder
 from src.Messages.champion_messages import (
     CHAMPION_NOT_FOUND,
 )
@@ -80,8 +82,8 @@ class ChampionService:
     @classmethod
     def _apply_ordering(cls, sql: Any, filters: ChampionFilters) -> Any:
         column = getattr(Champion, filters.order_by)
-        primary = column.desc() if filters.order_dir == "desc" else column.asc()
-        if filters.order_by == "name":
+        primary = column.desc() if filters.order_dir == SortOrder.DESC else column.asc()
+        if filters.order_by == ChampionOrderBy.NAME:
             return sql.order_by(primary)
         # Class is not unique, so name breaks the tie and keeps pagination stable.
         return sql.order_by(primary, Champion.name.asc())

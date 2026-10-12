@@ -1,11 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import {
-  type RankingHistoryPoint,
-  type SeasonStatus,
-  fetchAllianceRankingHistory,
-} from '@/app/services/game'
+import { type RankingHistoryPoint, fetchAllianceRankingHistory } from '@/app/services/game'
+import type { SeasonStatus } from '@/app/services/season'
 import { getSeasonWarStats, type SeasonWarStats } from '@/app/services/statistics'
 import { updateWarOpponentDeaths } from '@/app/services/war'
 

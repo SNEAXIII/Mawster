@@ -21,7 +21,7 @@ export interface War {
   id: string
   alliance_id: string
   opponent_name: string
-  status: 'active' | 'ended'
+  status: WarStatus
   created_by_pseudo: string
   created_at: string
   banned_champions: BannedChampion[]
@@ -39,7 +39,10 @@ export interface War {
 }
 
 // The three are mutually exclusive in-game, hence one slot rather than three flags.
-export type WarBoost = 'power_start' | 'invulnerability' | 'regeneration'
+export const WAR_STATUSES = ['active', 'ended'] as const
+export type WarStatus = (typeof WAR_STATUSES)[number]
+export const WAR_BOOSTS = ['power_start', 'invulnerability', 'regeneration'] as const
+export type WarBoost = (typeof WAR_BOOSTS)[number]
 
 export interface WarBoosts {
   war_boost: WarBoost | null

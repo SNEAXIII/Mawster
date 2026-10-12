@@ -4,21 +4,16 @@ import {
   EMPTY_FILTERS,
   type ChampionFiltersState,
 } from '@/app/admin/_viewmodels/champion-filters'
-import {
-  ChampionClass,
-  getClassColors,
-  getClassIconUrl,
-  sortByClassOrder,
-} from '@/app/lib/champion-class'
+import { getClassColors, getClassIconUrl, sortByClassOrder } from '@/app/lib/champion-class'
 import { cn, formatDate, truncateString } from '@/app/lib/utils'
 
 describe('countActiveFilters', () => {
   it.each<[Partial<ChampionFiltersState>, number]>([
     [{}, 0],
     [{ search: 'herc' }, 0],
-    [{ championClass: ChampionClass.MYSTIC }, 1],
+    [{ championClass: 'Mystic' }, 1],
     [{ is_ascendable: 'true', has_prefight: 'false' }, 2],
-    [{ championClass: ChampionClass.TECH, is_saga_attacker: 'true' }, 2],
+    [{ championClass: 'Tech', is_saga_attacker: 'true' }, 2],
   ])('%j → %i', (overrides, expected) => {
     expect(countActiveFilters({ ...EMPTY_FILTERS, ...overrides })).toBe(expected)
   })

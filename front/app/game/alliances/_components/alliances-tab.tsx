@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { InvitableAccount, AllianceInvitation } from '@/app/services/game'
+import type { InvitableAccount, AllianceInvitation, InvitationType } from '@/app/services/game'
 import { Card, CardContent } from '@/components/ui/card'
 import { useI18n, type Locale } from '@/app/i18n'
 import { Shield } from 'lucide-react'
@@ -19,8 +19,8 @@ interface AlliancesTabProps {
   eligibleMembers: InvitableAccount[]
   eligibleVisitors: InvitableAccount[]
   pendingInvitations: Record<string, AllianceInvitation[]>
-  inviteType: 'member' | 'visitor'
-  onInviteTypeChange: (type: 'member' | 'visitor') => void
+  inviteType: InvitationType
+  onInviteTypeChange: (type: InvitationType) => void
   onMemberAccountChange: (id: string) => void
   onOpenInviteMember: (allianceId: string) => void
   onCloseInviteMember: () => void

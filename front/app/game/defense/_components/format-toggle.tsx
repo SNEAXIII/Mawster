@@ -2,9 +2,7 @@
 
 import { useI18n } from '@/app/i18n'
 import { ToggleButton, ToggleGroup } from '@/components/toggle-button'
-import type { SeasonFormat } from '@/app/services/season'
-
-const FORMATS: SeasonFormat[] = ['regular', 'big_thing']
+import { SEASON_FORMATS, type SeasonFormat } from '@/app/services/season'
 
 export default function FormatToggle({
   value,
@@ -15,7 +13,7 @@ export default function FormatToggle({
     <div className='flex items-center gap-2'>
       <span className='text-sm font-medium whitespace-nowrap'>{t.game.defense.formats.label}:</span>
       <ToggleGroup>
-        {FORMATS.map((format) => (
+        {SEASON_FORMATS.map((format) => (
           <ToggleButton
             key={format}
             active={value === format}

@@ -1,4 +1,4 @@
-import { api, jsonBody } from '@/app/services/utils'
+import { api, jsonBody, type SortOrder } from '@/app/services/utils'
 import { CLASS_ORDER } from '@/app/lib/champion-class'
 
 // ─── Types ───────────────────────────────────────────────
@@ -31,8 +31,8 @@ export const championClasses = [
 // ─── API ─────────────────────────────────────────────────
 export const BOOL_FILTERS = ['all', 'true', 'false'] as const
 export type BoolFilter = (typeof BOOL_FILTERS)[number]
-export type ChampionOrderBy = 'name' | 'champion_class'
-export type ChampionOrderDir = 'asc' | 'desc'
+export const CHAMPION_ORDER_FIELDS = ['name', 'champion_class'] as const
+export type ChampionOrderBy = (typeof CHAMPION_ORDER_FIELDS)[number]
 
 export interface ChampionQuery {
   page?: number
@@ -46,7 +46,7 @@ export interface ChampionQuery {
   isSagaAttacker?: BoolFilter | null
   isSagaDefender?: BoolFilter | null
   orderBy?: ChampionOrderBy
-  orderDir?: ChampionOrderDir
+  orderDir?: SortOrder
 }
 
 export const getChampions = async (query: ChampionQuery = {}): Promise<FetchChampionsResponse> => {

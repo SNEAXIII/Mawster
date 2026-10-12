@@ -27,7 +27,7 @@ interface RosterFilterBarProps {
   filters: RosterFilters
   onChange: (patch: Partial<RosterFilters>) => void
   onReset: () => void
-  availableClasses: string[]
+  availableClasses: readonly string[]
   /** Only read when `showCount` is on. */
   filteredCount?: number
   /** Only read when `showCount` is on. */

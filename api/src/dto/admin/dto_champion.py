@@ -1,12 +1,10 @@
 import uuid
-from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.dto.mixins import SagaRoles
-
-ChampionOrderBy = Literal["name", "champion_class"]
-ChampionOrderDir = Literal["asc", "desc"]
+from src.enums.ChampionOrderBy import ChampionOrderBy
+from src.enums.SortOrder import SortOrder
 
 
 class ChampionResponse(SagaRoles):
@@ -35,8 +33,8 @@ class ChampionFilters(BaseModel):
     season_id: uuid.UUID | None = None
     is_saga_attacker: bool | None = None
     is_saga_defender: bool | None = None
-    order_by: ChampionOrderBy = "name"
-    order_dir: ChampionOrderDir = "asc"
+    order_by: ChampionOrderBy = ChampionOrderBy.NAME
+    order_dir: SortOrder = SortOrder.ASC
 
     @property
     def needs_saga_join(self) -> bool:

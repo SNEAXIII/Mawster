@@ -2,12 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { parseRarity } from '@/app/game/defense/_components/defense-utils'
-
-/** Selectable rarity tiers, ordered low → high. */
-export const RARITY_TIERS = ['6r4', '6r5', '7r1', '7r2', '7r3', '7r4', '7r5', '7r6'] as const
+import { RARITIES } from '@/app/services/roster'
 
 /** Default when no stored preference: 7★ shown, 6★ hidden. */
-const DEFAULT_TIERS = RARITY_TIERS.filter((t) => t.startsWith('7'))
+const DEFAULT_TIERS = RARITIES.filter((t) => t.startsWith('7'))
 
 /** Sort weight for a rarity string: 7r6 (706) → 6r4 (604). */
 export function rarityWeight(rarity: string): number {

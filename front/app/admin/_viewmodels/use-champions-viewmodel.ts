@@ -1,12 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  getChampions,
-  type Champion,
-  type ChampionOrderBy,
-  type ChampionOrderDir,
-} from '@/app/services/champions'
+import { getChampions, type Champion, type ChampionOrderBy } from '@/app/services/champions'
+import type { SortOrder } from '@/app/services/utils'
 import { listSeasons, type Season } from '@/app/services/season'
 import { useSeasonContext } from '@/app/contexts/season-context'
 import { useI18n } from '@/app/i18n'
@@ -27,7 +23,7 @@ export function useChampionsViewModel() {
 
   const [filters, setFilters] = useState<ChampionFiltersState>(EMPTY_FILTERS)
   const [orderBy, setOrderBy] = useState<ChampionOrderBy>('name')
-  const [orderDir, setOrderDir] = useState<ChampionOrderDir>('asc')
+  const [orderDir, setOrderDir] = useState<SortOrder>('asc')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPage, setTotalPage] = useState(1)
   const [perPage, setPerPage] = useState(BASE_SIZE)

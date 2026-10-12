@@ -2,18 +2,8 @@ import type { Champion } from './champions'
 import { api, jsonBody } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
-export enum ChampionRarity {
-  SIX_R4 = '6r4',
-  SIX_R5 = '6r5',
-  SEVEN_R1 = '7r1',
-  SEVEN_R2 = '7r2',
-  SEVEN_R3 = '7r3',
-  SEVEN_R4 = '7r4',
-  SEVEN_R5 = '7r5',
-  SEVEN_R6 = '7r6',
-}
-
-export const RARITIES = Object.values(ChampionRarity)
+export const RARITIES = ['6r4', '6r5', '7r1', '7r2', '7r3', '7r4', '7r5', '7r6'] as const
+export type ChampionRarity = (typeof RARITIES)[number]
 
 export const RARITY_LABELS: Record<string, string> = {
   '6r4': '6R4',

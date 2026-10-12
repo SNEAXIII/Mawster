@@ -8,9 +8,10 @@ export const possibleStatus = [
   { value: 'deleted', label: 'deleted' },
 ]
 
+export const ROLES = ['user', 'admin', 'super_admin'] as const
+export type Role = (typeof ROLES)[number]
+
 export const possibleRoles = [
   { value: 'all', label: 'all' },
-  { value: 'user', label: 'user' },
-  { value: 'admin', label: 'admin' },
-  { value: 'super_admin', label: 'super_admin' },
+  ...ROLES.map((role) => ({ value: role, label: role })),
 ]

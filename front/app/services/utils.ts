@@ -1,5 +1,8 @@
 export const PROXY = '/api/back'
 
+export const SORT_ORDERS = ['asc', 'desc'] as const
+export type SortOrder = (typeof SORT_ORDERS)[number]
+
 export const jsonHeaders: HeadersInit = {
   Accept: 'application/json',
   'Content-Type': 'application/json',

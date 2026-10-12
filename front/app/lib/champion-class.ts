@@ -1,14 +1,6 @@
-export enum ChampionClass {
-  COSMIC = 'Cosmic',
-  TECH = 'Tech',
-  MUTANT = 'Mutant',
-  SKILL = 'Skill',
-  SCIENCE = 'Science',
-  MYSTIC = 'Mystic',
-}
-
 /** Declaration order is the in-game class wheel — every class dropdown follows it. */
-export const CLASS_ORDER = Object.values(ChampionClass)
+export const CLASS_ORDER = ['Cosmic', 'Tech', 'Mutant', 'Skill', 'Science', 'Mystic'] as const
+export type ChampionClass = (typeof CLASS_ORDER)[number]
 
 /** Tailwind color config per champion class, keyed to the class icon artwork. */
 export const CLASS_COLORS: Record<

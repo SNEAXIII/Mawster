@@ -4,7 +4,8 @@ import { api, jsonBody } from '@/app/services/utils'
 
 // ─── Types ───────────────────────────────────────────────
 
-export type ReportStatus = 'pending' | 'resolved' | 'dismissed'
+export const NOTE_REPORT_STATUSES = ['pending', 'resolved', 'dismissed'] as const
+export type NoteReportStatus = (typeof NOTE_REPORT_STATUSES)[number]
 
 export interface NoteReport {
   id: string

@@ -14,10 +14,12 @@ from src.dto.admin.dto_fight_record import (
     WarFightRecordResponse,
     WarFightSynergyResponse,
 )
+from src.enums.FightRecordSortField import FightRecordSortField
 from src.enums.FightRecordSource import FightRecordSource
 from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonSelectorType import SeasonSelectorType
 from src.enums.SeasonStatus import SeasonStatus
+from src.enums.SortOrder import SortOrder
 from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceVisitor import AllianceVisitor
 from src.models.Base import utcnow
@@ -222,8 +224,8 @@ class FightRecordService:
         planning_error_only: bool | None = None,
         page: int = 1,
         size: int = 20,
-        sort_by: str = "created_at",
-        sort_order: str = "desc",
+        sort_by: FightRecordSortField = FightRecordSortField.CREATED_AT,
+        sort_order: SortOrder = SortOrder.DESC,
     ) -> PaginatedFightRecordsResponse:
         if not accessible_alliance_ids:
             return PaginatedFightRecordsResponse(items=[], total=0, page=page, size=size, pages=1)
@@ -388,7 +390,7 @@ class FightRecordService:
             "alliance_name": base.c.alliance_name,
         }
         sort_col = sort_col_map.get(sort_by, base.c.created_at)
-        sort_expr = sort_col.desc() if sort_order == "desc" else sort_col.asc()
+        sort_expr = sort_col.desc() if sort_order == SortOrder.DESC else sort_col.asc()
 
         rows = (
             (

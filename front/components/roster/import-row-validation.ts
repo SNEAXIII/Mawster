@@ -1,5 +1,6 @@
 import { RARITIES } from '@/app/services/roster'
 import type { PreviewRow } from './import-preview-row'
+import { isOneOf } from '@/app/lib/utils'
 
 // The bulk endpoint is atomic: one row the API rejects fails the whole batch,
 // so a single misread rank used to turn a 22-champion import into 22 errors.
@@ -14,7 +15,7 @@ export type RowIssue = 'missingName' | 'invalidRarity'
  * accepted 6r1..6r3, which the API rejects, and rejected 7r6, which it accepts.
  */
 export function isValidRarity(rarity: string): boolean {
-  return (RARITIES as string[]).includes(rarity)
+  return isOneOf(RARITIES, rarity)
 }
 
 export function rowIssues(row: PreviewRow): RowIssue[] {

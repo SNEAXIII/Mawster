@@ -2,6 +2,7 @@
 import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { COMPACT_COL, GROW_COL, type KnowledgeBaseColumn } from './knowledge-base-columns'
+import type { FightRecordSortField } from '@/app/services/fight-records'
 
 type SortState = Readonly<{
   sortBy: string
@@ -30,7 +31,7 @@ type KnowledgeBaseTableHeadProps = Readonly<{
   columns: ReadonlyArray<KnowledgeBaseColumn>
   sortBy: string
   sortOrder: 'asc' | 'desc'
-  onSort: (col: string) => void
+  onSort: (col: FightRecordSortField) => void
   /** Export mode renders every header as plain text — sort arrows are UI noise on an image. */
   exporting: boolean
 }>
