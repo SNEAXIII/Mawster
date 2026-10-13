@@ -329,7 +329,6 @@ deploy:
 # 	docker stack deploy --with-registry-auth --resolve-image always -c stack-obs.yaml mawster-obs
 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app.yaml mawster
 # 	docker stack deploy --with-registry-auth --resolve-image always -c stack-app-staging.yaml mawster-staging
-	$(MAKE) seed-champions
 
 panic:
 	docker stack rm mawster
