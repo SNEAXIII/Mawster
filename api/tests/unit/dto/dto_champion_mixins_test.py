@@ -40,7 +40,6 @@ IDENTITY_CARRIERS = [
     AllianceRosterEntryResponse,
     WarPlacementResponse,
     AvailableAttackerResponse,
-    AvailablePrefightAttackerResponse,
     WarSynergyResponse,
     WarPrefightResponse,
 ]
@@ -63,7 +62,6 @@ REF_CARRIERS = [
     AllianceRosterEntryResponse,
     WarPlacementResponse,
     AvailableAttackerResponse,
-    AvailablePrefightAttackerResponse,
 ]
 
 

@@ -232,11 +232,14 @@ class AvailableAttackerResponse(PlayerIdentity, ChampionRef, SagaRoles):
     is_preferred_attacker: bool = False
 
 
-class AvailablePrefightAttackerResponse(PlayerIdentity, ChampionRef, SagaRoles):
+class AvailablePrefightAttackerResponse(PlayerIdentity, SagaRoles):
+    """A pre-fight is information, not a fight: no rank, signature, class or ascension."""
+
     champion_user_id: uuid.UUID
+    champion_id: uuid.UUID
+    champion_name: str
     champion_alias: str | None = None
-    rarity: str
-    ascension: int = 0
+    image_url: str | None = None
     is_preferred_attacker: bool = False
 
 

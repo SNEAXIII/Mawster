@@ -116,6 +116,7 @@ async def _setup_prefight_scenario():
         "war": war,
         "attacker_cu": attacker_cu,
         "prefight_cu": prefight_cu,
+        "prefight_champ": prefight_champ,
         "headers_member": headers_member,
         "headers_owner": headers_owner,
     }
@@ -421,6 +422,27 @@ class TestGetAvailablePrefightAttackers:
         resp = await execute_get_request(url, headers=data["headers_member"])
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
+
+    @pytest.mark.asyncio
+    async def test_omits_rank_signature_class_and_ascension(self):
+        data = await _setup_prefight_scenario()
+        url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-prefight-attackers"
+        resp = await execute_get_request(url, headers=data["headers_member"])
+        assert resp.status_code == 200
+        for item in resp.json():
+            assert {"rarity", "signature", "champion_class", "ascension"}.isdisjoint(item)
+
+    @pytest.mark.asyncio
+    async def test_keeps_one_entry_per_player_and_champion(self):
+        """Two copies of a champion collapse into the highest one."""
+        data = await _setup_prefight_scenario()
+        lower_cu = await push_champion_user(data["member"], data["prefight_champ"], stars=6, rank=5)
+        url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-prefight-attackers"
+        resp = await execute_get_request(url, headers=data["headers_member"])
+        assert resp.status_code == 200
+        ids = [item["champion_user_id"] for item in resp.json()]
+        assert str(data["prefight_cu"].id) in ids
+        assert str(lower_cu.id) not in ids
 
     @pytest.mark.asyncio
     async def test_excludes_banned_champion(self):

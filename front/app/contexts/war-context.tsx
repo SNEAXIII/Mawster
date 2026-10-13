@@ -24,6 +24,7 @@ import {
   type WarDefenseSummary,
   type WarProgress,
   type AvailableAttacker,
+  type AvailablePrefightAttacker,
   type WarSynergy,
   type WarPrefight,
   createWar,
@@ -136,7 +137,7 @@ interface WarContextValue {
     gameAccountId?: string,
     nodeNumber?: number
   ) => Promise<AvailableAttacker[]>
-  loadAvailablePrefightAttackers: () => Promise<AvailableAttacker[]>
+  loadAvailablePrefightAttackers: () => Promise<AvailablePrefightAttacker[]>
 
   // Synergy
   synergies: WarSynergy[]
