@@ -46,7 +46,7 @@ export default function KnowledgeBaseTableRow({
           )}
           {r.assisted && (
             <span title={kb.assistedBadge}>
-              <Users className='h-3.5 w-3.5 text-blue-400 shrink-0' />
+              <Users className='h-3.5 w-3.5 text-info shrink-0' />
             </span>
           )}
         </div>

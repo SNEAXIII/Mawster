@@ -13,13 +13,13 @@ const PAIRS = [
   'muted',
   'accent',
   'destructive',
+  'info',
 ]
 const SINGLES = ['border', 'input', 'ring', 'muted-foreground']
 
-// Hard-coded colours still in the app — they do not follow the tokens (see redesign Q9).
+// Hard-coded on purpose: game data, colour scales, or drawn over a fixed dark scrim.
 const HARDCODED = [
-  { label: 'blue-600 (war active)', className: 'bg-blue-600 text-white' },
-  { label: 'blue-400 (edit)', className: 'text-blue-400' },
+  { label: 'blue-400 (edit, on scrim)', className: 'text-blue-400' },
   { label: 'amber-400 (signature)', className: 'text-amber-400' },
   { label: 'yellow-400 (preferred)', className: 'text-yellow-400' },
   { label: 'purple-400 (ascension)', className: 'text-purple-400' },

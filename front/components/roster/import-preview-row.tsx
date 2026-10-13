@@ -72,7 +72,7 @@ export default function ImportPreviewRow({
 
   const rowBackground = () => {
     if (row.isNew) return 'bg-green-50 dark:bg-green-950/30'
-    if (row.hasChanges) return 'bg-blue-50 dark:bg-blue-950/30'
+    if (row.hasChanges) return 'bg-info/10'
     return ''
   }
 
@@ -121,8 +121,8 @@ export default function ImportPreviewRow({
                 <span className='text-gray-400'>
                   {RARITY_LABELS[row.oldRarity!] ?? row.oldRarity}
                 </span>
-                <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
-                <span className='text-blue-600 font-semibold'>
+                <ArrowRight className='text-info h-2.5 w-2.5' />
+                <span className='text-info font-semibold'>
                   {RARITY_LABELS[row.newRarity] ?? row.newRarity}
                 </span>
               </div>
@@ -133,8 +133,8 @@ export default function ImportPreviewRow({
             {row.oldSignature !== row.newSignature && (
               <div className='flex items-center gap-1 justify-end'>
                 <span className='text-gray-400'>sig {row.oldSignature}</span>
-                <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
-                <span className='text-blue-600 font-semibold'>sig {row.newSignature}</span>
+                <ArrowRight className='text-info h-2.5 w-2.5' />
+                <span className='text-info font-semibold'>sig {row.newSignature}</span>
               </div>
             )}
             {(row.oldAscension ?? 0) !== (row.ascension ?? 0) && (
@@ -142,8 +142,8 @@ export default function ImportPreviewRow({
                 <span className='text-gray-400'>
                   {ascLabel} {row.oldAscension ?? 0}
                 </span>
-                <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
-                <span className='text-blue-600 font-semibold'>
+                <ArrowRight className='text-info h-2.5 w-2.5' />
+                <span className='text-info font-semibold'>
                   {ascLabel} {row.ascension ?? 0}
                 </span>
               </div>

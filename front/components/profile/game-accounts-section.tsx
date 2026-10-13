@@ -43,7 +43,7 @@ const ROLE_CONFIG: Record<
 > = {
   owner: { Icon: Crown, cls: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300' },
   officer: { Icon: ShieldCheck, cls: 'bg-purple-500/20 text-purple-700 dark:text-purple-300' },
-  member: { Icon: Shield, cls: 'bg-blue-500/20 text-blue-700 dark:text-blue-300' },
+  member: { Icon: Shield, cls: 'bg-info/20 text-info' },
   visitor: { Icon: Eye, cls: 'bg-muted/80 text-muted-foreground' },
 }
 
@@ -144,7 +144,7 @@ export default function GameAccountsSection() {
       <Card>
         <CardHeader>
           <CardTitle className='text-lg flex items-center gap-2'>
-            <Gamepad2 className='h-5 w-5 text-blue-500' />
+            <Gamepad2 className='h-5 w-5 text-info' />
             {t.game.accounts.title}
           </CardTitle>
           <p className='text-sm text-muted-foreground'>
@@ -324,7 +324,7 @@ export default function GameAccountsSection() {
                         <Button
                           variant='ghost'
                           size='icon'
-                          className='text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10'
+                          className='text-muted-foreground hover:text-info hover:bg-info/10'
                           onClick={() => startEditing(account)}
                           data-cy={`account-edit-btn-${index}`}
                         >

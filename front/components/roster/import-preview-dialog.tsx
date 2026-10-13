@@ -83,7 +83,7 @@ export default function ImportPreviewDialog({
               {t.roster.importExport.newCount.replace('{count}', String(newCount))}
             </span>
             {', '}
-            <span className='text-blue-600 font-medium'>
+            <span className='text-info font-medium'>
               {t.roster.importExport.updateCount.replace('{count}', String(changeCount))}
             </span>
             {', '}
