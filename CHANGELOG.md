@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.28.0](https://github.com/SNEAXIII/Mawster/compare/v1.27.0...v1.28.0) (2026-10-13)
+
+
+### Ajouté
+
+* redesigned layouts — buttons, cards, roster and war screens ([4ceb42c](https://github.com/SNEAXIII/Mawster/commit/4ceb42c9432114e4e6711bf0a2527c78fe3cc8eb))
+
 ## [1.27.0](https://github.com/SNEAXIII/Mawster/compare/v1.26.1...v1.27.0) (2026-10-13)
 
 
