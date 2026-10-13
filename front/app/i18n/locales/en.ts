@@ -55,6 +55,7 @@ const en = {
     settings: 'Settings',
     language: 'Language',
     theme: 'Theme',
+    look: 'Look',
     signOut: 'Sign out',
     collapseSidebar: 'Collapse',
     expandSidebar: 'Expand',

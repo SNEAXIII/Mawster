@@ -159,6 +159,16 @@ input[type='number']::-webkit-outer-spin-button {
   }
 
   /* Redesign candidates — only active under data-look, one survives the redesign. */
+  [data-look^='new-'] {
+    --sidebar-background: var(--card);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
+  }
   [data-look='new-a'] {
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
