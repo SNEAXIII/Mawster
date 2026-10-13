@@ -29,7 +29,7 @@ export default function OverlaysShowcase() {
   return (
     <>
       <p className='text-xs text-muted-foreground'>
-        Overlays render in a portal: in compare mode they follow the toolbar look, not the column.
+        Overlays render in a portal: side by side, they follow the first look, not the column.
       </p>
 
       <Section title='Dialogs'>
