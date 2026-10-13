@@ -69,7 +69,6 @@ export default function AllianceVisitorsSection({
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='size-7'
                   onClick={() => handleInviteAsMember(v)}
                   data-cy={`invite-visitor-as-member-${v.game_account_id}`}
                   title={t.game.alliances.inviteAsMember}

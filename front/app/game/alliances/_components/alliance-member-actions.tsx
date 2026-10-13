@@ -105,7 +105,7 @@ export function AllianceMemberActions({
           <Button
             variant='ghost'
             size='icon'
-            className='size-7 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent'
+            className='shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent'
             data-cy={`member-actions-${member.game_pseudo}`}
           >
             <MoreHorizontal className='size-3.5' />
