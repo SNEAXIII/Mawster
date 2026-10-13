@@ -3,6 +3,21 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.27.0](https://github.com/SNEAXIII/Mawster/compare/v1.26.1...v1.27.0) (2026-10-13)
+
+
+### Ajouté
+
+* AI roster import out of beta, featured on the landing ([#708](https://github.com/SNEAXIII/Mawster/issues/708)) ([fe9963a](https://github.com/SNEAXIII/Mawster/commit/fe9963ad9610177237be4d6ff2c9d665f75fb9de))
+* Midnight sky look by default, classic look selectable in settings ([#709](https://github.com/SNEAXIII/Mawster/issues/709)) ([63931c9](https://github.com/SNEAXIII/Mawster/commit/63931c99c59cb9d3cdcf7d9c558912e2a3215b70))
+
+
+### Corrigé
+
+* blue highlights follow the selected look ([7f17bc3](https://github.com/SNEAXIII/Mawster/commit/7f17bc35355b3fc9e1827a5b164b8b1905e69717))
+* darker Midnight sky surfaces and accent ([84d9484](https://github.com/SNEAXIII/Mawster/commit/84d94841237109821f727eb8c4e4f5d8951f812b))
+* revoke admin rights as soon as an admin is demoted or disabled ([#711](https://github.com/SNEAXIII/Mawster/issues/711)) ([e9a2f21](https://github.com/SNEAXIII/Mawster/commit/e9a2f21ad934a9cec6a802ef1a7dd06a8c9b8a98))
+
 ## [1.26.1](https://github.com/SNEAXIII/Mawster/compare/v1.26.0...v1.26.1) (2026-10-13)
 
 
