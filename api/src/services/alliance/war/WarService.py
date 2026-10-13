@@ -116,6 +116,10 @@ _PREFIGHT_OPTIONS = (
 )
 
 
+def _copy_strength(cu: ChampionUser) -> tuple[int, int, int]:
+    return (cu.stars, cu.rank, cu.ascension)
+
+
 class WarService:
     # ─── War ──────────────────────────────────────────────────────────────────
 
@@ -801,9 +805,16 @@ class WarService:
         if war and war.bans:
             stmt = stmt.where(ChampionUser.champion_id.not_in([b.champion_id for b in war.bans]))  # type: ignore[union-attr]
 
+        # One entry per player and champion: the highest copy stands for the duplicates.
+        best: dict[tuple[uuid.UUID, uuid.UUID], tuple[ChampionUser, GameAccount, Champion]] = {}
+        for cu, ga, champ in (await session.exec(stmt)).all():  # type: ignore[arg-type]
+            kept = best.get((ga.id, cu.champion_id))
+            if kept is None or _copy_strength(cu) > _copy_strength(kept[0]):
+                best[(ga.id, cu.champion_id)] = (cu, ga, champ)
+
         saga = await SagaService.resolve_current(session)
         result: list[AvailablePrefightAttackerResponse] = []
-        for cu, ga, champ in (await session.exec(stmt)).all():  # type: ignore[arg-type]
+        for cu, ga, champ in best.values():
             att, dfn = saga.get(cu.champion_id, NO_SAGA)
             result.append(
                 AvailablePrefightAttackerResponse(
@@ -813,10 +824,7 @@ class WarService:
                     champion_id=cu.champion_id,
                     champion_name=champ.name,
                     champion_alias=champ.alias,
-                    champion_class=champ.champion_class,
                     image_url=champ.image_url,
-                    rarity=cu.rarity,
-                    ascension=cu.ascension,
                     is_preferred_attacker=cu.is_preferred_attacker,
                     is_saga_attacker=att,
                     is_saga_defender=dfn,

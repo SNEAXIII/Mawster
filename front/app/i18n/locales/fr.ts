@@ -686,7 +686,6 @@ const fr: Translations = {
       selectAttacker: 'Assigner un attaquant au nœud #{node}',
       nodeDetail: 'Nœud #{node}',
       searchAttacker: 'Rechercher champion ou joueur...',
-      searchPlayer: 'Rechercher joueur...',
       assignAttacker: 'Assigner Attaquant',
       removeAttacker: 'Retirer Attaquant',
       removeAttackerConfirmTitle: "Retirer l'attaquant",
