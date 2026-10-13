@@ -23,22 +23,25 @@ class AuthService:
         user_id = data.get("user_id")
         return await UserService.get_user_by_id_with_validity_check(session, user_id)
 
+    # The role comes from the DB, not the claim: a demoted or disabled admin loses access at once.
     @classmethod
     async def require_admin(
         cls,
+        session: SessionDep,
         token: Annotated[str, Depends(oauth2_scheme)],
     ) -> bool:
-        role = JWTService.decode_jwt(token)["role"]
-        if role not in (Roles.ADMIN, Roles.SUPER_ADMIN):
+        user = await cls.get_current_user_in_jwt(session, token)
+        if user.role not in (Roles.ADMIN, Roles.SUPER_ADMIN):
             raise INSUFFISANT_ROLE_EXCEPTION
         return True
 
     @classmethod
     async def require_super_admin(
         cls,
+        session: SessionDep,
         token: Annotated[str, Depends(oauth2_scheme)],
     ) -> bool:
-        role = JWTService.decode_jwt(token)["role"]
-        if role != Roles.SUPER_ADMIN:
+        user = await cls.get_current_user_in_jwt(session, token)
+        if user.role != Roles.SUPER_ADMIN:
             raise INSUFFISANT_ROLE_EXCEPTION
         return True

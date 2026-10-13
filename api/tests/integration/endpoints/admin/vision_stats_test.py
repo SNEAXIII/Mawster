@@ -14,7 +14,12 @@ from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import push_game_account
-from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
+from tests.integration.endpoints.setup.user_setup import (
+    STANDALONE_ADMIN_HEADERS,
+    push_one_user,
+    push_standalone_admin,
+    push_user2,
+)
 from tests.utils.utils_client import create_auth_headers, execute_get_request
 from tests.utils.utils_constant import GAME_PSEUDO, GAME_PSEUDO_2, USER2_ID, USER_ID
 from tests.utils.utils_db import get_test_session, load_objects
@@ -26,8 +31,13 @@ USERS_URL = "/admin/vision/users"
 IMPORTS_URL = "/admin/vision/imports"
 
 
+@pytest.fixture(autouse=True)
+async def _admin_in_db():
+    await push_standalone_admin()
+
+
 def admin_headers() -> dict[str, str]:
-    return create_auth_headers(role="admin")
+    return STANDALONE_ADMIN_HEADERS
 
 
 async def _push_import(

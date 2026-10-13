@@ -8,14 +8,17 @@ up with the matching flags on GET /champion-users/by-account/{id}.
 import pytest
 
 from main import app
-from src.enums.Roles import Roles
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
     push_champion,
     push_champion_user,
     push_game_account,
 )
-from tests.integration.endpoints.setup.user_setup import push_one_user
+from tests.integration.endpoints.setup.user_setup import (
+    STANDALONE_ADMIN_HEADERS,
+    push_one_user,
+    push_standalone_admin,
+)
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
@@ -28,7 +31,7 @@ from tests.utils.utils_db import get_test_session
 app.dependency_overrides[get_session] = get_test_session
 
 USER_HEADERS = create_auth_headers()
-ADMIN_HEADERS = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+ADMIN_HEADERS = STANDALONE_ADMIN_HEADERS
 
 SEASONS_URL = "/admin/seasons"
 CHAMPION_USERS_ROUTE = "/champion-users"
@@ -37,6 +40,7 @@ CHAMPION_USERS_ROUTE = "/champion-users"
 @pytest.mark.asyncio
 async def test_roster_reflects_current_season_saga():
     await push_one_user()
+    await push_standalone_admin()
     acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     champ = await push_champion("Hercules", "Cosmic")
 
@@ -66,6 +70,7 @@ async def test_roster_reflects_current_season_saga():
 async def test_roster_defaults_false_without_saga_role():
     """A champion with no ChampionSagaRole row for the current season defaults to False."""
     await push_one_user()
+    await push_standalone_admin()
     acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     champ = await push_champion("Storm", "Mutant")
 
