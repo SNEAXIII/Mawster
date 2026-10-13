@@ -28,7 +28,7 @@ export default function Loading({ usersPerPage }: Readonly<LoadingProps>) {
               <TableCell>
                 <Button
                   variant='ghost'
-                  className='size-8 p-0'
+                  size='icon'
                   disabled={true}
                 >
                   <MoreHorizontal className='size-4' />

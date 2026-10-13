@@ -86,7 +86,7 @@ export default function AllianceMemberRow({
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent'
+                  className='shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent'
                   data-cy={`view-roster-${member.game_pseudo}`}
                   onClick={() => onViewRoster(member.id, member.game_pseudo)}
                 >

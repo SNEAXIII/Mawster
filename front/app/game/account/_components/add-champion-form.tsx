@@ -89,197 +89,207 @@ export default function AddChampionForm({
         open={open}
         onOpenChange={onOpenChange}
       >
-        {/* Champion search */}
-        <div className='mb-3'>
-          <label className='block text-sm font-medium mb-1'>{t.roster.champion}</label>
-          <SearchInput
-            ref={searchInputRef}
-            placeholder={t.roster.searchChampion}
-            value={championSearch}
-            onChange={handleChampionSearchChange}
-            data-cy='champion-search'
-          />
+        <div className='grid gap-x-8 lg:grid-cols-2'>
+          {/* Champion search */}
+          <div className='mb-3'>
+            <label className='block text-sm font-medium mb-1'>{t.roster.champion}</label>
+            <SearchInput
+              ref={searchInputRef}
+              placeholder={t.roster.searchChampion}
+              value={championSearch}
+              onChange={handleChampionSearchChange}
+              data-cy='champion-search'
+            />
 
-          {/* Search results dropdown */}
-          {searchResults.length > 0 && !selectedChampion && (
-            <ScrollArea className='border rounded-md mt-1 max-h-48 shadow-md'>
-              {searchResults.map((c) => (
-                <button
-                  key={c.id}
-                  className='w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2 transition-colors'
-                  onClick={() => handleSelectChampion(c)}
-                  data-cy={`champion-result-${c.name}`}
-                >
-                  {c.image_url && (
+            {/* Search results dropdown */}
+            {searchResults.length > 0 && !selectedChampion && (
+              <ScrollArea className='border rounded-md mt-1 max-h-48 shadow-md'>
+                {searchResults.map((c) => (
+                  <button
+                    key={c.id}
+                    className='w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2 transition-colors'
+                    onClick={() => handleSelectChampion(c)}
+                    data-cy={`champion-result-${c.name}`}
+                  >
+                    {c.image_url && (
+                      <img
+                        src={getChampionImageUrl(c.image_url, 40) ?? ''}
+                        alt={c.name}
+                        className='size-8 rounded object-cover'
+                      />
+                    )}
+                    <span>{c.name}</span>
+                    <span className='text-xs text-muted-foreground ml-auto'>
+                      {c.champion_class}
+                    </span>
+                  </button>
+                ))}
+              </ScrollArea>
+            )}
+
+            {/* Selected champion preview */}
+            {selectedChampion && (
+              <div
+                className='mt-1'
+                data-cy='champion-selected-preview'
+              >
+                <div className='flex items-center gap-2 text-sm text-primary'>
+                  {selectedChampion.image_url && (
                     <img
-                      src={getChampionImageUrl(c.image_url, 40) ?? ''}
-                      alt={c.name}
-                      className='size-8 rounded object-cover'
+                      src={getChampionImageUrl(selectedChampion.image_url, 40) ?? ''}
+                      alt={selectedChampion.name}
+                      className='size-6 rounded'
                     />
                   )}
-                  <span>{c.name}</span>
-                  <span className='text-xs text-muted-foreground ml-auto'>{c.champion_class}</span>
-                </button>
-              ))}
-            </ScrollArea>
-          )}
-
-          {/* Selected champion preview */}
-          {selectedChampion && (
-            <div
-              className='mt-1'
-              data-cy='champion-selected-preview'
-            >
-              <div className='flex items-center gap-2 text-sm text-primary'>
-                {selectedChampion.image_url && (
-                  <img
-                    src={getChampionImageUrl(selectedChampion.image_url, 40) ?? ''}
-                    alt={selectedChampion.name}
-                    className='size-6 rounded'
-                  />
-                )}
-                <span className='font-medium'>{selectedChampion.name}</span>
-                <span className='text-muted-foreground'>({selectedChampion.champion_class})</span>
-              </div>
-              {existingEntries.length > 0 && (
-                <div
-                  className='mt-1.5 ml-8 flex flex-col gap-0.5'
-                  data-cy='already-in-roster'
-                >
-                  <span className='text-xs text-amber-500 font-medium'>
-                    {t.roster.alreadyInRoster}
-                  </span>
-                  {existingEntries.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className='text-xs text-amber-500 flex items-center gap-1'
-                    >
-                      <span className='font-semibold text-amber-500'>
-                        {RARITY_LABELS[entry.rarity] ?? entry.rarity}
-                      </span>
-                      <span className='text-amber-500'>· sig {entry.signature}</span>
-                    </div>
-                  ))}
+                  <span className='font-medium'>{selectedChampion.name}</span>
+                  <span className='text-muted-foreground'>({selectedChampion.champion_class})</span>
                 </div>
+                {existingEntries.length > 0 && (
+                  <div
+                    className='mt-1.5 ml-8 flex flex-col gap-0.5'
+                    data-cy='already-in-roster'
+                  >
+                    <span className='text-xs text-amber-500 font-medium'>
+                      {t.roster.alreadyInRoster}
+                    </span>
+                    {existingEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className='text-xs text-amber-500 flex items-center gap-1'
+                      >
+                        <span className='font-semibold text-amber-500'>
+                          {RARITY_LABELS[entry.rarity] ?? entry.rarity}
+                        </span>
+                        <span className='text-amber-500'>· sig {entry.signature}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div>
+            {/* Rarity buttons */}
+            <div className='mb-3'>
+              <Label className='mb-1.5 block'>{t.roster.rarity}</Label>
+              <ToggleGroup
+                type='single'
+                value={selectedRarity}
+                onValueChange={(val) => {
+                  if (val) setSelectedRarity(val)
+                }}
+                variant='outline'
+                className='flex flex-wrap justify-start gap-1'
+              >
+                {RARITIES.map((r) => (
+                  <ToggleGroupItem
+                    key={r}
+                    value={r}
+                    data-cy={`rarity-${r}`}
+                    className='px-3 py-1.5 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
+                  >
+                    {RARITY_LABELS[r]}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+
+            {/* Signature field with quick-fill buttons */}
+            <div className='mb-4'>
+              <Label className='mb-1.5 block'>{t.roster.signature}</Label>
+              <div className='flex flex-wrap items-center gap-2'>
+                <Input
+                  type='number'
+                  min={0}
+                  className='w-24'
+                  value={signatureValue}
+                  onChange={(e) =>
+                    setSignatureValue(
+                      Math.min(200, Math.max(0, Number.parseInt(e.target.value) || 0))
+                    )
+                  }
+                  data-cy='sig-input'
+                />
+                <ToggleGroup
+                  type='single'
+                  value={String(signatureValue)}
+                  onValueChange={(val) => {
+                    if (val) setSignatureValue(Number(val))
+                  }}
+                  variant='outline'
+                  size='sm'
+                  className='flex gap-1'
+                >
+                  {SIGNATURE_PRESETS.map((v) => (
+                    <ToggleGroupItem
+                      key={v}
+                      value={String(v)}
+                      className='text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
+                    >
+                      {v}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+            </div>
+
+            {/* Preferred Attacker */}
+            <div className='mb-4'>
+              <div className='flex items-center gap-2'>
+                <Checkbox
+                  id='preferred-attacker'
+                  checked={isPreferredAttacker}
+                  onCheckedChange={(checked) => setIsPreferredAttacker(checked === true)}
+                  data-cy='preferred-attacker-checkbox'
+                />
+                <Label
+                  htmlFor='preferred-attacker'
+                  className='cursor-pointer select-none'
+                >
+                  {t.roster.preferredAttacker}
+                </Label>
+              </div>
+              <p className='text-xs text-muted-foreground mt-1 ml-6'>
+                {t.roster.preferredAttackerHint}
+              </p>
+            </div>
+
+            {/* Ascension */}
+            <div className='mb-4'>
+              <Label className='mb-1.5 block'>Ascension</Label>
+              <ToggleGroup
+                type='single'
+                value={String(ascension)}
+                onValueChange={(val) => {
+                  if (val) setAscension(Number(val))
+                }}
+                variant='outline'
+                className='flex justify-start gap-1'
+              >
+                {[0, 1, 2].map((level) => {
+                  const isAscendable = selectedChampion?.is_ascendable ?? false
+                  const disabled = !isAscendable && level > 0
+                  return (
+                    <ToggleGroupItem
+                      key={level}
+                      value={String(level)}
+                      disabled={disabled}
+                      data-cy={`ascension-${level}`}
+                      className='px-3 py-1.5 text-sm data-[state=on]:bg-purple-600 data-[state=on]:text-white'
+                    >
+                      {level === 0 ? 'None' : `A${level}`}
+                    </ToggleGroupItem>
+                  )
+                })}
+              </ToggleGroup>
+              {selectedChampion && !selectedChampion.is_ascendable && (
+                <p className='text-xs text-muted-foreground mt-1'>
+                  This champion cannot be ascended.
+                </p>
               )}
             </div>
-          )}
-        </div>
-
-        {/* Rarity buttons */}
-        <div className='mb-3'>
-          <Label className='mb-1.5 block'>{t.roster.rarity}</Label>
-          <ToggleGroup
-            type='single'
-            value={selectedRarity}
-            onValueChange={(val) => {
-              if (val) setSelectedRarity(val)
-            }}
-            variant='outline'
-            className='flex flex-wrap justify-start gap-1'
-          >
-            {RARITIES.map((r) => (
-              <ToggleGroupItem
-                key={r}
-                value={r}
-                data-cy={`rarity-${r}`}
-                className='px-3 py-1.5 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
-              >
-                {RARITY_LABELS[r]}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
-
-        {/* Signature field with quick-fill buttons */}
-        <div className='mb-4'>
-          <Label className='mb-1.5 block'>{t.roster.signature}</Label>
-          <div className='flex flex-wrap items-center gap-2'>
-            <Input
-              type='number'
-              min={0}
-              className='w-24'
-              value={signatureValue}
-              onChange={(e) =>
-                setSignatureValue(Math.min(200, Math.max(0, Number.parseInt(e.target.value) || 0)))
-              }
-              data-cy='sig-input'
-            />
-            <ToggleGroup
-              type='single'
-              value={String(signatureValue)}
-              onValueChange={(val) => {
-                if (val) setSignatureValue(Number(val))
-              }}
-              variant='outline'
-              size='sm'
-              className='flex gap-1'
-            >
-              {SIGNATURE_PRESETS.map((v) => (
-                <ToggleGroupItem
-                  key={v}
-                  value={String(v)}
-                  className='text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
-                >
-                  {v}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
           </div>
-        </div>
-
-        {/* Preferred Attacker */}
-        <div className='mb-4'>
-          <div className='flex items-center gap-2'>
-            <Checkbox
-              id='preferred-attacker'
-              checked={isPreferredAttacker}
-              onCheckedChange={(checked) => setIsPreferredAttacker(checked === true)}
-              data-cy='preferred-attacker-checkbox'
-            />
-            <Label
-              htmlFor='preferred-attacker'
-              className='cursor-pointer select-none'
-            >
-              {t.roster.preferredAttacker}
-            </Label>
-          </div>
-          <p className='text-xs text-muted-foreground mt-1 ml-6'>
-            {t.roster.preferredAttackerHint}
-          </p>
-        </div>
-
-        {/* Ascension */}
-        <div className='mb-4'>
-          <Label className='mb-1.5 block'>Ascension</Label>
-          <ToggleGroup
-            type='single'
-            value={String(ascension)}
-            onValueChange={(val) => {
-              if (val) setAscension(Number(val))
-            }}
-            variant='outline'
-            className='flex justify-start gap-1'
-          >
-            {[0, 1, 2].map((level) => {
-              const isAscendable = selectedChampion?.is_ascendable ?? false
-              const disabled = !isAscendable && level > 0
-              return (
-                <ToggleGroupItem
-                  key={level}
-                  value={String(level)}
-                  disabled={disabled}
-                  data-cy={`ascension-${level}`}
-                  className='px-3 py-1.5 text-sm data-[state=on]:bg-purple-600 data-[state=on]:text-white'
-                >
-                  {level === 0 ? 'None' : `A${level}`}
-                </ToggleGroupItem>
-              )
-            })}
-          </ToggleGroup>
-          {selectedChampion && !selectedChampion.is_ascendable && (
-            <p className='text-xs text-muted-foreground mt-1'>This champion cannot be ascended.</p>
-          )}
         </div>
 
         {/* Submit */}

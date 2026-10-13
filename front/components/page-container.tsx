@@ -8,5 +8,5 @@ type PageContainerProps = Readonly<{
 }>
 
 export const PageContainer = ({ children, stack = false, className }: PageContainerProps) => (
-  <div className={cn('sm:p-4', stack && 'flex flex-col gap-4', className)}>{children}</div>
+  <div className={cn(stack && 'flex flex-col gap-4', className)}>{children}</div>
 )

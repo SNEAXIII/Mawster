@@ -54,7 +54,8 @@ loading); auth via `Depends(AuthService.get_current_user_in_jwt)`; raise `HTTPEx
 **Frontend** (`front/app/`):
 
 - `services/` — API wrappers; `lib/apiClient` auto-attaches the JWT
-- `components/ui/` — shadcn/ui — **never modify directly**
+- `components/ui/` — shadcn/ui — **never modify directly**, except `button.tsx` and `card.tsx`
+  ([ADR 0019](docs/adr/0019-button-and-card-are-house-tuned.md)); no `h-*` on a `Button`
 - Page-scoped components in `_components/`, files ≤150 lines
 - Reuse house components before a shadcn primitive — tabs are `@/components/tab-bar`, never shadcn `Tabs`
 - `@radix-ui/react-slot` ≥1.3 ships no `"use client"`: a Server Component importing `Button` fails

@@ -34,7 +34,7 @@ export default function UpgradeRequestsSection({
         defaultOpen={false}
         className='mb-4'
       >
-        <div className='flex flex-col gap-2'>
+        <div className='grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {requests.map((req) => {
             const classColors = getClassColors(req.champion_class)
             return (
@@ -50,7 +50,9 @@ export default function UpgradeRequestsSection({
                   size={40}
                 />
                 <div className='flex-1 min-w-0'>
-                  <p className='text-sm font-semibold text-white truncate'>{req.champion_name}</p>
+                  <p className='text-sm font-semibold text-foreground truncate'>
+                    {req.champion_name}
+                  </p>
                   <div className='flex items-center gap-2 text-xs'>
                     <span className='text-muted-foreground'>
                       {t.roster.upgradeRequests.currentRarity.replace(

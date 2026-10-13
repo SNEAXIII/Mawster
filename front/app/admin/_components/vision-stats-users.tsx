@@ -49,7 +49,7 @@ export default function VisionStatsUsers({
   return (
     <Card data-cy='vision-users-panel'>
       <CardHeader className='pb-2'>
-        <CardTitle className='text-base'>{s.usersTitle}</CardTitle>
+        <CardTitle>{s.usersTitle}</CardTitle>
       </CardHeader>
       <CardContent>
         {data.items.length === 0 ? (

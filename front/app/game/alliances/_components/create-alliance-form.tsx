@@ -46,7 +46,7 @@ export default function CreateAllianceForm({
 
   return (
     <Card>
-      <CardContent className='pt-6'>
+      <CardContent className='pt-4'>
         <form
           onSubmit={onSubmit}
           className='flex flex-col gap-4'

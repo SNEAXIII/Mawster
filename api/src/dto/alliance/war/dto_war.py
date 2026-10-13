@@ -287,7 +287,7 @@ class WarSynergyResponse(PlayerIdentity, ChampionIdentity, SagaRoles):
 
 
 class WarUpdateRequest(BaseModel):
-    opponent_name: str = Field(..., max_length=100, min_length=1, pattern=r"^[a-zA-Z0-9 ]+$")
+    opponent_name: str = Field(..., max_length=100, min_length=1)
     banned_champion_ids: list[uuid.UUID] = Field(
         default_factory=list,
         max_length=MAX_BANNED_CHAMPIONS,

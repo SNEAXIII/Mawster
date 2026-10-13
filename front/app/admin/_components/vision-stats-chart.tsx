@@ -59,7 +59,7 @@ export default function VisionStatsChart({ daily }: Readonly<VisionStatsChartPro
   return (
     <Card data-cy='vision-stats-chart'>
       <CardHeader className='pb-2'>
-        <CardTitle className='text-base'>{s.chartTitle}</CardTitle>
+        <CardTitle>{s.chartTitle}</CardTitle>
       </CardHeader>
       <CardContent>
         {hasData ? (

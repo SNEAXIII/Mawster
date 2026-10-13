@@ -20,7 +20,7 @@ export function ProfileRatioEvolutionChart({ points }: Readonly<Props>) {
   return (
     <Card data-cy='profile-evolution-chart'>
       <CardHeader className='pb-2'>
-        <CardTitle className='text-sm'>{s.evolutionTitle}</CardTitle>
+        <CardTitle>{s.evolutionTitle}</CardTitle>
       </CardHeader>
       <CardContent>
         {points.length === 0 ? (

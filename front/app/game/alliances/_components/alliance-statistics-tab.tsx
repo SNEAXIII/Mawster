@@ -397,7 +397,7 @@ export default function AllianceStatisticsTab({
             <div className='w-full lg:w-80 shrink-0'>
               <Card>
                 <CardHeader className='pb-2'>
-                  <CardTitle className='text-sm'>{stat.title}</CardTitle>
+                  <CardTitle>{stat.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <MemberChampionChart
