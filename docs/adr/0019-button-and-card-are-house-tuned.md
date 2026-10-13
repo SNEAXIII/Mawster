@@ -11,8 +11,10 @@ would creep back one import at a time.
 
 What the redesign changed, so it can be re-applied after a regeneration:
 
-- **Button** — three heights only: `sm` 32px, `default` 36px (40px below `sm`, a tap
-  target), `lg` 40px, and `icon` 32px square to sit with `sm`. Focus is a soft halo,
+- **Button** — three heights only: `sm` 32px, `default` 36px, `lg` 40px, and `icon` 32px
+  square to sit with `sm`. No size carries a responsive height: tailwind-merge only
+  replaces classes of the same breakpoint, so a call site's `h-auto` would leave an
+  `sm:h-9` in place and clip the button from `sm` up. Focus is a soft halo,
   `ring-2 ring-ring/50`, instead of a 1px ring. Call sites no longer force `h-6`, `h-7`
   or `h-12`.
 - **Card** — `p-4` instead of `p-6` on header, content and footer; `CardTitle` is
