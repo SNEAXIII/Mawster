@@ -4,6 +4,7 @@ from datetime import datetime
 from src.enums.Roles import Roles
 from src.models import User
 from src.utils.email_hash import hash_email
+from tests.utils.utils_client import create_auth_headers
 from tests.utils.utils_constant import (
     ADMIN_EMAIL,
     ADMIN_LOGIN,
@@ -99,3 +100,17 @@ def get_super_admin(
 
 async def push_one_super_admin():
     await load_objects([get_super_admin()])
+
+
+STANDALONE_ADMIN_ID = uuid.uuid4()
+STANDALONE_ADMIN_HEADERS = create_auth_headers(user_id=str(STANDALONE_ADMIN_ID), role=Roles.ADMIN)
+
+
+async def push_standalone_admin():
+    """An admin distinct from USER_ID, for tests where USER_ID must stay a plain user."""
+    admin = get_generic_user(
+        login="standalone_admin", email="standalone_admin@gmail.com", role=Roles.ADMIN
+    )
+    admin.id = STANDALONE_ADMIN_ID
+    admin.discord_id = "discord_standalone_admin"
+    await load_objects([admin])

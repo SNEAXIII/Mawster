@@ -76,78 +76,46 @@ async def test_get_current_user_in_jwt_invalid_role_raises(mocker):
     assert error.value.detail == str(INSUFFISANT_ROLE_EXCEPTION)
 
 
-@pytest.mark.asyncio
-async def test_require_admin_success(mocker):
-    # Arrange
-    mock_decode = decode_service_mock(mocker, {"role": Roles.ADMIN})
-
-    # Act
-    result = await AuthService.require_admin(FAKE_TOKEN)
-
-    # Assert
-    mock_decode.assert_called_once_with(FAKE_TOKEN)
-    assert result is True
-
-
-@pytest.mark.asyncio
-async def test_require_admin_super_admin_also_passes(mocker):
-    """SUPER_ADMIN should also pass the require_admin check."""
-    # Arrange
-    mock_decode = decode_service_mock(mocker, {"role": Roles.SUPER_ADMIN})
-
-    # Act
-    result = await AuthService.require_admin(FAKE_TOKEN)
-
-    # Assert
-    mock_decode.assert_called_once_with(FAKE_TOKEN)
-    assert result is True
-
-
-@pytest.mark.asyncio
-async def test_require_super_admin_success(mocker):
-    # Arrange
-    mock_decode = decode_service_mock(mocker, {"role": Roles.SUPER_ADMIN})
-
-    # Act
-    result = await AuthService.require_super_admin(FAKE_TOKEN)
-
-    # Assert
-    mock_decode.assert_called_once_with(FAKE_TOKEN)
-    assert result is True
-
-
-@pytest.mark.asyncio
-async def test_require_super_admin_admin_fails(mocker):
-    """Regular ADMIN should NOT pass the require_super_admin check."""
-    # Arrange
-    mock_decode = decode_service_mock(mocker, {"role": Roles.ADMIN})
-
-    # Act
-    with pytest.raises(JwtError) as error:
-        await AuthService.require_super_admin(FAKE_TOKEN)
-
-    # Assert
-    mock_decode.assert_called_once_with(FAKE_TOKEN)
-    assert error.value.detail == str(INSUFFISANT_ROLE_EXCEPTION)
+def guard_mocks(mocker, db_role: Roles):
+    """The claim always says SUPER_ADMIN: only the DB role may decide."""
+    decode_service_mock(mocker, {"user_id": str(USER_ID), "role": Roles.SUPER_ADMIN})
+    user = User(login=LOGIN, email=EMAIL, discord_id=DISCORD_ID, role=db_role)
+    get_user_with_validity_check_mock(mocker, user)
+    return session_mock(mocker)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("method_to_test", "role"),
+    ("method_to_test", "db_role"),
     [
-        (AuthService.require_admin, UNKNOWN_ROLE),
-        (AuthService.require_admin, Roles.USER),
+        (AuthService.require_admin, Roles.ADMIN),
+        (AuthService.require_admin, Roles.SUPER_ADMIN),
+        (AuthService.require_super_admin, Roles.SUPER_ADMIN),
     ],
-    ids=[f"admin-{UNKNOWN_ROLE}", f"admin-{Roles.USER}"],
+    ids=["admin-admin", "admin-super_admin", "super_admin-super_admin"],
 )
-async def test_require_admin_error(mocker, method_to_test, role):
-    # Arrange
-    mock_decode = decode_service_mock(mocker, {"role": role})
+async def test_require_role_success(mocker, method_to_test, db_role):
+    mock_session = guard_mocks(mocker, db_role)
 
-    # Act
+    result = await method_to_test(mock_session, FAKE_TOKEN)
+
+    assert result is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("method_to_test", "db_role"),
+    [
+        (AuthService.require_admin, Roles.USER),
+        (AuthService.require_super_admin, Roles.ADMIN),
+        (AuthService.require_super_admin, Roles.USER),
+    ],
+    ids=["admin-user", "super_admin-admin", "super_admin-user"],
+)
+async def test_require_role_uses_db_role_not_claim(mocker, method_to_test, db_role):
+    mock_session = guard_mocks(mocker, db_role)
+
     with pytest.raises(JwtError) as error:
-        await method_to_test(FAKE_TOKEN)
+        await method_to_test(mock_session, FAKE_TOKEN)
 
-    # Assert
-    mock_decode.assert_called_once_with(FAKE_TOKEN)
     assert error.value.detail == str(INSUFFISANT_ROLE_EXCEPTION)

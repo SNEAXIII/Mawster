@@ -7,7 +7,6 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
-from src.enums.Roles import Roles
 from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarBoost import WarBoost
@@ -34,7 +33,12 @@ from tests.integration.endpoints.setup.game_setup import (
     push_officer,
     push_visitor,
 )
-from tests.integration.endpoints.setup.user_setup import get_generic_user, push_user2
+from tests.integration.endpoints.setup.user_setup import (
+    STANDALONE_ADMIN_HEADERS,
+    get_generic_user,
+    push_standalone_admin,
+    push_user2,
+)
 from tests.utils.utils_client import (
     create_auth_headers,
     execute_get_request,
@@ -1005,11 +1009,11 @@ class TestAdminSnapshotEndpoints:
         session.add(war)
         await session.commit()
 
-        admin_headers = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+        await push_standalone_admin()
         response = await execute_post_request(
             "/admin/wars/force-snapshot",
             payload={},
-            headers=admin_headers,
+            headers=STANDALONE_ADMIN_HEADERS,
         )
         assert response.status_code == 200
         body = response.json()
@@ -1027,11 +1031,11 @@ class TestAdminSnapshotEndpoints:
         owner_headers = create_auth_headers(user_id=str(USER_ID))
         await _end_war(data["alliance"].id, data["war"].id, headers=owner_headers)
 
-        admin_headers = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+        await push_standalone_admin()
         response = await execute_post_request(
             "/admin/wars/force-snapshot",
             payload={},
-            headers=admin_headers,
+            headers=STANDALONE_ADMIN_HEADERS,
         )
         assert response.status_code == 200
         body = response.json()
@@ -1045,8 +1049,10 @@ class TestAdminSnapshotEndpoints:
         owner_headers = create_auth_headers(user_id=str(USER_ID))
         await _end_war(data["alliance"].id, data["war"].id, headers=owner_headers)
 
-        admin_headers = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
-        response = await execute_get_request("/admin/wars/snapshot-stats", headers=admin_headers)
+        await push_standalone_admin()
+        response = await execute_get_request(
+            "/admin/wars/snapshot-stats", headers=STANDALONE_ADMIN_HEADERS
+        )
         assert response.status_code == 200
         body = response.json()
         assert len(body) == 1

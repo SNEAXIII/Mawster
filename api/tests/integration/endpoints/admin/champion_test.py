@@ -100,6 +100,7 @@ class TestAdminChampionsAccessControl:
         ids=[name for _, _, _, name in _ADMIN_CHAMPION_ROUTES],
     )
     async def test_non_admin_returns_403(self, session, method, url, payload):
+        await push_one_user()
         response = await execute_request(method, url, payload, headers=USER_HEADERS)
         assert response.status_code == 403
 

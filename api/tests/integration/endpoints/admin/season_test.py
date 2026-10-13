@@ -4,6 +4,7 @@ import pytest
 
 from main import app
 from src.enums.Roles import Roles
+from src.models.war.Season import Season
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import push_alliance_with_owner
 from tests.integration.endpoints.setup.user_setup import get_admin, get_generic_user
@@ -30,9 +31,14 @@ async def admin_in_db():
     await load_objects([get_admin()])
 
 
+@pytest.fixture
+async def user_in_db():
+    await load_objects([get_generic_user(is_base_id=True)])
+
+
 class TestCreateSeason:
     @pytest.mark.anyio
-    async def test_admin_can_create_season(self):
+    async def test_admin_can_create_season(self, admin_in_db):
         response = await execute_post_request(SEASONS_URL, {"number": 64}, ADMIN_HEADERS)
         assert response.status_code == 201
         data = response.json()
@@ -40,13 +46,13 @@ class TestCreateSeason:
         assert data["status"] == "upcoming"
 
     @pytest.mark.anyio
-    async def test_duplicate_number_returns_409(self):
+    async def test_duplicate_number_returns_409(self, admin_in_db):
         await execute_post_request(SEASONS_URL, {"number": 65}, ADMIN_HEADERS)
         response = await execute_post_request(SEASONS_URL, {"number": 65}, ADMIN_HEADERS)
         assert response.status_code == 409
 
     @pytest.mark.anyio
-    async def test_create_rejected_when_current_exists(self):
+    async def test_create_rejected_when_current_exists(self, admin_in_db):
         await execute_post_request(SEASONS_URL, {"number": 300}, ADMIN_HEADERS)
         response = await execute_post_request(SEASONS_URL, {"number": 301}, ADMIN_HEADERS)
         assert response.status_code == 409
@@ -60,33 +66,33 @@ class TestCreateSeason:
         assert response.status_code == 201
 
     @pytest.mark.anyio
-    async def test_non_admin_returns_403(self):
+    async def test_non_admin_returns_403(self, user_in_db):
         response = await execute_post_request(SEASONS_URL, {"number": 66}, USER_HEADERS)
         assert response.status_code == 403
 
     @pytest.mark.anyio
-    async def test_number_zero_returns_422(self):
+    async def test_number_zero_returns_422(self, admin_in_db):
         response = await execute_post_request(SEASONS_URL, {"number": 0}, ADMIN_HEADERS)
         assert response.status_code == 422
 
     @pytest.mark.anyio
-    async def test_negative_number_returns_422(self):
+    async def test_negative_number_returns_422(self, admin_in_db):
         response = await execute_post_request(SEASONS_URL, {"number": -1}, ADMIN_HEADERS)
         assert response.status_code == 422
 
     @pytest.mark.anyio
-    async def test_number_above_max_returns_422(self):
+    async def test_number_above_max_returns_422(self, admin_in_db):
         response = await execute_post_request(SEASONS_URL, {"number": 10000}, ADMIN_HEADERS)
         assert response.status_code == 422
 
     @pytest.mark.anyio
-    async def test_number_at_max_boundary_succeeds(self):
+    async def test_number_at_max_boundary_succeeds(self, admin_in_db):
         response = await execute_post_request(SEASONS_URL, {"number": 9999}, ADMIN_HEADERS)
         assert response.status_code == 201
         assert response.json()["number"] == 9999
 
     @pytest.mark.anyio
-    async def test_create_defaults_to_regular_with_limits(self):
+    async def test_create_defaults_to_regular_with_limits(self, admin_in_db):
         response = await execute_post_request(SEASONS_URL, {"number": 200}, ADMIN_HEADERS)
         assert response.status_code == 201
         data = response.json()
@@ -96,7 +102,7 @@ class TestCreateSeason:
         assert data["node_count"] == 50
 
     @pytest.mark.anyio
-    async def test_create_big_thing_returns_big_thing_limits(self):
+    async def test_create_big_thing_returns_big_thing_limits(self, admin_in_db):
         response = await execute_post_request(
             SEASONS_URL, {"number": 201, "format": "big_thing"}, ADMIN_HEADERS
         )
@@ -204,7 +210,7 @@ class TestRevertSeason:
         assert response.status_code == 404
 
     @pytest.mark.anyio
-    async def test_revert_non_admin_returns_403(self):
+    async def test_revert_non_admin_returns_403(self, user_in_db):
         response = await execute_patch_request(
             f"{SEASONS_URL}/00000000-0000-0000-0000-000000000099/revert", {}, USER_HEADERS
         )
@@ -212,10 +218,6 @@ class TestRevertSeason:
 
 
 class TestGetCurrentSeason:
-    @pytest.fixture
-    async def user_in_db(self):
-        await load_objects([get_generic_user(is_base_id=True)])
-
     @pytest.mark.anyio
     async def test_returns_null_when_no_season(self, user_in_db):
         response = await execute_get_request(CURRENT_URL, USER_HEADERS)
@@ -253,10 +255,6 @@ class TestGetCurrentSeason:
 
 class TestListSeasonsPublic:
     @pytest.fixture
-    async def user_in_db(self):
-        await load_objects([get_generic_user(is_base_id=True)])
-
-    @pytest.fixture
     async def member_in_alliance(self):
         await load_objects([get_generic_user(is_base_id=True)])
         await push_alliance_with_owner(
@@ -268,7 +266,7 @@ class TestListSeasonsPublic:
 
     @pytest.mark.anyio
     async def test_member_can_list_seasons(self, member_in_alliance):
-        await execute_post_request(SEASONS_URL, {"number": 10}, ADMIN_HEADERS)
+        await load_objects([Season(number=10)])
 
         response = await execute_get_request("/seasons", USER_HEADERS)
         assert response.status_code == 200
