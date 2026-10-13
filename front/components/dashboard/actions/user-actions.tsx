@@ -116,7 +116,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
                 {isSuperAdmin && !isAdmin && (
                   <DropdownMenuItem
                     onClick={() => setIsPromoteToAdminDialogOpen(true)}
-                    className='text-blue-600 flex items-center'
+                    className='text-info flex items-center'
                     disabled={isLoading.promote}
                     data-cy={`promote-${login}`}
                   >

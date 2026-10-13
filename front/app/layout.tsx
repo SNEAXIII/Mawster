@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/sonner'
 import MyModerationProvider from './contexts/moderation-context'
 import type { Metadata } from 'next'
 import { SITE_NAME, SITE_URL } from '@/app/lib/site'
+import { DEFAULT_LOOK } from '@/app/lib/look'
 
 const TITLE = 'Mawster — Alliance War planner for Marvel Contest of Champions'
 const DESCRIPTION =
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang='en'
+      data-look={DEFAULT_LOOK}
       suppressHydrationWarning
     >
       <body className={`${inter.className} antialiased`}>

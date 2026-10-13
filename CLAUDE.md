@@ -34,8 +34,7 @@ file for review-level corrections.
 `eslint-disable` you meet.
 
 **Never run by hand what `.pre-commit-config.yaml` already runs** — ruff (check + format),
-raises-arity, zizmor, oxlint, prettier, cypress `tsc`. The app `tsc` is not in there and still needs
-a manual run.
+raises-arity, zizmor, oxlint, prettier, app and cypress `tsc`.
 
 **E2E** runs in CI only (`scripts/e2e/e2e_parallel.py` is CI-only). To debug one spec by hand,
 the user runs `make e2e-open` (Cypress UI) — never launch it yourself.

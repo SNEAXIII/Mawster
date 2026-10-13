@@ -48,6 +48,13 @@ repos:
         pass_filenames: false
         files: ^front/cypress/.*\.ts$
 
+      - id: tsc-app
+        name: typecheck (front)
+        entry: bash -c 'cd front && exec node node_modules/typescript/bin/tsc -p tsconfig.json --noEmit'
+        language: system
+        pass_filenames: false
+        files: ^front/(?!cypress/).*\.(ts|tsx)$|^front/tsconfig\.json$
+
       # After oxlint --fix so formatting has the last word. Through node: Windows can't run the
       # node_modules/.bin `#!/bin/sh` wrapper.
       - id: prettier

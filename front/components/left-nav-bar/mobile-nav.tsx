@@ -32,7 +32,7 @@ export default function MobileNav() {
                 itemClass,
                 'text-muted-foreground hover:text-foreground',
                 link.isActive &&
-                  'text-blue-400 after:absolute after:bottom-0.5 after:h-0.5 after:w-4 after:rounded-full after:bg-blue-400 hover:text-blue-400 [&_svg]:stroke-[2.5]'
+                  'text-info after:absolute after:bottom-0.5 after:h-0.5 after:w-4 after:rounded-full after:bg-info hover:text-info [&_svg]:stroke-[2.5]'
               )}
             >
               <link.icon />
