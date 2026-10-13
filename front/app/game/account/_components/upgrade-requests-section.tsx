@@ -34,7 +34,7 @@ export default function UpgradeRequestsSection({
         defaultOpen={false}
         className='mb-4'
       >
-        <div className='flex flex-col gap-2'>
+        <div className='grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {requests.map((req) => {
             const classColors = getClassColors(req.champion_class)
             return (
