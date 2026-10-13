@@ -36,10 +36,6 @@ async def _admin_in_db():
     await push_standalone_admin()
 
 
-def admin_headers() -> dict[str, str]:
-    return STANDALONE_ADMIN_HEADERS
-
-
 async def _push_import(
     game_account_id: uuid.UUID,
     status: VisionImportStatus,
@@ -140,7 +136,7 @@ async def test_endpoints_reject_plain_user(url: str):
 async def test_stats_overview_counts_every_outcome():
     await _two_users_with_imports()
 
-    response = await execute_get_request(STATS_URL, headers=admin_headers())
+    response = await execute_get_request(STATS_URL, headers=STANDALONE_ADMIN_HEADERS)
 
     assert response.status_code == 200
     overview = response.json()["overview"]
@@ -162,7 +158,9 @@ async def test_stats_overview_counts_every_outcome():
 async def test_stats_overview_reports_model_quality():
     await _two_users_with_imports()
 
-    overview = (await execute_get_request(STATS_URL, headers=admin_headers())).json()["overview"]
+    overview = (await execute_get_request(STATS_URL, headers=STANDALONE_ADMIN_HEADERS)).json()[
+        "overview"
+    ]
 
     assert overview["jobs_total"] == 3
     assert overview["jobs_failed"] == 1
@@ -177,7 +175,7 @@ async def test_stats_overview_reports_model_quality():
 async def test_stats_overview_is_zeroed_without_imports():
     await push_one_user()
 
-    body = (await execute_get_request(STATS_URL, headers=admin_headers())).json()
+    body = (await execute_get_request(STATS_URL, headers=STANDALONE_ADMIN_HEADERS)).json()
 
     assert body["overview"]["imports_total"] == 0
     assert body["overview"]["confirm_rate"] == 0.0
@@ -196,8 +194,12 @@ async def test_stats_window_excludes_older_imports_but_all_time_keeps_them():
         created_at=utcnow() - timedelta(days=40),
     )
 
-    windowed = (await execute_get_request(f"{STATS_URL}?days=7", headers=admin_headers())).json()
-    all_time = (await execute_get_request(f"{STATS_URL}?days=0", headers=admin_headers())).json()
+    windowed = (
+        await execute_get_request(f"{STATS_URL}?days=7", headers=STANDALONE_ADMIN_HEADERS)
+    ).json()
+    all_time = (
+        await execute_get_request(f"{STATS_URL}?days=0", headers=STANDALONE_ADMIN_HEADERS)
+    ).json()
 
     assert windowed["overview"]["imports_total"] == 1
     # The all-time counter is reported whatever the window, so the dashboard can
@@ -215,7 +217,9 @@ async def test_daily_series_is_zero_filled_over_the_window():
     account = await push_game_account(user_id=USER_ID)
     await _push_import(account.id, VisionImportStatus.CONFIRMED, screens=3)
 
-    body = (await execute_get_request(f"{STATS_URL}?days=7", headers=admin_headers())).json()
+    body = (
+        await execute_get_request(f"{STATS_URL}?days=7", headers=STANDALONE_ADMIN_HEADERS)
+    ).json()
 
     daily = body["daily"]
     assert len(daily) == 7
@@ -235,7 +239,9 @@ async def test_daily_series_all_time_only_returns_days_with_data():
         account.id, VisionImportStatus.CONFIRMED, created_at=utcnow() - timedelta(days=200)
     )
 
-    body = (await execute_get_request(f"{STATS_URL}?days=0", headers=admin_headers())).json()
+    body = (
+        await execute_get_request(f"{STATS_URL}?days=0", headers=STANDALONE_ADMIN_HEADERS)
+    ).json()
 
     assert len(body["daily"]) == 2
 
@@ -252,7 +258,7 @@ async def test_top_errors_groups_failures_by_message():
         await _push_job(vision_import, status=VisionJobStatus.FAILED, error="blurry")
     await _push_job(vision_import, status=VisionJobStatus.FAILED, error="empty")
 
-    body = (await execute_get_request(STATS_URL, headers=admin_headers())).json()
+    body = (await execute_get_request(STATS_URL, headers=STANDALONE_ADMIN_HEADERS)).json()
 
     assert body["top_errors"][0] == {"error": "blurry", "count": 2}
     assert {"error": "empty", "count": 1} in body["top_errors"]
@@ -265,7 +271,7 @@ async def test_top_errors_groups_failures_by_message():
 async def test_user_stats_ranks_importers_and_keeps_sums_unfanned():
     await _two_users_with_imports()
 
-    body = (await execute_get_request(USERS_URL, headers=admin_headers())).json()
+    body = (await execute_get_request(USERS_URL, headers=STANDALONE_ADMIN_HEADERS)).json()
 
     assert body["total"] == 2
     top = body["items"][0]
@@ -287,7 +293,8 @@ async def test_user_stats_sorting_and_pagination():
 
     ascending = (
         await execute_get_request(
-            f"{USERS_URL}?sort_by=imports_total&sort_order=asc&size=1", headers=admin_headers()
+            f"{USERS_URL}?sort_by=imports_total&sort_order=asc&size=1",
+            headers=STANDALONE_ADMIN_HEADERS,
         )
     ).json()
 
@@ -302,7 +309,7 @@ async def test_user_stats_lists_every_game_pseudo_of_a_user():
     await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO_2)
     await _push_import(account.id, VisionImportStatus.CONFIRMED)
 
-    body = (await execute_get_request(USERS_URL, headers=admin_headers())).json()
+    body = (await execute_get_request(USERS_URL, headers=STANDALONE_ADMIN_HEADERS)).json()
 
     assert sorted(body["items"][0]["game_pseudos"]) == sorted([GAME_PSEUDO, GAME_PSEUDO_2])
     # The extra account must not double the import count.
@@ -321,7 +328,7 @@ async def test_imports_log_returns_newest_first_with_author():
     )
     newest = await _push_import(account.id, VisionImportStatus.CANCELLED)
 
-    body = (await execute_get_request(IMPORTS_URL, headers=admin_headers())).json()
+    body = (await execute_get_request(IMPORTS_URL, headers=STANDALONE_ADMIN_HEADERS)).json()
 
     assert body["total"] == 2
     assert body["items"][0]["id"] == str(newest.id)
@@ -338,7 +345,7 @@ async def test_imports_log_rolls_up_failed_jobs_and_predictions():
     await _push_job(vision_import, predictions=4)
     await _push_job(vision_import, status=VisionJobStatus.FAILED, error="blurry")
 
-    body = (await execute_get_request(IMPORTS_URL, headers=admin_headers())).json()
+    body = (await execute_get_request(IMPORTS_URL, headers=STANDALONE_ADMIN_HEADERS)).json()
 
     assert body["items"][0]["jobs_failed"] == 1
     assert body["items"][0]["predictions_total"] == 4
@@ -349,10 +356,14 @@ async def test_imports_log_filters_by_status_and_user():
     await _two_users_with_imports()
 
     cancelled = (
-        await execute_get_request(f"{IMPORTS_URL}?status=cancelled", headers=admin_headers())
+        await execute_get_request(
+            f"{IMPORTS_URL}?status=cancelled", headers=STANDALONE_ADMIN_HEADERS
+        )
     ).json()
     by_user = (
-        await execute_get_request(f"{IMPORTS_URL}?user_id={USER2_ID}", headers=admin_headers())
+        await execute_get_request(
+            f"{IMPORTS_URL}?user_id={USER2_ID}", headers=STANDALONE_ADMIN_HEADERS
+        )
     ).json()
 
     assert cancelled["total"] == 1
@@ -366,8 +377,8 @@ async def test_days_query_is_bounded():
     await push_one_user()
 
     assert (
-        await execute_get_request(f"{STATS_URL}?days=400", headers=admin_headers())
+        await execute_get_request(f"{STATS_URL}?days=400", headers=STANDALONE_ADMIN_HEADERS)
     ).status_code == 422
     assert (
-        await execute_get_request(f"{STATS_URL}?days=-1", headers=admin_headers())
+        await execute_get_request(f"{STATS_URL}?days=-1", headers=STANDALONE_ADMIN_HEADERS)
     ).status_code == 422

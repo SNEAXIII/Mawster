@@ -704,20 +704,19 @@ class TestBigThingFormat:
         headers_owner = create_auth_headers(user_id=str(USER_ID))
         headers_member = create_auth_headers(user_id=str(USER2_ID))
         await push_standalone_admin()
-        admin_headers = STANDALONE_ADMIN_HEADERS
 
         # Activate a big_thing season
         create_resp = await execute_post_request(
             "/admin/seasons",
             payload={"number": 99, "format": "big_thing"},
-            headers=admin_headers,
+            headers=STANDALONE_ADMIN_HEADERS,
         )
         assert create_resp.status_code == 201
         season_id = create_resp.json()["id"]
         activate_resp = await execute_patch_request(
             f"/admin/seasons/{season_id}/open",
             payload={},
-            headers=admin_headers,
+            headers=STANDALONE_ADMIN_HEADERS,
         )
         assert activate_resp.status_code == 200
 

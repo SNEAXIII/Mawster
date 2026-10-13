@@ -1010,11 +1010,10 @@ class TestAdminSnapshotEndpoints:
         await session.commit()
 
         await push_standalone_admin()
-        admin_headers = STANDALONE_ADMIN_HEADERS
         response = await execute_post_request(
             "/admin/wars/force-snapshot",
             payload={},
-            headers=admin_headers,
+            headers=STANDALONE_ADMIN_HEADERS,
         )
         assert response.status_code == 200
         body = response.json()
@@ -1033,11 +1032,10 @@ class TestAdminSnapshotEndpoints:
         await _end_war(data["alliance"].id, data["war"].id, headers=owner_headers)
 
         await push_standalone_admin()
-        admin_headers = STANDALONE_ADMIN_HEADERS
         response = await execute_post_request(
             "/admin/wars/force-snapshot",
             payload={},
-            headers=admin_headers,
+            headers=STANDALONE_ADMIN_HEADERS,
         )
         assert response.status_code == 200
         body = response.json()
@@ -1052,8 +1050,9 @@ class TestAdminSnapshotEndpoints:
         await _end_war(data["alliance"].id, data["war"].id, headers=owner_headers)
 
         await push_standalone_admin()
-        admin_headers = STANDALONE_ADMIN_HEADERS
-        response = await execute_get_request("/admin/wars/snapshot-stats", headers=admin_headers)
+        response = await execute_get_request(
+            "/admin/wars/snapshot-stats", headers=STANDALONE_ADMIN_HEADERS
+        )
         assert response.status_code == 200
         body = response.json()
         assert len(body) == 1

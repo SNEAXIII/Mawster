@@ -31,7 +31,6 @@ from tests.utils.utils_db import get_test_session
 app.dependency_overrides[get_session] = get_test_session
 
 USER_HEADERS = create_auth_headers()
-ADMIN_HEADERS = STANDALONE_ADMIN_HEADERS
 
 SEASONS_URL = "/admin/seasons"
 CHAMPION_USERS_ROUTE = "/champion-users"
@@ -44,7 +43,7 @@ async def test_roster_reflects_current_season_saga():
     acc = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     champ = await push_champion("Hercules", "Cosmic")
 
-    season_resp = await execute_post_request(SEASONS_URL, {"number": 900}, ADMIN_HEADERS)
+    season_resp = await execute_post_request(SEASONS_URL, {"number": 900}, STANDALONE_ADMIN_HEADERS)
     assert season_resp.status_code == 201
     season_id = season_resp.json()["id"]
 
@@ -53,7 +52,7 @@ async def test_roster_reflects_current_season_saga():
     saga_resp = await execute_put_request(
         f"{SEASONS_URL}/{season_id}/saga/{champ.id}",
         {"is_saga_attacker": True, "is_saga_defender": False},
-        ADMIN_HEADERS,
+        STANDALONE_ADMIN_HEADERS,
     )
     assert saga_resp.status_code == 200
 
