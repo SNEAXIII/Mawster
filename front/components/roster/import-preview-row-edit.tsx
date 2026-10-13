@@ -81,7 +81,7 @@ function rowStateClass(ignored: boolean, invalid: boolean): string {
 
 const STATUS_CLASSES: Record<RowStatus, string> = {
   new: 'bg-green-600 text-white border-transparent',
-  updated: 'bg-blue-600 text-white border-transparent',
+  updated: 'bg-info text-info-foreground border-transparent',
   unchanged: 'bg-transparent text-muted-foreground border-border italic',
 }
 

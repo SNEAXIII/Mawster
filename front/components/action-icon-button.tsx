@@ -7,7 +7,7 @@ const VARIANT_CLASSES = {
   default: '',
   danger: 'text-red-500 hover:text-red-700',
   success: 'text-green-600 hover:text-green-800',
-  info: 'text-blue-500 hover:text-blue-700',
+  info: 'text-info hover:text-info/80',
 } as const
 
 type ActionIconButtonProps = Readonly<{

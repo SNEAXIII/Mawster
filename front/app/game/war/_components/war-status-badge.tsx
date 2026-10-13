@@ -19,7 +19,7 @@ export default function WarStatusBadge({ status }: Readonly<{ status: War['statu
   }
   return (
     <Badge
-      className='bg-blue-600 text-white hover:bg-blue-600'
+      className='bg-info text-info-foreground hover:bg-info'
       data-cy='war-status-active'
     >
       {t.game.war.statusActive}

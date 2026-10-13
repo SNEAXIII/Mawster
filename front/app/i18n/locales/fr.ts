@@ -56,6 +56,7 @@ const fr: Translations = {
     settings: 'Paramètres',
     language: 'Langue',
     theme: 'Thème',
+    look: 'Apparence',
     signIn: 'Se connecter',
     signOut: 'Se déconnecter',
     collapseSidebar: 'Réduire',
@@ -110,6 +111,9 @@ const fr: Translations = {
       "Aucun écran d'administration n'expose vos rosters, vos guerres ni vos plans : ils restent dans votre alliance. Une seule exception, et elle est assumée — une note signalée est lue par un modérateur, avec son historique d'édition.",
 
     featNew: 'Nouveau',
+    featScanTitle: 'Import IA du roster',
+    featScanDesc:
+      'Envoyez des captures de vos champions et Mawster les lit pour remplir votre roster automatiquement — fini la saisie manuelle.',
     featNotesTitle: 'Notes sur les plans, avec modération',
     featNotesDesc:
       "Ajoute des notes directement sur les plans de guerre d'alliance, avec un système de modération pour que les officiers gardent le tableau propre et pertinent.",
@@ -183,13 +187,9 @@ const fr: Translations = {
     soonEyebrow: 'Roadmap',
     soonTitle: 'Roadmap',
     soonBadge: 'Bientôt',
-    inDevBadge: 'En développement',
     soonBotTitle: 'Bot Discord',
     soonBotDesc:
       'Pilotez Mawster directement depuis Discord — consultez les placements, publiez les plans de guerre et pinguez vos battlegroups sans quitter le serveur.',
-    soonScanTitle: 'Import du roster par capture d’écran',
-    soonScanDesc:
-      'Envoyez une capture de vos champions et laissez Mawster la lire pour remplir votre roster automatiquement — fini la saisie manuelle.',
 
     openSourceEyebrow: 'Open source',
     openSourceTitle: 'Contribue avec la communauté',
@@ -1312,8 +1312,6 @@ const fr: Translations = {
         marginUncertain: 'Incertain',
         marginClear: 'Net',
         marginCorrected: 'Corrigé',
-        betaBadge: 'Bêta',
-        betaNotice: 'L’import IA est en bêta — écrivez-nous pour toute aide ou remarque :',
         pickChampionTitle: 'Autres candidats',
         pickChampionSearch: 'Rechercher un champion…',
         pickChampionEmpty: 'Aucun champion trouvé.',

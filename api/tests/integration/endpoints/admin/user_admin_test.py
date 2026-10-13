@@ -9,9 +9,12 @@ from src.enums.Roles import Roles
 from src.models.Base import utcnow
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.user_setup import (
+    get_admin,
     get_generic_user,
+    get_user,
     push_one_admin,
     push_one_super_admin,
+    push_one_user,
 )
 from tests.utils.utils_client import (
     create_auth_headers,
@@ -97,8 +100,28 @@ class TestAdminUsersAccessControl:
         ids=[name for _, _, _, name in _ADMIN_USER_ROUTES],
     )
     async def test_non_admin_returns_403(self, session, method, url, payload):
+        await push_one_user()
         response = await execute_request(method, url, payload, headers=USER_HEADERS)
         assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("db_user", "headers", "method", "url", "expected_status"),
+        [
+            (get_user(), ADMIN_HEADERS, "GET", ADMIN_USERS_URL, 403),
+            (get_admin(), SUPER_ADMIN_HEADERS, "PATCH", f"/admin/users/demote/{_FAKE_ID}", 403),
+            # A route guarded by require_admin alone, so the guard itself must reject them.
+            (get_admin(disabled_at=utcnow()), ADMIN_HEADERS, "GET", "/admin/vision/stats", 401),
+            (get_admin(deleted_at=utcnow()), ADMIN_HEADERS, "GET", "/admin/vision/stats", 401),
+        ],
+        ids=["demoted_admin", "demoted_super_admin", "disabled_admin", "deleted_admin"],
+    )
+    async def test_role_and_validity_come_from_db_not_token(
+        self, session, db_user, headers, method, url, expected_status
+    ):
+        await load_objects([db_user])
+        response = await execute_request(method, url, {}, headers=headers)
+        assert response.status_code == expected_status
 
 
 # =========================================================================

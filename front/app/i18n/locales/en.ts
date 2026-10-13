@@ -55,6 +55,7 @@ const en = {
     settings: 'Settings',
     language: 'Language',
     theme: 'Theme',
+    look: 'Look',
     signOut: 'Sign out',
     collapseSidebar: 'Collapse',
     expandSidebar: 'Expand',
@@ -108,6 +109,9 @@ const en = {
       'No admin screen exposes your rosters, wars or plans — they stay inside your alliance. One exception, stated up front: a reported note is read by a moderator, along with its edit history.',
 
     featNew: 'New',
+    featScanTitle: 'AI roster import',
+    featScanDesc:
+      'Drop screenshots of your champions and Mawster reads them to fill your roster automatically — no more manual entry.',
     featNotesTitle: 'Plan notes with moderation',
     featNotesDesc:
       'Drop notes straight onto alliance-war plans, with a moderation system so officers keep the board clean and on-topic.',
@@ -181,13 +185,9 @@ const en = {
     soonEyebrow: 'Roadmap',
     soonTitle: 'Roadmap',
     soonBadge: 'Soon',
-    inDevBadge: 'In development',
     soonBotTitle: 'Discord bot',
     soonBotDesc:
       'Run Mawster straight from Discord — check placements, post war plans and ping your battlegroups without leaving the server.',
-    soonScanTitle: 'Screenshot roster import',
-    soonScanDesc:
-      'Drop a screenshot of your champions and let Mawster read it to fill your roster automatically — no more manual entry.',
 
     openSourceEyebrow: 'Open source',
     openSourceTitle: 'Contribute with the community',
@@ -1299,8 +1299,6 @@ const en = {
         marginUncertain: 'Uncertain',
         marginClear: 'Clear match',
         marginCorrected: 'Corrected',
-        betaBadge: 'Beta',
-        betaNotice: 'AI import is in beta — reach out for help or feedback:',
         pickChampionTitle: 'Other candidates',
         pickChampionSearch: 'Search a champion…',
         pickChampionEmpty: 'No champion found.',

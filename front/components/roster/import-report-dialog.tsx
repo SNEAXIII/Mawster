@@ -48,7 +48,7 @@ const ROW_BACKGROUND: Record<ImportRowState, string> = {
   added: 'bg-green-50 dark:bg-green-950/30',
   skipped: '',
   ignored: '',
-  updated: 'bg-blue-50 dark:bg-blue-950/30',
+  updated: 'bg-info/10',
 }
 
 function rowState(result: ImportResult): ImportRowState {
@@ -105,7 +105,7 @@ export default function ImportReportDialog({
               </span>
             )}
             {updatedCount > 0 && (
-              <span className='inline-flex items-center gap-1 text-blue-600 font-medium'>
+              <span className='inline-flex items-center gap-1 text-info font-medium'>
                 <Check className='h-3.5 w-3.5' /> {updatedCount}{' '}
                 {t.roster.importExport.badgeUpdated.toLowerCase()}
               </span>
@@ -204,7 +204,7 @@ export default function ImportReportDialog({
                   )}
                   {state === 'updated' && (
                     <div className='space-y-0.5'>
-                      <span className='inline-flex items-center gap-1 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5'>
+                      <span className='inline-flex items-center gap-1 bg-info text-info-foreground text-[10px] font-bold px-2 py-0.5 rounded-full mb-0.5'>
                         {t.roster.importExport.badgeUpdated}
                       </span>
                       {hasRarityChange && (
@@ -212,8 +212,8 @@ export default function ImportReportDialog({
                           <span className='text-gray-400'>
                             {RARITY_LABELS[result.oldRarity!] ?? result.oldRarity}
                           </span>
-                          <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
-                          <span className='text-blue-600 font-semibold'>
+                          <ArrowRight className='text-info h-2.5 w-2.5' />
+                          <span className='text-info font-semibold'>
                             {RARITY_LABELS[result.newRarity] ?? result.newRarity}
                           </span>
                         </div>
@@ -226,10 +226,8 @@ export default function ImportReportDialog({
                       {hasSigChange && (
                         <div className='flex items-center gap-1 justify-end'>
                           <span className='text-gray-400'>sig {result.oldSignature}</span>
-                          <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
-                          <span className='text-blue-600 font-semibold'>
-                            sig {result.newSignature}
-                          </span>
+                          <ArrowRight className='text-info h-2.5 w-2.5' />
+                          <span className='text-info font-semibold'>sig {result.newSignature}</span>
                         </div>
                       )}
                       {hasAscChange && (
@@ -237,8 +235,8 @@ export default function ImportReportDialog({
                           <span className='text-gray-400'>
                             {ascLabel} {result.oldAscension}
                           </span>
-                          <ArrowRight className='text-blue-500 h-2.5 w-2.5' />
-                          <span className='text-blue-600 font-semibold'>
+                          <ArrowRight className='text-info h-2.5 w-2.5' />
+                          <span className='text-info font-semibold'>
                             {ascLabel} {result.newAscension}
                           </span>
                         </div>

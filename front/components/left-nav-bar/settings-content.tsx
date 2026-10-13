@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import LanguageSwitcher from '@/components/language-switcher'
 import ThemePicker from '@/components/theme-picker'
+import LookPicker from '@/components/look-picker'
 import { useI18n } from '@/app/i18n'
 import { signOutAndRedirect } from '@/app/lib/sign-out'
 
@@ -25,6 +26,11 @@ export default function SettingsContent({ isAuthenticated }: Readonly<SettingsCo
       <div className='flex items-center justify-between'>
         <span className='text-sm font-medium'>{t.nav.theme}</span>
         <ThemePicker />
+      </div>
+      <Separator />
+      <div className='flex items-center justify-between'>
+        <span className='text-sm font-medium'>{t.nav.look}</span>
+        <LookPicker />
       </div>
       {isAuthenticated && (
         <>

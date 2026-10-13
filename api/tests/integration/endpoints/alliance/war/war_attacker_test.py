@@ -18,6 +18,10 @@ from tests.integration.endpoints.setup.game_setup import (
     push_champion,
     push_champion_user,
 )
+from tests.integration.endpoints.setup.user_setup import (
+    STANDALONE_ADMIN_HEADERS,
+    push_standalone_admin,
+)
 from tests.integration.endpoints.setup.war_setup import (
     USER3_ID,
     _setup_alliance,
@@ -694,26 +698,25 @@ class TestBigThingFormat:
     async def test_big_thing_attacker_cap_is_2(self):
         """Member can assign 2 attackers; the 3rd returns 409."""
         # Setup: alliance + war + defenders (big_thing has nodes 1-10)
-        # _setup_alliance loads the owner user (USER_ID); admin headers use JWT role override.
         data = await _setup_alliance()
         alliance = data["alliance"]
         member = data["member"]
         headers_owner = create_auth_headers(user_id=str(USER_ID))
         headers_member = create_auth_headers(user_id=str(USER2_ID))
-        admin_headers = create_auth_headers(user_id=str(USER_ID), role=Roles.ADMIN)
+        await push_standalone_admin()
 
         # Activate a big_thing season
         create_resp = await execute_post_request(
             "/admin/seasons",
             payload={"number": 99, "format": "big_thing"},
-            headers=admin_headers,
+            headers=STANDALONE_ADMIN_HEADERS,
         )
         assert create_resp.status_code == 201
         season_id = create_resp.json()["id"]
         activate_resp = await execute_patch_request(
             f"/admin/seasons/{season_id}/open",
             payload={},
-            headers=admin_headers,
+            headers=STANDALONE_ADMIN_HEADERS,
         )
         assert activate_resp.status_code == 200
 

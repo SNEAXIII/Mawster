@@ -5,7 +5,6 @@ import ImportPreviewDialog from '@/components/roster/import-preview-dialog'
 import ImportReportDialog from '@/components/roster/import-report-dialog'
 import RosterImportButtons from '@/components/roster/roster-import-buttons'
 import VisionImportSection from '@/components/roster/vision-import-section'
-import VisionBetaNotice from '@/components/roster/vision-beta-notice'
 import { useRosterImportExport } from './use-roster-import-export'
 import { useVisionImportSection } from './use-vision-import-section'
 
@@ -66,7 +65,6 @@ export default function RosterImportExport({
           onExport={handleExport}
           onImportJson={() => fileInputRef.current?.click()}
         />
-        <VisionBetaNotice />
       </div>
 
       <ImportPreviewDialog
