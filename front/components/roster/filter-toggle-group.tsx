@@ -33,7 +33,7 @@ export default function FilterToggleGroup<T extends string | number>({
             variant='outline'
             size='sm'
             data-cy={`${cyPrefix}-${o}`}
-            className={cn('h-8 text-xs', active && 'bg-primary/10 border-primary text-primary')}
+            className={cn(active && 'bg-primary/10 border-primary text-primary')}
             onClick={() => toggle(o)}
           >
             {labelFor(o)}

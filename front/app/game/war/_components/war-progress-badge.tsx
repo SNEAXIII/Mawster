@@ -19,7 +19,7 @@ export default function WarProgressBadge() {
 
   return (
     <div
-      className='flex flex-col leading-tight'
+      className='flex flex-col items-center leading-tight'
       data-cy='war-progress'
     >
       <div className='flex items-center gap-1'>
@@ -50,7 +50,7 @@ export default function WarProgressBadge() {
           return (
             <span
               key={bg.battlegroup}
-              className={cn('text-[10px]', bgDone ? 'text-green-500' : 'text-muted-foreground')}
+              className={cn('text-xs', bgDone ? 'text-green-500' : 'text-muted-foreground')}
               data-cy={`war-progress-bg-${bg.battlegroup}`}
             >
               {t.game.war.progressBg.replace('{bg}', String(bg.battlegroup))} {bg.completed}/

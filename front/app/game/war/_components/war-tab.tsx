@@ -2,20 +2,13 @@
 
 import dynamic from 'next/dynamic'
 import { useState, useEffect, useRef } from 'react'
-import { Button } from '@/components/ui/button'
-import { ToggleButton, ToggleGroup } from '@/components/toggle-button'
-import { Shield, Swords, Trash2, Pencil, Camera, Link2 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { useI18n } from '@/app/i18n'
-import { toast } from 'sonner'
 import { FullPageSpinner } from '@/components/full-page-spinner'
-import ChampionPortrait from '@/components/champion-portrait'
 import { WarMode } from './war-types'
 import { useWar } from '@/app/contexts/war-context'
 import { useCurrentSeason } from '@/hooks/use-current-season'
-import SeasonBanner from './season-banner'
-import WarStatusBadge from './war-status-badge'
-import WarProgressBadge from './war-progress-badge'
+import WarOverview from './war-overview'
 import ExportHeader from '@/app/game/_components/export-header'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import { downloadElementAsPng } from '@/app/lib/export-image'
@@ -35,8 +28,6 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
   const {
     currentWar,
     selectedBg,
-    handleBgChange,
-    canManageWar,
     canPlaceWar,
     isWarClosed,
     warMode,
@@ -46,8 +37,6 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
     prefights,
     handleNodeClick,
     handleRemoveDefender,
-    setShowClearConfirm,
-    setShowEndConfirm,
     alliances,
     selectedAllianceId,
   } = useWar()
@@ -89,12 +78,6 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
   const handleExportMap = () => exportImage('map')
   const handleExportList = () => exportImage('attackers')
 
-  const handleCopyShareLink = async () => {
-    const url = `${window.location.origin}/game/war?alliance=${selectedAllianceId}&bg=${selectedBg}`
-    await navigator.clipboard.writeText(url)
-    toast.success(t.game.war.shareLinkCopied)
-  }
-
   useEffect(() => {
     setPlayerFilter('')
     setCombatFilter('todo')
@@ -126,184 +109,12 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
   return (
     <ExportModeProvider value={exporting}>
       <div className='flex flex-col gap-4'>
-        {/* Controls row: opponent name + BG picker + mode toggle + clear */}
-        <div className='flex flex-wrap items-center gap-3'>
-          {currentWar && <WarStatusBadge status={currentWar.status} />}
-          <SeasonBanner season={currentWar ? currentSeason : undefined} />
-
-          {/* ELO badge — read-only, edit from the alliances page */}
-          {selectedAlliance && (
-            <div
-              className='flex items-center gap-1'
-              data-cy='war-elo-badge'
-            >
-              <span className='text-xs font-medium text-muted-foreground'>{t.game.war.elo}:</span>
-              <span
-                className='text-xs font-bold'
-                data-cy='war-elo-value'
-              >
-                {selectedAlliance.elo}
-              </span>
-            </div>
-          )}
-
-          {/* Tier badge — read-only, edit from the alliances page */}
-          {selectedAlliance && (
-            <div
-              className='flex items-center gap-1'
-              data-cy='war-tier-badge'
-            >
-              <span className='text-xs font-medium text-muted-foreground'>{t.game.war.tier}:</span>
-              <span
-                className='text-xs font-bold'
-                data-cy='war-tier-value'
-              >
-                {selectedAlliance.tier}
-              </span>
-            </div>
-          )}
-
-          {/* Live fight / KO counter for the whole war */}
-          {currentWar && <WarProgressBadge />}
-
-          {/* Opponent name */}
-          {currentWar && (
-            <div className='flex items-center gap-2'>
-              <Swords className='size-4 text-muted-foreground' />
-              <span
-                data-cy='war-opponent-name'
-                className='text-sm font-semibold'
-              >
-                vs {currentWar.opponent_name}
-              </span>
-            </div>
-          )}
-
-          {/* BG button group */}
-          <ToggleGroup dataCy='bg-picker'>
-            {[1, 2, 3].map((bg) => (
-              <ToggleButton
-                key={bg}
-                active={selectedBg === bg}
-                onClick={() => handleBgChange(bg)}
-                dataCy={`bg-btn-${bg}`}
-              >
-                G{bg}
-              </ToggleButton>
-            ))}
-          </ToggleGroup>
-
-          {/* Mode toggle — visible to officers and strategists */}
-          {canPlaceWar && (
-            <ToggleGroup dataCy='war-mode-toggle'>
-              <ToggleButton
-                active={warMode === WarMode.Attackers}
-                onClick={() => setWarMode(WarMode.Attackers)}
-                dataCy='war-mode-attackers'
-              >
-                <Swords className='size-3.5' />
-                {t.game.war.modeAttackers}
-              </ToggleButton>
-              <ToggleButton
-                active={warMode === WarMode.Defenders}
-                onClick={() => setWarMode(WarMode.Defenders)}
-                dataCy='war-mode-defenders'
-              >
-                <Shield className='size-3.5' />
-                {t.game.war.modeDefenders}
-              </ToggleButton>
-            </ToggleGroup>
-          )}
-          {/* Clear BG button */}
-          {canPlaceWar && !isWarClosed && placements.length > 0 && (
-            <Button
-              variant='outline'
-              onClick={() => setShowClearConfirm(true)}
-              data-cy='clear-war-bg-btn'
-            >
-              <Trash2 className='size-4 mr-2' />
-              {t.game.war.clearAll}
-            </Button>
-          )}
-          {/* Share link — always available while a war is active */}
-          <Button
-            variant='outline'
-            onClick={handleCopyShareLink}
-            data-cy='share-war-link-btn'
-          >
-            <Link2 className='w-4 h-4 mr-1' />
-            {t.game.war.shareLink}
-          </Button>
-          {/* Export buttons — one image per click */}
-          {placements.length > 0 && (
-            <>
-              <Button
-                variant='outline'
-                onClick={handleExportMap}
-                disabled={exporting}
-                data-cy='export-war-map-btn'
-              >
-                <Camera className='w-4 h-4 mr-1' />
-                {exporting ? '…' : t.game.war.exportMap}
-              </Button>
-              <Button
-                variant='outline'
-                onClick={handleExportList}
-                disabled={exporting}
-                data-cy='export-war-list-btn'
-              >
-                <Camera className='w-4 h-4 mr-1' />
-                {exporting ? '…' : t.game.war.exportList}
-              </Button>
-            </>
-          )}
-          {/* Banned champions */}
-          <div className='flex items-center gap-2 flex-wrap'>
-            <span className='text-sm shrink-0'>{t.game.war.bans.label}:</span>
-            {!currentWar || currentWar.banned_champions.length === 0 ? (
-              <span className='text-sm'>{t.game.war.bans.none}</span>
-            ) : (
-              currentWar.banned_champions.map((c) => (
-                <div
-                  key={c.id}
-                  title={c.name}
-                  data-cy={`ban-display-${c.id}`}
-                  className='flex flex-col items-center gap-0.5'
-                >
-                  <ChampionPortrait
-                    imageUrl={c.image_url}
-                    name={c.name}
-                    rarity={'7r6'}
-                    size={45}
-                    is_saga_attacker={c.is_saga_attacker}
-                    is_saga_defender={c.is_saga_defender}
-                    sagaMode='attacker'
-                  />
-                </div>
-              ))
-            )}
-            {canManageWar && !isWarClosed && (
-              <Button
-                variant='outline'
-                onClick={onEditClick}
-                data-cy='edit-war-btn'
-              >
-                <Pencil className='size-4 mr-2' /> {t.game.war.editWar}
-              </Button>
-            )}
-          </div>
-          {/* End war button */}
-          {canManageWar && !isWarClosed && (
-            <Button
-              variant='destructive'
-              onClick={() => setShowEndConfirm(true)}
-              className='ml-auto'
-              data-cy='end-war-btn'
-            >
-              {t.game.war.endWar}
-            </Button>
-          )}
-        </div>
+        <WarOverview
+          onEditClick={onEditClick}
+          onExportMap={handleExportMap}
+          onExportList={handleExportList}
+          exporting={exporting}
+        />
 
         {warLoading ? (
           <FullPageSpinner />

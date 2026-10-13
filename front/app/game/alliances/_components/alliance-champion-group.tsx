@@ -108,7 +108,7 @@ export default function AllianceChampionGroup({
                 type='button'
                 variant='ghost'
                 size='sm'
-                className='h-7 px-1'
+                className='px-1'
                 data-cy='champion-owner-upgrade'
                 onClick={() => onRequestUpgrade(e)}
                 title={t.game.alliances.requestUpgrade}

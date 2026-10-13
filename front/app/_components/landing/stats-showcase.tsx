@@ -66,7 +66,7 @@ export function StatsShowcase() {
         <div className='mt-10 flex flex-col gap-6 select-none'>
           <Card>
             <CardHeader className='pb-2'>
-              <CardTitle className='text-sm'>{s.rankingTitle}</CardTitle>
+              <CardTitle>{s.rankingTitle}</CardTitle>
             </CardHeader>
             <CardContent>
               <AllianceRankingChart
@@ -78,7 +78,7 @@ export function StatsShowcase() {
 
           <div className='flex flex-col gap-6 lg:flex-row'>
             <Card className='flex-1 min-w-0'>
-              <CardContent className='overflow-x-auto pt-6'>
+              <CardContent className='overflow-x-auto pt-4'>
                 <AllianceStatsTable
                   rows={sortedRows}
                   sortField={sortField}
@@ -93,7 +93,7 @@ export function StatsShowcase() {
             <div className='w-full shrink-0 lg:w-80'>
               <Card>
                 <CardHeader className='pb-2'>
-                  <CardTitle className='text-sm'>{t.game.alliances.statistics.title}</CardTitle>
+                  <CardTitle>{t.game.alliances.statistics.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <MemberChampionChart

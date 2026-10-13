@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Shield } from 'lucide-react'
+import { PageTitle } from '@/components/page-title'
 import { useI18n } from '@/app/i18n'
 
 function getInitials(name: string | undefined | null): string {
@@ -25,7 +26,7 @@ export function ProfileHeader({
 
   return (
     <Card>
-      <CardContent className='pt-6'>
+      <CardContent className='pt-4'>
         <div className='flex flex-col sm:flex-row items-center gap-4 sm:gap-6'>
           <Avatar className='size-20 sm:size-24 ring-2 ring-offset-2 ring-primary/20'>
             <AvatarFallback className='text-xl sm:text-2xl font-bold bg-primary/10 text-primary'>
@@ -33,7 +34,7 @@ export function ProfileHeader({
             </AvatarFallback>
           </Avatar>
           <div className='text-center sm:text-left flex flex-col gap-1.5'>
-            <h1 className='text-xl sm:text-2xl font-bold'>{name ?? t.profile.user}</h1>
+            <PageTitle>{name ?? t.profile.user}</PageTitle>
             <Badge
               variant='secondary'
               className='gap-1'

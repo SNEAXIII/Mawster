@@ -80,7 +80,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
               <div>
                 <Button
                   variant='ghost'
-                  className='h-8 w-8 p-0'
+                  size='icon'
                   disabled={isDisabledOrAdmin}
                 >
                   <MoreHorizontal className='h-4 w-4' />
@@ -105,7 +105,7 @@ export const UserActions: React.FC<UserActionsProps> = ({
             <DropdownMenuTrigger asChild>
               <Button
                 variant='ghost'
-                className='h-8 w-8 p-0'
+                size='icon'
                 disabled={isDeleted}
               >
                 <MoreHorizontal className='h-4 w-4' />

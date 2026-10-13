@@ -281,7 +281,7 @@ export default function ImportPreviewRowEdit({
           <Button
             variant='outline'
             size='sm'
-            className='h-6 shrink-0 px-2 text-[11px]'
+            className='shrink-0'
             onClick={() => emit({ ignored: true })}
             data-cy={`preview-row-ignore-button-${index}`}
           >
@@ -296,7 +296,7 @@ export default function ImportPreviewRowEdit({
           <Button
             variant='outline'
             size='sm'
-            className='h-6 shrink-0 px-2 text-[11px]'
+            className='shrink-0'
             onClick={() => emit({ ignored: false })}
             data-cy={`preview-row-restore-button-${index}`}
           >

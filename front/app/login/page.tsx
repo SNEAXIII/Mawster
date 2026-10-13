@@ -140,7 +140,7 @@ function LoginPageContent() {
           <CardTitle className='text-2xl font-bold text-center'>{t.login.title}</CardTitle>
           <p className='text-sm text-center text-muted-foreground'>{t.login.subtitle}</p>
         </CardHeader>
-        <CardContent className='px-4 sm:px-6 py-4'>
+        <CardContent>
           <div className='flex flex-col gap-4'>
             {error && (
               <Alert variant='destructive'>
@@ -152,7 +152,8 @@ function LoginPageContent() {
 
             <Button
               type='button'
-              className='w-full flex items-center justify-center gap-2 h-12 text-base'
+              size='lg'
+              className='w-full text-base'
               onClick={handleDiscordLogin}
               disabled={isLoading}
               data-cy='discord-login-btn'
@@ -170,7 +171,8 @@ function LoginPageContent() {
             <Button
               type='button'
               variant='outline'
-              className='w-full flex items-center justify-center gap-2 h-12 text-base'
+              size='lg'
+              className='w-full text-base'
               onClick={handleGoogleLogin}
               disabled={isLoading}
               data-cy='google-login-btn'

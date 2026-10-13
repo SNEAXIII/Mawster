@@ -25,10 +25,11 @@ function RegisterPageContent() {
           <CardTitle className='text-2xl font-bold text-center'>{t.register.title}</CardTitle>
           <p className='text-sm text-center text-muted-foreground'>{t.register.subtitle}</p>
         </CardHeader>
-        <CardContent className='px-4 sm:px-6 py-4'>
+        <CardContent>
           <Button
             type='button'
-            className='w-full flex items-center justify-center gap-2 h-12 text-base'
+            size='lg'
+            className='w-full text-base'
             onClick={() => signIn('discord', { callbackUrl })}
           >
             <svg

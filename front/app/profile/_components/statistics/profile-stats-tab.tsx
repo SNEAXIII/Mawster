@@ -76,7 +76,7 @@ export function ProfileStatsTab() {
             <div className='w-full lg:w-80 shrink-0'>
               <Card>
                 <CardHeader className='pb-2'>
-                  <CardTitle className='text-sm'>{s.title}</CardTitle>
+                  <CardTitle>{s.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <MemberChampionChart

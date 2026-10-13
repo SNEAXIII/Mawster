@@ -39,7 +39,8 @@ export default function InviteMemberCombo({
           variant='outline'
           role='combobox'
           aria-expanded={open}
-          className='w-full sm:w-48 h-8 text-xs justify-between font-normal'
+          size='sm'
+          className='w-full sm:w-48 justify-between font-normal'
           data-cy='invite-member-select'
         >
           {memberAccountId

@@ -67,7 +67,7 @@ export default function VisionStatsImports({
   return (
     <Card data-cy='vision-imports-panel'>
       <CardHeader className='flex flex-row flex-wrap items-center justify-between gap-2 pb-2'>
-        <CardTitle className='text-base'>{s.importsTitle}</CardTitle>
+        <CardTitle>{s.importsTitle}</CardTitle>
         <div className='flex flex-wrap items-center gap-2'>
           {userFilter && (
             <Button

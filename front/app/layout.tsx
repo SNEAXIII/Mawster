@@ -84,7 +84,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 without it they escape to the document and add a second scrollbar. */}
             <div className='flex min-w-0 grow flex-col md:relative md:overflow-y-auto'>
               <MobileNav />
-              <div className='grow p-3'>
+              <div className='grow p-3 sm:p-6'>
                 <MyModerationProvider>{children}</MyModerationProvider>
               </div>
             </div>

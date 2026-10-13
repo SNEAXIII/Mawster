@@ -20,7 +20,7 @@ export default function VisionStatsErrors({ errors }: Readonly<VisionStatsErrors
   return (
     <Card data-cy='vision-errors-panel'>
       <CardHeader className='pb-2'>
-        <CardTitle className='text-base'>{s.errorsTitle}</CardTitle>
+        <CardTitle>{s.errorsTitle}</CardTitle>
       </CardHeader>
       <CardContent>
         {errors.length === 0 ? (

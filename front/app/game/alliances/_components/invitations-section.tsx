@@ -21,7 +21,7 @@ export default function InvitationsSection({
 
   return (
     <Card data-cy='my-invitations-section'>
-      <CardContent className='py-3 sm:py-4 px-3 sm:px-6 flex flex-col gap-3'>
+      <CardContent className='p-3 sm:p-4 flex flex-col gap-3'>
         <div className='flex items-center gap-2'>
           <Mail className='size-5 text-primary' />
           <h2 className='text-sm font-medium text-muted-foreground'>

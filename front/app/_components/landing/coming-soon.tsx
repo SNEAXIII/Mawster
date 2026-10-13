@@ -41,7 +41,7 @@ export function ComingSoon() {
                 key={feature.title}
                 className='border-dashed bg-muted/20'
               >
-                <CardContent className='pt-6'>
+                <CardContent className='pt-4'>
                   <div className='flex items-center justify-between'>
                     <span className='flex h-11 w-11 items-center justify-center rounded-lg bg-muted text-muted-foreground'>
                       <Icon className='h-5 w-5' />

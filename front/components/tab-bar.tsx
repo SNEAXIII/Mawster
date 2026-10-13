@@ -41,7 +41,8 @@ export default function TabBar<T extends string | number>({
             data-cy={tab.cy ?? `tab-${tab.value}`}
             className={cn(
               'inline-flex h-full shrink-0 items-center rounded-md border border-transparent px-3 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden',
-              isActive && 'border-input bg-background text-foreground shadow-sm dark:bg-input/30'
+              isActive &&
+                'border-input bg-background text-foreground shadow-sm ring-1 ring-primary/40 dark:bg-input/30'
             )}
           >
             {tab.label}

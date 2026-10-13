@@ -15,7 +15,7 @@ export function Testimonials() {
         <div className='mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
           {TESTIMONIALS.map((x) => (
             <Card key={`${x.name}-${x.alliance}`}>
-              <CardContent className='pt-6'>
+              <CardContent className='pt-4'>
                 <p className='leading-relaxed text-foreground'>
                   &ldquo;{(t.landing.testimonialQuotes as Record<string, string>)[x.quoteKey]}
                   &rdquo;

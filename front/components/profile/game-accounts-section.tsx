@@ -143,7 +143,7 @@ export default function GameAccountsSection() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className='text-lg flex items-center gap-2'>
+          <CardTitle className='flex items-center gap-2'>
             <Gamepad2 className='h-5 w-5 text-info' />
             {t.game.accounts.title}
           </CardTitle>
