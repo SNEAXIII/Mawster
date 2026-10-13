@@ -15,6 +15,7 @@ from src.dto.alliance.war.dto_war import (
     WarPrefightResponse,
     WarResponse,
     WarSynergyResponse,
+    WarUpdateRequest,
 )
 from src.models.Base import utcnow
 
@@ -129,6 +130,13 @@ class TestWarCreateRequest:
     def test_valid_underscore(self):
         dto = WarCreateRequest(opponent_name="Enemy_Alliance")
         assert dto.opponent_name == "Enemy_Alliance"
+
+
+class TestWarUpdateRequest:
+    def test_accepts_what_creation_accepts(self):
+        # A war created as "C.av" must stay editable.
+        dto = WarUpdateRequest(opponent_name="C.av")
+        assert dto.opponent_name == "C.av"
 
 
 # ─── WarResponse ──────────────────────────────────────────
