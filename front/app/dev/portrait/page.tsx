@@ -8,18 +8,7 @@ import ChampionPortrait, {
 } from '@/components/champion-portrait'
 import PortraitLabControls, { type PortraitLabState } from './_components/portrait-lab-controls'
 import { cn } from '@/app/lib/utils'
-
-// Static assets, no auth needed — served through the /static rewrite.
-const CHAMPIONS = [
-  { name: 'Thanos', imageUrl: '/static/champions/thanos.webp' },
-  { name: 'Absorbing Man', imageUrl: '/static/champions/absorbing_man.webp' },
-  { name: 'Black Panther', imageUrl: '/static/champions/black_panther.webp' },
-  { name: 'Sentinel', imageUrl: '/static/champions/sentinel.webp' },
-  { name: 'Lumatrix', imageUrl: '/static/champions/lumatrix.webp' },
-  { name: 'Groot', imageUrl: '/static/champions/groot.webp' },
-  { name: 'Hercules', imageUrl: '/static/champions/hercules.webp' },
-  { name: 'Onslaught', imageUrl: '/static/champions/onslaught.webp' },
-] as const
+import { CHAMPIONS } from '@/app/dev/_mocks'
 
 const SIZES = Array.from({ length: 14 }, (_, i) => 20 + i * 10) // 20 → 150, step 10
 
