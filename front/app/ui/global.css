@@ -203,25 +203,25 @@ input[type='number']::-webkit-outer-spin-button {
   .dark [data-look='new-a'] {
     --background: 222 47% 6%;
     --foreground: 210 40% 96%;
-    --card: 222 40% 9%;
+    --card: 222 40% 7%;
     --card-foreground: 210 40% 96%;
-    --popover: 222 40% 9%;
+    --popover: 222 40% 8%;
     --popover-foreground: 210 40% 96%;
-    --primary: 199 92% 62%;
+    --primary: 199 80% 48%;
     --primary-foreground: 222 47% 8%;
-    --secondary: 220 30% 15%;
+    --secondary: 220 30% 12%;
     --secondary-foreground: 210 40% 96%;
-    --muted: 220 30% 13%;
+    --muted: 220 30% 10%;
     --muted-foreground: 215 20% 62%;
-    --accent: 220 30% 16%;
+    --accent: 220 30% 13%;
     --accent-foreground: 210 40% 96%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
     --info: 205 90% 66%;
     --info-foreground: 222 47% 8%;
-    --border: 220 28% 17%;
-    --input: 220 28% 19%;
-    --ring: 199 92% 62%;
+    --border: 220 28% 15%;
+    --input: 220 28% 16%;
+    --ring: 199 80% 48%;
   }
 
   [data-look='new-b'] {
