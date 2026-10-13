@@ -50,7 +50,9 @@ export default function UpgradeRequestsSection({
                   size={40}
                 />
                 <div className='flex-1 min-w-0'>
-                  <p className='text-sm font-semibold text-white truncate'>{req.champion_name}</p>
+                  <p className='text-sm font-semibold text-foreground truncate'>
+                    {req.champion_name}
+                  </p>
                   <div className='flex items-center gap-2 text-xs'>
                     <span className='text-muted-foreground'>
                       {t.roster.upgradeRequests.currentRarity.replace(
