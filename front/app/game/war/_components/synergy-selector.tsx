@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import ChampionPortrait from '@/components/champion-portrait'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import type { AvailableAttacker } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
-import { cn } from '@/app/lib/utils'
-import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
+import { keepBestCopy } from './use-available-attackers'
+import InfoChampionTile from './info-champion-tile'
 
 interface SynergySelectorDialogProps {
   open: boolean
@@ -49,12 +48,14 @@ export default function SynergySelectorDialog({
       .then(setAttackers)
       .catch(() => {})
       .finally(() => setLoading(false))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [open, selectedAllianceId, activeWarId, selectedBg, targetGameAccountId])
 
   const usedSynergyIds = new Set(synergies.map((s) => s.champion_user_id))
-  const available = attackers.filter(
-    (a) => !usedSynergyIds.has(a.champion_user_id) && a.champion_user_id !== targetChampionUserId
+  const available = keepBestCopy(
+    attackers.filter(
+      (a) => !usedSynergyIds.has(a.champion_user_id) && a.champion_user_id !== targetChampionUserId
+    )
   )
   const filtered = query
     ? available.filter((a) => {
@@ -99,35 +100,16 @@ export default function SynergySelectorDialog({
           {!loading && filtered.length > 0 && (
             <div className='grid grid-cols-3 gap-2'>
               {filtered.map((a) => (
-                <button
+                <InfoChampionTile
                   key={a.champion_user_id}
-                  className='flex flex-col items-center gap-1 p-2 rounded-lg border hover:ring-2 hover:ring-primary/60 transition-all'
-                  data-cy={`synergy-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
-                  onClick={async () => {
+                  champion={a}
+                  label={a.champion_name}
+                  dataCy={`synergy-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
+                  onPick={() => {
                     onClose()
-                    await handleAddSynergy(a.champion_user_id, targetChampionUserId)
+                    void handleAddSynergy(a.champion_user_id, targetChampionUserId)
                   }}
-                >
-                  <ChampionPortrait
-                    imageUrl={a.image_url}
-                    name={a.champion_name}
-                    rarity={a.rarity}
-                    size={48}
-                    isPreferred={a.is_preferred_attacker}
-                    ascension={a.ascension}
-                    is_saga_attacker={a.is_saga_attacker}
-                    is_saga_defender={a.is_saga_defender}
-                    sagaMode='attacker'
-                  />
-                  <span className='text-[10px] text-center truncate w-full leading-tight'>
-                    {a.champion_name}
-                  </span>
-                  <span
-                    className={cn('text-[9px] font-mono leading-none', rarityBadgeClass(a.rarity))}
-                  >
-                    {rarityLabel(a.rarity, a.signature, a.ascension)}
-                  </span>
-                </button>
+                />
               ))}
             </div>
           )}

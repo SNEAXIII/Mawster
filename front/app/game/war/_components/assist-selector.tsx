@@ -3,14 +3,11 @@
 import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { SearchInput } from '@/components/search-input'
-import ChampionPortrait from '@/components/champion-portrait'
-import { cn } from '@/app/lib/utils'
 import { shortenChampionName } from '@/app/services/roster'
-import { getClassColors } from '@/app/lib/champion-class'
-import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
 import { useWar } from '@/app/contexts/war-context'
-import { useAvailableAttackers } from './use-available-attackers'
+import { useAvailableAttackers, keepBestCopy } from './use-available-attackers'
+import InfoChampionTile from './info-champion-tile'
+import InfoSelectorFilters from './info-selector-filters'
 
 interface AssistSelectorDialogProps {
   open: boolean
@@ -32,8 +29,9 @@ export default function AssistSelectorDialog({
 
   const {
     available,
-    playerSearch,
-    setPlayerSearch,
+    players,
+    playerFilter,
+    setPlayerFilter,
     championSearch,
     setChampionSearch,
     loading,
@@ -43,8 +41,10 @@ export default function AssistSelectorDialog({
   } = useAvailableAttackers(open, guardedFetch)
 
   const filtered = filterBySearch(
-    available.filter(
-      (a) => attackerGameAccountId === null || a.game_account_id !== attackerGameAccountId
+    keepBestCopy(
+      available.filter(
+        (a) => attackerGameAccountId === null || a.game_account_id !== attackerGameAccountId
+      )
     )
   )
   const groups = buildGroups(filtered)
@@ -69,46 +69,18 @@ export default function AssistSelectorDialog({
           {group.pseudo}
         </div>
         <div className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2'>
-          {group.attackers.map((a) => {
-            const classColors = getClassColors(a.champion_class)
-            return (
-              <button
-                key={a.champion_user_id}
-                className={cn(
-                  'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
-                  'hover:ring-2 hover:ring-primary/60'
-                )}
-                onClick={() => {
-                  void handleAssignAssist(nodeNumber, a.champion_user_id)
-                  onClose()
-                }}
-                data-cy={`assist-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
-              >
-                <ChampionPortrait
-                  imageUrl={a.image_url}
-                  name={a.champion_name}
-                  rarity={a.rarity}
-                  size={48}
-                  isPreferred={a.is_preferred_attacker}
-                  ascension={a.ascension}
-                  is_saga_attacker={a.is_saga_attacker}
-                  is_saga_defender={a.is_saga_defender}
-                  sagaMode='attacker'
-                />
-                <span className='text-[10px] text-center truncate w-full leading-tight'>
-                  {shortenChampionName(a.champion_name)}
-                </span>
-                <span
-                  className={cn('text-[9px] font-mono leading-none', rarityBadgeClass(a.rarity))}
-                >
-                  {rarityLabel(a.rarity, a.signature, a.ascension)}
-                </span>
-                <span className={cn('text-[9px] font-medium', classColors.label)}>
-                  {a.champion_class}
-                </span>
-              </button>
-            )
-          })}
+          {group.attackers.map((a) => (
+            <InfoChampionTile
+              key={a.champion_user_id}
+              champion={a}
+              label={shortenChampionName(a.champion_name)}
+              onPick={() => {
+                void handleAssignAssist(nodeNumber, a.champion_user_id)
+                onClose()
+              }}
+              dataCy={`assist-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
+            />
+          ))}
         </div>
       </div>
     ))
@@ -129,20 +101,14 @@ export default function AssistSelectorDialog({
           </DialogTitle>
         </DialogHeader>
         <Separator />
-        <div className='px-4 py-3 flex gap-2'>
-          <SearchInput
-            value={playerSearch}
-            onChange={setPlayerSearch}
-            placeholder={t.game.war.searchPlayer}
-            data-cy='assist-search-player'
-          />
-          <SearchInput
-            value={championSearch}
-            onChange={setChampionSearch}
-            placeholder={t.game.war.searchChampion}
-            data-cy='assist-search-champion'
-          />
-        </div>
+        <InfoSelectorFilters
+          championSearch={championSearch}
+          onChampionSearch={setChampionSearch}
+          players={players}
+          playerFilter={playerFilter}
+          onPlayerFilter={setPlayerFilter}
+          dataCyPrefix='assist'
+        />
         <Separator />
         <div className='overflow-y-auto flex-1 p-3 flex flex-col gap-4'>{content}</div>
       </DialogContent>

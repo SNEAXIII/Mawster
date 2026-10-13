@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.26.1](https://github.com/SNEAXIII/Mawster/compare/v1.26.0...v1.26.1) (2026-10-13)
+
+
+### Corrigé
+
+* player dropdown and rank-free tiles in the pre-fight, assist and synergy pickers ([8142db6](https://github.com/SNEAXIII/Mawster/commit/8142db618be508ae1754a4abb23cae2fe837a894))
+
 ## [1.26.0](https://github.com/SNEAXIII/Mawster/compare/v1.25.1...v1.26.0) (2026-10-12)
 
 

@@ -121,21 +121,24 @@ export interface WarDefenseSummary {
   progress: WarProgress | null
 }
 
-export interface AvailableAttacker {
+export interface AvailablePrefightAttacker {
   champion_user_id: string
   game_account_id: string
   game_pseudo: string
   champion_id: string
   champion_name: string
   champion_alias: string | null
-  champion_class: string
   image_url: string | null
-  rarity: string
-  ascension: number
-  signature: number
   is_preferred_attacker: boolean
   is_saga_attacker: boolean
   is_saga_defender: boolean
+}
+
+export interface AvailableAttacker extends AvailablePrefightAttacker {
+  champion_class: string
+  rarity: string
+  ascension: number
+  signature: number
 }
 
 export interface WarSynergy {
@@ -484,7 +487,7 @@ export async function getAvailablePrefightAttackers(
   allianceId: string,
   warId: string,
   battlegroup: number
-): Promise<AvailableAttacker[]> {
+): Promise<AvailablePrefightAttacker[]> {
   return api(
     `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-prefight-attackers`,
     'Failed to load available pre-fight attackers'

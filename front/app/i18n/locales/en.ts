@@ -680,7 +680,6 @@ const en = {
       selectAttacker: 'Assign attacker to node #{node}',
       nodeDetail: 'Node #{node}',
       searchAttacker: 'Search champion or player...',
-      searchPlayer: 'Search player...',
       assignAttacker: 'Assign Attacker',
       removeAttacker: 'Remove Attacker',
       removeAttackerConfirmTitle: 'Remove Attacker',
