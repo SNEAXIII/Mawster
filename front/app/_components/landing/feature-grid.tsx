@@ -41,7 +41,7 @@ export function FeatureGrid() {
                 key={f.title}
                 className={`transition hover:border-brand/40${f.isNew ? ' border-brand/40' : ''}`}
               >
-                <CardContent className='pt-6'>
+                <CardContent className='pt-4'>
                   <div className='flex items-center gap-3'>
                     <span className='flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand'>
                       <Icon className='h-5 w-5' />

@@ -79,7 +79,7 @@ export default function AllianceVisitorsSection({
                 <Button
                   variant='ghost'
                   size='icon'
-                  className='h-7 w-7 text-destructive hover:text-destructive'
+                  className='text-destructive hover:text-destructive'
                   onClick={() => setKickTarget(v)}
                   data-cy={`kick-visitor-${v.game_account_id}`}
                   title={t.game.alliances.kickVisitor}

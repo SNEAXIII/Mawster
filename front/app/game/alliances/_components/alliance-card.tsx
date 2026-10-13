@@ -107,7 +107,7 @@ export default function AllianceCard({
 
   return (
     <Card data-cy={`alliance-card-${alliance.name}`}>
-      <CardContent className='py-3 sm:py-4 px-3 sm:px-6 flex flex-col gap-3 sm:gap-4'>
+      <CardContent className='p-3 sm:p-4 flex flex-col gap-3 sm:gap-4'>
         {/* Alliance header */}
         <div className='flex items-start gap-3'>
           <Shield className='size-5 text-primary mt-0.5' />

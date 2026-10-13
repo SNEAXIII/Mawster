@@ -62,7 +62,7 @@ export function AccountInfoCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className='text-lg'>{t.profile.accountInfo}</CardTitle>
+        <CardTitle>{t.profile.accountInfo}</CardTitle>
       </CardHeader>
       <CardContent className='flex flex-col gap-4'>
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>

@@ -67,7 +67,7 @@ export default function RosterFilterBar({
       variant='outline'
       size='sm'
       data-cy={cy}
-      className={cn('h-8 text-xs', filters[key] && 'bg-primary/10 border-primary text-primary')}
+      className={cn(filters[key] && 'bg-primary/10 border-primary text-primary')}
       onClick={() => onChange({ [key]: !filters[key] })}
     >
       {label}
@@ -152,7 +152,7 @@ export default function RosterFilterBar({
             type='button'
             variant='outline'
             size='sm'
-            className='h-8 text-xs text-muted-foreground'
+            className='text-muted-foreground'
             data-cy='roster-filter-reset'
             onClick={onReset}
           >

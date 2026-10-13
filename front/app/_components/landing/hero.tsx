@@ -84,7 +84,7 @@ export function Hero() {
       <div className='hidden md:block'>
         <Card className='select-none shadow-lg'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm'>{t.landing.statsShowcase.rankingTitle}</CardTitle>
+            <CardTitle>{t.landing.statsShowcase.rankingTitle}</CardTitle>
             <span className='rounded-md border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-500'>
               {t.landing.statsShowcase.demoBadge}
             </span>

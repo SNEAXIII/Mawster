@@ -121,7 +121,7 @@ export default function SelectorFilterBar({
           variant='ghost'
           size='sm'
           data-cy='selector-reset-filters'
-          className='h-8 text-xs text-muted-foreground'
+          className='text-muted-foreground'
           onClick={onReset}
         >
           {t.dashboard.pagination.resetFilters}
