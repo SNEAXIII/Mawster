@@ -56,6 +56,7 @@ const fr: Translations = {
     settings: 'Paramètres',
     language: 'Langue',
     theme: 'Thème',
+    look: 'Apparence',
     signIn: 'Se connecter',
     signOut: 'Se déconnecter',
     collapseSidebar: 'Réduire',

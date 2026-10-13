@@ -10,6 +10,7 @@ import { signOutAndRedirect } from '@/app/lib/sign-out'
 import VersionWatcher from '@/components/version-watcher'
 import LanguagePickerDialog from '@/components/language-picker-dialog'
 import { useEffect } from 'react'
+import { restoreStoredLook } from '@/app/lib/look'
 
 function SessionWatcher() {
   const { data: session } = useSession()
@@ -24,6 +25,8 @@ function SessionWatcher() {
 }
 
 export function Providers({ children }: Readonly<{ children: React.ReactNode }>) {
+  useEffect(restoreStoredLook, [])
+
   return (
     <ThemeProvider
       attribute='class'
