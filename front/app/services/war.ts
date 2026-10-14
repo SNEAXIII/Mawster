@@ -73,6 +73,7 @@ export interface WarPlacement {
   has_power_boost: boolean
   has_specials_boost: boolean
   attacker_champion_user_id: string | null
+  attacker_champion_id: string | null
   attacker_game_account_id: string | null
   attacker_pseudo: string | null
   attacker_champion_name: string | null

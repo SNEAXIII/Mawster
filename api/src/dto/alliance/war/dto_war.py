@@ -124,6 +124,7 @@ class WarPlacementResponse(WarCoords, ChampionRef, SagaRoles):
     has_power_boost: bool = False
     has_specials_boost: bool = False
     attacker_champion_user_id: uuid.UUID | None = None
+    attacker_champion_id: uuid.UUID | None = None
     attacker_game_account_id: uuid.UUID | None = None
     attacker_pseudo: str | None = None
     attacker_champion_name: str | None = None
@@ -176,6 +177,7 @@ class WarPlacementResponse(WarCoords, ChampionRef, SagaRoles):
             "has_power_boost": data.has_power_boost,
             "has_specials_boost": data.has_specials_boost,
             "attacker_champion_user_id": data.attacker_champion_user_id,
+            "attacker_champion_id": attacker.champion_id if attacker else None,
             "attacker_is_preferred_attacker": attacker.is_preferred_attacker if attacker else None,
             "is_assisted": data.assist_champion_user_id is not None,
             "assistor_champion_user_id": data.assist_champion_user_id,

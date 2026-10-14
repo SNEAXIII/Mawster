@@ -98,6 +98,7 @@ def _make_attacker(**overrides):
     defaults = {
         "id": uuid.uuid4(),
         "game_account_id": uuid.uuid4(),
+        "champion_id": uuid.uuid4(),
         "game_account": _ns(game_pseudo="AttackerPlayer"),
         "champion": champ,
         "stars": 7,
@@ -233,6 +234,7 @@ class TestWarPlacementResponseDTO:
         assert dto.placed_by_pseudo == "OfficerPlayer"
         # No attacker
         assert dto.attacker_champion_user_id is None
+        assert dto.attacker_champion_id is None
         assert dto.attacker_pseudo is None
         assert dto.attacker_champion_name is None
         assert dto.attacker_rarity is None
@@ -270,6 +272,7 @@ class TestWarPlacementResponseDTO:
 
         # Attacker fields
         assert dto.attacker_champion_user_id == attacker.id
+        assert dto.attacker_champion_id == attacker.champion_id
         assert dto.attacker_game_account_id == attacker.game_account_id
         assert dto.attacker_pseudo == "AttackerPlayer"
         assert dto.attacker_champion_name == "Hercules"

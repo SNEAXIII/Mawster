@@ -11,6 +11,7 @@ import { useWar } from '@/app/contexts/war-context'
 interface SynergyPopoverProps {
   /** The node attacker champion (target that benefits from synergy) */
   championUserId: string
+  championId: string
   gameAccountId: string
   championName: string
   imageUrl: string | null
@@ -25,6 +26,7 @@ interface SynergyPopoverProps {
 
 export default function SynergyPopover({
   championUserId,
+  championId,
   gameAccountId,
   championName,
   imageUrl,
@@ -134,6 +136,7 @@ export default function SynergyPopover({
         open={selectorOpen}
         onClose={() => setSelectorOpen(false)}
         targetChampionUserId={championUserId}
+        targetChampionId={championId}
         targetGameAccountId={gameAccountId}
         targetChampionName={championName}
       />

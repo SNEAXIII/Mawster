@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { providerOf, slotKey, type AvailableAttacker, type Provider } from '@/app/services/war'
+import { providerOf, type AvailableAttacker, type Provider } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import { useAvailableAttackers } from './use-available-attackers'
 import { catalogCandidates, useCatalogPicks } from './use-catalog-picks'
@@ -71,25 +71,21 @@ export default function PrefightSelectorDialog({
   )
   const selectedAccount = accounts.get(playerFilter)
   const bannedIds = new Set((currentWar?.banned_champions ?? []).map((c) => c.id))
+  const prefightKey = (c: { game_account_id: string; champion_id: string }) =>
+    `${c.game_account_id}:${c.champion_id}`
   // Only exclude champions already prefighting THIS specific node (same champion can prefight other nodes)
-  const usedPrefightIds = new Set(
-    prefights.filter((p) => p.target_node_number === targetNodeNumber).map(slotKey)
+  const usedPrefights = new Set(
+    prefights.filter((p) => p.target_node_number === targetNodeNumber).map(prefightKey)
   )
+  const isFree = (c: { game_account_id: string; champion_id: string }) =>
+    !usedPrefights.has(prefightKey(c))
   const filtered = filterBySearch(
-    available.filter(
-      (a) =>
-        (showDefenders || !a.is_on_defense) &&
-        !usedPrefightIds.has(
-          slotKey({ ...a, champion_user_id: a.is_on_defense ? null : a.champion_user_id })
-        )
-    )
+    available.filter((a) => (showDefenders || !a.is_on_defense) && isFree(a))
   )
   const picks =
     showCatalog && selectedAccount
       ? filterBySearch(
-          catalogCandidates(catalog, owners, bannedIds, selectedAccount).filter(
-            (p) => !usedPrefightIds.has(p.champion_id)
-          )
+          catalogCandidates(catalog, owners, bannedIds, selectedAccount).filter(isFree)
         )
       : []
   const pick = (provider: Provider) => {

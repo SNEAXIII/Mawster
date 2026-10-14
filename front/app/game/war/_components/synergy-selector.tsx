@@ -5,7 +5,7 @@ import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
-import { slotKey, type AvailableAttacker } from '@/app/services/war'
+import type { AvailableAttacker } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import { keepBestCopy } from './use-available-attackers'
 import { catalogCandidates, useCatalogPicks } from './use-catalog-picks'
@@ -16,6 +16,7 @@ interface SynergySelectorDialogProps {
   open: boolean
   onClose: () => void
   targetChampionUserId: string
+  targetChampionId: string
   targetGameAccountId: string
   targetChampionName: string
 }
@@ -24,6 +25,7 @@ export default function SynergySelectorDialog({
   open,
   onClose,
   targetChampionUserId,
+  targetChampionId,
   targetGameAccountId,
   targetChampionName,
 }: Readonly<SynergySelectorDialogProps>) {
@@ -58,10 +60,11 @@ export default function SynergySelectorDialog({
   }, [open, selectedAllianceId, activeWarId, selectedBg, targetGameAccountId])
 
   const bannedIds = new Set((currentWar?.banned_champions ?? []).map((c) => c.id))
-  const usedSynergyIds = new Set(synergies.map(slotKey))
   const usedChampionIds = new Set(
     synergies.filter((s) => s.game_account_id === targetGameAccountId).map((s) => s.champion_id)
   )
+  const isFree = (c: { champion_id: string }) =>
+    c.champion_id !== targetChampionId && !usedChampionIds.has(c.champion_id)
   const matches = (c: { champion_name: string; champion_alias: string | null }) => {
     const q = query.toLowerCase()
     return (
@@ -70,20 +73,11 @@ export default function SynergySelectorDialog({
     )
   }
   const recorded = keepBestCopy(
-    attackers.filter(
-      (a) =>
-        !usedSynergyIds.has(
-          slotKey({ ...a, champion_user_id: a.is_on_defense ? null : a.champion_user_id })
-        ) &&
-        a.champion_user_id !== targetChampionUserId &&
-        (showDefenders || !a.is_on_defense)
-    )
+    attackers.filter((a) => isFree(a) && (showDefenders || !a.is_on_defense))
   ).filter(matches)
   const picks = showCatalog
     ? catalogCandidates(catalog, attackers, bannedIds, { id: targetGameAccountId, pseudo: '' })
-        .filter(
-          (p) => p.champion_name !== targetChampionName && !usedChampionIds.has(p.champion_id)
-        )
+        .filter(isFree)
         .filter(matches)
     : []
 
