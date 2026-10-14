@@ -901,6 +901,7 @@ class TestFightRecordReadsTheWar:
                     battlegroup=1,
                     game_account_id=data["member"].id,
                     champion_user_id=prefight_cu.id,
+                    champion_id=prefight_champ.id,
                     target_node_number=10,
                 ),
                 WarSynergyAttacker(
@@ -908,6 +909,7 @@ class TestFightRecordReadsTheWar:
                     battlegroup=1,
                     game_account_id=data["member"].id,
                     champion_user_id=synergy_cu.id,
+                    champion_id=synergy_champ.id,
                     target_champion_user_id=data["attacker_cu"].id,
                 ),
             ]

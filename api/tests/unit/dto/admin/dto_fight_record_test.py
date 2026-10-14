@@ -2,6 +2,7 @@ import uuid
 from unittest.mock import MagicMock
 
 from src.dto.admin.dto_fight_record import (
+    ChampionUserSnapshotResponse,
     WarFightPrefightResponse,
     WarFightSynergyResponse,
 )
@@ -17,8 +18,8 @@ def _make_champion(name="Wolverine", champion_class="Mutant", image_url=None):
 
 def _make_link(name, champion_class, stars, ascension):
     link = MagicMock()
-    link.champion_user.champion_id = uuid.uuid4()
-    link.champion_user.champion = _make_champion(name, champion_class)
+    link.champion_id = uuid.uuid4()
+    link.champion = _make_champion(name, champion_class)
     link.champion_user.stars = stars
     link.champion_user.ascension = ascension
     return link
@@ -35,3 +36,12 @@ def test_prefight_response_flattens_champion():
     result = WarFightPrefightResponse.model_validate(_make_link("Magneto", "Mutant", 7, 0))
     assert result.champion_name == "Magneto"
     assert result.stars == 7
+
+
+def test_unrecorded_snapshot_has_no_stars():
+    row = MagicMock(champion_id=uuid.uuid4(), champion=_make_champion("Magik", "Mystic"))
+    row.champion_user = None
+    dto = ChampionUserSnapshotResponse.model_validate(row)
+    assert dto.stars is None
+    assert dto.ascension is None
+    assert dto.is_unrecorded

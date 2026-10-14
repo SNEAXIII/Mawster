@@ -346,16 +346,9 @@ class TestRemoveSynergy:
     @pytest.mark.asyncio
     async def test_remove_synergy_success(self):
         data = await _setup_synergy_scenario()
-        await execute_post_request(
-            _synergy_url(data["alliance"].id, data["war"].id),
-            payload={
-                "champion_user_id": str(data["synergy_cu"].id),
-                "target_champion_user_id": str(data["attacker_cu"].id),
-            },
-            headers=data["headers_member"],
-        )
+        created = await _add_synergy_on_attacker(data)
         response = await execute_delete_request(
-            f"{_synergy_url(data['alliance'].id, data['war'].id)}/{data['synergy_cu'].id}",
+            f"{_synergy_url(data['alliance'].id, data['war'].id)}/{created.json()['id']}",
             headers=data["headers_member"],
         )
         assert response.status_code == 204
@@ -683,3 +676,4 @@ async def _add_synergy_on_attacker(data):
         headers=data["headers_member"],
     )
     assert add.status_code == 201
+    return add

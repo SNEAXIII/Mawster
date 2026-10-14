@@ -47,6 +47,9 @@ WAR_MAP_SEALED = "This war's season is over — its map can no longer be correct
 ATTACKER_LEFT_BATTLEGROUP_LOCKED = (
     "This fight belongs to a player no longer in this battlegroup — it cannot be changed"
 )
+CHAMPION_HAS_RECORDED_COPY = "This player has a recorded copy of this champion available — use it"
+PROVIDER_EXACTLY_ONE = "Give exactly one of champion_user_id or champion_id"
+UNRECORDED_PREFIGHT_NEEDS_ACCOUNT = "An unrecorded pre-fight needs the game_account_id of its owner"
 
 
 def champion_with_id_not_found(champion_id) -> str:
