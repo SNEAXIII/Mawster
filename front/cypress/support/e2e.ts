@@ -1392,19 +1392,6 @@ Cypress.Commands.add(
   },
 );
 
-Cypress.Commands.add(
-  'apiRemoveWarSynergy',
-  (token: string, allianceId: string, warId: string, battlegroup: number, championUserId: string) => {
-    cy.request({
-      method: 'DELETE',
-      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy/${championUserId}`,
-      headers: { Authorization: `Bearer ${token}` },
-    }).then((res) => {
-      expect(res.status).to.eq(204);
-    });
-  },
-);
-
 // ── Prefight API commands ─────────────────────────────────────────────────────
 
 Cypress.Commands.add(
@@ -1422,24 +1409,6 @@ Cypress.Commands.add(
       url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
       headers: { Authorization: `Bearer ${token}` },
       body: { champion_user_id: championUserId, target_node_number: targetNodeNumber },
-    });
-  },
-);
-
-Cypress.Commands.add(
-  'apiRemoveWarPrefight',
-  (
-    token: string,
-    allianceId: string,
-    warId: string,
-    battlegroup: number,
-    championUserId: string,
-    targetNodeNumber: number,
-  ) => {
-    return cy.request({
-      method: 'DELETE',
-      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}/node/${targetNodeNumber}`,
-      headers: { Authorization: `Bearer ${token}` },
     });
   },
 );
