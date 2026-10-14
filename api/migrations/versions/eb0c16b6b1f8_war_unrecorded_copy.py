@@ -34,6 +34,15 @@ _TABLES = {
 }
 
 
+def _drop_duplicates(table: str, cols: list[str]) -> None:
+    # Two copies of one champion as carriers on the same key have no game effect: keep the oldest.
+    same_key = " AND ".join(f"k.{c} = t.{c}" for c in cols)
+    op.execute(
+        f"DELETE t FROM {table} t JOIN {table} k ON {same_key} "
+        "AND (k.created_at < t.created_at OR (k.created_at = t.created_at AND k.id < t.id))"
+    )
+
+
 def _swap_unique(table: str, name: str, cols: list[str]) -> None:
     # The old unique backs the war_id FK on MariaDB: keep a stand-in index while swapping.
     op.create_index("ix_tmp_war_id", table, ["war_id"])
@@ -56,6 +65,7 @@ def upgrade() -> None:
         op.alter_column(
             table, "champion_user_id", existing_type=mysql.CHAR(length=32), nullable=True
         )
+        _drop_duplicates(table, new_cols)
         _swap_unique(table, name, new_cols)
 
 
