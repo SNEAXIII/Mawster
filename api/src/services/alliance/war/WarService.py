@@ -785,6 +785,7 @@ class WarService:
         attacker_id: uuid.UUID | None = None,
         war: War | None = None,
         node_number: int | None = None,
+        include_defense: bool = False,
     ) -> list[AvailableAttackerResponse]:
         fmt = await cls._war_format(session, war)
         max_attackers = for_format(fmt).max_attackers_per_member
@@ -814,7 +815,12 @@ class WarService:
             used = taken.get(game_account.id, set())
             full = len(used) >= max_attackers
             for cu in game_account.roster:
-                if cu.id in on_defense or cu.champion_id in banned or (full and cu.id not in used):
+                is_on_defense = cu.id in on_defense
+                if (
+                    (is_on_defense and not include_defense)
+                    or cu.champion_id in banned
+                    or (full and cu.id not in used)
+                ):
                     continue
                 att, dfn = saga.get(cu.champion_id, NO_SAGA)
                 result.append(
@@ -833,6 +839,7 @@ class WarService:
                         is_preferred_attacker=cu.is_preferred_attacker,
                         is_saga_attacker=att,
                         is_saga_defender=dfn,
+                        is_on_defense=is_on_defense,
                     )
                 )
         return result
@@ -844,10 +851,16 @@ class WarService:
         alliance_id: uuid.UUID,
         battlegroup: int,
         war: War | None = None,
+        include_defense: bool = False,
     ) -> list[AvailablePrefightAttackerResponse]:
-        on_defense = DefensePlanService.active_defender_ids(
-            alliance_id, await cls._war_format(session, war), battlegroup
-        ).scalar_subquery()
+        fmt = await cls._war_format(session, war)
+        on_defense = set(
+            (
+                await session.exec(
+                    DefensePlanService.active_defender_ids(alliance_id, fmt, battlegroup)
+                )
+            ).all()
+        )
         stmt = (
             select(ChampionUser, GameAccount, Champion)
             .join(GameAccount, ChampionUser.game_account_id == GameAccount.id)  # type: ignore[arg-type]
@@ -856,17 +869,21 @@ class WarService:
                 GameAccount.alliance_id == alliance_id,
                 GameAccount.alliance_group == battlegroup,
                 Champion.has_prefight.is_(True),
-                ChampionUser.id.not_in(on_defense),  # type: ignore[union-attr]
             )
         )
+        if not include_defense and on_defense:
+            stmt = stmt.where(col(ChampionUser.id).not_in(on_defense))
         if war and war.bans:
             stmt = stmt.where(ChampionUser.champion_id.not_in([b.champion_id for b in war.bans]))  # type: ignore[union-attr]
 
-        # One entry per player and champion: the highest copy stands for the duplicates.
+        def strength(cu: ChampionUser) -> tuple[bool, int, int, int]:
+            return (cu.id not in on_defense, *_copy_strength(cu))
+
+        # One entry per player and champion: the highest copy stands, a free one before a defender.
         best: dict[tuple[uuid.UUID, uuid.UUID], tuple[ChampionUser, GameAccount, Champion]] = {}
         for cu, ga, champ in (await session.exec(stmt)).all():  # type: ignore[arg-type]
             kept = best.get((ga.id, cu.champion_id))
-            if kept is None or _copy_strength(cu) > _copy_strength(kept[0]):
+            if kept is None or strength(cu) > strength(kept[0]):
                 best[(ga.id, cu.champion_id)] = (cu, ga, champ)
 
         saga = await SagaService.resolve_current(session)
@@ -885,6 +902,7 @@ class WarService:
                     is_preferred_attacker=cu.is_preferred_attacker,
                     is_saga_attacker=att,
                     is_saga_defender=dfn,
+                    is_on_defense=cu.id in on_defense,
                 )
             )
         return result

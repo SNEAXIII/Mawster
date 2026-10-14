@@ -1,8 +1,15 @@
 """Unrecorded Copy: a Synergy Carrier or Prefight the player owns off-site."""
 
+import uuid
+
 import pytest
 
+from src.enums.SeasonFormat import SeasonFormat
+from src.enums.SeasonStatus import SeasonStatus
+from src.enums.WarStatus import WarStatus
 from src.Messages.war_messages import PREFIGHT_ENTRY_NOT_FOUND
+from src.models.war.Season import Season
+from src.models.war.War import War
 from tests.integration.endpoints.alliance.war.war_prefight_test import (
     _occupy_node_6,
     _prefight_url,
@@ -14,12 +21,13 @@ from tests.integration.endpoints.alliance.war.war_synergy_test import (
     _synergy_url,
 )
 from tests.integration.endpoints.setup.defense_setup import push_plan, push_plan_node
-from tests.integration.endpoints.setup.game_setup import push_champion
+from tests.integration.endpoints.setup.game_setup import push_champion, push_champion_user
 from tests.utils.utils_client import (
     execute_delete_request,
     execute_get_request,
     execute_post_request,
 )
+from tests.utils.utils_db import load_objects
 
 
 async def _defend(data, champion_user, node=3):
@@ -51,6 +59,18 @@ async def _add_unrecorded_prefight(data):
     )
     assert created.status_code == 201
     return url, created
+
+
+def _available(data, war_id=None, prefight=False, include=True):
+    kind = "available-prefight-attackers" if prefight else "available-attackers"
+    query = "?include_defense=true" if include else ""
+    return f"/alliances/{data['alliance'].id}/wars/{war_id or data['war'].id}/bg/1/{kind}{query}"
+
+
+async def _flags(data, **kwargs) -> dict[str, bool]:
+    resp = await execute_get_request(_available(data, **kwargs), headers=data["headers_member"])
+    assert resp.status_code == 200
+    return {item["champion_user_id"]: item["is_on_defense"] for item in resp.json()}
 
 
 class TestUnrecordedPrefight:
@@ -211,6 +231,17 @@ class TestUnrecordedPrefight:
         listed = (await execute_get_request(url, headers=data["headers_member"])).json()
         assert listed[0]["unrecorded_reason"] == "on_defense"
 
+    @pytest.mark.asyncio
+    async def test_defender_still_refused_as_node_attacker(self):
+        data = await _setup_prefight_scenario()
+        await _defend(data, data["prefight_cu"])
+        resp = await execute_post_request(
+            f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/5/attacker",
+            payload={"champion_user_id": str(data["prefight_cu"].id)},
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 409
+
 
 class TestUnrecordedSynergy:
     @pytest.mark.asyncio
@@ -290,3 +321,75 @@ class TestUnrecordedSynergy:
             f"{url}/{created.json()['id']}", headers=data["headers_member"]
         )
         assert resp.status_code == 204
+
+
+class TestAvailableWithDefense:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("prefight", [False, True])
+    async def test_active_plan_defender_flagged(self, prefight):
+        data = await _setup_prefight_scenario()
+        await _defend(data, data["prefight_cu"])
+        assert (await _flags(data, prefight=prefight))[str(data["prefight_cu"].id)] is True
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("prefight", [False, True])
+    async def test_default_still_excludes_defenders(self, prefight):
+        data = await _setup_prefight_scenario()
+        await _defend(data, data["prefight_cu"])
+        flags = await _flags(data, prefight=prefight, include=False)
+        assert str(data["prefight_cu"].id) not in flags
+
+    @pytest.mark.asyncio
+    async def test_inactive_plan_does_not_flag(self):
+        data = await _setup_prefight_scenario()
+        plan = await push_plan(data["alliance"].id, battlegroup=1, active=False)
+        await push_plan_node(plan, 3, data["prefight_cu"])
+        assert (await _flags(data))[str(data["prefight_cu"].id)] is False
+
+    @pytest.mark.asyncio
+    async def test_other_format_does_not_flag(self):
+        data = await _setup_prefight_scenario()
+        plan = await push_plan(
+            data["alliance"].id, battlegroup=1, fmt=SeasonFormat.BIG_THING, active=True
+        )
+        await push_plan_node(plan, 3, data["prefight_cu"])
+        assert (await _flags(data))[str(data["prefight_cu"].id)] is False
+
+    @pytest.mark.asyncio
+    async def test_other_battlegroup_does_not_flag(self):
+        data = await _setup_prefight_scenario()
+        plan = await push_plan(data["alliance"].id, battlegroup=2, active=True)
+        await push_plan_node(plan, 3, data["prefight_cu"])
+        assert (await _flags(data))[str(data["prefight_cu"].id)] is False
+
+    @pytest.mark.asyncio
+    async def test_closed_war_uses_its_season_format(self):
+        data = await _setup_prefight_scenario()
+        season = Season(
+            id=uuid.uuid4(), number=1, status=SeasonStatus.ENDED, format=SeasonFormat.BIG_THING
+        )
+        closed = War(
+            id=uuid.uuid4(),
+            alliance_id=data["alliance"].id,
+            opponent_name="Old",
+            created_by_id=data["owner"].id,
+            season_id=season.id,
+            status=WarStatus.ENDED,
+        )
+        await load_objects([season, closed])
+        plan = await push_plan(
+            data["alliance"].id, battlegroup=1, fmt=SeasonFormat.BIG_THING, active=True
+        )
+        await push_plan_node(plan, 3, data["prefight_cu"])
+        flags = await _flags(data, war_id=closed.id)
+        assert flags[str(data["prefight_cu"].id)] is True
+
+    @pytest.mark.asyncio
+    async def test_prefight_dedup_prefers_the_free_copy(self):
+        """7 stars on defense + 6 stars free: the free copy stands for the champion."""
+        data = await _setup_prefight_scenario()
+        await _defend(data, data["prefight_cu"])
+        lower = await push_champion_user(data["member"], data["prefight_champ"], stars=6, rank=5)
+        flags = await _flags(data, prefight=True)
+        assert flags.get(str(lower.id)) is False
+        assert str(data["prefight_cu"].id) not in flags
