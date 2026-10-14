@@ -2,6 +2,7 @@
 
 import { useI18n } from '@/app/i18n'
 import ChampionPortrait from '@/components/champion-portrait'
+import UnrecordedBadge from './unrecorded-badge'
 import { cn } from '@/app/lib/utils'
 import { X, Flame } from 'lucide-react'
 import type { WarPrefight, WarPlacement } from '@/app/services/war'
@@ -88,6 +89,7 @@ export default function PrefightEntryRow({
       <div className='flex-1 min-w-0'>
         <div className='text-[10px] text-muted-foreground'>{t.game.war.prefight.label}</div>
         <div className='text-[10px] font-medium truncate'>{prefight.champion_name}</div>
+        {prefight.unrecorded_reason && <UnrecordedBadge reason={prefight.unrecorded_reason} />}
       </div>
 
       {!readonly && !isMapReadOnly && (

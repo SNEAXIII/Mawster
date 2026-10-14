@@ -5,6 +5,7 @@ import { StickyNote } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import ChampionPortrait from '@/components/champion-portrait'
+import UnrecordedBadge from './unrecorded-badge'
 import PrefightSelectorDialog from './prefight-selector'
 import AssistSelectorDialog from './assist-selector'
 import WarNoteEditor from './war-note-editor'
@@ -114,6 +115,12 @@ export default function NodeActionsPopover({
                   />
                   <div className='flex flex-col flex-1 min-w-0'>
                     <span className='text-xs font-medium truncate'>{p.champion_name}</span>
+                    {p.unrecorded_reason && (
+                      <UnrecordedBadge
+                        reason={p.unrecorded_reason}
+                        compact
+                      />
+                    )}
                     <span className='text-[10px] text-muted-foreground truncate'>
                       {p.game_pseudo}
                     </span>

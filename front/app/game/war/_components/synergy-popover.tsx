@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import ChampionPortrait from '@/components/champion-portrait'
+import UnrecordedBadge from './unrecorded-badge'
 import SynergySelectorDialog from './synergy-selector'
 import { useWar } from '@/app/contexts/war-context'
 
@@ -95,6 +96,12 @@ export default function SynergyPopover({
                   >
                     {s.champion_name}
                   </span>
+                  {s.unrecorded_reason && (
+                    <UnrecordedBadge
+                      reason={s.unrecorded_reason}
+                      compact
+                    />
+                  )}
                   <button
                     className='shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
                     data-cy={`synergy-revoke-${s.champion_name.replaceAll(/\s+/g, '-')}`}

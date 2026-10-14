@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import ChampionPortrait from '@/components/champion-portrait'
+import UnrecordedBadge from './unrecorded-badge'
 import { cn } from '@/app/lib/utils'
 import {
   X,
@@ -178,6 +179,12 @@ export default function AttackerEntryRow({
               is_saga_defender={p.is_saga_defender}
               sagaMode='attacker'
             />
+            {p.unrecorded_reason && (
+              <UnrecordedBadge
+                reason={p.unrecorded_reason}
+                compact
+              />
+            )}
           </div>
         ))}
       </div>
