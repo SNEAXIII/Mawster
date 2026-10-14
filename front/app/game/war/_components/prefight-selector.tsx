@@ -71,7 +71,6 @@ export default function PrefightSelectorDialog({
   )
   const selectedAccount = accounts.get(playerFilter)
   const bannedIds = new Set((currentWar?.banned_champions ?? []).map((c) => c.id))
-
   // Only exclude champions already prefighting THIS specific node (same champion can prefight other nodes)
   const usedPrefightIds = new Set(
     prefights.filter((p) => p.target_node_number === targetNodeNumber).map(slotKey)
