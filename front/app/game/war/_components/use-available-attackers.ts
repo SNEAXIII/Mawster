@@ -10,7 +10,7 @@ interface AttackerGroup<T> {
 
 function copyStrength(a: AvailableAttacker): number[] {
   const split = splitRarity(a.rarity)
-  return [split?.stars ?? 0, split?.rank ?? 0, a.ascension]
+  return [a.is_on_defense ? 0 : 1, split?.stars ?? 0, split?.rank ?? 0, a.ascension]
 }
 
 function isStronger(a: AvailableAttacker, b: AvailableAttacker): boolean {
@@ -64,7 +64,9 @@ export function useAvailableAttackers<T extends AvailablePrefightAttacker>(
 
   const players = Array.from(new Set(available.map((a) => a.game_pseudo)))
 
-  function filterBySearch(items: T[]): T[] {
+  function filterBySearch<
+    U extends Pick<AvailablePrefightAttacker, 'game_pseudo' | 'champion_name' | 'champion_alias'>,
+  >(items: U[]): U[] {
     const q = championSearch.toLowerCase()
     return items.filter((a) => {
       const matchPlayer = !playerFilter || a.game_pseudo === playerFilter

@@ -5,6 +5,7 @@ import { StickyNote } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import ChampionPortrait from '@/components/champion-portrait'
+import UnrecordedBadge from './unrecorded-badge'
 import PrefightSelectorDialog from './prefight-selector'
 import AssistSelectorDialog from './assist-selector'
 import WarNoteEditor from './war-note-editor'
@@ -99,21 +100,27 @@ export default function NodeActionsPopover({
               <p className='text-[10px] text-muted-foreground'>{t.game.war.prefight.label}</p>
               {boundPrefights.map((p) => (
                 <div
-                  key={p.champion_user_id}
+                  key={p.id}
                   className='flex items-center gap-2'
                 >
                   <ChampionPortrait
                     imageUrl={p.image_url}
                     name={p.champion_name}
-                    rarity={p.rarity}
+                    rarity={p.rarity ?? ''}
                     size={32}
-                    ascension={p.ascension}
+                    ascension={p.ascension ?? 0}
                     is_saga_attacker={p.is_saga_attacker}
                     is_saga_defender={p.is_saga_defender}
                     sagaMode='attacker'
                   />
                   <div className='flex flex-col flex-1 min-w-0'>
                     <span className='text-xs font-medium truncate'>{p.champion_name}</span>
+                    {p.unrecorded_reason && (
+                      <UnrecordedBadge
+                        reason={p.unrecorded_reason}
+                        compact
+                      />
+                    )}
                     <span className='text-[10px] text-muted-foreground truncate'>
                       {p.game_pseudo}
                     </span>
@@ -124,7 +131,7 @@ export default function NodeActionsPopover({
                     disabled={!canManage}
                     onClick={async () => {
                       setOpen(false)
-                      await handleRemovePrefight(p.champion_user_id, p.target_node_number)
+                      await handleRemovePrefight(p.id)
                     }}
                   >
                     {t.game.war.prefight.revoke}

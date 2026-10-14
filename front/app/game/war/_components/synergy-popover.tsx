@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import ChampionPortrait from '@/components/champion-portrait'
+import UnrecordedBadge from './unrecorded-badge'
 import SynergySelectorDialog from './synergy-selector'
 import { useWar } from '@/app/contexts/war-context'
 
@@ -76,15 +77,15 @@ export default function SynergyPopover({
               <p className='text-[10px] text-muted-foreground'>{t.game.war.synergy.label}</p>
               {boundSynergies.map((s) => (
                 <div
-                  key={s.champion_user_id}
+                  key={s.id}
                   className='flex items-center gap-2'
                 >
                   <ChampionPortrait
                     imageUrl={s.image_url}
                     name={s.champion_name}
-                    rarity={s.rarity}
+                    rarity={s.rarity ?? ''}
                     size={32}
-                    ascension={s.ascension}
+                    ascension={s.ascension ?? 0}
                     is_saga_attacker={s.is_saga_attacker}
                     is_saga_defender={s.is_saga_defender}
                     sagaMode='attacker'
@@ -95,13 +96,19 @@ export default function SynergyPopover({
                   >
                     {s.champion_name}
                   </span>
+                  {s.unrecorded_reason && (
+                    <UnrecordedBadge
+                      reason={s.unrecorded_reason}
+                      compact
+                    />
+                  )}
                   <button
                     className='shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed'
                     data-cy={`synergy-revoke-${s.champion_name.replaceAll(/\s+/g, '-')}`}
                     disabled={!canManage}
                     onClick={async () => {
                       setOpen(false)
-                      await handleRemoveSynergy(s.champion_user_id)
+                      await handleRemoveSynergy(s.id)
                     }}
                   >
                     {t.game.war.synergy.revoke}

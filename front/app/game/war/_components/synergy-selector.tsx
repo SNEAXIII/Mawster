@@ -5,10 +5,12 @@ import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
-import type { AvailableAttacker } from '@/app/services/war'
+import { slotKey, type AvailableAttacker } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import { keepBestCopy } from './use-available-attackers'
-import InfoChampionTile from './info-champion-tile'
+import { catalogCandidates, useCatalogPicks } from './use-catalog-picks'
+import SelectorToggles, { useSelectorToggles } from './selector-toggles'
+import SynergySelectorGrid from './synergy-selector-grid'
 
 interface SynergySelectorDialogProps {
   open: boolean
@@ -30,6 +32,7 @@ export default function SynergySelectorDialog({
     selectedAllianceId,
     activeWarId,
     selectedBg,
+    currentWar,
     handleAddSynergy,
     synergies,
     loadAvailableAttackers,
@@ -37,6 +40,9 @@ export default function SynergySelectorDialog({
   const [attackers, setAttackers] = useState<AvailableAttacker[]>([])
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
+  const toggles = useSelectorToggles(open)
+  const { showDefenders, showCatalog } = toggles
+  const { catalog } = useCatalogPicks(showCatalog, { prefightOnly: false })
   useEffect(() => {
     if (!open) {
       setQuery('')
@@ -44,28 +50,42 @@ export default function SynergySelectorDialog({
     }
     if (!selectedAllianceId || !activeWarId) return
     setLoading(true)
-    loadAvailableAttackers(targetGameAccountId)
+    loadAvailableAttackers(targetGameAccountId, undefined, true)
       .then(setAttackers)
       .catch(() => {})
       .finally(() => setLoading(false))
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [open, selectedAllianceId, activeWarId, selectedBg, targetGameAccountId])
 
-  const usedSynergyIds = new Set(synergies.map((s) => s.champion_user_id))
-  const available = keepBestCopy(
-    attackers.filter(
-      (a) => !usedSynergyIds.has(a.champion_user_id) && a.champion_user_id !== targetChampionUserId
-    )
+  const bannedIds = new Set((currentWar?.banned_champions ?? []).map((c) => c.id))
+  const usedSynergyIds = new Set(synergies.map(slotKey))
+  const usedChampionIds = new Set(
+    synergies.filter((s) => s.game_account_id === targetGameAccountId).map((s) => s.champion_id)
   )
-  const filtered = query
-    ? available.filter((a) => {
-        const q = query.toLowerCase()
-        return (
-          a.champion_name.toLowerCase().includes(q) ||
-          (a.champion_alias ?? '').toLowerCase().includes(q)
+  const matches = (c: { champion_name: string; champion_alias: string | null }) => {
+    const q = query.toLowerCase()
+    return (
+      c.champion_name.toLowerCase().includes(q) ||
+      (c.champion_alias ?? '').toLowerCase().includes(q)
+    )
+  }
+  const recorded = keepBestCopy(
+    attackers.filter(
+      (a) =>
+        !usedSynergyIds.has(
+          slotKey({ ...a, champion_user_id: a.is_on_defense ? null : a.champion_user_id })
+        ) &&
+        a.champion_user_id !== targetChampionUserId &&
+        (showDefenders || !a.is_on_defense)
+    )
+  ).filter(matches)
+  const picks = showCatalog
+    ? catalogCandidates(catalog, attackers, bannedIds, { id: targetGameAccountId, pseudo: '' })
+        .filter(
+          (p) => p.champion_name !== targetChampionName && !usedChampionIds.has(p.champion_id)
         )
-      })
-    : available
+        .filter(matches)
+    : []
 
   return (
     <Dialog
@@ -82,7 +102,7 @@ export default function SynergySelectorDialog({
           </DialogTitle>
         </DialogHeader>
         <Separator />
-        <div className='px-4 pt-3'>
+        <div className='px-4 py-3'>
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -90,28 +110,26 @@ export default function SynergySelectorDialog({
             data-cy='synergy-search'
           />
         </div>
+        <SelectorToggles
+          {...toggles}
+          dataCyPrefix='synergy'
+        />
         <div className='overflow-y-auto p-4'>
           {loading && (
             <p className='text-sm text-muted-foreground'>{t.game.war.availableAttackersError}</p>
           )}
-          {!loading && filtered.length === 0 && (
+          {!loading && recorded.length + picks.length === 0 && (
             <p className='text-sm text-muted-foreground'>{t.game.war.noAvailableAttackers}</p>
           )}
-          {!loading && filtered.length > 0 && (
-            <div className='grid grid-cols-3 gap-2'>
-              {filtered.map((a) => (
-                <InfoChampionTile
-                  key={a.champion_user_id}
-                  champion={a}
-                  label={a.champion_name}
-                  dataCy={`synergy-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
-                  onPick={() => {
-                    onClose()
-                    void handleAddSynergy(a.champion_user_id, targetChampionUserId)
-                  }}
-                />
-              ))}
-            </div>
+          {!loading && recorded.length + picks.length > 0 && (
+            <SynergySelectorGrid
+              recorded={recorded}
+              picks={picks}
+              onPick={(provider) => {
+                onClose()
+                void handleAddSynergy(provider, targetChampionUserId)
+              }}
+            />
           )}
         </div>
       </DialogContent>
