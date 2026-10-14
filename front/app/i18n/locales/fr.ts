@@ -729,6 +729,15 @@ const fr: Translations = {
       noteDelete: 'Supprimer la note',
       noteDeleted: 'Note supprimée',
       noteDeleteError: 'Échec de la suppression de la note',
+      unrecorded: {
+        onDefense: 'En défense',
+        notInRoster: 'Non renseigné',
+        onDefenseHint: 'La copie renseignée est en défense — une copie inférieure sera utilisée',
+        notInRosterHint: "Absent du site — le joueur l'a hors roster",
+        showDefenders: 'Défenseurs',
+        showCatalog: 'Champions non renseignés',
+        pickPlayerFirst: 'Choisis un joueur pour lister ses champions non renseignés',
+      },
       synergy: {
         add: 'Ajouter une synergie',
         revoke: 'Révoquer',
