@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { WarPlacement } from '@/app/services/war'
+import { slotKey, type WarPlacement } from '@/app/services/war'
 import type { SeasonFormat } from '@/app/services/season'
 import { useWar } from '@/app/contexts/war-context'
 import PrefightEntryRow from './prefight-entry-row'
@@ -204,7 +204,7 @@ export default function WarAttackerPanel({
             // Synergy champions for this member (by pseudo match)
             const memberSynergies = synergies.filter((s) => s.game_pseudo === memberGroup.pseudo)
             const synergyOnlyProviders = memberSynergies.filter(
-              (s) => !nodeAttackerIds.has(s.champion_user_id)
+              (s) => !nodeAttackerIds.has(slotKey(s))
             )
 
             const memberPrefights = prefights.filter((p) => p.game_pseudo === memberGroup.pseudo)
@@ -213,14 +213,14 @@ export default function WarAttackerPanel({
             const prefightOnlyProviders = [
               ...new Map(
                 memberPrefights
-                  .filter((p) => !nodeAttackerIds.has(p.champion_user_id))
-                  .map((p) => [p.champion_user_id, p])
+                  .filter((p) => !nodeAttackerIds.has(slotKey(p)))
+                  .map((p) => [slotKey(p), p])
               ).values(),
             ]
             const totalSlots = new Set([
               ...nodeAttackerIds,
-              ...memberSynergies.map((s) => s.champion_user_id),
-              ...memberPrefights.map((p) => p.champion_user_id),
+              ...memberSynergies.map((s) => slotKey(s)),
+              ...memberPrefights.map((p) => slotKey(p)),
               ...memberAssists.map((a) => a.assistor_champion_user_id).filter(Boolean),
             ]).size
 
@@ -301,13 +301,13 @@ export default function WarAttackerPanel({
                     {/* Synergy-only champions (not on any node) */}
                     {synergyOnlyProviders.map((s) => (
                       <ChampionPortrait
-                        key={s.champion_user_id}
+                        key={s.id}
                         imageUrl={s.image_url}
                         name={s.champion_name}
-                        rarity={s.rarity}
+                        rarity={s.rarity ?? ''}
                         size={35}
                         mode='synergy'
-                        ascension={s.ascension}
+                        ascension={s.ascension ?? 0}
                         is_saga_attacker={s.is_saga_attacker}
                         is_saga_defender={s.is_saga_defender}
                         sagaMode='attacker'
@@ -317,13 +317,13 @@ export default function WarAttackerPanel({
                     {/* Prefight-only champions */}
                     {prefightOnlyProviders.map((p) => (
                       <ChampionPortrait
-                        key={p.champion_user_id}
+                        key={slotKey(p)}
                         imageUrl={p.image_url}
                         name={p.champion_name}
-                        rarity={p.rarity}
+                        rarity={p.rarity ?? ''}
                         size={35}
                         mode='prefight'
-                        ascension={p.ascension}
+                        ascension={p.ascension ?? 0}
                         is_saga_attacker={p.is_saga_attacker}
                         is_saga_defender={p.is_saga_defender}
                         sagaMode='attacker'

@@ -99,15 +99,15 @@ export default function NodeActionsPopover({
               <p className='text-[10px] text-muted-foreground'>{t.game.war.prefight.label}</p>
               {boundPrefights.map((p) => (
                 <div
-                  key={p.champion_user_id}
+                  key={p.id}
                   className='flex items-center gap-2'
                 >
                   <ChampionPortrait
                     imageUrl={p.image_url}
                     name={p.champion_name}
-                    rarity={p.rarity}
+                    rarity={p.rarity ?? ''}
                     size={32}
-                    ascension={p.ascension}
+                    ascension={p.ascension ?? 0}
                     is_saga_attacker={p.is_saga_attacker}
                     is_saga_defender={p.is_saga_defender}
                     sagaMode='attacker'
@@ -124,7 +124,7 @@ export default function NodeActionsPopover({
                     disabled={!canManage}
                     onClick={async () => {
                       setOpen(false)
-                      await handleRemovePrefight(p.champion_user_id, p.target_node_number)
+                      await handleRemovePrefight(p.id)
                     }}
                   >
                     {t.game.war.prefight.revoke}

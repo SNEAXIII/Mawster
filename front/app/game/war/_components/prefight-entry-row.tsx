@@ -53,10 +53,10 @@ export default function PrefightEntryRow({
           <ChampionPortrait
             imageUrl={prefight.image_url}
             name={prefight.champion_name}
-            rarity={prefight.rarity}
+            rarity={prefight.rarity ?? ''}
             size={portraitSize}
             mode='prefight'
-            ascension={prefight.ascension}
+            ascension={prefight.ascension ?? 0}
             is_saga_attacker={prefight.is_saga_attacker}
             is_saga_defender={prefight.is_saga_defender}
             sagaMode='attacker'
@@ -97,9 +97,7 @@ export default function PrefightEntryRow({
             'rounded-full bg-orange-500/80 hover:bg-orange-500 text-white flex items-center justify-center flex-shrink-0',
             btnSize
           )}
-          onClick={() =>
-            handleRemovePrefight(prefight.champion_user_id, prefight.target_node_number)
-          }
+          onClick={() => handleRemovePrefight(prefight.id)}
           title={t.game.war.prefight.revoke}
           data-cy={`remove-prefight-node-${prefight.target_node_number}`}
         >

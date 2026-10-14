@@ -12,7 +12,7 @@ import { cn } from '@/app/lib/utils'
 import { shortenChampionName } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
 import { rarityBadgeClass, rarityLabel } from '@/app/game/defense/_components/defense-utils'
-import type { AvailableAttacker, WarPlacement } from '@/app/services/war'
+import { slotKey, type AvailableAttacker, type WarPlacement } from '@/app/services/war'
 import AttackerEntryRow from './attacker-entry-row'
 import WarNoteEditor from './war-note-editor'
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar'
@@ -121,8 +121,8 @@ export default function WarAttackerSelector({
     attackerIdsByAccount.set(accountId, ids)
   }
   for (const p of placements) countAttacker(p.attacker_game_account_id, p.attacker_champion_user_id)
-  for (const s of synergies) countAttacker(s.game_account_id, s.champion_user_id)
-  for (const pf of prefights) countAttacker(pf.game_account_id, pf.champion_user_id)
+  for (const s of synergies) countAttacker(s.game_account_id, slotKey(s))
+  for (const pf of prefights) countAttacker(pf.game_account_id, slotKey(pf))
 
   const availableClasses = useMemo(
     () =>

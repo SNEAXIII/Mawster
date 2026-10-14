@@ -163,17 +163,17 @@ export default function AttackerEntryRow({
         />
         {nodePrefights.map((p) => (
           <div
-            key={p.champion_user_id}
+            key={p.id}
             className='relative'
             title={t.game.war.prefight.tooltip}
           >
             <ChampionPortrait
               imageUrl={p.image_url}
               name={p.champion_name}
-              rarity={p.rarity}
+              rarity={p.rarity ?? ''}
               size={portraitSize}
               mode='prefight'
-              ascension={p.ascension}
+              ascension={p.ascension ?? 0}
               is_saga_attacker={p.is_saga_attacker}
               is_saga_defender={p.is_saga_defender}
               sagaMode='attacker'

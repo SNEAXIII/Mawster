@@ -4,6 +4,7 @@ import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { shortenChampionName } from '@/app/services/roster'
+import { providerOf } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import { useAvailableAttackers } from './use-available-attackers'
 import InfoChampionTile from './info-champion-tile'
@@ -81,7 +82,7 @@ export default function PrefightSelectorDialog({
               champion={a}
               label={shortenChampionName(a.champion_name)}
               onPick={() => {
-                void handleAddPrefight(a.champion_user_id, targetNodeNumber)
+                void handleAddPrefight(providerOf(a), targetNodeNumber)
                 onClose()
               }}
               dataCy={`prefight-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}

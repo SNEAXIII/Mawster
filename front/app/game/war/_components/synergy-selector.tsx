@@ -5,7 +5,7 @@ import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
-import type { AvailableAttacker } from '@/app/services/war'
+import { providerOf, type AvailableAttacker } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import { keepBestCopy } from './use-available-attackers'
 import InfoChampionTile from './info-champion-tile'
@@ -107,7 +107,7 @@ export default function SynergySelectorDialog({
                   dataCy={`synergy-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
                   onPick={() => {
                     onClose()
-                    void handleAddSynergy(a.champion_user_id, targetChampionUserId)
+                    void handleAddSynergy(providerOf(a), targetChampionUserId)
                   }}
                 />
               ))}

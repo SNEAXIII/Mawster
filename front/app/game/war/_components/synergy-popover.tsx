@@ -76,15 +76,15 @@ export default function SynergyPopover({
               <p className='text-[10px] text-muted-foreground'>{t.game.war.synergy.label}</p>
               {boundSynergies.map((s) => (
                 <div
-                  key={s.champion_user_id}
+                  key={s.id}
                   className='flex items-center gap-2'
                 >
                   <ChampionPortrait
                     imageUrl={s.image_url}
                     name={s.champion_name}
-                    rarity={s.rarity}
+                    rarity={s.rarity ?? ''}
                     size={32}
-                    ascension={s.ascension}
+                    ascension={s.ascension ?? 0}
                     is_saga_attacker={s.is_saga_attacker}
                     is_saga_defender={s.is_saga_defender}
                     sagaMode='attacker'
@@ -101,7 +101,7 @@ export default function SynergyPopover({
                     disabled={!canManage}
                     onClick={async () => {
                       setOpen(false)
-                      await handleRemoveSynergy(s.champion_user_id)
+                      await handleRemoveSynergy(s.id)
                     }}
                   >
                     {t.game.war.synergy.revoke}
