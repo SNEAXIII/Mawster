@@ -7,7 +7,7 @@ import pytest
 from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarStatus import WarStatus
-from src.Messages.war_messages import PREFIGHT_ENTRY_NOT_FOUND
+from src.Messages.war_messages import CHAMPION_NOT_IN_ALLIANCE_BG, PREFIGHT_ENTRY_NOT_FOUND
 from src.models.war.Season import Season
 from src.models.war.War import War
 from tests.integration.endpoints.alliance.war.war_prefight_test import (
@@ -25,6 +25,7 @@ from tests.integration.endpoints.setup.game_setup import push_champion, push_cha
 from tests.utils.utils_client import (
     execute_delete_request,
     execute_get_request,
+    execute_patch_request,
     execute_post_request,
 )
 from tests.utils.utils_db import load_objects
@@ -56,6 +57,17 @@ async def _add_unrecorded_prefight(data):
     url = _prefight_url(data["alliance"].id, data["war"].id)
     created = await execute_post_request(
         url, payload=_unrecorded_prefight(data, absent), headers=data["headers_member"]
+    )
+    assert created.status_code == 201
+    return url, created
+
+
+async def _add_unrecorded_synergy(data):
+    """Return the synergy URL and the created Unrecorded Copy's response."""
+    absent = await push_champion(name="Magik", champion_class="Mystic")
+    url = _synergy_url(data["alliance"].id, data["war"].id)
+    created = await execute_post_request(
+        url, payload=_unrecorded_synergy(data, absent.id), headers=data["headers_member"]
     )
     assert created.status_code == 201
     return url, created
@@ -232,6 +244,23 @@ class TestUnrecordedPrefight:
         assert listed[0]["unrecorded_reason"] == "on_defense"
 
     @pytest.mark.asyncio
+    async def test_account_outside_the_battlegroup_rejected(self):
+        data = await _setup_prefight_scenario()
+        await execute_patch_request(
+            f"/alliances/{data['alliance'].id}/members/{data['member'].id}/group",
+            payload={"group": 2},
+            headers=data["headers_owner"],
+        )
+        absent = await push_champion(name="Magik", champion_class="Mystic", has_prefight=True)
+        resp = await execute_post_request(
+            _prefight_url(data["alliance"].id, data["war"].id),
+            payload=_unrecorded_prefight(data, absent),
+            headers=data["headers_owner"],
+        )
+        assert resp.status_code == 403
+        assert resp.json()["message"] == CHAMPION_NOT_IN_ALLIANCE_BG
+
+    @pytest.mark.asyncio
     async def test_defender_still_refused_as_node_attacker(self):
         data = await _setup_prefight_scenario()
         await _defend(data, data["prefight_cu"])
@@ -247,14 +276,8 @@ class TestUnrecordedSynergy:
     @pytest.mark.asyncio
     async def test_not_in_roster_uses_target_account(self):
         data = await _setup_synergy_scenario()
-        absent = await push_champion(name="Magik", champion_class="Mystic")
-        resp = await execute_post_request(
-            _synergy_url(data["alliance"].id, data["war"].id),
-            payload=_unrecorded_synergy(data, absent.id),
-            headers=data["headers_member"],
-        )
-        assert resp.status_code == 201
-        body = resp.json()
+        _, created = await _add_unrecorded_synergy(data)
+        body = created.json()
         assert body["game_account_id"] == str(data["member"].id)
         assert body["unrecorded_reason"] == "not_in_roster"
 
@@ -293,14 +316,7 @@ class TestUnrecordedSynergy:
     @pytest.mark.asyncio
     async def test_removing_the_target_attacker_cascades(self):
         data = await _setup_synergy_scenario()
-        absent = await push_champion(name="Magik", champion_class="Mystic")
-        url = _synergy_url(data["alliance"].id, data["war"].id)
-        created = await execute_post_request(
-            url,
-            payload=_unrecorded_synergy(data, absent.id),
-            headers=data["headers_member"],
-        )
-        assert created.status_code == 201
+        url, _ = await _add_unrecorded_synergy(data)
         await execute_delete_request(
             f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/node/10/attacker",
             headers=data["headers_member"],
@@ -310,13 +326,7 @@ class TestUnrecordedSynergy:
     @pytest.mark.asyncio
     async def test_remove_by_entry_id(self):
         data = await _setup_synergy_scenario()
-        absent = await push_champion(name="Magik", champion_class="Mystic")
-        url = _synergy_url(data["alliance"].id, data["war"].id)
-        created = await execute_post_request(
-            url,
-            payload=_unrecorded_synergy(data, absent.id),
-            headers=data["headers_member"],
-        )
+        url, created = await _add_unrecorded_synergy(data)
         resp = await execute_delete_request(
             f"{url}/{created.json()['id']}", headers=data["headers_member"]
         )
