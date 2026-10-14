@@ -157,6 +157,30 @@ async def _war_banning(data, champion_id) -> str:
     return new_war_id
 
 
+async def _occupy_node_6(data):
+    """Defender on node 6, attacked by the owner — a second target node for pre-fights."""
+    alliance_id, war_id = data["alliance"].id, data["war"].id
+    second_defender = await push_champion(name="Hulk", champion_class="Science")
+    await execute_post_request(
+        f"/alliances/{alliance_id}/wars/{war_id}/bg/1/place",
+        payload={
+            "node_number": 6,
+            "champion_id": str(second_defender.id),
+            "stars": 7,
+            "rank": 3,
+            "ascension": 0,
+        },
+        headers=data["headers_owner"],
+    )
+    owner_attacker = await push_champion(name="Cyclops", champion_class="Mutant")
+    owner_attacker_cu = await push_champion_user(data["owner"], owner_attacker, stars=7, rank=3)
+    await execute_post_request(
+        f"/alliances/{alliance_id}/wars/{war_id}/bg/1/node/6/attacker",
+        payload={"champion_user_id": str(owner_attacker_cu.id)},
+        headers=data["headers_owner"],
+    )
+
+
 class TestGetPrefight:
     @pytest.mark.asyncio
     async def test_get_prefight_empty(self):
@@ -550,25 +574,7 @@ class TestRemovePrefight:
     async def test_remove_prefight_keeps_the_same_champion_on_other_nodes(self):
         data = await _setup_prefight_scenario()
         alliance_id, war_id = data["alliance"].id, data["war"].id
-        second_defender = await push_champion(name="Hulk", champion_class="Science")
-        await execute_post_request(
-            f"/alliances/{alliance_id}/wars/{war_id}/bg/1/place",
-            payload={
-                "node_number": 6,
-                "champion_id": str(second_defender.id),
-                "stars": 7,
-                "rank": 3,
-                "ascension": 0,
-            },
-            headers=data["headers_owner"],
-        )
-        owner_attacker = await push_champion(name="Cyclops", champion_class="Mutant")
-        owner_attacker_cu = await push_champion_user(data["owner"], owner_attacker, stars=7, rank=3)
-        await execute_post_request(
-            f"/alliances/{alliance_id}/wars/{war_id}/bg/1/node/6/attacker",
-            payload={"champion_user_id": str(owner_attacker_cu.id)},
-            headers=data["headers_owner"],
-        )
+        await _occupy_node_6(data)
         for node in (5, 6):
             added = await execute_post_request(
                 _prefight_url(alliance_id, war_id),
