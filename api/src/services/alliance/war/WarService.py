@@ -819,7 +819,11 @@ class WarService:
                 if (
                     (is_on_defense and not include_defense)
                     or cu.champion_id in banned
-                    or (full and cu.id not in used)
+                    or (
+                        full
+                        and cu.id not in used
+                        and not (is_on_defense and cu.champion_id in used)
+                    )
                 ):
                     continue
                 att, dfn = saga.get(cu.champion_id, NO_SAGA)

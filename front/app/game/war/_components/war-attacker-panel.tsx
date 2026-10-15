@@ -3,7 +3,7 @@
 import { useState, type RefObject } from 'react'
 import { useI18n } from '@/app/i18n'
 import ChampionPortrait from '@/components/champion-portrait'
-import UnrecordedBadge from './unrecorded-badge'
+import SupportPortrait from './support-portrait'
 import PlayerFilterSelect from '@/app/game/_components/player-filter-select'
 import {
   Select,
@@ -302,54 +302,20 @@ export default function WarAttackerPanel({
 
                     {/* Synergy-only champions (not on any node) */}
                     {synergyOnlyProviders.map((s) => (
-                      <div
+                      <SupportPortrait
                         key={s.id}
-                        className='flex flex-col items-center'
-                      >
-                        <ChampionPortrait
-                          imageUrl={s.image_url}
-                          name={s.champion_name}
-                          rarity={s.rarity ?? ''}
-                          size={35}
-                          mode='synergy'
-                          ascension={s.ascension ?? 0}
-                          is_saga_attacker={s.is_saga_attacker}
-                          is_saga_defender={s.is_saga_defender}
-                          sagaMode='attacker'
-                        />
-                        {s.unrecorded_reason && (
-                          <UnrecordedBadge
-                            reason={s.unrecorded_reason}
-                            compact
-                          />
-                        )}
-                      </div>
+                        entry={s}
+                        mode='synergy'
+                      />
                     ))}
 
                     {/* Prefight-only champions */}
                     {prefightOnlyProviders.map((p) => (
-                      <div
+                      <SupportPortrait
                         key={slotKey(p)}
-                        className='flex flex-col items-center'
-                      >
-                        <ChampionPortrait
-                          imageUrl={p.image_url}
-                          name={p.champion_name}
-                          rarity={p.rarity ?? ''}
-                          size={35}
-                          mode='prefight'
-                          ascension={p.ascension ?? 0}
-                          is_saga_attacker={p.is_saga_attacker}
-                          is_saga_defender={p.is_saga_defender}
-                          sagaMode='attacker'
-                        />
-                        {p.unrecorded_reason && (
-                          <UnrecordedBadge
-                            reason={p.unrecorded_reason}
-                            compact
-                          />
-                        )}
-                      </div>
+                        entry={p}
+                        mode='prefight'
+                      />
                     ))}
                   </div>
                 </div>

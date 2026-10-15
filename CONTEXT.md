@@ -232,11 +232,11 @@ Three distinct roles, each bringing one Roster Entry into a War:
 The Roster Entry that fights an enemy defender on a node.
 
 **Prefight**:
-A Roster Entry brought only for the buff it applies before a fight. Targets a node.
+A Roster Entry — or an Unrecorded Copy — brought only for the buff it applies before a fight. Targets a node.
 _Avoid_: attacker, support.
 
 **Synergy Carrier**:
-A Roster Entry brought only to buff another of your own Roster Entries. Targets a
+A Roster Entry — or an Unrecorded Copy — brought only to buff another of your own Roster Entries. Targets a
 champion, never a node — that is what separates it from a Prefight.
 _Avoid_: synergy, support.
 
