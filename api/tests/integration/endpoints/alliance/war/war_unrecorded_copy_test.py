@@ -8,6 +8,7 @@ from src.enums.SeasonFormat import SeasonFormat
 from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarStatus import WarStatus
 from src.Messages.war_messages import CHAMPION_NOT_IN_ALLIANCE_BG, PREFIGHT_ENTRY_NOT_FOUND
+from src.models.alliance.DefensePlan import DefensePlanNode
 from src.models.war.Season import Season
 from src.models.war.War import War
 from tests.integration.endpoints.alliance.war.war_prefight_test import (
@@ -28,12 +29,18 @@ from tests.utils.utils_client import (
     execute_patch_request,
     execute_post_request,
 )
-from tests.utils.utils_db import load_objects
+from tests.utils.utils_db import Session, load_objects
 
 
 async def _defend(data, champion_user, node=3):
     plan = await push_plan(data["alliance"].id, battlegroup=1, active=True)
-    await push_plan_node(plan, node, champion_user)
+    return await push_plan_node(plan, node, champion_user)
+
+
+async def _undefend(plan_node):
+    async with Session() as session:
+        await session.delete(await session.get(DefensePlanNode, plan_node.id))
+        await session.commit()
 
 
 def _unrecorded_prefight(data, champion, node=5, account=None):
@@ -177,9 +184,11 @@ class TestUnrecordedPrefight:
 
     @pytest.mark.asyncio
     async def test_two_nodes_take_one_quota_slot(self):
-        """Member holds 1 node attacker; one Unrecorded Copy on 2 nodes → 2 slots of 3."""
+        """Node attacker (1) + Unrecorded Copy on 2 nodes (1) + a recorded one (1) = the 3 slots."""
         data = await _setup_prefight_scenario()
         absent = await push_champion(name="Magik", champion_class="Mystic", has_prefight=True)
+        fourth = await push_champion(name="Gambit", champion_class="Mutant", has_prefight=True)
+        fourth_cu = await push_champion_user(data["member"], fourth, stars=7, rank=3)
         await _occupy_node_6(data)
         url = _prefight_url(data["alliance"].id, data["war"].id)
         for node in (5, 6):
@@ -189,13 +198,13 @@ class TestUnrecordedPrefight:
                 headers=data["headers_member"],
             )
             assert resp.status_code == 201
-        # third distinct slot still fits
-        resp = await execute_post_request(
-            url,
-            payload={"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 5},
-            headers=data["headers_member"],
-        )
-        assert resp.status_code == 201
+        for cu, expected in ((data["prefight_cu"], 201), (fourth_cu, 409)):
+            resp = await execute_post_request(
+                url,
+                payload={"champion_user_id": str(cu.id), "target_node_number": 5},
+                headers=data["headers_member"],
+            )
+            assert resp.status_code == expected
 
     @pytest.mark.asyncio
     async def test_banned_champion_rejected(self):
@@ -233,15 +242,60 @@ class TestUnrecordedPrefight:
     @pytest.mark.asyncio
     async def test_reason_follows_the_active_plan_at_read_time(self):
         data = await _setup_prefight_scenario()
-        await _defend(data, data["prefight_cu"])
+        defender = await _defend(data, data["prefight_cu"])
         url = _prefight_url(data["alliance"].id, data["war"].id)
-        await execute_post_request(
+        created = await execute_post_request(
             url,
             payload=_unrecorded_prefight(data, data["prefight_champ"]),
             headers=data["headers_member"],
         )
+        assert created.json()["unrecorded_reason"] == "on_defense"
+        await _undefend(defender)
         listed = (await execute_get_request(url, headers=data["headers_member"])).json()
-        assert listed[0]["unrecorded_reason"] == "on_defense"
+        assert listed[0]["unrecorded_reason"] == "not_in_roster"
+
+    @pytest.mark.asyncio
+    async def test_unknown_champion_not_found(self):
+        data = await _setup_prefight_scenario()
+        resp = await execute_post_request(
+            _prefight_url(data["alliance"].id, data["war"].id),
+            payload={
+                "champion_id": str(uuid.uuid4()),
+                "game_account_id": str(data["member"].id),
+                "target_node_number": 5,
+            },
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_unknown_game_account_not_found(self):
+        data = await _setup_prefight_scenario()
+        resp = await execute_post_request(
+            _prefight_url(data["alliance"].id, data["war"].id),
+            payload={
+                "champion_id": str(data["prefight_champ"].id),
+                "game_account_id": str(uuid.uuid4()),
+                "target_node_number": 5,
+            },
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_both_champion_user_and_champion_rejected(self):
+        data = await _setup_prefight_scenario()
+        resp = await execute_post_request(
+            _prefight_url(data["alliance"].id, data["war"].id),
+            payload={
+                "champion_user_id": str(data["prefight_cu"].id),
+                "champion_id": str(data["prefight_champ"].id),
+                "game_account_id": str(data["member"].id),
+                "target_node_number": 5,
+            },
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 422
 
     @pytest.mark.asyncio
     async def test_account_outside_the_battlegroup_rejected(self):
@@ -324,6 +378,29 @@ class TestUnrecordedSynergy:
         assert (await execute_get_request(url, headers=data["headers_member"])).json() == []
 
     @pytest.mark.asyncio
+    async def test_duplicate_rejected(self):
+        data = await _setup_synergy_scenario()
+        url, created = await _add_unrecorded_synergy(data)
+        resp = await execute_post_request(
+            url,
+            payload=_unrecorded_synergy(data, created.json()["champion_id"]),
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_banned_champion_rejected(self):
+        data = await _setup_synergy_scenario()
+        absent = await push_champion(name="Magik", champion_class="Mystic")
+        war_id = await _war_banning(data, absent.id)
+        resp = await execute_post_request(
+            _synergy_url(data["alliance"].id, war_id),
+            payload=_unrecorded_synergy(data, absent.id),
+            headers=data["headers_member"],
+        )
+        assert resp.status_code == 409
+
+    @pytest.mark.asyncio
     async def test_remove_by_entry_id(self):
         data = await _setup_synergy_scenario()
         url, created = await _add_unrecorded_synergy(data)
@@ -340,6 +417,19 @@ class TestAvailableWithDefense:
         data = await _setup_prefight_scenario()
         await _defend(data, data["prefight_cu"])
         assert (await _flags(data, prefight=prefight))[str(data["prefight_cu"].id)] is True
+
+    @pytest.mark.asyncio
+    async def test_full_player_keeps_a_defender_on_its_unrecorded_slot(self):
+        data = await _setup_prefight_scenario()
+        await _defend(data, data["prefight_cu"])
+        url = _prefight_url(data["alliance"].id, data["war"].id)
+        other = await push_champion(name="Magik", champion_class="Mystic", has_prefight=True)
+        for champion in (data["prefight_champ"], other):
+            resp = await execute_post_request(
+                url, payload=_unrecorded_prefight(data, champion), headers=data["headers_member"]
+            )
+            assert resp.status_code == 201
+        assert (await _flags(data))[str(data["prefight_cu"].id)] is True
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("prefight", [False, True])
