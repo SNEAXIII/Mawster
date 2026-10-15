@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.28.1](https://github.com/SNEAXIII/Mawster/compare/v1.28.0...v1.28.1) (2026-10-15)
+
+
+### Corrigé
+
+* add carina champion ([e35375f](https://github.com/SNEAXIII/Mawster/commit/e35375f37527c702649c6bc43affb7ce80e29ac2))
+
 ## [1.28.0](https://github.com/SNEAXIII/Mawster/compare/v1.27.0...v1.28.0) (2026-10-13)
 
 
