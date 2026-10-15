@@ -122,7 +122,7 @@ export interface WarDefenseSummary {
   progress: WarProgress | null
 }
 
-export type UnrecordedReason = 'on_defense' | 'not_in_roster'
+export type UnrecordedReason = 'on_defense' | 'not_in_roster' | 'recorded_copy_free'
 
 export interface AvailablePrefightAttacker {
   champion_user_id: string

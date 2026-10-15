@@ -1,14 +1,30 @@
 'use client'
 
-import { ShieldAlert, UserX } from 'lucide-react'
+import { RefreshCw, ShieldAlert, UserX } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import type { UnrecordedReason } from '@/app/services/war'
 
-const STYLE: Record<UnrecordedReason, { icon: typeof ShieldAlert; tone: string }> = {
-  on_defense: { icon: ShieldAlert, tone: 'bg-amber-500/15 text-amber-500 border-amber-500/40' },
-  not_in_roster: { icon: UserX, tone: 'bg-sky-500/15 text-sky-500 border-sky-500/40' },
-}
+const STYLE = {
+  on_defense: {
+    icon: ShieldAlert,
+    tone: 'bg-amber-500/15 text-amber-500 border-amber-500/40',
+    label: 'onDefense',
+    hint: 'onDefenseHint',
+  },
+  not_in_roster: {
+    icon: UserX,
+    tone: 'bg-sky-500/15 text-sky-500 border-sky-500/40',
+    label: 'notInRoster',
+    hint: 'notInRosterHint',
+  },
+  recorded_copy_free: {
+    icon: RefreshCw,
+    tone: 'bg-rose-500/15 text-rose-500 border-rose-500/40',
+    label: 'recordedCopyFree',
+    hint: 'recordedCopyFreeHint',
+  },
+} as const satisfies Record<UnrecordedReason, object>
 
 export default function UnrecordedBadge({
   reason,
@@ -16,9 +32,9 @@ export default function UnrecordedBadge({
 }: Readonly<{ reason: UnrecordedReason; compact?: boolean }>) {
   const { t } = useI18n()
   const u = t.game.war.unrecorded
-  const label = reason === 'on_defense' ? u.onDefense : u.notInRoster
-  const hint = reason === 'on_defense' ? u.onDefenseHint : u.notInRosterHint
-  const { icon: Icon, tone } = STYLE[reason]
+  const { icon: Icon, tone, label: labelKey, hint: hintKey } = STYLE[reason]
+  const label = u[labelKey]
+  const hint = u[hintKey]
   return (
     <span
       className={cn(

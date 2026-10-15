@@ -252,7 +252,20 @@ class TestUnrecordedPrefight:
         assert created.json()["unrecorded_reason"] == "on_defense"
         await _undefend(defender)
         listed = (await execute_get_request(url, headers=data["headers_member"])).json()
-        assert listed[0]["unrecorded_reason"] == "not_in_roster"
+        assert listed[0]["unrecorded_reason"] == "recorded_copy_free"
+
+    @pytest.mark.asyncio
+    async def test_reason_flags_a_copy_recorded_after_placement(self):
+        data = await _setup_prefight_scenario()
+        absent = await push_champion(name="Magik", champion_class="Mystic", has_prefight=True)
+        url = _prefight_url(data["alliance"].id, data["war"].id)
+        created = await execute_post_request(
+            url, payload=_unrecorded_prefight(data, absent), headers=data["headers_member"]
+        )
+        assert created.json()["unrecorded_reason"] == "not_in_roster"
+        await push_champion_user(data["member"], absent, stars=6, rank=5)
+        listed = (await execute_get_request(url, headers=data["headers_member"])).json()
+        assert listed[0]["unrecorded_reason"] == "recorded_copy_free"
 
     @pytest.mark.asyncio
     async def test_unknown_champion_not_found(self):

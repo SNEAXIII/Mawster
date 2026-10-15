@@ -244,7 +244,8 @@ _Avoid_: synergy, support.
 A copy of a Champion the Player owns but never entered on the site — typically a lower
 copy of one standing on defense. Brought only as Synergy Carrier or Prefight, never as
 Attacker; allowed only when no recorded copy of that Champion is off the Active Plan.
-Rarity and rank unknown. Shown as *on defense* or *not in roster*, derived at read time.
+Rarity and rank unknown. Shown as *on defense*, *not in roster*, or *recorded copy free* once a
+recorded copy leaves defense or gets entered — derived at read time, never re-linked.
 _Avoid_: ghost, placeholder, unknown champion.
 
 ### War map

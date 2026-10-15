@@ -734,6 +734,9 @@ const fr: Translations = {
         notInRoster: 'Non renseigné',
         onDefenseHint: 'La copie renseignée est en défense — une copie inférieure sera utilisée',
         notInRosterHint: "Absent du site — le joueur l'a hors roster",
+        recordedCopyFree: 'Copie renseignée libre',
+        recordedCopyFreeHint:
+          'Une copie renseignée est maintenant libre — retire cette entrée et place la vraie copie',
         showDefenders: 'Défenseurs',
         showCatalog: 'Champions non renseignés',
         pickPlayerFirst: 'Choisis un joueur pour lister ses champions non renseignés',

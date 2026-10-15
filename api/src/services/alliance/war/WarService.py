@@ -1111,18 +1111,41 @@ class WarService:
     # ─── Synergy & prefight ───────────────────────────────────────────────────
 
     @classmethod
-    async def _defended_champions(
-        cls, session: SessionDep, alliance_id: uuid.UUID, war: War, battlegroup: int
-    ) -> set[tuple[uuid.UUID, uuid.UUID]]:
-        on_defense = DefensePlanService.active_defender_ids(
-            alliance_id, await cls._war_format(session, war), battlegroup
-        ).scalar_subquery()
-        rows = await session.exec(
-            select(ChampionUser.game_account_id, ChampionUser.champion_id).where(
-                col(ChampionUser.id).in_(on_defense)
+    async def _unrecorded_reasons(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        war: War,
+        battlegroup: int,
+        keys: set[tuple[uuid.UUID, uuid.UUID]],
+    ) -> dict[tuple[uuid.UUID, uuid.UUID], UnrecordedReason]:
+        """Per (account, champion): a free recorded copy beats one on defense; none means not in roster."""
+        on_defense = set(
+            (
+                await session.exec(
+                    DefensePlanService.active_defender_ids(
+                        alliance_id, await cls._war_format(session, war), battlegroup
+                    )
+                )
+            ).all()
+        )
+        copies = await session.exec(
+            select(ChampionUser.id, ChampionUser.game_account_id, ChampionUser.champion_id).where(
+                col(ChampionUser.game_account_id).in_({account for account, _ in keys}),
+                col(ChampionUser.champion_id).in_({champion for _, champion in keys}),
             )
         )
-        return set(rows.all())
+        reasons = dict.fromkeys(keys, UnrecordedReason.NOT_IN_ROSTER)
+        for cu_id, account_id, champion_id in copies.all():
+            key = (account_id, champion_id)
+            if key not in reasons or reasons[key] == UnrecordedReason.RECORDED_COPY_FREE:
+                continue
+            reasons[key] = (
+                UnrecordedReason.ON_DEFENSE
+                if cu_id in on_defense
+                else UnrecordedReason.RECORDED_COPY_FREE
+            )
+        return reasons
 
     @classmethod
     async def _entry_dtos[T: (WarSynergyResponse, WarPrefightResponse)](
@@ -1135,21 +1158,18 @@ class WarService:
         battlegroup: int,
     ) -> list[T]:
         saga = await SagaService.resolve_current(session)
-        defended = (
-            await cls._defended_champions(session, alliance_id, war, battlegroup)
-            if any(row.champion_user_id is None for row in rows)
-            else set()
+        keys = {(r.game_account_id, r.champion_id) for r in rows if r.champion_user_id is None}
+        reasons = (
+            await cls._unrecorded_reasons(session, alliance_id, war, battlegroup, keys)
+            if keys
+            else {}
         )
         dtos = []
         for row in rows:
             dto = dto_cls.model_validate(row)
             dto.is_saga_attacker, dto.is_saga_defender = saga.get(row.champion_id, NO_SAGA)
             if row.champion_user_id is None:
-                dto.unrecorded_reason = (
-                    UnrecordedReason.ON_DEFENSE
-                    if (row.game_account_id, row.champion_id) in defended
-                    else UnrecordedReason.NOT_IN_ROSTER
-                )
+                dto.unrecorded_reason = reasons[(row.game_account_id, row.champion_id)]
             dtos.append(dto)
         return dtos
 
