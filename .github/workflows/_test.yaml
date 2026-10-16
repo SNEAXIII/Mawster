@@ -69,7 +69,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    needs: [lint-test-python, lint-test-static-assets]
+    needs: [lint-test-python, lint-test-static-assets, lint-test-front]
     if: github.event_name == 'pull_request' || github.ref_name == 'release'
     uses: $/.github/workflows/_sonar.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:
@@ -120,9 +120,16 @@ jobs:
       - name: Typecheck Cypress specs
         working-directory: ./front
         run: npx --no-install tsc -p cypress/tsconfig.json --noEmit
-      - name: Run frontend unit tests
+      - name: Run frontend unit tests with coverage
         working-directory: ./front
-        run: npm test
+        run: npm run test:coverage
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: front-coverage
+          path: front/coverage/lcov.info
+          retention-days: 1
+          if-no-files-found: error
 
   lint-test-static-assets:
     name: Lint & Test for static-assets

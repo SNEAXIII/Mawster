@@ -1,7 +1,8 @@
 name: Sonar scan
 
 # Called by _test.yaml and sonar.yaml, never triggered. The caller's run must hold the
-# `backend-coverage` (api/coverage.xml) and `static-assets-coverage` (lcov.info) artifacts.
+# `backend-coverage` (api/coverage.xml), `static-assets-coverage` and `front-coverage`
+# (lcov.info) artifacts.
 on:
   workflow_call:
     secrets:
@@ -38,6 +39,11 @@ jobs:
         with:
           name: static-assets-coverage
           path: static-assets
+      - name: Download frontend coverage
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: front-coverage
+          path: front/coverage
       - name: SonarQube Cloud scan
         uses: SonarSource/sonarqube-scan-action@ba9859eae8dd6bd29e412f25ddbbef3d032000f4 # v8.2.2
         env:

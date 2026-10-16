@@ -18,7 +18,26 @@ EXCLUSIONS = [
 # Sonar-only: coverage.py never sees these. Dropping one makes Sonar's
 # zero-coverage sensor report it as 0% and sink the new-code gate.
 SONAR_EXTRA = [
-    "front/**",
+    # Everything in front/ but the pure logic front/vitest.config.mts measures.
+    "front/*.*",
+    "front/**/*.tsx",
+    "front/**/*.js",
+    "front/**/use-*.ts",
+    "front/**/_viewmodels/**",
+    "front/**/_hooks/**",
+    "front/hooks/**",
+    "front/cypress/**",
+    "front/tests/**",
+    "front/public/**",
+    "front/app/*.ts",
+    "front/app/_components/**",
+    "front/app/api/**",
+    "front/app/components/**",
+    "front/app/contexts/**",
+    "front/app/dev/**",
+    "front/app/i18n/**",
+    "front/app/types/**",
+    "front/app/ui/**",
     "static-assets/museum/**",
     "static-assets/src/main.rs",
     ".claude/**",
