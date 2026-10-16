@@ -164,9 +164,9 @@ Project agents in `.claude/agents/` are not auto-dispatched — consider routing
 
 ## Docker
 
-**This checkout runs on the production swarm manager**: every `docker` command here and
-`make deploy` act on the live `mawster` stack. Inspect freely; confirm with the user before anything
-that mutates it (`stack deploy`, `service update`, `service rm`, secrets).
+**This machine may host the production swarm**: when `docker stack ls` lists `mawster`, every
+`docker` command and `make deploy` act on the live stack. Inspect freely; confirm with the user before
+anything that mutates it (`stack deploy`, `service update`, `service rm`, secrets).
 
 Dev ports and credentials: `compose-dev.yaml`.
 
