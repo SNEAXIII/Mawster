@@ -60,7 +60,6 @@ describe('War — Unrecorded Copy', () => {
       cy.apiLogin(s.memberData.user_id, 'war');
       openPrefightSelector();
       cy.getByCy('prefight-toggle-catalog').click();
-      cy.getByCy('prefight-pick-player-first').should('be.visible');
       cy.selectOption('prefight-player-filter', 'uc3Member');
       cy.getByCy('prefight-pick-unrecorded-Magik').click();
       cy.getByCy('prefight-selector').should('not.exist');

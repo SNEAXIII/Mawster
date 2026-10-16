@@ -739,7 +739,6 @@ const fr: Translations = {
           'Une copie renseignée est maintenant libre — retire cette entrée et place la vraie copie',
         showDefenders: 'Défenseurs',
         showCatalog: 'Champions non renseignés',
-        pickPlayerFirst: 'Choisis un joueur pour lister ses champions non renseignés',
       },
       synergy: {
         add: 'Ajouter une synergie',

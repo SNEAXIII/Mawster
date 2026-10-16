@@ -733,7 +733,6 @@ const en = {
           'A recorded copy is now free — remove this entry and place the recorded copy instead',
         showDefenders: 'Defenders',
         showCatalog: 'Champions not in roster',
-        pickPlayerFirst: 'Pick a player to list their unrecorded champions',
       },
       synergy: {
         add: 'Add a synergy',

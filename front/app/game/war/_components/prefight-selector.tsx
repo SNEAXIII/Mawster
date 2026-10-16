@@ -11,7 +11,6 @@ import { catalogCandidates, useCatalogPicks } from './use-catalog-picks'
 import InfoSelectorFilters from './info-selector-filters'
 import SelectorToggles, { useSelectorToggles } from './selector-toggles'
 import PrefightPlayerGroups from './prefight-player-groups'
-import PrefightCatalogGroup from './prefight-catalog-group'
 
 interface PrefightSelectorDialogProps {
   open: boolean
@@ -59,7 +58,6 @@ export default function PrefightSelectorDialog({
   const accounts = new Map(
     available.map((a) => [a.game_pseudo, { id: a.game_account_id, pseudo: a.game_pseudo }])
   )
-  const selectedAccount = accounts.get(playerFilter)
   const bannedIds = new Set((currentWar?.banned_champions ?? []).map((c) => c.id))
   const prefightKey = (c: { game_account_id: string; champion_id: string }) =>
     `${c.game_account_id}:${c.champion_id}`
@@ -72,12 +70,14 @@ export default function PrefightSelectorDialog({
   const filtered = filterBySearch(
     available.filter((a) => (showDefenders || !a.is_on_defense) && isFree(a))
   )
-  const picks =
-    showCatalog && selectedAccount
-      ? filterBySearch(
-          catalogCandidates(catalog, available, bannedIds, selectedAccount).filter(isFree)
+  // The pre-fight catalog is a handful of champions: every player gets theirs, no pick needed.
+  const picks = showCatalog
+    ? filterBySearch(
+        [...accounts.values()].flatMap((account) =>
+          catalogCandidates(catalog, available, bannedIds, account).filter(isFree)
         )
-      : []
+      )
+    : []
   const pick = (provider: Provider) => {
     void handleAddPrefight(provider, targetNodeNumber)
     onClose()
@@ -117,18 +117,12 @@ export default function PrefightSelectorDialog({
             loading={loading}
             error={error}
             groups={buildGroups(filtered)}
-            hideEmpty={showCatalog}
+            picks={picks}
             onPick={(a) => pick(providerOf(a))}
+            onPickUnrecorded={(p) =>
+              pick({ champion_id: p.champion_id, game_account_id: p.game_account_id })
+            }
           />
-          {showCatalog && !loading && !error && (
-            <PrefightCatalogGroup
-              picks={picks}
-              pickPlayerFirst={!playerFilter}
-              onPick={(p) =>
-                pick({ champion_id: p.champion_id, game_account_id: p.game_account_id })
-              }
-            />
-          )}
         </div>
       </DialogContent>
     </Dialog>
