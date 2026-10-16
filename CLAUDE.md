@@ -42,6 +42,10 @@ the user runs `make e2e-open` (Cypress UI) — never launch it yourself.
 **Servers**: `docker compose -f compose-dev.yaml up -d`, then `make run-dev` (`api/`) and
 `npm run dev` (`front/`).
 
+**Calling the dev API**: `curl -H "Authorization: Bearer $(make -s dev-token)"` from `api/` acts as
+the user's own account; `PSEUDO=<game_pseudo>` acts as another player. The DB stores UUIDs as 32
+hex chars, the API answers them dashed.
+
 ---
 
 ## Architecture
