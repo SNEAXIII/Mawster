@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { getChampions, type Champion } from '@/app/services/champions'
+import { useEffect, useMemo, useState } from 'react'
+import { fetchCatalog, type CatalogChampion } from '@/app/services/tierlist'
 
 export interface CatalogPick {
   champion_id: string
@@ -12,26 +12,37 @@ export interface CatalogPick {
   game_pseudo: string
 }
 
-// ponytail: one page of 1000 covers the catalog; paginate if it ever grows past it.
-const CATALOG_SIZE = 1000
+// One request per page load, shared by every selector; a failure lets the next open retry.
+let catalogRequest: Promise<CatalogChampion[]> | null = null
+function loadCatalog(): Promise<CatalogChampion[]> {
+  catalogRequest ??= fetchCatalog()
+    .then((r) => r.champions)
+    .catch((err: unknown) => {
+      catalogRequest = null
+      throw err
+    })
+  return catalogRequest
+}
 
-export function useCatalogPicks(enabled: boolean, { prefightOnly }: { prefightOnly: boolean }) {
-  const [catalog, setCatalog] = useState<Champion[]>([])
-  const [loading, setLoading] = useState(false)
+/** The champion catalog, loaded when the dialog opens so the toggle sends no request. */
+export function useCatalogPicks(open: boolean, { prefightOnly }: { prefightOnly: boolean }) {
+  const [champions, setChampions] = useState<CatalogChampion[]>([])
   useEffect(() => {
-    if (!enabled || catalog.length) return
-    setLoading(true)
-    getChampions({ size: CATALOG_SIZE, orderBy: 'name', hasPrefight: prefightOnly ? 'true' : null })
-      .then((r) => setCatalog(r.champions))
+    if (!open || champions.length) return
+    loadCatalog()
+      .then(setChampions)
       .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [enabled, prefightOnly, catalog.length])
-  return { catalog, loading }
+  }, [open, champions.length])
+  const catalog = useMemo(
+    () => (prefightOnly ? champions.filter((c) => c.has_prefight) : champions),
+    [champions, prefightOnly]
+  )
+  return { catalog }
 }
 
 /** Champions the player has no recorded copy of (free or on defense), minus bans. */
 export function catalogCandidates(
-  catalog: Champion[],
+  catalog: CatalogChampion[],
   taken: { game_account_id: string; champion_id: string }[],
   bannedIds: Set<string>,
   account: { id: string; pseudo: string }

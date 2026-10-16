@@ -44,7 +44,7 @@ export default function SynergySelectorDialog({
   const [query, setQuery] = useState('')
   const toggles = useSelectorToggles(open)
   const { showDefenders, showCatalog } = toggles
-  const { catalog } = useCatalogPicks(showCatalog, { prefightOnly: false })
+  const { catalog } = useCatalogPicks(open, { prefightOnly: false })
   useEffect(() => {
     if (!open) {
       setQuery('')

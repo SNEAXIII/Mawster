@@ -1,10 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { providerOf, type AvailableAttacker, type Provider } from '@/app/services/war'
+import { providerOf, type Provider } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import { useAvailableAttackers } from './use-available-attackers'
 import { catalogCandidates, useCatalogPicks } from './use-catalog-picks'
@@ -32,7 +32,6 @@ export default function PrefightSelectorDialog({
     currentWar,
     handleAddPrefight,
     prefights,
-    loadAvailableAttackers,
     loadAvailablePrefightAttackers,
   } = useWar()
 
@@ -55,19 +54,10 @@ export default function PrefightSelectorDialog({
 
   const toggles = useSelectorToggles(open)
   const { showDefenders, showCatalog } = toggles
-  const [roster, setRoster] = useState<AvailableAttacker[]>([])
-  const { catalog } = useCatalogPicks(showCatalog, { prefightOnly: true })
-  useEffect(() => {
-    if (!open) setRoster([])
-    if (!open || !showCatalog || !ready) return
-    loadAvailableAttackers(undefined, undefined, true)
-      .then(setRoster)
-      .catch(() => {})
-  }, [open, showCatalog, ready, loadAvailableAttackers])
-
-  const owners = showCatalog ? [...available, ...roster] : available
+  const { catalog } = useCatalogPicks(open, { prefightOnly: true })
+  // `available` holds every owned pre-fight champion, defenders included: no roster to fetch.
   const accounts = new Map(
-    owners.map((a) => [a.game_pseudo, { id: a.game_account_id, pseudo: a.game_pseudo }])
+    available.map((a) => [a.game_pseudo, { id: a.game_account_id, pseudo: a.game_pseudo }])
   )
   const selectedAccount = accounts.get(playerFilter)
   const bannedIds = new Set((currentWar?.banned_champions ?? []).map((c) => c.id))
@@ -85,7 +75,7 @@ export default function PrefightSelectorDialog({
   const picks =
     showCatalog && selectedAccount
       ? filterBySearch(
-          catalogCandidates(catalog, owners, bannedIds, selectedAccount).filter(isFree)
+          catalogCandidates(catalog, available, bannedIds, selectedAccount).filter(isFree)
         )
       : []
   const pick = (provider: Provider) => {
