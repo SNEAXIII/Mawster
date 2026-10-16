@@ -17,7 +17,7 @@ export default function SupportPortrait({
   mode,
 }: Readonly<{ entry: SupportEntry; mode: 'synergy' | 'prefight' }>) {
   return (
-    <div className='flex flex-col items-center'>
+    <div className='relative flex flex-col items-center'>
       <ChampionPortrait
         imageUrl={entry.image_url}
         name={entry.champion_name}
@@ -32,7 +32,7 @@ export default function SupportPortrait({
       {entry.unrecorded_reason && (
         <UnrecordedBadge
           reason={entry.unrecorded_reason}
-          compact
+          overlay
         />
       )}
     </div>

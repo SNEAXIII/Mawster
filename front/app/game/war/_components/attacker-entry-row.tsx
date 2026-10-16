@@ -182,7 +182,7 @@ export default function AttackerEntryRow({
             {p.unrecorded_reason && (
               <UnrecordedBadge
                 reason={p.unrecorded_reason}
-                compact
+                overlay
               />
             )}
           </div>

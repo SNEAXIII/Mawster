@@ -29,12 +29,25 @@ const STYLE = {
 export default function UnrecordedBadge({
   reason,
   compact = false,
-}: Readonly<{ reason: UnrecordedReason; compact?: boolean }>) {
+  overlay = false,
+}: Readonly<{ reason: UnrecordedReason; compact?: boolean; overlay?: boolean }>) {
   const { t } = useI18n()
   const u = t.game.war.unrecorded
   const { icon: Icon, tone, label: labelKey, hint: hintKey } = STYLE[reason]
   const label = u[labelKey]
   const hint = u[hintKey]
+  // Over a portrait (parent must be `relative`): icon only, the label moves to the tooltip.
+  if (overlay) {
+    return (
+      <span
+        className={cn('absolute top-0 left-0 z-30 rounded-full border p-0.5', tone, 'bg-card')}
+        title={`${label} — ${hint}`}
+        data-cy={`unrecorded-badge-${reason}`}
+      >
+        <Icon className='w-2.5 h-2.5' />
+      </span>
+    )
+  }
   return (
     <span
       className={cn(
