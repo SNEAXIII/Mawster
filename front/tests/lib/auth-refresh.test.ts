@@ -93,7 +93,7 @@ describe('getServerApiUrl', () => {
   afterEach(() => vi.unstubAllEnvs())
 
   it.each([
-    ['production', undefined, 'http://api:8000'],
+    ['production', undefined, 'http://api:8000'], // NOSONAR typescript:S5332 - asserts the internal swarm URL
     ['production', 'true', 'http://127.0.0.1:8000'],
     ['development', undefined, 'http://127.0.0.1:8000'],
   ])('NODE_ENV=%s DEV_MODE=%s → %s', (env, devMode, expected) => {

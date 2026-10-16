@@ -22,7 +22,10 @@ export default defineConfig({
       ],
       exclude: ['**/use-*.ts'],
       // Paths from the repo root, where the Sonar scanner runs.
-      reporter: ['text-summary', ['lcov', { projectRoot: fileURLToPath(new URL('..', import.meta.url)) }]],
+      reporter: [
+        'text-summary',
+        ['lcov', { projectRoot: fileURLToPath(new URL('..', import.meta.url)) }],
+      ],
     },
   },
 })
