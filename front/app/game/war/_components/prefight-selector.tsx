@@ -1,10 +1,9 @@
 'use client'
 
-import { useCallback } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { providerOf, type Provider } from '@/app/services/war'
+import type { Provider } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
 import { useAvailableAttackers } from './use-available-attackers'
 import { catalogCandidates, useCatalogPicks } from './use-catalog-picks'
@@ -34,11 +33,7 @@ export default function PrefightSelectorDialog({
     loadAvailablePrefightAttackers,
   } = useWar()
 
-  const ready = Boolean(selectedAllianceId && activeWarId)
-  const fetchAll = useCallback(
-    () => loadAvailablePrefightAttackers(true),
-    [loadAvailablePrefightAttackers]
-  )
+  const guardedFetch = selectedAllianceId && activeWarId ? loadAvailablePrefightAttackers : null
   const {
     available,
     playerFilter,
@@ -49,7 +44,7 @@ export default function PrefightSelectorDialog({
     error,
     filterBySearch,
     buildGroups,
-  } = useAvailableAttackers(open, ready ? fetchAll : null)
+  } = useAvailableAttackers(open, guardedFetch)
 
   const toggles = useSelectorToggles(open)
   const { showDefenders, showCatalog } = toggles
@@ -126,10 +121,7 @@ export default function PrefightSelectorDialog({
             error={error}
             groups={buildGroups(filtered)}
             picks={picks}
-            onPick={(a) => pick(providerOf(a))}
-            onPickUnrecorded={(p) =>
-              pick({ champion_id: p.champion_id, game_account_id: p.game_account_id })
-            }
+            onPick={pick}
           />
         </div>
       </DialogContent>

@@ -139,7 +139,7 @@ interface WarContextValue {
     nodeNumber?: number,
     includeDefense?: boolean
   ) => Promise<AvailableAttacker[]>
-  loadAvailablePrefightAttackers: (includeDefense?: boolean) => Promise<AvailablePrefightAttacker[]>
+  loadAvailablePrefightAttackers: () => Promise<AvailablePrefightAttacker[]>
 
   // Synergy
   synergies: WarSynergy[]
@@ -408,8 +408,7 @@ export function WarProvider({
   )
 
   const loadAvailablePrefightAttackers = useCallback(
-    (includeDefense?: boolean) =>
-      getAvailablePrefightAttackers(selectedAllianceId, activeWarId, selectedBg, includeDefense),
+    () => getAvailablePrefightAttackers(selectedAllianceId, activeWarId, selectedBg),
     [selectedAllianceId, activeWarId, selectedBg]
   )
 

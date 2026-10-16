@@ -30,6 +30,18 @@ export function keepBestCopy(items: AvailableAttacker[]): AvailableAttacker[] {
   return Array.from(best.values())
 }
 
+export function matchesChampion(
+  query: string,
+  c: Pick<AvailablePrefightAttacker, 'champion_name' | 'champion_alias'>
+): boolean {
+  const q = query.toLowerCase()
+  return (
+    !q ||
+    c.champion_name.toLowerCase().includes(q) ||
+    (c.champion_alias ?? '').toLowerCase().includes(q)
+  )
+}
+
 export function useAvailableAttackers<T extends AvailablePrefightAttacker>(
   open: boolean,
   fetchFn: (() => Promise<T[]>) | null
@@ -67,15 +79,9 @@ export function useAvailableAttackers<T extends AvailablePrefightAttacker>(
   function filterBySearch<
     U extends Pick<AvailablePrefightAttacker, 'game_pseudo' | 'champion_name' | 'champion_alias'>,
   >(items: U[]): U[] {
-    const q = championSearch.toLowerCase()
-    return items.filter((a) => {
-      const matchPlayer = !playerFilter || a.game_pseudo === playerFilter
-      const matchChampion =
-        !q ||
-        a.champion_name.toLowerCase().includes(q) ||
-        (a.champion_alias ?? '').toLowerCase().includes(q)
-      return matchPlayer && matchChampion
-    })
+    return items.filter(
+      (a) => (!playerFilter || a.game_pseudo === playerFilter) && matchesChampion(championSearch, a)
+    )
   }
 
   function buildGroups(filtered: T[]): AttackerGroup<T>[] {

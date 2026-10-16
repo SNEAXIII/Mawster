@@ -15,14 +15,15 @@ interface SupportEntry {
 export default function SupportPortrait({
   entry,
   mode,
-}: Readonly<{ entry: SupportEntry; mode: 'synergy' | 'prefight' }>) {
+  size = 35,
+}: Readonly<{ entry: SupportEntry; mode: 'synergy' | 'prefight'; size?: number }>) {
   return (
     <div className='relative flex flex-col items-center'>
       <ChampionPortrait
         imageUrl={entry.image_url}
         name={entry.champion_name}
         rarity={entry.rarity ?? ''}
-        size={35}
+        size={size}
         mode={mode}
         ascension={entry.ascension ?? 0}
         is_saga_attacker={entry.is_saga_attacker}

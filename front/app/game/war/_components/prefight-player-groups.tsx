@@ -2,10 +2,9 @@
 
 import type { ReactNode } from 'react'
 import { useI18n } from '@/app/i18n'
-import { shortenChampionName } from '@/app/services/roster'
-import type { AvailablePrefightAttacker } from '@/app/services/war'
+import type { AvailablePrefightAttacker, Provider } from '@/app/services/war'
 import type { CatalogPick } from './use-catalog-picks'
-import InfoChampionTile from './info-champion-tile'
+import ProviderTiles from './provider-tiles'
 
 function PickGroup({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
   return (
@@ -29,8 +28,7 @@ interface PrefightPlayerGroupsProps {
   error: boolean
   groups: Group[]
   picks: CatalogPick[]
-  onPick: (a: AvailablePrefightAttacker) => void
-  onPickUnrecorded: (p: CatalogPick) => void
+  onPick: (provider: Provider) => void
 }
 
 /** One group per player: their recorded copies, then their unrecorded ones. */
@@ -40,7 +38,6 @@ export default function PrefightPlayerGroups({
   groups,
   picks,
   onPick,
-  onPickUnrecorded,
 }: Readonly<PrefightPlayerGroupsProps>) {
   const { t } = useI18n()
   if (loading) {
@@ -74,26 +71,12 @@ export default function PrefightPlayerGroups({
       key={group.gameAccountId}
       title={group.pseudo}
     >
-      {group.attackers.map((a) => (
-        <InfoChampionTile
-          key={a.champion_user_id}
-          champion={a}
-          label={shortenChampionName(a.champion_name)}
-          badge={a.is_on_defense ? 'on_defense' : undefined}
-          onPick={() => onPick(a)}
-          dataCy={`prefight-pick-${a.champion_name.replaceAll(/\s+/g, '-')}`}
-        />
-      ))}
-      {group.picks.map((p) => (
-        <InfoChampionTile
-          key={`unrecorded-${p.champion_id}`}
-          champion={p}
-          label={shortenChampionName(p.champion_name)}
-          badge='not_in_roster'
-          onPick={() => onPickUnrecorded(p)}
-          dataCy={`prefight-pick-unrecorded-${p.champion_name.replaceAll(/\s+/g, '-')}`}
-        />
-      ))}
+      <ProviderTiles
+        recorded={group.attackers}
+        picks={group.picks}
+        cyPrefix='prefight'
+        onPick={onPick}
+      />
     </PickGroup>
   ))
 }

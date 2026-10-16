@@ -506,12 +506,11 @@ export async function removeWarSynergy(
 export async function getAvailablePrefightAttackers(
   allianceId: string,
   warId: string,
-  battlegroup: number,
-  includeDefense = false
+  battlegroup: number
 ): Promise<AvailablePrefightAttacker[]> {
-  const suffix = includeDefense ? '?include_defense=true' : ''
+  // Defenders included: the selector badges them and lets the toggle hide them.
   return api(
-    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-prefight-attackers${suffix}`,
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-prefight-attackers?include_defense=true`,
     'Failed to load available pre-fight attackers'
   )
 }

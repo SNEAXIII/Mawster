@@ -7,10 +7,10 @@ import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import type { AvailableAttacker } from '@/app/services/war'
 import { useWar } from '@/app/contexts/war-context'
-import { keepBestCopy } from './use-available-attackers'
+import { keepBestCopy, matchesChampion } from './use-available-attackers'
 import { catalogCandidates, useCatalogPicks } from './use-catalog-picks'
 import SelectorToggles, { useSelectorToggles } from './selector-toggles'
-import SynergySelectorGrid from './synergy-selector-grid'
+import ProviderTiles from './provider-tiles'
 
 interface SynergySelectorDialogProps {
   open: boolean
@@ -65,13 +65,8 @@ export default function SynergySelectorDialog({
   )
   const isFree = (c: { champion_id: string }) =>
     c.champion_id !== targetChampionId && !usedChampionIds.has(c.champion_id)
-  const matches = (c: { champion_name: string; champion_alias: string | null }) => {
-    const q = query.toLowerCase()
-    return (
-      c.champion_name.toLowerCase().includes(q) ||
-      (c.champion_alias ?? '').toLowerCase().includes(q)
-    )
-  }
+  const matches = (c: { champion_name: string; champion_alias: string | null }) =>
+    matchesChampion(query, c)
   const recorded = keepBestCopy(
     attackers.filter((a) => isFree(a) && (showDefenders || !a.is_on_defense))
   ).filter(matches)
@@ -116,14 +111,17 @@ export default function SynergySelectorDialog({
             <p className='text-sm text-muted-foreground'>{t.game.war.noAvailableAttackers}</p>
           )}
           {!loading && recorded.length + picks.length > 0 && (
-            <SynergySelectorGrid
-              recorded={recorded}
-              picks={picks}
-              onPick={(provider) => {
-                onClose()
-                void handleAddSynergy(provider, targetChampionUserId)
-              }}
-            />
+            <div className='grid grid-cols-3 gap-2'>
+              <ProviderTiles
+                recorded={recorded}
+                picks={picks}
+                cyPrefix='synergy'
+                onPick={(provider) => {
+                  onClose()
+                  void handleAddSynergy(provider, targetChampionUserId)
+                }}
+              />
+            </div>
           )}
         </div>
       </DialogContent>
