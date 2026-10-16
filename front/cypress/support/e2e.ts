@@ -1480,6 +1480,7 @@ export interface AttackerScenario {
   championUserId: string;
   /** Champion name → champion_user id for the member, including any extra roster entry. */
   memberChampionUserIds: Record<string, string>;
+  ownerChampionUserIds: Record<string, string>;
   /** Champion name → catalog champion id for every champion the batch loaded. */
   championIds: Record<string, string>;
 }
@@ -1508,6 +1509,7 @@ export function setupAttackerScenario(prefix: string, extras: SetupExtras = {}):
         create_alliance: { name: `${safePrefix(prefix)}Alliance`, tag: safePrefix(prefix).slice(0, 3).toUpperCase() },
         battlegroup: 1,
         create_war: { opponent_name: 'AttackerEnemy' },
+        roster: extras.ownerRoster,
       },
       {
         discord_token: memberToken,
@@ -1535,6 +1537,7 @@ export function setupAttackerScenario(prefix: string, extras: SetupExtras = {}):
           warId,
           championUserId: users[memberToken].champion_user_ids['Wolverine'],
           memberChampionUserIds: users[memberToken].champion_user_ids,
+          ownerChampionUserIds: users[ownerToken].champion_user_ids,
           championIds: champions,
         },
         { log: false },

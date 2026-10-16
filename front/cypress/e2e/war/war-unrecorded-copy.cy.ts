@@ -1,14 +1,32 @@
 import { openWarNode, putPlanNode, setupPrefightScenario } from '../../support/e2e';
 
-/** Storm, the member's only pre-fight champion, goes on the active defense plan. */
+const FILLERS = [
+  { name: 'Spider-Man', champion_class: 'Cosmic' },
+  { name: 'Doctor Doom', champion_class: 'Mystic' },
+  { name: 'Blade', champion_class: 'Skill' },
+  { name: 'Hulk', champion_class: 'Science' },
+];
+const fillerRoster = FILLERS.map((c) => ({ champion: c.name, rarity: '7r3' }));
+
+/** Storm, the member's only pre-fight champion, goes on the active defense plan.
+ *  Activation needs a Validated plan: both BG1 players hold their 5 defenders. */
 function stormOnDefense(prefix: string, { assignAttacker = true } = {}) {
-  return setupPrefightScenario(prefix).then((s) => {
+  return setupPrefightScenario(prefix, {
+    champions: FILLERS,
+    memberRoster: fillerRoster,
+    ownerRoster: [...fillerRoster, { champion: 'Iron Man', rarity: '7r3' }],
+  }).then((s) => {
     const token = s.ownerData.access_token;
     if (assignAttacker) {
       cy.apiAssignWarAttacker(s.memberData.access_token, s.allianceId, s.warId, 1, 10, s.championUserId);
     }
+    const defenders = [
+      s.prefightChampionUserId,
+      ...FILLERS.map((c) => s.memberChampionUserIds[c.name]),
+      ...Object.values(s.ownerChampionUserIds),
+    ];
     return cy.apiCreatePlan(token, s.allianceId, 1, 'Plan 1').then((plan: { id: string }) => {
-      putPlanNode(token, s.allianceId, plan.id, 1, s.prefightChampionUserId);
+      defenders.forEach((id, i) => putPlanNode(token, s.allianceId, plan.id, i + 1, id));
       cy.apiActivatePlan(token, s.allianceId, plan.id);
       return cy.wrap(s, { log: false });
     });
