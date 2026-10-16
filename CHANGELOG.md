@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.29.0](https://github.com/SNEAXIII/Mawster/compare/v1.28.1...v1.29.0) (2026-10-16)
+
+
+### Ajouté
+
+* bring an unrecorded champion copy as synergy or pre-fight ([28ca252](https://github.com/SNEAXIII/Mawster/commit/28ca25233e3c6b2e8d6477bf1eb0999f7b7e825c))
+
 ## [1.28.1](https://github.com/SNEAXIII/Mawster/compare/v1.28.0...v1.28.1) (2026-10-15)
 
 
