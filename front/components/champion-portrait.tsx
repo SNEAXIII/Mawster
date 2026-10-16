@@ -156,14 +156,16 @@ export default function ChampionPortrait({
       style={{ width: size, height: box === 'frame' ? size / FRAME_ASPECT : size }}
       data-cy={dataCy ?? `champion-portrait-${name}-${mode}`}
     >
-      {/* Star frame – behind */}
-      <img
-        src={frameUrl}
-        alt=''
-        loading={eagerLoad ? 'eager' : 'lazy'}
-        decoding='async'
-        className='absolute inset-0 w-full h-full object-contain pointer-events-none'
-      />
+      {/* Star frame – behind; an Unrecorded Copy has no rarity, hence no frame */}
+      {rarity && (
+        <img
+          src={frameUrl}
+          alt=''
+          loading={eagerLoad ? 'eager' : 'lazy'}
+          decoding='async'
+          className='absolute inset-0 w-full h-full object-contain pointer-events-none'
+        />
+      )}
       {/* Champion image – on top, filling the frame's window. `focusY` keeps the
           head in view: the source art is square and the window is wider than
           tall, so a centred crop would eat into it. */}

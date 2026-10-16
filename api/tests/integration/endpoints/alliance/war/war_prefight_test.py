@@ -122,6 +122,65 @@ async def _setup_prefight_scenario():
     }
 
 
+async def _war_banning(data, champion_id) -> str:
+    """End the scenario's war and open one banning `champion_id`, node 5 defended and attacked."""
+    alliance_id = data["alliance"].id
+    await execute_post_request(
+        f"/alliances/{alliance_id}/wars/{data['war'].id}/end",
+        payload={"win": True},
+        headers=data["headers_owner"],
+    )
+    new_war_resp = await execute_post_request(
+        f"/alliances/{alliance_id}/wars",
+        payload={"opponent_name": "Ban Prefight War", "banned_champion_ids": [str(champion_id)]},
+        headers=data["headers_owner"],
+    )
+    assert new_war_resp.status_code == 201
+    new_war_id = new_war_resp.json()["id"]
+    fresh_champ = await push_champion(name="Black Panther", champion_class="Skill")
+    await execute_post_request(
+        f"/alliances/{alliance_id}/wars/{new_war_id}/bg/1/place",
+        payload={
+            "node_number": 5,
+            "champion_id": str(fresh_champ.id),
+            "stars": 7,
+            "rank": 3,
+            "ascension": 0,
+        },
+        headers=data["headers_owner"],
+    )
+    await execute_post_request(
+        f"/alliances/{alliance_id}/wars/{new_war_id}/bg/1/node/5/attacker",
+        payload={"champion_user_id": str(data["attacker_cu"].id)},
+        headers=data["headers_member"],
+    )
+    return new_war_id
+
+
+async def _occupy_node_6(data):
+    """Defender on node 6, attacked by the owner — a second target node for pre-fights."""
+    alliance_id, war_id = data["alliance"].id, data["war"].id
+    second_defender = await push_champion(name="Hulk", champion_class="Science")
+    await execute_post_request(
+        f"/alliances/{alliance_id}/wars/{war_id}/bg/1/place",
+        payload={
+            "node_number": 6,
+            "champion_id": str(second_defender.id),
+            "stars": 7,
+            "rank": 3,
+            "ascension": 0,
+        },
+        headers=data["headers_owner"],
+    )
+    owner_attacker = await push_champion(name="Cyclops", champion_class="Mutant")
+    owner_attacker_cu = await push_champion_user(data["owner"], owner_attacker, stars=7, rank=3)
+    await execute_post_request(
+        f"/alliances/{alliance_id}/wars/{war_id}/bg/1/node/6/attacker",
+        payload={"champion_user_id": str(owner_attacker_cu.id)},
+        headers=data["headers_owner"],
+    )
+
+
 class TestGetPrefight:
     @pytest.mark.asyncio
     async def test_get_prefight_empty(self):
@@ -448,28 +507,12 @@ class TestGetAvailablePrefightAttackers:
     async def test_excludes_banned_champion(self):
         """Champion banned in the war does not appear in available-prefight-attackers."""
         data = await _setup_prefight_scenario()
-        alliance = data["alliance"]
-        war = data["war"]
         prefight_cu = data["prefight_cu"]
+        new_war_id = await _war_banning(data, prefight_cu.champion_id)
 
-        # End current war and create a new one banning the prefight champion (Quake)
-        await execute_post_request(
-            f"/alliances/{alliance.id}/wars/{war.id}/end",
-            payload={"win": True},
-            headers=data["headers_owner"],
+        url = (
+            f"/alliances/{data['alliance'].id}/wars/{new_war_id}/bg/1/available-prefight-attackers"
         )
-        new_war_resp = await execute_post_request(
-            f"/alliances/{alliance.id}/wars",
-            payload={
-                "opponent_name": "Ban Prefight War",
-                "banned_champion_ids": [str(prefight_cu.champion_id)],
-            },
-            headers=data["headers_owner"],
-        )
-        assert new_war_resp.status_code == 201
-        new_war_id = new_war_resp.json()["id"]
-
-        url = f"/alliances/{alliance.id}/wars/{new_war_id}/bg/1/available-prefight-attackers"
         resp = await execute_get_request(url, headers=data["headers_member"])
         assert resp.status_code == 200
         ids = [item["champion_user_id"] for item in resp.json()]
@@ -516,15 +559,14 @@ class TestRemovePrefight:
     @pytest.mark.asyncio
     async def test_remove_prefight_success(self):
         data = await _setup_prefight_scenario()
-        await execute_post_request(
-            _prefight_url(data["alliance"].id, data["war"].id),
+        url = _prefight_url(data["alliance"].id, data["war"].id)
+        created = await execute_post_request(
+            url,
             payload={"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 5},
             headers=data["headers_member"],
         )
         response = await execute_delete_request(
-            _prefight_url(data["alliance"].id, data["war"].id)
-            + f"/{data['prefight_cu'].id}/node/5",
-            headers=data["headers_member"],
+            f"{url}/{created.json()['id']}", headers=data["headers_member"]
         )
         assert response.status_code == 204
 
@@ -532,25 +574,7 @@ class TestRemovePrefight:
     async def test_remove_prefight_keeps_the_same_champion_on_other_nodes(self):
         data = await _setup_prefight_scenario()
         alliance_id, war_id = data["alliance"].id, data["war"].id
-        second_defender = await push_champion(name="Hulk", champion_class="Science")
-        await execute_post_request(
-            f"/alliances/{alliance_id}/wars/{war_id}/bg/1/place",
-            payload={
-                "node_number": 6,
-                "champion_id": str(second_defender.id),
-                "stars": 7,
-                "rank": 3,
-                "ascension": 0,
-            },
-            headers=data["headers_owner"],
-        )
-        owner_attacker = await push_champion(name="Cyclops", champion_class="Mutant")
-        owner_attacker_cu = await push_champion_user(data["owner"], owner_attacker, stars=7, rank=3)
-        await execute_post_request(
-            f"/alliances/{alliance_id}/wars/{war_id}/bg/1/node/6/attacker",
-            payload={"champion_user_id": str(owner_attacker_cu.id)},
-            headers=data["headers_owner"],
-        )
+        await _occupy_node_6(data)
         for node in (5, 6):
             added = await execute_post_request(
                 _prefight_url(alliance_id, war_id),
@@ -563,7 +587,7 @@ class TestRemovePrefight:
             assert added.status_code == 201
 
         response = await execute_delete_request(
-            _prefight_url(alliance_id, war_id) + f"/{data['prefight_cu'].id}/node/6",
+            f"{_prefight_url(alliance_id, war_id)}/{added.json()['id']}",
             headers=data["headers_member"],
         )
         assert response.status_code == 204
@@ -577,22 +601,7 @@ class TestRemovePrefight:
     async def test_remove_prefight_not_found(self):
         data = await _setup_prefight_scenario()
         response = await execute_delete_request(
-            _prefight_url(data["alliance"].id, data["war"].id) + f"/{uuid.uuid4()}/node/5",
-            headers=data["headers_member"],
-        )
-        assert response.status_code == 404
-
-    @pytest.mark.asyncio
-    async def test_remove_prefight_on_another_node_not_found(self):
-        data = await _setup_prefight_scenario()
-        await execute_post_request(
-            _prefight_url(data["alliance"].id, data["war"].id),
-            payload={"champion_user_id": str(data["prefight_cu"].id), "target_node_number": 5},
-            headers=data["headers_member"],
-        )
-        response = await execute_delete_request(
-            _prefight_url(data["alliance"].id, data["war"].id)
-            + f"/{data['prefight_cu'].id}/node/6",
+            f"{_prefight_url(data['alliance'].id, data['war'].id)}/{uuid.uuid4()}",
             headers=data["headers_member"],
         )
         assert response.status_code == 404
@@ -681,50 +690,10 @@ class TestPrefightServiceCoverage:
     async def test_add_prefight_banned_champion_returns_409(self):  # L1338
         """Prefight provider whose champion is banned in the war is rejected with 409."""
         data = await _setup_prefight_scenario()
-        alliance = data["alliance"]
-        war = data["war"]
         prefight_cu = data["prefight_cu"]
-        attacker_cu = data["attacker_cu"]
-
-        # End current war, create a new one with Quake banned
-        await execute_post_request(
-            f"/alliances/{alliance.id}/wars/{war.id}/end",
-            payload={"win": True},
-            headers=data["headers_owner"],
-        )
-        new_war_resp = await execute_post_request(
-            f"/alliances/{alliance.id}/wars",
-            payload={
-                "opponent_name": "Ban Prefight War",
-                "banned_champion_ids": [str(prefight_cu.champion_id)],
-            },
-            headers=data["headers_owner"],
-        )
-        assert new_war_resp.status_code == 201
-        new_war_id = new_war_resp.json()["id"]
-
-        # Place a fresh defender on node 5 and assign the existing attacker
-        fresh_champ = await push_champion(name="Black Panther", champion_class="Skill")
-        await execute_post_request(
-            f"/alliances/{alliance.id}/wars/{new_war_id}/bg/1/place",
-            payload={
-                "node_number": 5,
-                "champion_id": str(fresh_champ.id),
-                "stars": 7,
-                "rank": 3,
-                "ascension": 0,
-            },
-            headers=data["headers_owner"],
-        )
-        await execute_post_request(
-            f"/alliances/{alliance.id}/wars/{new_war_id}/bg/1/node/5/attacker",
-            payload={"champion_user_id": str(attacker_cu.id)},
-            headers=data["headers_member"],
-        )
-
-        # Try to add banned Quake as prefight provider → 409
+        new_war_id = await _war_banning(data, prefight_cu.champion_id)
         resp = await execute_post_request(
-            _prefight_url(alliance.id, new_war_id),
+            _prefight_url(data["alliance"].id, new_war_id),
             payload={"champion_user_id": str(prefight_cu.id), "target_node_number": 5},
             headers=data["headers_member"],
         )

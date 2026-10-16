@@ -73,6 +73,7 @@ export interface WarPlacement {
   has_power_boost: boolean
   has_specials_boost: boolean
   attacker_champion_user_id: string | null
+  attacker_champion_id: string | null
   attacker_game_account_id: string | null
   attacker_pseudo: string | null
   attacker_champion_name: string | null
@@ -121,6 +122,8 @@ export interface WarDefenseSummary {
   progress: WarProgress | null
 }
 
+export type UnrecordedReason = 'on_defense' | 'not_in_roster' | 'recorded_copy_free'
+
 export interface AvailablePrefightAttacker {
   champion_user_id: string
   game_account_id: string
@@ -132,7 +135,21 @@ export interface AvailablePrefightAttacker {
   is_preferred_attacker: boolean
   is_saga_attacker: boolean
   is_saga_defender: boolean
+  is_on_defense: boolean
 }
+
+/** A provider is a roster entry, or an Unrecorded Copy named by its champion. */
+export type Provider =
+  { champion_user_id: string } | { champion_id: string; game_account_id: string }
+
+export const providerOf = (a: AvailablePrefightAttacker): Provider =>
+  a.is_on_defense
+    ? { champion_id: a.champion_id, game_account_id: a.game_account_id }
+    : { champion_user_id: a.champion_user_id }
+
+/** Mirrors the backend quota key: an Unrecorded Copy counts once per champion. */
+export const slotKey = (e: { champion_user_id: string | null; champion_id: string }) =>
+  e.champion_user_id ?? e.champion_id
 
 export interface AvailableAttacker extends AvailablePrefightAttacker {
   champion_class: string
@@ -146,13 +163,15 @@ export interface WarSynergy {
   war_id: string
   battlegroup: number
   game_account_id: string
-  champion_user_id: string
+  champion_user_id: string | null
+  champion_id: string
   target_champion_user_id: string
   champion_name: string
   champion_class: string
   image_url: string | null
-  rarity: string
-  ascension: number
+  rarity: string | null
+  ascension: number | null
+  unrecorded_reason: UnrecordedReason | null
   is_saga_attacker: boolean
   is_saga_defender: boolean
   target_champion_name: string
@@ -165,13 +184,15 @@ export interface WarPrefight {
   war_id: string
   battlegroup: number
   game_account_id: string
-  champion_user_id: string
+  champion_user_id: string | null
+  champion_id: string
   target_node_number: number
   champion_name: string
   champion_class: string
   image_url: string | null
-  rarity: string
-  ascension: number
+  rarity: string | null
+  ascension: number | null
+  unrecorded_reason: UnrecordedReason | null
   is_saga_attacker: boolean
   is_saga_defender: boolean
   game_pseudo: string
@@ -303,11 +324,13 @@ export async function getAvailableAttackers(
   warId: string,
   battlegroup: number,
   targetGameAccountId?: string,
-  nodeNumber?: number
+  nodeNumber?: number,
+  includeDefense = false
 ): Promise<AvailableAttacker[]> {
   const params = new URLSearchParams()
   if (targetGameAccountId) params.set('attacker_id', targetGameAccountId)
   if (nodeNumber !== undefined) params.set('node_number', String(nodeNumber))
+  if (includeDefense) params.set('include_defense', 'true')
   const suffix = params.toString() ? `?${params}` : ''
   return api(
     `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-attackers${suffix}`,
@@ -455,16 +478,13 @@ export async function addWarSynergy(
   allianceId: string,
   warId: string,
   battlegroup: number,
-  championUserId: string,
+  provider: Provider,
   targetChampionUserId: string
 ): Promise<WarSynergy> {
   return api(
     `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy`,
     'Failed to add synergy attacker',
-    jsonBody('POST', {
-      champion_user_id: championUserId,
-      target_champion_user_id: targetChampionUserId,
-    })
+    jsonBody('POST', { ...provider, target_champion_user_id: targetChampionUserId })
   )
 }
 
@@ -472,10 +492,10 @@ export async function removeWarSynergy(
   allianceId: string,
   warId: string,
   battlegroup: number,
-  championUserId: string
+  synergyId: string
 ): Promise<void> {
   await api(
-    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy/${championUserId}`,
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy/${synergyId}`,
     'Failed to remove synergy attacker',
     { method: 'DELETE' }
   )
@@ -488,8 +508,9 @@ export async function getAvailablePrefightAttackers(
   warId: string,
   battlegroup: number
 ): Promise<AvailablePrefightAttacker[]> {
+  // Defenders included: the selector badges them and lets the toggle hide them.
   return api(
-    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-prefight-attackers`,
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/available-prefight-attackers?include_defense=true`,
     'Failed to load available pre-fight attackers'
   )
 }
@@ -511,16 +532,13 @@ export async function addWarPrefight(
   allianceId: string,
   warId: string,
   battlegroup: number,
-  championUserId: string,
+  provider: Provider,
   targetNodeNumber: number
 ): Promise<WarPrefight> {
   return api(
     `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
     'Failed to add pre-fight attacker',
-    jsonBody('POST', {
-      champion_user_id: championUserId,
-      target_node_number: targetNodeNumber,
-    })
+    jsonBody('POST', { ...provider, target_node_number: targetNodeNumber })
   )
 }
 
@@ -528,11 +546,10 @@ export async function removeWarPrefight(
   allianceId: string,
   warId: string,
   battlegroup: number,
-  championUserId: string,
-  targetNodeNumber: number
+  prefightId: string
 ): Promise<void> {
   await api(
-    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}/node/${targetNodeNumber}`,
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${prefightId}`,
     'Failed to remove pre-fight attacker',
     { method: 'DELETE' }
   )

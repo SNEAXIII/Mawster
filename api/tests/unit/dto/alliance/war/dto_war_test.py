@@ -98,6 +98,7 @@ def _make_attacker(**overrides):
     defaults = {
         "id": uuid.uuid4(),
         "game_account_id": uuid.uuid4(),
+        "champion_id": uuid.uuid4(),
         "game_account": _ns(game_pseudo="AttackerPlayer"),
         "champion": champ,
         "stars": 7,
@@ -233,6 +234,7 @@ class TestWarPlacementResponseDTO:
         assert dto.placed_by_pseudo == "OfficerPlayer"
         # No attacker
         assert dto.attacker_champion_user_id is None
+        assert dto.attacker_champion_id is None
         assert dto.attacker_pseudo is None
         assert dto.attacker_champion_name is None
         assert dto.attacker_rarity is None
@@ -270,6 +272,7 @@ class TestWarPlacementResponseDTO:
 
         # Attacker fields
         assert dto.attacker_champion_user_id == attacker.id
+        assert dto.attacker_champion_id == attacker.champion_id
         assert dto.attacker_game_account_id == attacker.game_account_id
         assert dto.attacker_pseudo == "AttackerPlayer"
         assert dto.attacker_champion_name == "Hercules"
@@ -310,20 +313,16 @@ class TestWarPlacementResponseDTO:
 
 
 def _make_prefight(**overrides):
-    champ = _make_champion(name="Quake", image_url=None)
-    cu = _ns(
-        champion=champ,
-        rarity="7r3",
-        ascension=0,
-    )
     defaults = {
         "id": uuid.uuid4(),
         "war_id": uuid.uuid4(),
         "battlegroup": 1,
         "game_account_id": uuid.uuid4(),
+        "champion_id": uuid.uuid4(),
+        "champion": _make_champion(name="Quake", image_url=None),
         "champion_user_id": uuid.uuid4(),
         "target_node_number": 5,
-        "champion_user": cu,
+        "champion_user": _ns(rarity="7r3", ascension=0),
         "game_account": _ns(game_pseudo="Player1"),
         "created_at": datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC),
     }
@@ -334,16 +333,17 @@ def _make_prefight(**overrides):
 def _make_synergy(**overrides):
     champ = _make_champion(name="Nick Fury", champion_class="Skill", image_url="/img/fury.png")
     target_champ = _make_champion(name="Quake", image_url=None)
-    cu = _ns(champion=champ, rarity="7r3", ascension=1)
     target_cu = _ns(champion=target_champ, rarity="6r4", ascension=0)
     defaults = {
         "id": uuid.uuid4(),
         "war_id": uuid.uuid4(),
         "battlegroup": 2,
         "game_account_id": uuid.uuid4(),
+        "champion_id": uuid.uuid4(),
+        "champion": champ,
         "champion_user_id": uuid.uuid4(),
         "target_champion_user_id": uuid.uuid4(),
-        "champion_user": cu,
+        "champion_user": _ns(rarity="7r3", ascension=1),
         "target_champion_user": target_cu,
         "game_account": _ns(game_pseudo="SynergyPlayer"),
         "created_at": datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC),
@@ -376,8 +376,7 @@ class TestWarPrefightResponseDTO:
         """Same as placements/synergies — saga flags come from WarService's season-sourced
         injection, not from reading the champion here."""
         champ = _make_champion(name="Doom", champion_class="Mystic", is_saga_attacker=True)
-        cu = _ns(champion=champ, rarity="6r4", ascension=2)
-        obj = _make_prefight(champion_user=cu)
+        obj = _make_prefight(champion=champ, champion_user=_ns(rarity="6r4", ascension=2))
         dto = WarPrefightResponse.model_validate(obj)
 
         assert dto.champion_name == "Doom"
@@ -392,6 +391,7 @@ class TestWarPrefightResponseDTO:
             "war_id": uuid.uuid4(),
             "battlegroup": 1,
             "game_account_id": uuid.uuid4(),
+            "champion_id": uuid.uuid4(),
             "champion_user_id": uuid.uuid4(),
             "target_node_number": 10,
             "champion_name": "Quake",
@@ -430,8 +430,7 @@ class TestWarSynergyResponseDTO:
         """Same as placements/prefights — saga flags come from WarService's season-sourced
         injection, not from reading the champion here."""
         champ = _make_champion(is_saga_attacker=True, is_saga_defender=True)
-        cu = _ns(champion=champ, rarity="7r3", ascension=0)
-        obj = _make_synergy(champion_user=cu)
+        obj = _make_synergy(champion=champ)
         dto = WarSynergyResponse.model_validate(obj)
 
         assert dto.is_saga_attacker is False
@@ -443,6 +442,7 @@ class TestWarSynergyResponseDTO:
             "war_id": uuid.uuid4(),
             "battlegroup": 1,
             "game_account_id": uuid.uuid4(),
+            "champion_id": uuid.uuid4(),
             "champion_user_id": uuid.uuid4(),
             "target_champion_user_id": uuid.uuid4(),
             "champion_name": "Nick Fury",

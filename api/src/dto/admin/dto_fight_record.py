@@ -10,8 +10,9 @@ from src.enums.WarBoost import WarBoost
 
 
 class ChampionUserSnapshotResponse(ChampionRef):
-    stars: int
-    ascension: int
+    stars: int | None = None
+    ascension: int | None = None
+    is_unrecorded: bool = False
 
     @model_validator(mode="before")
     @classmethod
@@ -20,12 +21,13 @@ class ChampionUserSnapshotResponse(ChampionRef):
             return data
         cu = data.champion_user
         return {
-            "champion_id": cu.champion_id,
-            "champion_name": cu.champion.name,
-            "champion_class": cu.champion.champion_class,
-            "image_url": cu.champion.image_url,
-            "stars": cu.stars,
-            "ascension": cu.ascension,
+            "champion_id": data.champion_id,
+            "champion_name": data.champion.name,
+            "champion_class": data.champion.champion_class,
+            "image_url": data.champion.image_url,
+            "stars": cu.stars if cu else None,
+            "ascension": cu.ascension if cu else None,
+            "is_unrecorded": cu is None,
         }
 
 

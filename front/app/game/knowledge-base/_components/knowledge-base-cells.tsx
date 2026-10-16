@@ -83,6 +83,7 @@ type ChampionIconListProps = Readonly<{
  */
 export function ChampionIconList({ champions, dataCy }: ChampionIconListProps) {
   const exporting = useExportMode()
+  const { t } = useI18n()
   return (
     <td
       className={cn(COMPACT_COL, 'py-2')}
@@ -98,8 +99,15 @@ export function ChampionIconList({ champions, dataCy }: ChampionIconListProps) {
               key={c.champion_id}
               src={src}
               alt={c.champion_name}
-              title={c.champion_name}
-              className='w-9 h-9 object-contain rounded'
+              title={
+                c.is_unrecorded
+                  ? `${c.champion_name} — ${t.game.war.unrecorded.notInRoster}`
+                  : c.champion_name
+              }
+              className={cn(
+                'w-9 h-9 object-contain rounded',
+                c.is_unrecorded && 'ring-2 ring-sky-500/60'
+              )}
             />
           ) : (
             <span

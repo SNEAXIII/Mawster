@@ -18,8 +18,9 @@ export interface SynergyRecord {
   champion_name: string
   champion_class: string
   image_url: string | null
-  stars: number
-  ascension: number
+  stars: number | null
+  ascension: number | null
+  is_unrecorded: boolean
 }
 
 export interface PrefightRecord {
@@ -27,8 +28,9 @@ export interface PrefightRecord {
   champion_name: string
   champion_class: string
   image_url: string | null
-  stars: number
-  ascension: number
+  stars: number | null
+  ascension: number | null
+  is_unrecorded: boolean
 }
 
 export interface FightRecord {

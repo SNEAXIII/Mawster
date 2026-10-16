@@ -10,7 +10,7 @@ interface AttackerGroup<T> {
 
 function copyStrength(a: AvailableAttacker): number[] {
   const split = splitRarity(a.rarity)
-  return [split?.stars ?? 0, split?.rank ?? 0, a.ascension]
+  return [a.is_on_defense ? 0 : 1, split?.stars ?? 0, split?.rank ?? 0, a.ascension]
 }
 
 function isStronger(a: AvailableAttacker, b: AvailableAttacker): boolean {
@@ -28,6 +28,18 @@ export function keepBestCopy(items: AvailableAttacker[]): AvailableAttacker[] {
     if (!kept || isStronger(a, kept)) best.set(key, a)
   }
   return Array.from(best.values())
+}
+
+export function matchesChampion(
+  query: string,
+  c: Pick<AvailablePrefightAttacker, 'champion_name' | 'champion_alias'>
+): boolean {
+  const q = query.toLowerCase()
+  return (
+    !q ||
+    c.champion_name.toLowerCase().includes(q) ||
+    (c.champion_alias ?? '').toLowerCase().includes(q)
+  )
 }
 
 export function useAvailableAttackers<T extends AvailablePrefightAttacker>(
@@ -64,16 +76,12 @@ export function useAvailableAttackers<T extends AvailablePrefightAttacker>(
 
   const players = Array.from(new Set(available.map((a) => a.game_pseudo)))
 
-  function filterBySearch(items: T[]): T[] {
-    const q = championSearch.toLowerCase()
-    return items.filter((a) => {
-      const matchPlayer = !playerFilter || a.game_pseudo === playerFilter
-      const matchChampion =
-        !q ||
-        a.champion_name.toLowerCase().includes(q) ||
-        (a.champion_alias ?? '').toLowerCase().includes(q)
-      return matchPlayer && matchChampion
-    })
+  function filterBySearch<
+    U extends Pick<AvailablePrefightAttacker, 'game_pseudo' | 'champion_name' | 'champion_alias'>,
+  >(items: U[]): U[] {
+    return items.filter(
+      (a) => (!playerFilter || a.game_pseudo === playerFilter) && matchesChampion(championSearch, a)
+    )
   }
 
   function buildGroups(filtered: T[]): AttackerGroup<T>[] {

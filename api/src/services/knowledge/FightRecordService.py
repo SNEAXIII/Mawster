@@ -479,9 +479,8 @@ class FightRecordService:
                 select(WarPrefightAttacker)
                 .where(WarPrefightAttacker.war_id.in_(war_ids))
                 .options(
-                    selectinload(WarPrefightAttacker.champion_user).selectinload(
-                        ChampionUser.champion
-                    )
+                    selectinload(WarPrefightAttacker.champion),
+                    selectinload(WarPrefightAttacker.champion_user),
                 )
             )
         ).all()
@@ -490,9 +489,8 @@ class FightRecordService:
                 select(WarSynergyAttacker)
                 .where(WarSynergyAttacker.war_id.in_(war_ids))
                 .options(
-                    selectinload(WarSynergyAttacker.champion_user).selectinload(
-                        ChampionUser.champion
-                    )
+                    selectinload(WarSynergyAttacker.champion),
+                    selectinload(WarSynergyAttacker.champion_user),
                 )
             )
         ).all()

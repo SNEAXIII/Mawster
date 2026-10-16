@@ -652,6 +652,7 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
                         war_id=active_war.id,
                         battlegroup=1,
                         game_account_id=cu.game_account_id,
+                        champion_id=cu.champion_id,
                         champion_user_id=cu.id,
                         target_node_number=target_node,
                     )
@@ -664,6 +665,7 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
                         war_id=active_war.id,
                         battlegroup=1,
                         game_account_id=bg1_cus[0].game_account_id,
+                        champion_id=bg1_cus[0].champion_id,
                         champion_user_id=bg1_cus[0].id,
                         target_champion_user_id=bg1_cus[1].id,
                     )

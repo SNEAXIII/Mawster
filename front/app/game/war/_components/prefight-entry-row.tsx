@@ -2,6 +2,7 @@
 
 import { useI18n } from '@/app/i18n'
 import ChampionPortrait from '@/components/champion-portrait'
+import UnrecordedBadge from './unrecorded-badge'
 import { cn } from '@/app/lib/utils'
 import { X, Flame } from 'lucide-react'
 import type { WarPrefight, WarPlacement } from '@/app/services/war'
@@ -53,10 +54,10 @@ export default function PrefightEntryRow({
           <ChampionPortrait
             imageUrl={prefight.image_url}
             name={prefight.champion_name}
-            rarity={prefight.rarity}
+            rarity={prefight.rarity ?? ''}
             size={portraitSize}
             mode='prefight'
-            ascension={prefight.ascension}
+            ascension={prefight.ascension ?? 0}
             is_saga_attacker={prefight.is_saga_attacker}
             is_saga_defender={prefight.is_saga_defender}
             sagaMode='attacker'
@@ -88,6 +89,7 @@ export default function PrefightEntryRow({
       <div className='flex-1 min-w-0'>
         <div className='text-[10px] text-muted-foreground'>{t.game.war.prefight.label}</div>
         <div className='text-[10px] font-medium truncate'>{prefight.champion_name}</div>
+        {prefight.unrecorded_reason && <UnrecordedBadge reason={prefight.unrecorded_reason} />}
       </div>
 
       {!readonly && !isMapReadOnly && (
@@ -97,9 +99,7 @@ export default function PrefightEntryRow({
             'rounded-full bg-orange-500/80 hover:bg-orange-500 text-white flex items-center justify-center flex-shrink-0',
             btnSize
           )}
-          onClick={() =>
-            handleRemovePrefight(prefight.champion_user_id, prefight.target_node_number)
-          }
+          onClick={() => handleRemovePrefight(prefight.id)}
           title={t.game.war.prefight.revoke}
           data-cy={`remove-prefight-node-${prefight.target_node_number}`}
         >

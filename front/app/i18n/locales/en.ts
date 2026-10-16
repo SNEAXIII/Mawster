@@ -723,6 +723,19 @@ const en = {
       noteDelete: 'Delete note',
       noteDeleted: 'Note deleted',
       noteDeleteError: 'Failed to delete note',
+      unrecorded: {
+        onDefense: 'On defense',
+        notInRoster: 'Not in roster',
+        onDefenseHint: 'Recorded copy is on defense — a lower copy will be used',
+        notInRosterHint: 'Not entered on the site — the player owns it off-site',
+        recordedCopyFree: 'Recorded copy free',
+        recordedCopyFreeHint:
+          'A recorded copy is now free — remove this entry and place the recorded copy instead',
+        showDefenders: 'Defenders',
+        showCatalog: 'Champions not in roster',
+        pickPlayerFirst: 'Pick a player to list their unrecorded champions',
+        noneUnrecorded: 'This player already owns every pre-fight champion',
+      },
       synergy: {
         add: 'Add a synergy',
         revoke: 'Revoke',

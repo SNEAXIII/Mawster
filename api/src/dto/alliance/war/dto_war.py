@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -13,9 +13,14 @@ from src.dto.mixins import (
     WarCoords,
 )
 from src.enums.SeasonFormat import SeasonFormat
+from src.enums.UnrecordedReason import UnrecordedReason
 from src.enums.WarBoost import WarBoost
 from src.game_types import Ascension, KoCount, NodeNumber, Rank, Stars
-from src.Messages.war_messages import BANNED_CHAMPION_LIST_TOO_LONG
+from src.Messages.war_messages import (
+    BANNED_CHAMPION_LIST_TOO_LONG,
+    PROVIDER_EXACTLY_ONE,
+    UNRECORDED_PREFIGHT_NEEDS_ACCOUNT,
+)
 
 MAX_BANNED_CHAMPIONS = 7
 
@@ -119,6 +124,7 @@ class WarPlacementResponse(WarCoords, ChampionRef, SagaRoles):
     has_power_boost: bool = False
     has_specials_boost: bool = False
     attacker_champion_user_id: uuid.UUID | None = None
+    attacker_champion_id: uuid.UUID | None = None
     attacker_game_account_id: uuid.UUID | None = None
     attacker_pseudo: str | None = None
     attacker_champion_name: str | None = None
@@ -171,6 +177,7 @@ class WarPlacementResponse(WarCoords, ChampionRef, SagaRoles):
             "has_power_boost": data.has_power_boost,
             "has_specials_boost": data.has_specials_boost,
             "attacker_champion_user_id": data.attacker_champion_user_id,
+            "attacker_champion_id": attacker.champion_id if attacker else None,
             "attacker_is_preferred_attacker": attacker.is_preferred_attacker if attacker else None,
             "is_assisted": data.assist_champion_user_id is not None,
             "assistor_champion_user_id": data.assist_champion_user_id,
@@ -230,6 +237,7 @@ class AvailableAttackerResponse(PlayerIdentity, ChampionRef, SagaRoles):
     ascension: int
     signature: int
     is_preferred_attacker: bool = False
+    is_on_defense: bool = False
 
 
 class AvailablePrefightAttackerResponse(PlayerIdentity, SagaRoles):
@@ -241,25 +249,42 @@ class AvailablePrefightAttackerResponse(PlayerIdentity, SagaRoles):
     champion_alias: str | None = None
     image_url: str | None = None
     is_preferred_attacker: bool = False
+    is_on_defense: bool = False
 
 
-class WarSynergyCreateRequest(BaseModel):
-    champion_user_id: uuid.UUID
+class _ProviderRef(BaseModel):
+    champion_user_id: uuid.UUID | None = None
+    champion_id: uuid.UUID | None = None
+
+    @model_validator(mode="after")
+    def _exactly_one(self) -> Self:
+        if (self.champion_user_id is None) == (self.champion_id is None):
+            raise ValueError(PROVIDER_EXACTLY_ONE)
+        return self
+
+
+class WarSynergyCreateRequest(_ProviderRef):
     target_champion_user_id: uuid.UUID
 
 
-class WarSynergyResponse(PlayerIdentity, ChampionIdentity, SagaRoles):
+class _WarEntryResponse(PlayerIdentity, ChampionIdentity, SagaRoles):
+    """A Synergy Carrier or Prefight; ``champion_user_id`` is null for an Unrecorded Copy."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     war_id: uuid.UUID
     battlegroup: int
-    champion_user_id: uuid.UUID
-    target_champion_user_id: uuid.UUID
-    rarity: str
-    ascension: int = 0
-    target_champion_name: str
+    champion_id: uuid.UUID
+    champion_user_id: uuid.UUID | None
+    rarity: str | None = None
+    ascension: int | None = None
+    unrecorded_reason: UnrecordedReason | None = None
     created_at: datetime
+
+    @staticmethod
+    def entry_fields(data: Any) -> dict[str, Any]:
+        return {}
 
     @model_validator(mode="before")
     @classmethod
@@ -267,22 +292,33 @@ class WarSynergyResponse(PlayerIdentity, ChampionIdentity, SagaRoles):
         if isinstance(data, dict):
             return data
         cu = data.champion_user
-        target = data.target_champion_user
         return {
             "id": data.id,
             "war_id": data.war_id,
             "battlegroup": data.battlegroup,
             "game_account_id": data.game_account_id,
             "champion_user_id": data.champion_user_id,
-            "target_champion_user_id": data.target_champion_user_id,
-            "champion_name": cu.champion.name,
-            "champion_class": cu.champion.champion_class,
-            "image_url": cu.champion.image_url,
-            "rarity": cu.rarity,
-            "ascension": cu.ascension,
-            "target_champion_name": target.champion.name,
+            "champion_id": data.champion_id,
+            "champion_name": data.champion.name,
+            "champion_class": data.champion.champion_class,
+            "image_url": data.champion.image_url,
+            "rarity": cu.rarity if cu else None,
+            "ascension": cu.ascension if cu else None,
             "game_pseudo": data.game_account.game_pseudo,
             "created_at": data.created_at,
+            **cls.entry_fields(data),
+        }
+
+
+class WarSynergyResponse(_WarEntryResponse):
+    target_champion_user_id: uuid.UUID
+    target_champion_name: str
+
+    @staticmethod
+    def entry_fields(data: Any) -> dict[str, Any]:
+        return {
+            "target_champion_user_id": data.target_champion_user_id,
+            "target_champion_name": data.target_champion_user.champion.name,
         }
 
 
@@ -304,41 +340,20 @@ class WarEndRequest(WarOpponentDeathsRequest):
     elo_change: int | None = None
 
 
-class WarPrefightCreateRequest(BaseModel):
-    champion_user_id: uuid.UUID
+class WarPrefightCreateRequest(_ProviderRef):
     target_node_number: NodeNumber
+    game_account_id: uuid.UUID | None = None
+
+    @model_validator(mode="after")
+    def _account_for_unrecorded(self) -> Self:
+        if self.champion_id is not None and self.game_account_id is None:
+            raise ValueError(UNRECORDED_PREFIGHT_NEEDS_ACCOUNT)
+        return self
 
 
-class WarPrefightResponse(PlayerIdentity, ChampionIdentity, SagaRoles):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: uuid.UUID
-    war_id: uuid.UUID
-    battlegroup: int
-    champion_user_id: uuid.UUID
+class WarPrefightResponse(_WarEntryResponse):
     target_node_number: int
-    rarity: str
-    ascension: int = 0
-    created_at: datetime
 
-    @model_validator(mode="before")
-    @classmethod
-    def flatten_relations(cls, data: Any) -> Any:
-        if isinstance(data, dict):
-            return data
-        cu = data.champion_user
-        return {
-            "id": data.id,
-            "war_id": data.war_id,
-            "battlegroup": data.battlegroup,
-            "game_account_id": data.game_account_id,
-            "champion_user_id": data.champion_user_id,
-            "target_node_number": data.target_node_number,
-            "champion_name": cu.champion.name,
-            "champion_class": cu.champion.champion_class,
-            "image_url": cu.champion.image_url,
-            "rarity": cu.rarity,
-            "ascension": cu.ascension,
-            "game_pseudo": data.game_account.game_pseudo,
-            "created_at": data.created_at,
-        }
+    @staticmethod
+    def entry_fields(data: Any) -> dict[str, Any]:
+        return {"target_node_number": data.target_node_number}
