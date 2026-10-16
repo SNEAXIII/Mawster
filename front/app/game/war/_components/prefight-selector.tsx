@@ -70,14 +70,14 @@ export default function PrefightSelectorDialog({
   const filtered = filterBySearch(
     available.filter((a) => (showDefenders || !a.is_on_defense) && isFree(a))
   )
-  // The pre-fight catalog is a handful of champions: every player gets theirs, no pick needed.
-  const picks = showCatalog
-    ? filterBySearch(
-        [...accounts.values()].flatMap((account) =>
-          catalogCandidates(catalog, available, bannedIds, account).filter(isFree)
-        )
-      )
-    : []
+  const selectedAccount = accounts.get(playerFilter)
+  const candidates =
+    showCatalog && selectedAccount
+      ? catalogCandidates(catalog, available, bannedIds, selectedAccount).filter(isFree)
+      : []
+  const picks = filterBySearch(candidates)
+  const u = t.game.war.unrecorded
+  const catalogHint = selectedAccount ? u.noneUnrecorded : u.pickPlayerFirst
   const pick = (provider: Provider) => {
     void handleAddPrefight(provider, targetNodeNumber)
     onClose()
@@ -113,6 +113,14 @@ export default function PrefightSelectorDialog({
         />
         <Separator />
         <div className='overflow-y-auto flex-1 p-3 flex flex-col gap-4'>
+          {showCatalog && !loading && candidates.length === 0 && (
+            <div
+              className='text-center text-sm text-muted-foreground'
+              data-cy={selectedAccount ? 'prefight-none-unrecorded' : 'prefight-pick-player-first'}
+            >
+              {catalogHint}
+            </div>
+          )}
           <PrefightPlayerGroups
             loading={loading}
             error={error}
