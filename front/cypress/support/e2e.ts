@@ -1392,19 +1392,6 @@ Cypress.Commands.add(
   },
 );
 
-Cypress.Commands.add(
-  'apiRemoveWarSynergy',
-  (token: string, allianceId: string, warId: string, battlegroup: number, championUserId: string) => {
-    cy.request({
-      method: 'DELETE',
-      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/synergy/${championUserId}`,
-      headers: { Authorization: `Bearer ${token}` },
-    }).then((res) => {
-      expect(res.status).to.eq(204);
-    });
-  },
-);
-
 // ── Prefight API commands ─────────────────────────────────────────────────────
 
 Cypress.Commands.add(
@@ -1422,24 +1409,6 @@ Cypress.Commands.add(
       url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight`,
       headers: { Authorization: `Bearer ${token}` },
       body: { champion_user_id: championUserId, target_node_number: targetNodeNumber },
-    });
-  },
-);
-
-Cypress.Commands.add(
-  'apiRemoveWarPrefight',
-  (
-    token: string,
-    allianceId: string,
-    warId: string,
-    battlegroup: number,
-    championUserId: string,
-    targetNodeNumber: number,
-  ) => {
-    return cy.request({
-      method: 'DELETE',
-      url: `${BACKEND}/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/prefight/${championUserId}/node/${targetNodeNumber}`,
-      headers: { Authorization: `Bearer ${token}` },
     });
   },
 );
@@ -1511,6 +1480,9 @@ export interface AttackerScenario {
   championUserId: string;
   /** Champion name → champion_user id for the member, including any extra roster entry. */
   memberChampionUserIds: Record<string, string>;
+  ownerChampionUserIds: Record<string, string>;
+  /** Champion name → catalog champion id for every champion the batch loaded. */
+  championIds: Record<string, string>;
 }
 
 export function setupAttackerScenario(prefix: string, extras: SetupExtras = {}): Cypress.Chainable<AttackerScenario> {
@@ -1537,6 +1509,7 @@ export function setupAttackerScenario(prefix: string, extras: SetupExtras = {}):
         create_alliance: { name: `${safePrefix(prefix)}Alliance`, tag: safePrefix(prefix).slice(0, 3).toUpperCase() },
         battlegroup: 1,
         create_war: { opponent_name: 'AttackerEnemy' },
+        roster: extras.ownerRoster,
       },
       {
         discord_token: memberToken,
@@ -1564,6 +1537,8 @@ export function setupAttackerScenario(prefix: string, extras: SetupExtras = {}):
           warId,
           championUserId: users[memberToken].champion_user_ids['Wolverine'],
           memberChampionUserIds: users[memberToken].champion_user_ids,
+          ownerChampionUserIds: users[ownerToken].champion_user_ids,
+          championIds: champions,
         },
         { log: false },
       );
@@ -1794,13 +1769,16 @@ export function setupActiveDefense(prefix: string, { activate = true } = {}): Cy
 // ability and put on the member's roster, which is all the three extra requests did.
 export function setupPrefightScenario(
   prefix: string,
-): Cypress.Chainable<AttackerScenario & { prefightChampionUserId: string }> {
+  extras: SetupExtras = {},
+): Cypress.Chainable<AttackerScenario & { prefightChampionUserId: string; prefightChampionId: string }> {
   return setupAttackerScenario(prefix, {
-    champions: [{ name: 'Storm', champion_class: 'Mutant', has_prefight: true }],
-    memberRoster: [{ champion: 'Storm', rarity: '7r3' }],
+    ...extras,
+    champions: [{ name: 'Storm', champion_class: 'Mutant', has_prefight: true }, ...(extras.champions ?? [])],
+    memberRoster: [{ champion: 'Storm', rarity: '7r3' }, ...(extras.memberRoster ?? [])],
   }).then((scenario) => ({
     ...scenario,
     prefightChampionUserId: scenario.memberChampionUserIds['Storm'],
+    prefightChampionId: scenario.championIds['Storm'],
   }));
 }
 

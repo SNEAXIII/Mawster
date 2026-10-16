@@ -42,6 +42,10 @@ the user runs `make e2e-open` (Cypress UI) — never launch it yourself.
 **Servers**: `docker compose -f compose-dev.yaml up -d`, then `make run-dev` (`api/`) and
 `npm run dev` (`front/`).
 
+**Calling the dev API**: `curl -H "Authorization: Bearer $(make -s dev-token)"` from `api/` acts as
+the user's own account; `PSEUDO=<game_pseudo>` acts as another player. The DB stores UUIDs as 32
+hex chars, the API answers them dashed.
+
 ---
 
 ## Architecture
@@ -164,9 +168,9 @@ Project agents in `.claude/agents/` are not auto-dispatched — consider routing
 
 ## Docker
 
-**This checkout runs on the production swarm manager**: every `docker` command here and
-`make deploy` act on the live `mawster` stack. Inspect freely; confirm with the user before anything
-that mutates it (`stack deploy`, `service update`, `service rm`, secrets).
+**This machine may host the production swarm**: when `docker stack ls` lists `mawster`, every
+`docker` command and `make deploy` act on the live stack. Inspect freely; confirm with the user before
+anything that mutates it (`stack deploy`, `service update`, `service rm`, secrets).
 
 Dev ports and credentials: `compose-dev.yaml`.
 

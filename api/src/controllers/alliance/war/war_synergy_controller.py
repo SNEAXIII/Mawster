@@ -34,7 +34,7 @@ async def get_war_synergy(
 ):
     """List synergy champions for a battlegroup. All members can view."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
-    return await WarService.get_synergy_attackers(session, war_id, battlegroup)
+    return await WarService.get_synergy_attackers(session, war_id, alliance_id, battlegroup)
 
 
 @war_synergy_controller.post(
@@ -59,20 +59,21 @@ async def add_war_synergy(
         war_id,
         alliance_id,
         battlegroup,
-        body.champion_user_id,
-        body.target_champion_user_id,
+        target_champion_user_id=body.target_champion_user_id,
+        champion_user_id=body.champion_user_id,
+        champion_id=body.champion_id,
     )
 
 
 @war_synergy_controller.delete(
-    "/{war_id}/bg/{battlegroup}/synergy/{champion_user_id}",
+    "/{war_id}/bg/{battlegroup}/synergy/{synergy_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def remove_war_synergy(
     alliance_id: uuid.UUID,
     war_id: uuid.UUID,
     battlegroup: BattlegroupPath,
-    champion_user_id: uuid.UUID,
+    synergy_id: uuid.UUID,
     session: SessionDep,
     current_user: CurrentUser,
     war: WarDep,
@@ -80,4 +81,4 @@ async def remove_war_synergy(
     """Remove a synergy champion from a battlegroup. All members can remove."""
     await AllianceService.require_member(session, alliance_id, current_user.id)
     await ClosedWarPolicy.require_map_edit(session, war, current_user.id)
-    await WarService.remove_synergy_attacker(session, war_id, battlegroup, champion_user_id)
+    await WarService.remove_synergy_attacker(session, war_id, battlegroup, synergy_id)

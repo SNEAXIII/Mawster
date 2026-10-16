@@ -232,13 +232,21 @@ Three distinct roles, each bringing one Roster Entry into a War:
 The Roster Entry that fights an enemy defender on a node.
 
 **Prefight**:
-A Roster Entry brought only for the buff it applies before a fight. Targets a node.
+A Roster Entry — or an Unrecorded Copy — brought only for the buff it applies before a fight. Targets a node.
 _Avoid_: attacker, support.
 
 **Synergy Carrier**:
-A Roster Entry brought only to buff another of your own Roster Entries. Targets a
+A Roster Entry — or an Unrecorded Copy — brought only to buff another of your own Roster Entries. Targets a
 champion, never a node — that is what separates it from a Prefight.
 _Avoid_: synergy, support.
+
+**Unrecorded Copy**:
+A copy of a Champion the Player owns but never entered on the site — typically a lower
+copy of one standing on defense. Brought only as Synergy Carrier or Prefight, never as
+Attacker; allowed only when no recorded copy of that Champion is off the Active Plan.
+Rarity and rank unknown. Shown as *on defense*, *not in roster*, or *recorded copy free* once a
+recorded copy leaves defense or gets entered — derived at read time, never re-linked.
+_Avoid_: ghost, placeholder, unknown champion.
 
 ### War map
 
@@ -284,7 +292,7 @@ The one Defense Plan per Battlegroup and format marked in use. The Season's form
 which Active Plan a Battlegroup shows, so a format switch leaves the other format's plans
 untouched. Only a Validated plan can be activated, and activating one demotes the previous;
 an Active Plan that later loses a Player stays active, flagged incomplete. A Roster Entry
-is "on defense" — barred from attacking — only on the Active Plan of the War's format;
+is "on defense" — barred from being an Attacker — only on the Active Plan of the War's format;
 every other plan is a draft of intent and blocks nothing. Plain members and Visitors see only Active Plans; every other plan and every
 Template needs the placement right.
 _Table_: `defense_active_plan`.

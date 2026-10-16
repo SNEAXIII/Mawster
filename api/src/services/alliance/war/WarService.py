@@ -24,8 +24,10 @@ from src.dto.alliance.war.dto_war import (
     WarSynergyResponse,
 )
 from src.enums.SeasonFormat import SeasonFormat
+from src.enums.UnrecordedReason import UnrecordedReason
 from src.enums.WarStatus import WarStatus
 from src.game_types import KoCount
+from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
 from src.Messages.war_messages import (
     ACTIVE_WAR_ALREADY_EXISTS,
     ASSIST_NO_ATTACKER_ASSIGNED,
@@ -38,6 +40,7 @@ from src.Messages.war_messages import (
     CHAMPION_ALREADY_PREFIGHT_ON_NODE,
     CHAMPION_ALREADY_SYNERGY_PROVIDER,
     CHAMPION_BANNED_FOR_WAR,
+    CHAMPION_HAS_RECORDED_COPY,
     CHAMPION_NO_PREFIGHT_ABILITY,
     CHAMPION_NOT_FOUND,
     CHAMPION_NOT_IN_ALLIANCE_BG,
@@ -107,12 +110,14 @@ _PLACEMENT_OPTIONS = (
 )
 _SYNERGY_OPTIONS = (
     selectinload(WarSynergyAttacker.game_account),  # type: ignore[arg-type]
-    selectinload(WarSynergyAttacker.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+    selectinload(WarSynergyAttacker.champion),  # type: ignore[arg-type]
+    selectinload(WarSynergyAttacker.champion_user),  # type: ignore[arg-type]
     selectinload(WarSynergyAttacker.target_champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
 )
 _PREFIGHT_OPTIONS = (
     selectinload(WarPrefightAttacker.game_account),  # type: ignore[arg-type]
-    selectinload(WarPrefightAttacker.champion_user).selectinload(ChampionUser.champion),  # type: ignore[arg-type]
+    selectinload(WarPrefightAttacker.champion),  # type: ignore[arg-type]
+    selectinload(WarPrefightAttacker.champion_user),  # type: ignore[arg-type]
 )
 
 
@@ -654,12 +659,13 @@ class WarService:
                 taken[account_id].add(champion_user_id)
         for model in (WarSynergyAttacker, WarPrefightAttacker):
             rows = await session.exec(
-                select(model.game_account_id, model.champion_user_id).where(
+                select(model.game_account_id, model.champion_user_id, model.champion_id).where(
                     model.war_id == war_id, model.battlegroup == battlegroup
                 )
             )
-            for account_id, champion_user_id in rows.all():
-                taken[account_id].add(champion_user_id)
+            for account_id, champion_user_id, champion_id in rows.all():
+                # An Unrecorded Copy is keyed by its champion: one slot whatever the node count.
+                taken[account_id].add(champion_user_id or champion_id)
         return taken
 
     @staticmethod
@@ -685,6 +691,28 @@ class WarService:
         if game_account.alliance_id != alliance_id or game_account.alliance_group != battlegroup:
             raise HTTPException(status.HTTP_403_FORBIDDEN, CHAMPION_NOT_IN_ALLIANCE_BG)
 
+    @staticmethod
+    def _assert_not_banned(war: War, champion_id: uuid.UUID) -> None:
+        if champion_id in {ban.champion_id for ban in war.bans}:
+            raise HTTPException(status.HTTP_409_CONFLICT, CHAMPION_BANNED_FOR_WAR)
+
+    @classmethod
+    async def _assert_quota(
+        cls,
+        session: SessionDep,
+        war: War,
+        battlegroup: int,
+        game_account_id: uuid.UUID,
+        slot: uuid.UUID,
+        exclude_node: int | None = None,
+    ) -> None:
+        max_attackers = for_format(await cls._war_format(session, war)).max_attackers_per_member
+        taken = await cls._taken_attackers(session, war.id, battlegroup, exclude_node)
+        if len(taken[game_account_id] | {slot}) > max_attackers:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, member_max_attackers_reached(max_attackers)
+            )
+
     @classmethod
     async def _assert_can_attack(
         cls,
@@ -696,8 +724,7 @@ class WarService:
         exclude_node: int | None = None,
     ) -> None:
         """Not banned, not on alliance defense, and within the member's attacker cap."""
-        if champion_user.champion_id in {ban.champion_id for ban in war.bans}:
-            raise HTTPException(status.HTTP_409_CONFLICT, CHAMPION_BANNED_FOR_WAR)
+        cls._assert_not_banned(war, champion_user.champion_id)
         fmt = await cls._war_format(session, war)
         on_defense = await session.exec(
             DefensePlanService.active_defender_ids(alliance_id, fmt, battlegroup).where(
@@ -706,12 +733,68 @@ class WarService:
         )
         if on_defense.first():
             raise HTTPException(status.HTTP_409_CONFLICT, CHAMPION_ALREADY_IN_ALLIANCE_DEFENSE)
-        max_attackers = for_format(fmt).max_attackers_per_member
-        taken = await cls._taken_attackers(session, war.id, battlegroup, exclude_node)
-        if len(taken[champion_user.game_account_id] | {champion_user.id}) > max_attackers:
-            raise HTTPException(
-                status.HTTP_409_CONFLICT, member_max_attackers_reached(max_attackers)
+        await cls._assert_quota(
+            session, war, battlegroup, champion_user.game_account_id, champion_user.id, exclude_node
+        )
+
+    @classmethod
+    async def _assert_can_bring_unrecorded(
+        cls,
+        session: SessionDep,
+        war: War,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+        game_account_id: uuid.UUID,
+        champion_id: uuid.UUID,
+    ) -> None:
+        """An Unrecorded Copy stands in only when every recorded copy is on defense."""
+        cls._assert_not_banned(war, champion_id)
+        on_defense = DefensePlanService.active_defender_ids(
+            alliance_id, await cls._war_format(session, war), battlegroup
+        ).scalar_subquery()
+        free_copy = await session.exec(
+            select(ChampionUser.id).where(
+                ChampionUser.game_account_id == game_account_id,
+                ChampionUser.champion_id == champion_id,
+                col(ChampionUser.id).not_in(on_defense),
             )
+        )
+        if free_copy.first():
+            raise HTTPException(status.HTTP_409_CONFLICT, CHAMPION_HAS_RECORDED_COPY)
+        await cls._assert_quota(session, war, battlegroup, game_account_id, champion_id)
+
+    @classmethod
+    async def _assert_can_provide(
+        cls,
+        session: SessionDep,
+        war: War,
+        alliance_id: uuid.UUID,
+        battlegroup: int,
+        champion_user: ChampionUser | None,
+        game_account_id: uuid.UUID,
+        champion_id: uuid.UUID,
+    ) -> None:
+        """A synergy or pre-fight provider: a roster entry, or else an Unrecorded Copy."""
+        if champion_user is not None:
+            await cls._assert_can_attack(session, war, alliance_id, battlegroup, champion_user)
+        else:
+            await cls._assert_can_bring_unrecorded(
+                session, war, alliance_id, battlegroup, game_account_id, champion_id
+            )
+
+    @staticmethod
+    async def _defender_ids(
+        session: SessionDep, alliance_id: uuid.UUID, fmt: SeasonFormat, battlegroup: int
+    ) -> set[uuid.UUID]:
+        stmt = DefensePlanService.active_defender_ids(alliance_id, fmt, battlegroup)
+        return set((await session.exec(stmt)).all())
+
+    @staticmethod
+    async def _load_champion(session: SessionDep, champion_id: uuid.UUID) -> Champion:
+        champion = await session.get(Champion, champion_id)
+        if champion is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
+        return champion
 
     @classmethod
     async def _assert_node_on_map(cls, session: SessionDep, war: War, node_number: int) -> None:
@@ -728,6 +811,7 @@ class WarService:
         attacker_id: uuid.UUID | None = None,
         war: War | None = None,
         node_number: int | None = None,
+        include_defense: bool = False,
     ) -> list[AvailableAttackerResponse]:
         fmt = await cls._war_format(session, war)
         max_attackers = for_format(fmt).max_attackers_per_member
@@ -742,13 +826,7 @@ class WarService:
             stmt = stmt.where(GameAccount.id == attacker_id)
         members = (await session.exec(stmt)).all()
 
-        on_defense = set(
-            (
-                await session.exec(
-                    DefensePlanService.active_defender_ids(alliance_id, fmt, battlegroup)
-                )
-            ).all()
-        )
+        on_defense = await cls._defender_ids(session, alliance_id, fmt, battlegroup)
         banned = {ban.champion_id for ban in war.bans} if war else set()
         taken = await cls._taken_attackers(session, war.id, battlegroup, node_number) if war else {}
         saga = await SagaService.resolve_current(session)
@@ -757,7 +835,16 @@ class WarService:
             used = taken.get(game_account.id, set())
             full = len(used) >= max_attackers
             for cu in game_account.roster:
-                if cu.id in on_defense or cu.champion_id in banned or (full and cu.id not in used):
+                is_on_defense = cu.id in on_defense
+                if (
+                    (is_on_defense and not include_defense)
+                    or cu.champion_id in banned
+                    or (
+                        full
+                        and cu.id not in used
+                        and not (is_on_defense and cu.champion_id in used)
+                    )
+                ):
                     continue
                 att, dfn = saga.get(cu.champion_id, NO_SAGA)
                 result.append(
@@ -776,6 +863,7 @@ class WarService:
                         is_preferred_attacker=cu.is_preferred_attacker,
                         is_saga_attacker=att,
                         is_saga_defender=dfn,
+                        is_on_defense=is_on_defense,
                     )
                 )
         return result
@@ -787,10 +875,10 @@ class WarService:
         alliance_id: uuid.UUID,
         battlegroup: int,
         war: War | None = None,
+        include_defense: bool = False,
     ) -> list[AvailablePrefightAttackerResponse]:
-        on_defense = DefensePlanService.active_defender_ids(
-            alliance_id, await cls._war_format(session, war), battlegroup
-        ).scalar_subquery()
+        fmt = await cls._war_format(session, war)
+        on_defense = await cls._defender_ids(session, alliance_id, fmt, battlegroup)
         stmt = (
             select(ChampionUser, GameAccount, Champion)
             .join(GameAccount, ChampionUser.game_account_id == GameAccount.id)  # type: ignore[arg-type]
@@ -799,17 +887,21 @@ class WarService:
                 GameAccount.alliance_id == alliance_id,
                 GameAccount.alliance_group == battlegroup,
                 Champion.has_prefight.is_(True),
-                ChampionUser.id.not_in(on_defense),  # type: ignore[union-attr]
             )
         )
+        if not include_defense and on_defense:
+            stmt = stmt.where(col(ChampionUser.id).not_in(on_defense))
         if war and war.bans:
             stmt = stmt.where(ChampionUser.champion_id.not_in([b.champion_id for b in war.bans]))  # type: ignore[union-attr]
 
-        # One entry per player and champion: the highest copy stands for the duplicates.
+        def strength(cu: ChampionUser) -> tuple[bool, int, int, int]:
+            return (cu.id not in on_defense, *_copy_strength(cu))
+
+        # One entry per player and champion: the highest copy stands, a free one before a defender.
         best: dict[tuple[uuid.UUID, uuid.UUID], tuple[ChampionUser, GameAccount, Champion]] = {}
         for cu, ga, champ in (await session.exec(stmt)).all():  # type: ignore[arg-type]
             kept = best.get((ga.id, cu.champion_id))
-            if kept is None or _copy_strength(cu) > _copy_strength(kept[0]):
+            if kept is None or strength(cu) > strength(kept[0]):
                 best[(ga.id, cu.champion_id)] = (cu, ga, champ)
 
         saga = await SagaService.resolve_current(session)
@@ -828,6 +920,7 @@ class WarService:
                     is_preferred_attacker=cu.is_preferred_attacker,
                     is_saga_attacker=att,
                     is_saga_defender=dfn,
+                    is_on_defense=cu.id in on_defense,
                 )
             )
         return result
@@ -1031,26 +1124,68 @@ class WarService:
 
     # ─── Synergy & prefight ───────────────────────────────────────────────────
 
-    @staticmethod
-    async def _saga_dtos[T: (WarSynergyResponse, WarPrefightResponse)](
+    @classmethod
+    async def _unrecorded_reasons(
+        cls,
+        session: SessionDep,
+        alliance_id: uuid.UUID,
+        war: War,
+        battlegroup: int,
+        keys: set[tuple[uuid.UUID, uuid.UUID]],
+    ) -> dict[tuple[uuid.UUID, uuid.UUID], UnrecordedReason]:
+        """Per (account, champion): a free recorded copy beats one on defense; none means not in roster."""
+        on_defense = await cls._defender_ids(
+            session, alliance_id, await cls._war_format(session, war), battlegroup
+        )
+        copies = await session.exec(
+            select(ChampionUser.id, ChampionUser.game_account_id, ChampionUser.champion_id).where(
+                col(ChampionUser.game_account_id).in_({account for account, _ in keys}),
+                col(ChampionUser.champion_id).in_({champion for _, champion in keys}),
+            )
+        )
+        reasons = dict.fromkeys(keys, UnrecordedReason.NOT_IN_ROSTER)
+        for cu_id, account_id, champion_id in copies.all():
+            key = (account_id, champion_id)
+            if key not in reasons or reasons[key] == UnrecordedReason.RECORDED_COPY_FREE:
+                continue
+            reasons[key] = (
+                UnrecordedReason.ON_DEFENSE
+                if cu_id in on_defense
+                else UnrecordedReason.RECORDED_COPY_FREE
+            )
+        return reasons
+
+    @classmethod
+    async def _entry_dtos[T: (WarSynergyResponse, WarPrefightResponse)](
+        cls,
         session: SessionDep,
         dto_cls: type[T],
         rows: Sequence[WarSynergyAttacker] | Sequence[WarPrefightAttacker],
+        alliance_id: uuid.UUID,
+        war: War,
+        battlegroup: int,
     ) -> list[T]:
         saga = await SagaService.resolve_current(session)
+        keys = {(r.game_account_id, r.champion_id) for r in rows if r.champion_user_id is None}
+        reasons = (
+            await cls._unrecorded_reasons(session, alliance_id, war, battlegroup, keys)
+            if keys
+            else {}
+        )
         dtos = []
         for row in rows:
             dto = dto_cls.model_validate(row)
-            dto.is_saga_attacker, dto.is_saga_defender = saga.get(
-                row.champion_user.champion_id, NO_SAGA
-            )
+            dto.is_saga_attacker, dto.is_saga_defender = saga.get(row.champion_id, NO_SAGA)
+            if row.champion_user_id is None:
+                dto.unrecorded_reason = reasons[(row.game_account_id, row.champion_id)]
             dtos.append(dto)
         return dtos
 
     @classmethod
     async def get_synergy_attackers(
-        cls, session: SessionDep, war_id: uuid.UUID, battlegroup: int
+        cls, session: SessionDep, war_id: uuid.UUID, alliance_id: uuid.UUID, battlegroup: int
     ) -> list[WarSynergyResponse]:
+        war = await cls._load_war(session, war_id)
         rows = (
             await session.exec(
                 select(WarSynergyAttacker)
@@ -1061,7 +1196,9 @@ class WarService:
                 .options(*_SYNERGY_OPTIONS)
             )
         ).all()
-        return await cls._saga_dtos(session, WarSynergyResponse, rows)
+        return await cls._entry_dtos(
+            session, WarSynergyResponse, rows, alliance_id, war, battlegroup
+        )
 
     @classmethod
     async def add_synergy_attacker(
@@ -1070,18 +1207,26 @@ class WarService:
         war_id: uuid.UUID,
         alliance_id: uuid.UUID,
         battlegroup: int,
-        champion_user_id: uuid.UUID,
         target_champion_user_id: uuid.UUID,
+        champion_user_id: uuid.UUID | None = None,
+        champion_id: uuid.UUID | None = None,
     ) -> WarSynergyResponse:
-        if champion_user_id == target_champion_user_id:
-            raise HTTPException(status.HTTP_409_CONFLICT, SYNERGY_PROVIDER_CANNOT_BE_TARGET)
-        champion_user = await cls._load_champion_user(session, champion_user_id)
         target = await cls._load_champion_user(
             session, target_champion_user_id, TARGET_CHAMPION_USER_NOT_FOUND
         )
-        game_account = champion_user.game_account
-        if game_account.user_id != target.game_account.user_id:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, ONLY_OWN_CHAMPIONS_SYNERGY)
+        champion_user = None
+        if champion_user_id is not None:
+            if champion_user_id == target_champion_user_id:
+                raise HTTPException(status.HTTP_409_CONFLICT, SYNERGY_PROVIDER_CANNOT_BE_TARGET)
+            champion_user = await cls._load_champion_user(session, champion_user_id)
+            if champion_user.game_account.user_id != target.game_account.user_id:
+                raise HTTPException(status.HTTP_403_FORBIDDEN, ONLY_OWN_CHAMPIONS_SYNERGY)
+            game_account, champion_id = champion_user.game_account, champion_user.champion_id
+        else:
+            if champion_id == target.champion_id:
+                raise HTTPException(status.HTTP_409_CONFLICT, SYNERGY_PROVIDER_CANNOT_BE_TARGET)
+            await cls._load_champion(session, champion_id)
+            game_account = target.game_account
         cls._assert_in_bg(game_account, alliance_id, battlegroup)
 
         target_on_node = await session.exec(
@@ -1095,14 +1240,18 @@ class WarService:
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_CONTENT, TARGET_NOT_ASSIGNED_AS_NODE_ATTACKER
             )
+
         war = await cls._load_war(session, war_id)
-        await cls._assert_can_attack(session, war, alliance_id, battlegroup, champion_user)
+        await cls._assert_can_provide(
+            session, war, alliance_id, battlegroup, champion_user, game_account.id, champion_id
+        )
 
         synergy = WarSynergyAttacker(
             war_id=war_id,
             battlegroup=battlegroup,
             game_account_id=game_account.id,
             champion_user_id=champion_user_id,
+            champion_id=champion_id,
             target_champion_user_id=target_champion_user_id,
         )
         session.add(synergy)
@@ -1121,30 +1270,27 @@ class WarService:
                 .options(*_SYNERGY_OPTIONS)
             )
         ).one()
-        return (await cls._saga_dtos(session, WarSynergyResponse, [loaded]))[0]
+        return (
+            await cls._entry_dtos(
+                session, WarSynergyResponse, [loaded], alliance_id, war, battlegroup
+            )
+        )[0]
 
     @classmethod
     async def remove_synergy_attacker(
-        cls, session: SessionDep, war_id: uuid.UUID, battlegroup: int, champion_user_id: uuid.UUID
+        cls, session: SessionDep, war_id: uuid.UUID, battlegroup: int, synergy_id: uuid.UUID
     ) -> None:
-        synergy = (
-            await session.exec(
-                select(WarSynergyAttacker).where(
-                    WarSynergyAttacker.war_id == war_id,
-                    WarSynergyAttacker.battlegroup == battlegroup,
-                    WarSynergyAttacker.champion_user_id == champion_user_id,
-                )
-            )
-        ).first()
-        if synergy is None:
+        synergy = await session.get(WarSynergyAttacker, synergy_id)
+        if synergy is None or synergy.war_id != war_id or synergy.battlegroup != battlegroup:
             raise HTTPException(status.HTTP_404_NOT_FOUND, SYNERGY_ATTACKER_NOT_FOUND)
         await session.delete(synergy)
         await session.commit()
 
     @classmethod
     async def get_prefight_attackers(
-        cls, session: SessionDep, war_id: uuid.UUID, battlegroup: int
+        cls, session: SessionDep, war_id: uuid.UUID, alliance_id: uuid.UUID, battlegroup: int
     ) -> list[WarPrefightResponse]:
+        war = await cls._load_war(session, war_id)
         rows = (
             await session.exec(
                 select(WarPrefightAttacker)
@@ -1155,7 +1301,9 @@ class WarService:
                 .options(*_PREFIGHT_OPTIONS)
             )
         ).all()
-        return await cls._saga_dtos(session, WarPrefightResponse, rows)
+        return await cls._entry_dtos(
+            session, WarPrefightResponse, rows, alliance_id, war, battlegroup
+        )
 
     @classmethod
     async def add_prefight_attacker(
@@ -1164,15 +1312,25 @@ class WarService:
         war_id: uuid.UUID,
         alliance_id: uuid.UUID,
         battlegroup: int,
-        champion_user_id: uuid.UUID,
         target_node_number: int,
+        champion_user_id: uuid.UUID | None = None,
+        champion_id: uuid.UUID | None = None,
+        game_account_id: uuid.UUID | None = None,
     ) -> WarPrefightResponse:
         war = await cls._load_war(session, war_id)
         await cls._assert_node_on_map(session, war, target_node_number)
-        champion_user = await cls._load_champion_user(session, champion_user_id)
-        if not champion_user.champion.has_prefight:
+        champion_user = None
+        if champion_user_id is not None:
+            champion_user = await cls._load_champion_user(session, champion_user_id)
+            champion, game_account = champion_user.champion, champion_user.game_account
+        else:
+            champion = await cls._load_champion(session, champion_id)
+            game_account = await session.get(GameAccount, game_account_id)
+            if game_account is None:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_FOUND)
+        if not champion.has_prefight:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, CHAMPION_NO_PREFIGHT_ABILITY)
-        cls._assert_in_bg(champion_user.game_account, alliance_id, battlegroup)
+        cls._assert_in_bg(game_account, alliance_id, battlegroup)
 
         target = await cls._get_placement_by_node(session, war_id, battlegroup, target_node_number)
         if target is None:
@@ -1183,13 +1341,17 @@ class WarService:
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_CONTENT, TARGET_NODE_NO_ATTACKER_ASSIGNED
             )
-        await cls._assert_can_attack(session, war, alliance_id, battlegroup, champion_user)
+
+        await cls._assert_can_provide(
+            session, war, alliance_id, battlegroup, champion_user, game_account.id, champion.id
+        )
 
         prefight = WarPrefightAttacker(
             war_id=war_id,
             battlegroup=battlegroup,
-            game_account_id=champion_user.game_account_id,
+            game_account_id=game_account.id,
             champion_user_id=champion_user_id,
+            champion_id=champion.id,
             target_node_number=target_node_number,
         )
         session.add(prefight)
@@ -1208,28 +1370,18 @@ class WarService:
                 .options(*_PREFIGHT_OPTIONS)
             )
         ).one()
-        return (await cls._saga_dtos(session, WarPrefightResponse, [loaded]))[0]
+        return (
+            await cls._entry_dtos(
+                session, WarPrefightResponse, [loaded], alliance_id, war, battlegroup
+            )
+        )[0]
 
     @classmethod
     async def remove_prefight_attacker(
-        cls,
-        session: SessionDep,
-        war_id: uuid.UUID,
-        battlegroup: int,
-        champion_user_id: uuid.UUID,
-        target_node_number: int,
+        cls, session: SessionDep, war_id: uuid.UUID, battlegroup: int, prefight_id: uuid.UUID
     ) -> None:
-        prefight = (
-            await session.exec(
-                select(WarPrefightAttacker).where(
-                    WarPrefightAttacker.war_id == war_id,
-                    WarPrefightAttacker.battlegroup == battlegroup,
-                    WarPrefightAttacker.champion_user_id == champion_user_id,
-                    WarPrefightAttacker.target_node_number == target_node_number,
-                )
-            )
-        ).first()
-        if prefight is None:
+        prefight = await session.get(WarPrefightAttacker, prefight_id)
+        if prefight is None or prefight.war_id != war_id or prefight.battlegroup != battlegroup:
             raise HTTPException(status.HTTP_404_NOT_FOUND, PREFIGHT_ENTRY_NOT_FOUND)
         await session.delete(prefight)
         await session.commit()

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import ChampionPortrait from '@/components/champion-portrait'
+import SupportPortrait from './support-portrait'
 import { cn } from '@/app/lib/utils'
 import {
   X,
@@ -163,20 +164,13 @@ export default function AttackerEntryRow({
         />
         {nodePrefights.map((p) => (
           <div
-            key={p.champion_user_id}
-            className='relative'
+            key={p.id}
             title={t.game.war.prefight.tooltip}
           >
-            <ChampionPortrait
-              imageUrl={p.image_url}
-              name={p.champion_name}
-              rarity={p.rarity}
-              size={portraitSize}
+            <SupportPortrait
+              entry={p}
               mode='prefight'
-              ascension={p.ascension}
-              is_saga_attacker={p.is_saga_attacker}
-              is_saga_defender={p.is_saga_defender}
-              sagaMode='attacker'
+              size={portraitSize}
             />
           </div>
         ))}

@@ -27,6 +27,7 @@ import {
   type AvailablePrefightAttacker,
   type WarSynergy,
   type WarPrefight,
+  type Provider,
   createWar,
   updateWar,
   endWar,
@@ -135,19 +136,20 @@ interface WarContextValue {
   handleUpdateBoosts: (nodeNumber: number, boosts: WarBoosts) => Promise<void>
   loadAvailableAttackers: (
     gameAccountId?: string,
-    nodeNumber?: number
+    nodeNumber?: number,
+    includeDefense?: boolean
   ) => Promise<AvailableAttacker[]>
   loadAvailablePrefightAttackers: () => Promise<AvailablePrefightAttacker[]>
 
   // Synergy
   synergies: WarSynergy[]
-  handleAddSynergy: (championUserId: string, targetChampionUserId: string) => Promise<void>
-  handleRemoveSynergy: (championUserId: string) => Promise<void>
+  handleAddSynergy: (provider: Provider, targetChampionUserId: string) => Promise<void>
+  handleRemoveSynergy: (synergyId: string) => Promise<void>
 
   // Prefight
   prefights: WarPrefight[]
-  handleAddPrefight: (championUserId: string, targetNodeNumber: number) => Promise<void>
-  handleRemovePrefight: (championUserId: string, targetNodeNumber: number) => Promise<void>
+  handleAddPrefight: (provider: Provider, targetNodeNumber: number) => Promise<void>
+  handleRemovePrefight: (prefightId: string) => Promise<void>
 
   // Combat completion
   handleToggleCombatCompleted: (nodeNumber: number) => Promise<void>
@@ -393,8 +395,15 @@ export function WarProvider({
   }
 
   const loadAvailableAttackers = useCallback(
-    (gameAccountId?: string, nodeNumber?: number) =>
-      getAvailableAttackers(selectedAllianceId, activeWarId, selectedBg, gameAccountId, nodeNumber),
+    (gameAccountId?: string, nodeNumber?: number, includeDefense?: boolean) =>
+      getAvailableAttackers(
+        selectedAllianceId,
+        activeWarId,
+        selectedBg,
+        gameAccountId,
+        nodeNumber,
+        includeDefense
+      ),
     [selectedAllianceId, activeWarId, selectedBg]
   )
 
@@ -661,18 +670,12 @@ export function WarProvider({
     }
   }
 
-  const handleAddSynergy = async (championUserId: string, targetChampionUserId: string) => {
+  const handleAddSynergy = async (provider: Provider, targetChampionUserId: string) => {
     if (!selectedAllianceId || !activeWarId) return
     await withToast(
       () =>
         write(() =>
-          addWarSynergy(
-            selectedAllianceId,
-            activeWarId,
-            selectedBg,
-            championUserId,
-            targetChampionUserId
-          )
+          addWarSynergy(selectedAllianceId, activeWarId, selectedBg, provider, targetChampionUserId)
         ),
       {
         success: (synergy) =>
@@ -680,20 +683,16 @@ export function WarProvider({
         error: t.game.war.synergy.addError,
         onSuccess: (synergy) => {
           if (isShown(activeWarId))
-            setSynergies((prev) => [
-              ...prev.filter((s) => s.champion_user_id !== synergy.champion_user_id),
-              synergy,
-            ])
+            setSynergies((prev) => [...prev.filter((s) => s.id !== synergy.id), synergy])
         },
       }
     )
   }
 
-  const handleRemoveSynergy = async (championUserId: string) => {
+  const handleRemoveSynergy = async (synergyId: string) => {
     if (!selectedAllianceId || !activeWarId) return
     await withToast(
-      () =>
-        write(() => removeWarSynergy(selectedAllianceId, activeWarId, selectedBg, championUserId)),
+      () => write(() => removeWarSynergy(selectedAllianceId, activeWarId, selectedBg, synergyId)),
       {
         success: t.game.war.synergy.removeSuccess,
         error: t.game.war.synergy.removeError,
@@ -702,18 +701,12 @@ export function WarProvider({
     )
   }
 
-  const handleAddPrefight = async (championUserId: string, targetNodeNumber: number) => {
+  const handleAddPrefight = async (provider: Provider, targetNodeNumber: number) => {
     if (!selectedAllianceId || !activeWarId) return
     await withToast(
       () =>
         write(() =>
-          addWarPrefight(
-            selectedAllianceId,
-            activeWarId,
-            selectedBg,
-            championUserId,
-            targetNodeNumber
-          )
+          addWarPrefight(selectedAllianceId, activeWarId, selectedBg, provider, targetNodeNumber)
         ),
       {
         success: (prefight) =>
@@ -726,19 +719,10 @@ export function WarProvider({
     )
   }
 
-  const handleRemovePrefight = async (championUserId: string, targetNodeNumber: number) => {
+  const handleRemovePrefight = async (prefightId: string) => {
     if (!selectedAllianceId || !activeWarId) return
     await withToast(
-      () =>
-        write(() =>
-          removeWarPrefight(
-            selectedAllianceId,
-            activeWarId,
-            selectedBg,
-            championUserId,
-            targetNodeNumber
-          )
-        ),
+      () => write(() => removeWarPrefight(selectedAllianceId, activeWarId, selectedBg, prefightId)),
       {
         success: t.game.war.prefight.removeSuccess,
         error: t.game.war.prefight.removeError,

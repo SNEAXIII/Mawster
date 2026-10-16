@@ -2,8 +2,10 @@ MESSAGE ?=
 LOGIN ?=
 ROLE ?= user
 DISCORD_ID ?=
+PSEUDO ?=
+DEV_LOGIN ?= Misterbalise
 
-.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions load-masteries reset-db delete-db init-db seed-user cancel-last mld test test-cov scrape-champions repopulate-db check fix fix-unsafe format
+.PHONY: help install install-dev run-dev run-testing create-mig migrate fixtures load-champions load-masteries reset-db delete-db init-db seed-user dev-token cancel-last mld test test-cov scrape-champions repopulate-db check fix fix-unsafe format
 
 help:
 	@echo "run-dev      --> run the server in dev mode with auto reload"
@@ -15,6 +17,7 @@ help:
 	@echo "load-masteries --> load masteries from scripts/masteries.json"
 	@echo "init-db      --> load one user and basic bdd"
 	@echo "seed-user    --> create or promote a dev user: LOGIN=x [ROLE=admin] [DISCORD_ID=y]"
+	@echo "dev-token    --> print a JWT for DEV_LOGIN (Misterbalise), or the player behind PSEUDO=x"
 	@echo "cancel-last  --> cancel last executed migration"
 	@echo "mld          --> regenerate docs/mld.puml from the models"
 	@echo "test         --> run the whole suite (5 xdist workers)"
@@ -71,6 +74,9 @@ init-db:
 seed-user:
 	@test -n "$(LOGIN)" || (echo "usage: make seed-user LOGIN=Sneaxiii [ROLE=admin] [DISCORD_ID=...]"; exit 1)
 	uv run python -m src.fixtures.seed_user --login "$(LOGIN)" --role "$(ROLE)" $(if $(DISCORD_ID),--discord-id "$(DISCORD_ID)",)
+
+dev-token:
+	@uv run python -m src.fixtures.dev_token $(if $(PSEUDO),--pseudo "$(PSEUDO)",--login "$(DEV_LOGIN)")
 
 mld:
 	uv run python -m docs.gen_mld

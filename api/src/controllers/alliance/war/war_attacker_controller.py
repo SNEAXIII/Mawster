@@ -39,11 +39,12 @@ async def get_available_attackers(
     war: WarDep,
     attacker_id: uuid.UUID | None = None,
     node_number: int | None = None,
+    include_defense: bool = False,
 ):
     """List available attackers (BG roster minus defenders). Pass attacker_id to filter to a single member."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
     return await WarService.get_available_attackers(
-        session, alliance_id, battlegroup, attacker_id, war, node_number
+        session, alliance_id, battlegroup, attacker_id, war, node_number, include_defense
     )
 
 
@@ -58,10 +59,13 @@ async def get_available_prefight_attackers(
     session: SessionDep,
     current_user: CurrentUser,
     war: WarDep,
+    include_defense: bool = False,
 ):
     """List available pre-fight champions (has_prefight=True) for the BG."""
     await AllianceService.require_visitor(session, alliance_id, current_user.id)
-    return await WarService.get_available_prefight_attackers(session, alliance_id, battlegroup, war)
+    return await WarService.get_available_prefight_attackers(
+        session, alliance_id, battlegroup, war, include_defense
+    )
 
 
 @war_attacker_controller.post(
