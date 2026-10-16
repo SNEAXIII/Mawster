@@ -1,20 +1,26 @@
 import { openWarNode, putPlanNode, setupPrefightScenario } from '../../support/e2e';
 
-const FILLERS = [
+const MEMBER_FILLERS = [
   { name: 'Spider-Man', champion_class: 'Cosmic' },
   { name: 'Doctor Doom', champion_class: 'Mystic' },
   { name: 'Blade', champion_class: 'Skill' },
   { name: 'Hulk', champion_class: 'Science' },
 ];
-const fillerRoster = FILLERS.map((c) => ({ champion: c.name, rarity: '7r3' }));
+const OWNER_FILLERS = [
+  { name: 'Thor', champion_class: 'Cosmic' },
+  { name: 'Hood', champion_class: 'Mystic' },
+  { name: 'Elektra', champion_class: 'Skill' },
+  { name: 'Hercules', champion_class: 'Cosmic' },
+];
+const toRoster = (champs: { name: string }[]) => champs.map((c) => ({ champion: c.name, rarity: '7r3' }));
 
 /** Storm, the member's only pre-fight champion, goes on the active defense plan.
- *  Activation needs a Validated plan: both BG1 players hold their 5 defenders. */
+ *  Activation needs a Validated plan: both BG1 players hold 5 distinct defenders. */
 function stormOnDefense(prefix: string, { assignAttacker = true } = {}) {
   return setupPrefightScenario(prefix, {
-    champions: FILLERS,
-    memberRoster: fillerRoster,
-    ownerRoster: [...fillerRoster, { champion: 'Iron Man', rarity: '7r3' }],
+    champions: [...MEMBER_FILLERS, ...OWNER_FILLERS],
+    memberRoster: toRoster(MEMBER_FILLERS),
+    ownerRoster: toRoster([...OWNER_FILLERS, { name: 'Iron Man' }]),
   }).then((s) => {
     const token = s.ownerData.access_token;
     if (assignAttacker) {
@@ -22,7 +28,7 @@ function stormOnDefense(prefix: string, { assignAttacker = true } = {}) {
     }
     const defenders = [
       s.prefightChampionUserId,
-      ...FILLERS.map((c) => s.memberChampionUserIds[c.name]),
+      ...MEMBER_FILLERS.map((c) => s.memberChampionUserIds[c.name]),
       ...Object.values(s.ownerChampionUserIds),
     ];
     return cy.apiCreatePlan(token, s.allianceId, 1, 'Plan 1').then((plan: { id: string }) => {
