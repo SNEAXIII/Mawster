@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import ChampionPortrait from '@/components/champion-portrait'
+import { shortenChampionName } from '@/app/services/roster'
 import UnrecordedBadge from './unrecorded-badge'
 import SynergySelectorDialog from './synergy-selector'
 import { useWar } from '@/app/contexts/war-context'
@@ -96,7 +97,7 @@ export default function SynergyPopover({
                     className='text-xs font-medium truncate flex-1'
                     data-cy={`synergy-provider-${s.champion_name.replaceAll(/\s+/g, '-')}`}
                   >
-                    {s.champion_name}
+                    {shortenChampionName(s.champion_name)}
                   </span>
                   {s.unrecorded_reason && (
                     <UnrecordedBadge

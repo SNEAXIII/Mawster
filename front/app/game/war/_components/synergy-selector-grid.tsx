@@ -1,6 +1,7 @@
 'use client'
 
 import { providerOf, type AvailableAttacker, type Provider } from '@/app/services/war'
+import { shortenChampionName } from '@/app/services/roster'
 import type { CatalogPick } from './use-catalog-picks'
 import InfoChampionTile from './info-champion-tile'
 
@@ -23,7 +24,7 @@ export default function SynergySelectorGrid({
         <InfoChampionTile
           key={a.champion_user_id}
           champion={a}
-          label={a.champion_name}
+          label={shortenChampionName(a.champion_name)}
           badge={a.is_on_defense ? 'on_defense' : undefined}
           dataCy={`synergy-pick-${cyName(a.champion_name)}`}
           onPick={() => onPick(providerOf(a))}
@@ -33,7 +34,7 @@ export default function SynergySelectorGrid({
         <InfoChampionTile
           key={`unrecorded-${p.game_account_id}-${p.champion_id}`}
           champion={p}
-          label={p.champion_name}
+          label={shortenChampionName(p.champion_name)}
           badge='not_in_roster'
           dataCy={`synergy-pick-unrecorded-${cyName(p.champion_name)}`}
           onPick={() => onPick({ champion_id: p.champion_id, game_account_id: p.game_account_id })}
