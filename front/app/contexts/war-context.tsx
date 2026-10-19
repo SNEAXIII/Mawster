@@ -670,17 +670,32 @@ export function WarProvider({
     }
   }
 
+  // Per node, the boost writes queued so far and how many clicks were made.
+  const boostChain = useRef<Record<string, Promise<unknown>>>({})
+  const boostSeq = useRef<Record<string, number>>({})
+
   const handleUpdateBoosts = async (nodeNumber: number, boosts: WarBoosts) => {
     if (!selectedAllianceId || !activeWarId) return
+    const key = koKey(activeWarId, nodeNumber)
+    const seq = (boostSeq.current[key] ?? 0) + 1
+    boostSeq.current[key] = seq
     const previous = placements.find((p) => p.node_number === nodeNumber)
     patchPlacement(nodeNumber, boosts)
-    try {
-      const updated = await write(() =>
-        updateWarBoosts(selectedAllianceId, activeWarId, selectedBg, nodeNumber, boosts)
+    // Each PUT carries the whole set, so they go out one at a time, in click order.
+    const request = (boostChain.current[key] ?? Promise.resolve())
+      .catch(() => {})
+      .then(() =>
+        write(() =>
+          updateWarBoosts(selectedAllianceId, activeWarId, selectedBg, nodeNumber, boosts)
+        )
       )
-      setPlacement(updated)
+    boostChain.current[key] = request
+    try {
+      const updated = await request
+      // An earlier click's answer would undo the clicks made since.
+      if (boostSeq.current[key] === seq) setPlacement(updated)
     } catch (err: unknown) {
-      if (previous) patchPlacement(nodeNumber, previous)
+      if (boostSeq.current[key] === seq && previous) patchPlacement(nodeNumber, previous)
       toast.error((err as Error).message || t.game.war.boosts.updateError)
     }
   }
