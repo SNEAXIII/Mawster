@@ -262,7 +262,7 @@ class TestDiscordLogin:
         assert response.status_code == 200
 
         async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
-            refreshed = await session.get(User, existing.id)
+            refreshed = await session.get_one(User, existing.id)
             assert refreshed.email_hash == stale_hash
             assert refreshed.email_hash_version == 0
 

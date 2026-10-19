@@ -35,7 +35,7 @@ MEMBER = create_auth_headers(user_id=str(USER2_ID))
 
 async def _end_season(season: Season) -> None:
     async with AsyncSession(sqlite_async_engine) as session:
-        db_season = await session.get(Season, season.id)
+        db_season = await session.get_one(Season, season.id)
         db_season.status = SeasonStatus.ENDED
         session.add(db_season)
         await session.commit()
@@ -228,7 +228,7 @@ class TestClosedWarFightRecordSync:
     async def test_reassigning_same_attacker_keeps_old_rank(self):
         data = await _setup_closed_war_scenario()
         async with AsyncSession(sqlite_async_engine) as session:
-            cu = await session.get(ChampionUser, data["champion_user"].id)
+            cu = await session.get_one(ChampionUser, data["champion_user"].id)
             cu.rank = 6
             session.add(cu)
             await session.commit()

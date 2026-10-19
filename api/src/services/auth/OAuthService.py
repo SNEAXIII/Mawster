@@ -1,6 +1,7 @@
 import secrets
 import string
 from abc import ABC, abstractmethod
+from typing import TypeGuard
 
 from fastapi import HTTPException
 from sqlmodel import select
@@ -130,7 +131,7 @@ class OAuthService(ABC):
         return await cls._link_provider(session, match, provider_field, provider_id)
 
     @staticmethod
-    def _is_linkable_email(email: str | None, email_verified: bool) -> bool:
+    def _is_linkable_email(email: str | None, email_verified: bool) -> TypeGuard[str]:
         return bool(email) and email_verified and not email.endswith(PLACEHOLDER_EMAIL_SUFFIX)
 
     @staticmethod

@@ -37,7 +37,7 @@ from tests.utils.utils_db import load_objects, sqlite_async_engine
 async def _attach_season(war_id: uuid.UUID, season_id: uuid.UUID) -> None:
     """Simulate a war declared before the season went active."""
     async with AsyncSession(sqlite_async_engine) as session:
-        war = await session.get(War, war_id)
+        war = await session.get_one(War, war_id)
         war.season_id = season_id
         session.add(war)
         await session.commit()

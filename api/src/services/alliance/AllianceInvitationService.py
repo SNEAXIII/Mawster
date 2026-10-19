@@ -179,7 +179,7 @@ class AllianceInvitationService:
             )
             return await cls._respond(session, invitation, InvitationStatus.ACCEPTED)
 
-        game_account = await session.get(GameAccount, invitation.game_account_id)
+        game_account = await session.get_one(GameAccount, invitation.game_account_id)
         AllianceService.assert_not_in_alliance(game_account)
         await AllianceService.assert_room_for_member(session, invitation.alliance_id)
         await AllianceVisitorService.remove_if_visitor(

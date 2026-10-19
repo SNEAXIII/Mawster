@@ -169,7 +169,7 @@ class TestAcceptVisitorInvitation:
 
         async for session in get_test_session():
             result = await session.exec(select(GA).where(GA.id == visitor_acc.id))
-            acc = result.first()
+            acc = result.one()
             assert acc.alliance_id is None
 
 

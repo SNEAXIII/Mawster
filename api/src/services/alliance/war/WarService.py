@@ -228,16 +228,23 @@ class WarService:
 
     @classmethod
     async def get_war(cls, session: SessionDep, war_id: uuid.UUID, alliance_id: uuid.UUID) -> War:
-        war = await cls._load_war(session, war_id)
+        war = await cls._find_war(session, war_id)
         if war is None or war.alliance_id != alliance_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, WAR_NOT_FOUND)
         return war
 
     @staticmethod
-    async def _load_war(session: SessionDep, war_id: uuid.UUID) -> War | None:
+    async def _find_war(session: SessionDep, war_id: uuid.UUID) -> War | None:
         return (
             await session.exec(select(War).where(War.id == war_id).options(*_WAR_OPTIONS))
         ).first()
+
+    @classmethod
+    async def _load_war(cls, session: SessionDep, war_id: uuid.UUID) -> War:
+        war = await cls._find_war(session, war_id)
+        if war is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, WAR_NOT_FOUND)
+        return war
 
     @staticmethod
     async def _war_format(
@@ -305,7 +312,7 @@ class WarService:
     ) -> WarResponse:
         war = await cls.get_war(session, war_id, alliance_id)
         ClosedWarPolicy.assert_open(war)
-        alliance = await session.get(Alliance, alliance_id)
+        alliance = await session.get_one(Alliance, alliance_id)
 
         if war.season_id is not None:
             if elo_change is None:
@@ -461,7 +468,7 @@ class WarService:
     def _placement_to_dto(
         placement: WarDefensePlacement,
         saga: dict[uuid.UUID, tuple[bool, bool]],
-        war: War | None,
+        war: War,
     ) -> WarPlacementResponse:
         dto = WarPlacementResponse.model_validate(placement)
         dto.is_saga_attacker, dto.is_saga_defender = saga.get(placement.champion_id, NO_SAGA)
@@ -477,8 +484,10 @@ class WarService:
     async def _placement_dtos(
         cls, session: SessionDep, placements: Sequence[WarDefensePlacement]
     ) -> list[WarPlacementResponse]:
+        if not placements:
+            return []
         saga = await SagaService.resolve_current(session)
-        war = await session.get(War, placements[0].war_id) if placements else None
+        war = await session.get_one(War, placements[0].war_id)
         return [cls._placement_to_dto(p, saga, war) for p in placements]
 
     @classmethod
@@ -516,7 +525,7 @@ class WarService:
         cls, session: SessionDep, placement: WarDefensePlacement
     ) -> None:
         ClosedWarPolicy.assert_attacker_unlocked(
-            await session.get(War, placement.war_id),
+            await session.get_one(War, placement.war_id),
             await cls._load_placement(session, placement.id),
         )
 
@@ -643,7 +652,7 @@ class WarService:
 
     @classmethod
     async def clear_bg(cls, session: SessionDep, war_id: uuid.UUID, battlegroup: int) -> int:
-        ClosedWarPolicy.assert_open(await session.get(War, war_id))
+        ClosedWarPolicy.assert_open(await session.get_one(War, war_id))
         placements = (
             await session.exec(
                 select(WarDefensePlacement).where(
@@ -818,8 +827,8 @@ class WarService:
         return set((await session.exec(stmt)).all())
 
     @staticmethod
-    async def _load_champion(session: SessionDep, champion_id: uuid.UUID) -> Champion:
-        champion = await session.get(Champion, champion_id)
+    async def _load_champion(session: SessionDep, champion_id: uuid.UUID | None) -> Champion:
+        champion = None if champion_id is None else await session.get(Champion, champion_id)
         if champion is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
         return champion
@@ -1253,7 +1262,7 @@ class WarService:
         else:
             if champion_id == target.champion_id:
                 raise HTTPException(status.HTTP_409_CONFLICT, SYNERGY_PROVIDER_CANNOT_BE_TARGET)
-            await cls._load_champion(session, champion_id)
+            champion_id = (await cls._load_champion(session, champion_id)).id
             game_account = target.game_account
         cls._assert_in_bg(game_account, alliance_id, battlegroup)
 
