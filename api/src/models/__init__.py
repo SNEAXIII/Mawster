@@ -43,4 +43,5 @@ from src.models.war.WarFightNoteRevision import WarFightNoteRevision  # noqa: F4
 from src.models.war.WarFightRecord import WarFightRecord  # noqa: F401
 from src.models.war.WarFightRecordImport import WarFightRecordImport  # noqa: F401
 from src.models.war.WarPrefightAttacker import WarPrefightAttacker  # noqa: F401
+from src.models.war.WarReadyBattlegroup import WarReadyBattlegroup  # noqa: F401
 from src.models.war.WarSynergyAttacker import WarSynergyAttacker  # noqa: F401

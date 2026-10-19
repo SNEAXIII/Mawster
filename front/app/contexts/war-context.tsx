@@ -35,6 +35,7 @@ import {
   placeWarDefender,
   removeWarDefender,
   clearWarBg,
+  setWarBgReady,
   assignWarAttacker,
   removeWarAttacker,
   updateWarKo,
@@ -130,6 +131,8 @@ interface WarContextValue {
   handleRemoveDefender: (node: number) => void
   handleConfirmRemoveDefender: () => Promise<void>
   handleClearBg: () => Promise<void>
+  isBgReady: boolean
+  handleToggleBgReady: () => Promise<void>
   handleAssignAttacker: (attacker: AvailableAttacker) => Promise<void>
   handleRemoveAttacker: (node: number) => Promise<void>
   handleAdjustKo: (node: number, delta: number) => void
@@ -552,6 +555,18 @@ export function WarProvider({
     }
   }
 
+  const isBgReady = warSummary?.is_ready ?? false
+  const handleToggleBgReady = async () => {
+    if (!selectedAllianceId || !activeWarId) return
+    const ready = !isBgReady
+    try {
+      await write(() => setWarBgReady(selectedAllianceId, activeWarId, selectedBg, ready))
+      setWarSummary((prev) => (prev ? { ...prev, is_ready: ready } : prev))
+    } catch {
+      toast.error(t.game.war.attackStatusError)
+    }
+  }
+
   const handleAssignAttacker = async (attacker: AvailableAttacker) => {
     if (!selectedAllianceId || !activeWarId || attackerSelectorNode === null) return
     const nodeNumber = attackerSelectorNode
@@ -873,6 +888,8 @@ export function WarProvider({
       handleRemoveDefender,
       handleConfirmRemoveDefender,
       handleClearBg,
+      isBgReady,
+      handleToggleBgReady,
       handleAssignAttacker,
       handleRemoveAttacker,
       handleAdjustKo,
@@ -916,6 +933,7 @@ export function WarProvider({
       warLoading,
       placements,
       progress,
+      isBgReady,
       warMode,
       selectorNode,
       attackerSelectorNode,

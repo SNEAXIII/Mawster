@@ -263,6 +263,12 @@ The regular 50-node map has four quarters: tier 1 (1-18), tier 2 (19-36), mini b
 (37-45) and boss (46-50). The defense map and the grid filters follow the quarters; the war
 stats count nodes 37-49 as **Mini Bosses** and node 50 as the **Boss**.
 
+**Ready**:
+A Battlegroup whose attacks are open in one running War: a Strategist says its plan holds
+well enough for the Attackers to start. Closed until someone opens it; a signal, it blocks nothing.
+_Table_: `war_ready_battlegroup`.
+_Avoid_: validated (that is a Defense Plan's state), light, go.
+
 **Defense Template**:
 A reusable composition of Champions on the nodes of one Season format, owned by the
 Alliance and tied to no Battlegroup and no Player. Names a Champion, never a copy of it —

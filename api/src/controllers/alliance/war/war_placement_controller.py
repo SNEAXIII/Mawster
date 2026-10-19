@@ -5,6 +5,7 @@ from starlette import status
 
 from src.controllers.alliance.war.war_deps import WarDep
 from src.dto.alliance.war.dto_war import (
+    WarBgReadyRequest,
     WarDefenseSummaryResponse,
     WarPlacementCreateRequest,
     WarPlacementResponse,
@@ -98,3 +99,18 @@ async def clear_war_bg(
     await AllianceService.require_strategist(session, alliance_id, current_user.id)
     count = await WarService.clear_bg(session, war_id, battlegroup)
     return {"deleted": count}
+
+
+@war_placement_controller.put("/{war_id}/bg/{battlegroup}/ready")
+async def set_war_bg_ready(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    body: WarBgReadyRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+    war: WarDep,
+):
+    """Open or close the attacks of a battlegroup. Officers/owner/strategist only."""
+    await AllianceService.require_strategist(session, alliance_id, current_user.id)
+    return {"ready": await WarService.set_bg_ready(session, war, battlegroup, body.ready)}
