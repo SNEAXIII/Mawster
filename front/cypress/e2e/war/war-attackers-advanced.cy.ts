@@ -99,7 +99,9 @@ describe('War – Attackers mode (advanced)', () => {
         );
 
         goToAttackersMode(ownerData.user_id);
+        cy.intercept('DELETE', '**/node/10/attacker').as('removeAttacker');
         confirmAction('remove-attacker-node-10');
+        cy.wait('@removeAttacker');
         cy.apiRequest(memberData.access_token, 'GET', `/alliances/${allianceId}/wars/${warId}/bg/1/prefight`).then(
           (res) => expect(res.body).to.have.length(0),
         );
