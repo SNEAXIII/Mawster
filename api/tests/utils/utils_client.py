@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from httpx import ASGITransport, AsyncClient, Response
@@ -13,7 +13,7 @@ _SHARED_CLIENT: AsyncClient | None = None
 
 
 @asynccontextmanager
-async def get_test_client() -> AsyncIterator[AsyncClient]:
+async def get_test_client() -> AsyncGenerator[AsyncClient]:
     """Yield the shared `AsyncClient` when available, otherwise create a temporary one.
 
     This allows tests to reuse a single client per test (via a fixture) while
