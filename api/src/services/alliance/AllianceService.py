@@ -4,7 +4,7 @@ from collections.abc import Callable
 from fastapi import HTTPException
 from sqlalchemy import exists, func, or_
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.enums.InvitationStatus import InvitationStatus
@@ -64,7 +64,7 @@ class AllianceService:
         result = await session.exec(
             select(GameAccount).where(
                 GameAccount.user_id == user_id,
-                GameAccount.deleted_at.is_(None),
+                col(GameAccount.deleted_at).is_(None),
             )
         )
         return list(result.all())
@@ -99,7 +99,7 @@ class AllianceService:
         """
         result = await session.exec(
             select(Alliance)
-            .where(Alliance.id == alliance_id, Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
+            .where(Alliance.id == alliance_id, col(Alliance.deleted_at).is_(None))
             .options(*_ALLIANCE_OPTIONS)
         )
         return result.first()
@@ -144,11 +144,11 @@ class AllianceService:
         ]
         result = await session.exec(
             select(GameAccount.id)
-            .join(Alliance, Alliance.id == alliance_id)
+            .join(Alliance, col(Alliance.id) == alliance_id)
             .where(
                 GameAccount.user_id == user_id,
-                GameAccount.deleted_at.is_(None),
-                Alliance.deleted_at.is_(None),  # type: ignore[union-attr]
+                col(GameAccount.deleted_at).is_(None),
+                col(Alliance.deleted_at).is_(None),
                 or_(*holds),
             )
             .limit(1)
@@ -212,11 +212,11 @@ class AllianceService:
         """The user's live game account that visits this alliance, if any."""
         result = await session.exec(
             select(GameAccount)
-            .join(AllianceVisitor, AllianceVisitor.game_account_id == GameAccount.id)
+            .join(AllianceVisitor, col(AllianceVisitor.game_account_id) == GameAccount.id)
             .where(
                 AllianceVisitor.alliance_id == alliance_id,
                 GameAccount.user_id == user_id,
-                GameAccount.deleted_at.is_(None),
+                col(GameAccount.deleted_at).is_(None),
             )
         )
         return result.first()
@@ -449,7 +449,7 @@ class AllianceService:
     @classmethod
     async def get_all_alliances(cls, session: SessionDep) -> list[Alliance]:
         result = await session.exec(
-            select(Alliance).where(Alliance.deleted_at.is_(None)).options(*_ALLIANCE_OPTIONS)  # type: ignore[union-attr]
+            select(Alliance).where(col(Alliance.deleted_at).is_(None)).options(*_ALLIANCE_OPTIONS)
         )
         return list(result.all())
 
@@ -459,7 +459,7 @@ class AllianceService:
         user_accounts = await session.exec(
             select(GameAccount.alliance_id)
             .where(GameAccount.user_id == user_id)
-            .where(GameAccount.alliance_id.isnot(None))  # type: ignore[union-attr]
+            .where(col(GameAccount.alliance_id).isnot(None))
         )
         return {aid for aid in user_accounts.all() if aid is not None}
 
@@ -477,7 +477,7 @@ class AllianceService:
             return []
         result = await session.exec(
             select(Alliance)
-            .where(Alliance.id.in_(alliance_ids), Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
+            .where(col(Alliance.id).in_(alliance_ids), col(Alliance.deleted_at).is_(None))
             .options(*_ALLIANCE_OPTIONS)
         )
         return list(result.all())
@@ -506,7 +506,7 @@ class AllianceService:
 
         result = await session.exec(
             select(Alliance)
-            .where(Alliance.id.in_(alliance_ids), Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
+            .where(col(Alliance.id).in_(alliance_ids), col(Alliance.deleted_at).is_(None))
             .options(
                 selectinload(Alliance.officers),  # type: ignore[arg-type]
                 selectinload(Alliance.strategists),  # type: ignore[arg-type]
@@ -615,7 +615,7 @@ class AllianceService:
         await session.exec(select(Alliance.id).where(Alliance.id == alliance_id).with_for_update())
         # A locking read: REPEATABLE READ's snapshot would miss a join committed while we waited.
         count = await session.exec(
-            select(func.count(GameAccount.id))
+            select(func.count(col(GameAccount.id)))
             .where(GameAccount.alliance_id == alliance_id)
             .with_for_update(read=True)
         )
@@ -814,7 +814,7 @@ class AllianceService:
                 raise HTTPException(status.HTTP_400_BAD_REQUEST, INVALID_GROUP_VALUE)
             # Count current members in this group (excluding the target account)
             count_result = await session.exec(
-                select(func.count(GameAccount.id)).where(
+                select(func.count(col(GameAccount.id))).where(
                     GameAccount.alliance_id == alliance_id,
                     GameAccount.alliance_group == group,
                     GameAccount.id != game_account_id,
@@ -889,8 +889,8 @@ class AllianceService:
         """Get game accounts of the user that are NOT already in an alliance (eligible to create one)."""
         sql = select(GameAccount).where(
             GameAccount.user_id == user_id,
-            GameAccount.alliance_id.is_(None),
-            GameAccount.deleted_at.is_(None),
+            col(GameAccount.alliance_id).is_(None),
+            col(GameAccount.deleted_at).is_(None),
         )
         result = await session.exec(sql)
         return list(result.all())
@@ -907,11 +907,11 @@ class AllianceService:
         pending_ids = set(pending_ids_result.all())
 
         sql = select(GameAccount).where(
-            GameAccount.alliance_id.is_(None),
-            GameAccount.deleted_at.is_(None),
+            col(GameAccount.alliance_id).is_(None),
+            col(GameAccount.deleted_at).is_(None),
         )
         if pending_ids:
-            sql = sql.where(GameAccount.id.notin_(pending_ids))  # type: ignore[union-attr]
+            sql = sql.where(col(GameAccount.id).notin_(pending_ids))
         result = await session.exec(sql)
         return list(result.all())
 
@@ -942,9 +942,9 @@ class AllianceService:
         )
         excluded_ids |= set(pending_ids_result.all())
 
-        sql = select(GameAccount).where(GameAccount.deleted_at.is_(None))
+        sql = select(GameAccount).where(col(GameAccount.deleted_at).is_(None))
         if excluded_ids:
-            sql = sql.where(GameAccount.id.notin_(excluded_ids))  # type: ignore[union-attr]
+            sql = sql.where(col(GameAccount.id).notin_(excluded_ids))
         result = await session.exec(sql)
         return list(result.all())
 
@@ -970,7 +970,7 @@ class AllianceService:
         result = await session.exec(
             select(AllianceVisitor).where(
                 AllianceVisitor.game_account_id == target_game_account.id,
-                AllianceVisitor.alliance_id.in_(viewer_alliance_ids),  # type: ignore[union-attr]
+                col(AllianceVisitor.alliance_id).in_(viewer_alliance_ids),
             )
         )
         return result.first() is not None

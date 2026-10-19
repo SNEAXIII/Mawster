@@ -3,7 +3,7 @@
 import uuid
 
 import pytest
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
@@ -147,7 +147,7 @@ async def _fetch_records(session, war_id):
             select(WarFightRecord)
             .join(
                 WarDefensePlacement,
-                WarFightRecord.war_defense_placement_id == WarDefensePlacement.id,
+                col(WarFightRecord.war_defense_placement_id) == WarDefensePlacement.id,
             )
             .where(WarDefensePlacement.war_id == war_id)
         )

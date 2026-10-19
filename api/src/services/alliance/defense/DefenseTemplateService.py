@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.enums.SeasonFormat import SeasonFormat
@@ -56,7 +56,7 @@ class DefenseTemplateService:
         result = await session.exec(
             select(DefenseTemplate)
             .where(DefenseTemplate.alliance_id == alliance_id, DefenseTemplate.format == fmt)
-            .order_by(DefenseTemplate.created_at)  # type: ignore[arg-type]
+            .order_by(col(DefenseTemplate.created_at))
             .options(*_TEMPLATE_OPTIONS)
         )
         return list(result.all())

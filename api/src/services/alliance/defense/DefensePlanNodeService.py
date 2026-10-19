@@ -3,7 +3,7 @@ from collections import Counter
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.Messages.defense_messages import (
@@ -120,7 +120,7 @@ class DefensePlanNodeService:
         roster = (
             await session.exec(
                 select(ChampionUser)
-                .where(ChampionUser.game_account_id.in_(member_map))  # type: ignore[attr-defined]
+                .where(col(ChampionUser.game_account_id).in_(member_map))
                 .options(selectinload(ChampionUser.champion))  # type: ignore[arg-type]
             )
         ).all()

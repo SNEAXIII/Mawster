@@ -1,7 +1,7 @@
 """A closed War: its terms are sealed, its map stays correctable during the Latest Season."""
 
 import pytest
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.enums.SeasonFormat import SeasonFormat
@@ -126,7 +126,7 @@ async def _record_of_node(war_id, battlegroup: int, node: int) -> WarFightRecord
                 select(WarFightRecord)
                 .join(
                     WarDefensePlacement,
-                    WarFightRecord.war_defense_placement_id == WarDefensePlacement.id,
+                    col(WarFightRecord.war_defense_placement_id) == WarDefensePlacement.id,
                 )
                 .where(
                     WarDefensePlacement.war_id == war_id,

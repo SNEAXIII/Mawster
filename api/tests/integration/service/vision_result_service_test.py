@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 from fastapi import HTTPException
-from sqlmodel import select
+from sqlmodel import col, select
 
 from src.dto.account.game.dto_vision_result import VisionPredictionMessage, VisionResultMessage
 from src.enums.VisionImportStatus import VisionImportStatus
@@ -329,7 +329,7 @@ async def test_succeed_persists_candidates(session):
 
     stored = (
         await session.exec(
-            select(VisionPredictionCandidate).order_by(VisionPredictionCandidate.position)
+            select(VisionPredictionCandidate).order_by(col(VisionPredictionCandidate.position))
         )
     ).all()
     assert [(c.name, c.score, c.position) for c in stored] == [

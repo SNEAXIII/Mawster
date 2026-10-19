@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import and_, or_, select
+from sqlmodel import and_, col, or_, select
 from starlette import status
 
 from src.enums.ChampionRarity import ChampionRarity
@@ -24,8 +24,10 @@ VALID_RARITIES = {r.value for r in ChampionRarity}
 def _pending_for_account(game_account_id: uuid.UUID):
     return (
         select(RequestedUpgrade)
-        .join(ChampionUser, RequestedUpgrade.champion_user_id == ChampionUser.id)
-        .where(ChampionUser.game_account_id == game_account_id, RequestedUpgrade.done_at.is_(None))
+        .join(ChampionUser, col(RequestedUpgrade.champion_user_id) == ChampionUser.id)
+        .where(
+            ChampionUser.game_account_id == game_account_id, col(RequestedUpgrade.done_at).is_(None)
+        )
     )
 
 
@@ -76,7 +78,7 @@ class UpgradeRequestService:
             await session.exec(
                 select(RequestedUpgrade).where(
                     RequestedUpgrade.champion_user_id == champion_user_id,
-                    RequestedUpgrade.done_at.is_(None),
+                    col(RequestedUpgrade.done_at).is_(None),
                 )
             )
         ).all()
@@ -163,10 +165,10 @@ class UpgradeRequestService:
         """Same, for many committed entries in one query: compares against their stored rarity."""
         stmt = (
             select(RequestedUpgrade)
-            .join(ChampionUser, RequestedUpgrade.champion_user_id == ChampionUser.id)
+            .join(ChampionUser, col(RequestedUpgrade.champion_user_id) == ChampionUser.id)
             .where(
-                ChampionUser.id.in_(champion_user_ids),  # type: ignore[attr-defined]
-                RequestedUpgrade.done_at.is_(None),
+                col(ChampionUser.id).in_(champion_user_ids),
+                col(RequestedUpgrade.done_at).is_(None),
                 or_(
                     RequestedUpgrade.requested_stars < ChampionUser.stars,
                     and_(

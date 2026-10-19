@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import HTTPException
 from sqlalchemy import Float, Integer, cast, func, union
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.dto.alliance.war.dto_statistic import ChampionUsageResponse
@@ -54,20 +54,20 @@ class PlayerStatsService:
         # ended war of that season. UNION deduplicates seasons reached by both legs.
         _season_ids = union(
             select(Season.id)
-            .join(War, War.season_id == Season.id)
-            .join(WarDefensePlacement, WarDefensePlacement.war_id == War.id)
+            .join(War, col(War.season_id) == Season.id)
+            .join(WarDefensePlacement, col(WarDefensePlacement.war_id) == War.id)
             .join(
                 ChampionUser,
-                ChampionUser.id == WarDefensePlacement.attacker_champion_user_id,
+                col(ChampionUser.id) == WarDefensePlacement.attacker_champion_user_id,
             )
             .where(ChampionUser.game_account_id == game_account_id)
             .where(War.status == WarStatus.ENDED),
             select(Season.id)
-            .join(War, War.season_id == Season.id)
-            .join(WarDefensePlacement, WarDefensePlacement.war_id == War.id)
+            .join(War, col(War.season_id) == Season.id)
+            .join(WarDefensePlacement, col(WarDefensePlacement.war_id) == War.id)
             .join(
                 ChampionUser,
-                ChampionUser.id == WarDefensePlacement.assist_champion_user_id,
+                col(ChampionUser.id) == WarDefensePlacement.assist_champion_user_id,
             )
             .where(ChampionUser.game_account_id == game_account_id)
             .where(War.status == WarStatus.ENDED),
@@ -76,7 +76,7 @@ class PlayerStatsService:
         stmt = (
             select(Season.id, Season.number, Season.status)
             .join(_season_ids, _season_ids.c.id == Season.id)
-            .order_by(Season.number.desc())
+            .order_by(col(Season.number).desc())
         )
         rows = (await session.exec(stmt)).mappings().all()
         return [
@@ -124,10 +124,10 @@ class PlayerStatsService:
                         ratio_expr.label("ratio"),
                     )
                     .select_from(WarDefensePlacement)
-                    .join(War, WarDefensePlacement.war_id == War.id)
+                    .join(War, col(WarDefensePlacement.war_id) == War.id)
                     .join(
                         ChampionUser,
-                        ChampionUser.id == WarDefensePlacement.attacker_champion_user_id,
+                        col(ChampionUser.id) == WarDefensePlacement.attacker_champion_user_id,
                     )
                     .where(*conds)
                 )
@@ -138,18 +138,18 @@ class PlayerStatsService:
 
         # --- participation: distinct wars attacked OR assisted ---
         war_pairs = union(
-            select(War.id.label("war_id"))
-            .join(WarDefensePlacement, WarDefensePlacement.war_id == War.id)
+            select(col(War.id).label("war_id"))
+            .join(WarDefensePlacement, col(WarDefensePlacement.war_id) == War.id)
             .join(
                 ChampionUser,
-                ChampionUser.id == WarDefensePlacement.attacker_champion_user_id,
+                col(ChampionUser.id) == WarDefensePlacement.attacker_champion_user_id,
             )
             .where(*conds),
-            select(War.id.label("war_id"))
-            .join(WarDefensePlacement, WarDefensePlacement.war_id == War.id)
+            select(col(War.id).label("war_id"))
+            .join(WarDefensePlacement, col(WarDefensePlacement.war_id) == War.id)
             .join(
                 ChampionUser,
-                ChampionUser.id == WarDefensePlacement.assist_champion_user_id,
+                col(ChampionUser.id) == WarDefensePlacement.assist_champion_user_id,
             )
             .where(*conds),
         ).subquery()
@@ -160,12 +160,12 @@ class PlayerStatsService:
 
         total_assists = (
             await session.exec(
-                select(func.count(WarDefensePlacement.id))
+                select(func.count(col(WarDefensePlacement.id)))
                 .select_from(WarDefensePlacement)
-                .join(War, WarDefensePlacement.war_id == War.id)
+                .join(War, col(WarDefensePlacement.war_id) == War.id)
                 .join(
                     ChampionUser,
-                    ChampionUser.id == WarDefensePlacement.assist_champion_user_id,
+                    col(ChampionUser.id) == WarDefensePlacement.assist_champion_user_id,
                 )
                 .where(*conds)
             )
@@ -203,12 +203,12 @@ class PlayerStatsService:
                         cast(total_fights, Float).label("fights"),
                     )
                     .select_from(WarDefensePlacement)
-                    .join(War, WarDefensePlacement.war_id == War.id)
+                    .join(War, col(WarDefensePlacement.war_id) == War.id)
                     .join(
                         ChampionUser,
-                        ChampionUser.id == WarDefensePlacement.attacker_champion_user_id,
+                        col(ChampionUser.id) == WarDefensePlacement.attacker_champion_user_id,
                     )
-                    .join(Season, Season.id == War.season_id)
+                    .join(Season, col(Season.id) == War.season_id)
                     .where(*conds)
                     .group_by(*group_cols)
                     .order_by(order_col.asc())
@@ -232,8 +232,8 @@ class PlayerStatsService:
                 await session.exec(
                     select(Alliance.name, Alliance.tag)
                     .select_from(war_pairs)
-                    .join(War, War.id == war_pairs.c.war_id)
-                    .join(Alliance, Alliance.id == War.alliance_id)
+                    .join(War, col(War.id) == war_pairs.c.war_id)
+                    .join(Alliance, col(Alliance.id) == War.alliance_id)
                     .group_by(Alliance.name, Alliance.tag)
                 )
             )
@@ -249,21 +249,21 @@ class PlayerStatsService:
         """Across all Seasons on purpose: the season filter never resets it."""
         rows = await session.exec(
             select(WarDefensePlacement.ko_count, WarDefensePlacement.is_fight_not_done)
-            .join(War, WarDefensePlacement.war_id == War.id)
+            .join(War, col(WarDefensePlacement.war_id) == War.id)
             .join(
                 ChampionUser,
-                ChampionUser.id == WarDefensePlacement.attacker_champion_user_id,
+                col(ChampionUser.id) == WarDefensePlacement.attacker_champion_user_id,
             )
             .where(
                 ChampionUser.game_account_id == game_account_id,
                 War.status == WarStatus.ENDED,
-                War.season_id.is_not(None),
-                WarDefensePlacement.is_planning_error.is_(False),
+                col(War.season_id).is_not(None),
+                col(WarDefensePlacement.is_planning_error).is_(False),
             )
             .order_by(
-                War.created_at.desc(),
-                War.id.desc(),
-                WarDefensePlacement.node_number.desc(),
+                col(War.created_at).desc(),
+                col(War.id).desc(),
+                col(WarDefensePlacement.node_number).desc(),
             )
         )
         return current_win_streak(StreakFight(*row) for row in rows)
@@ -291,7 +291,7 @@ class PlayerStatsService:
 
         conditions = [
             ChampionUser.game_account_id == game_account_id,
-            WarDefensePlacement.is_planning_error.is_(False),
+            col(WarDefensePlacement.is_planning_error).is_(False),
         ]
         if season_id is not None:
             conditions.append(War.season_id == season_id)

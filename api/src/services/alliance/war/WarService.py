@@ -203,7 +203,7 @@ class WarService:
                 select(War)
                 .where(War.alliance_id == alliance_id)
                 .options(*_WAR_OPTIONS)
-                .order_by(War.created_at.desc())  # type: ignore[attr-defined]
+                .order_by(col(War.created_at).desc())
             )
         ).all()
         latest_season = await DisplaySeasonService.get_display_season(session)
@@ -362,7 +362,7 @@ class WarService:
                 select(WarFightNote).where(
                     WarFightNote.war_id == war_id,
                     WarFightNote.battlegroup == battlegroup,
-                    WarFightNote.deleted_at.is_(None),
+                    col(WarFightNote.deleted_at).is_(None),
                 )
             )
         ).all()
@@ -595,8 +595,8 @@ class WarService:
                     WarSynergyAttacker.war_id == war_id,
                     WarSynergyAttacker.battlegroup == battlegroup,
                     or_(
-                        WarSynergyAttacker.champion_user_id == champion_user_id,
-                        WarSynergyAttacker.target_champion_user_id == champion_user_id,
+                        col(WarSynergyAttacker.champion_user_id) == champion_user_id,
+                        col(WarSynergyAttacker.target_champion_user_id) == champion_user_id,
                     ),
                 )
             )
@@ -686,7 +686,9 @@ class WarService:
                 WarDefensePlacement.attacker_champion_user_id,
                 WarDefensePlacement.node_number,
             )
-            .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+            .join(
+                ChampionUser, col(WarDefensePlacement.attacker_champion_user_id) == ChampionUser.id
+            )
             .where(
                 WarDefensePlacement.war_id == war_id, WarDefensePlacement.battlegroup == battlegroup
             )
@@ -918,18 +920,20 @@ class WarService:
         on_defense = await cls._defender_ids(session, alliance_id, fmt, battlegroup)
         stmt = (
             select(ChampionUser, GameAccount, Champion)
-            .join(GameAccount, ChampionUser.game_account_id == GameAccount.id)  # type: ignore[arg-type]
-            .join(Champion, ChampionUser.champion_id == Champion.id)  # type: ignore[arg-type]
+            .join(GameAccount, col(ChampionUser.game_account_id) == GameAccount.id)
+            .join(Champion, col(ChampionUser.champion_id) == Champion.id)
             .where(
                 GameAccount.alliance_id == alliance_id,
                 GameAccount.alliance_group == battlegroup,
-                Champion.has_prefight.is_(True),
+                col(Champion.has_prefight).is_(True),
             )
         )
         if not include_defense and on_defense:
             stmt = stmt.where(col(ChampionUser.id).not_in(on_defense))
         if war and war.bans:
-            stmt = stmt.where(ChampionUser.champion_id.not_in([b.champion_id for b in war.bans]))  # type: ignore[union-attr]
+            stmt = stmt.where(
+                col(ChampionUser.champion_id).not_in([b.champion_id for b in war.bans])
+            )
 
         def strength(cu: ChampionUser) -> tuple[bool, int, int, int]:
             return (cu.id not in on_defense, *_copy_strength(cu))

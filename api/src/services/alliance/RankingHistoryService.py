@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.dto.alliance.war.dto_ranking_history import RankingHistoryPoint, RankingHistoryResponse
@@ -62,7 +62,7 @@ class RankingHistoryService:
                     War.season_id == display_season.id,
                     War.status == WarStatus.ENDED,
                 )
-                .order_by(War.created_at)
+                .order_by(col(War.created_at))
             )
         ).all()
 

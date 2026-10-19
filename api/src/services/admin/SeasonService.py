@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status as http_status
 
 from src.enums.SeasonFormat import SeasonFormat
@@ -43,7 +43,7 @@ class SeasonService:
 
     @classmethod
     async def get_all_seasons(cls, session: SessionDep) -> list[Season]:
-        result = await session.exec(select(Season).order_by(Season.number.desc()))
+        result = await session.exec(select(Season).order_by(col(Season.number).desc()))
         return list(result.all())
 
     @classmethod
