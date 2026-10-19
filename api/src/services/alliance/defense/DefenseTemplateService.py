@@ -99,7 +99,7 @@ class DefenseTemplateService:
         await cls._assert_name_free(session, alliance_id, fmt, name)
         template = DefenseTemplate(alliance_id=alliance_id, format=fmt, name=name)
         template.nodes = [
-            DefenseTemplateNode(node_number=node, champion_id=champion_id)
+            DefenseTemplateNode(template_id=template.id, node_number=node, champion_id=champion_id)
             for node, champion_id in champion_nodes
         ]
         session.add(template)
@@ -134,7 +134,7 @@ class DefenseTemplateService:
         await assert_champion_exists(session, champion_id)
         assert_champion_free(template.nodes, champion_id, node_number)
         node = find_node(template.nodes, node_number) or DefenseTemplateNode(
-            template_id=template.id, node_number=node_number
+            template_id=template.id, node_number=node_number, champion_id=champion_id
         )
         node.champion_id = champion_id
         session.add(node)

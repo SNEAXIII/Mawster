@@ -55,9 +55,10 @@ def assert_champion_free(nodes: Iterable[_Node], champion_id: uuid.UUID, node_nu
         raise HTTPException(status.HTTP_409_CONFLICT, CHAMPION_ALREADY_PLACED_OTHER_NODE)
 
 
-async def assert_champion_exists(session: SessionDep, champion_id: uuid.UUID) -> None:
-    if await session.get(Champion, champion_id) is None:
+async def assert_champion_exists(session: SessionDep, champion_id: uuid.UUID | None) -> uuid.UUID:
+    if champion_id is None or await session.get(Champion, champion_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
+    return champion_id
 
 
 async def count_rows(session: SessionDep, model: Any, *filters: Any) -> int:

@@ -22,4 +22,4 @@ class TestSeasonCreateRequest:
 
     def test_number_required(self):
         with pytest.raises(ValidationError):
-            SeasonCreateRequest()
+            SeasonCreateRequest()  # ty: ignore[missing-argument]

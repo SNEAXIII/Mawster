@@ -195,7 +195,9 @@ class DefensePlanService:
             assert_same_format(template.format, fmt)
             plan.source_template_id = template.id
             plan.nodes = [
-                DefensePlanNode(node_number=n.node_number, champion_id=n.champion_id)
+                DefensePlanNode(
+                    plan_id=plan.id, node_number=n.node_number, champion_id=n.champion_id
+                )
                 for n in template.nodes
             ]
         elif source_plan_id is not None:
@@ -206,6 +208,7 @@ class DefensePlanService:
             plan.source_template_id = source.source_template_id
             plan.nodes = [
                 DefensePlanNode(
+                    plan_id=plan.id,
                     node_number=n.node_number,
                     champion_id=n.champion_id,
                     champion_user_id=n.champion_user_id,
@@ -254,7 +257,10 @@ class DefensePlanService:
         ).first()
         if pointer is None:
             pointer = DefenseActivePlan(
-                alliance_id=plan.alliance_id, battlegroup=plan.battlegroup, format=plan.format
+                alliance_id=plan.alliance_id,
+                battlegroup=plan.battlegroup,
+                format=plan.format,
+                plan_id=plan.id,
             )
         pointer.plan_id = plan.id
         session.add(pointer)

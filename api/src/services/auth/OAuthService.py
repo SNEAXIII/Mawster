@@ -167,7 +167,7 @@ class OAuthService(ABC):
         ):
             user.email_hash = hash_email(email)
             user.email_hash_version = SECRET.EMAIL_PEPPER_VERSION
-        session.add(LoginLog(user=user))
+        session.add(LoginLog(user_id=user.id))
         session.add(user)
         await session.commit()
         await session.refresh(user)
@@ -187,7 +187,7 @@ class OAuthService(ABC):
         setattr(user, provider_field, provider_id)
         user.set_last_login_date(utcnow())
         session.add(user)
-        session.add(LoginLog(user=user))
+        session.add(LoginLog(user_id=user.id))
         await session.commit()
         await session.refresh(user)
         return user
@@ -203,7 +203,7 @@ class OAuthService(ABC):
 
         setattr(user, provider_field, provider_id)
         user.set_last_login_date(utcnow())
-        session.add(LoginLog(user=user))
+        session.add(LoginLog(user_id=user.id))
         session.add(user)
         await session.commit()
         await session.refresh(user)

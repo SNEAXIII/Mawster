@@ -62,10 +62,10 @@ class DefensePlanNodeService:
                 session, plan, node_number, champion_id, champion_user_id
             )
         else:
-            await assert_champion_exists(session, champion_id)
+            champion_id = await assert_champion_exists(session, champion_id)
         assert_champion_free(plan.nodes, champion_id, node_number)
         node = find_node(plan.nodes, node_number) or DefensePlanNode(
-            plan_id=plan.id, node_number=node_number
+            plan_id=plan.id, node_number=node_number, champion_id=champion_id
         )
         node.champion_id = champion_id
         node.champion_user_id = champion_user_id
