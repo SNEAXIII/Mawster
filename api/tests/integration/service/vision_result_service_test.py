@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 from fastapi import HTTPException
-from sqlmodel import select
+from sqlmodel import col, select
 
 from src.dto.account.game.dto_vision_result import VisionPredictionMessage, VisionResultMessage
 from src.enums.VisionImportStatus import VisionImportStatus
@@ -100,7 +100,7 @@ def _done_message(job: VisionJob, vision_import: VisionImport) -> VisionResultMe
     return VisionResultMessage(
         job_id=job.id,
         import_id=vision_import.id,
-        status="done",
+        status=VisionJobStatus.DONE,
         result_key="imports/a/b/result.json",
         predictions=[
             VisionPredictionMessage(
@@ -166,7 +166,10 @@ async def test_redelivery_of_an_already_failed_job_is_ignored():
     job, vision_import = _job(status=VisionJobStatus.FAILED, attempts=1), _import(total=2, done=1)
     session = FakeSession(job, vision_import)
     message = VisionResultMessage(
-        job_id=job.id, import_id=vision_import.id, status="failed", error="ocr blew up"
+        job_id=job.id,
+        import_id=vision_import.id,
+        status=VisionJobStatus.FAILED,
+        error="ocr blew up",
     )
 
     await VisionResultService.handle(session, message)
@@ -182,7 +185,7 @@ async def test_result_for_a_deleted_job_is_ignored():
     vision_import = _import()
     session = FakeSession(job=None, vision_import=vision_import)
     message = VisionResultMessage(
-        job_id=uuid.uuid4(), import_id=vision_import.id, status="done", predictions=[]
+        job_id=uuid.uuid4(), import_id=vision_import.id, status=VisionJobStatus.DONE, predictions=[]
     )
 
     await VisionResultService.handle(session, message)
@@ -215,7 +218,10 @@ async def test_failure_is_terminal_and_never_requeues(session):
     )
     job = jobs[0]
     message = VisionResultMessage(
-        job_id=job.id, import_id=vision_import.id, status="failed", error="ocr blew up"
+        job_id=job.id,
+        import_id=vision_import.id,
+        status=VisionJobStatus.FAILED,
+        error="ocr blew up",
     )
 
     await VisionResultService.handle(session, message)
@@ -235,7 +241,10 @@ async def test_a_failed_last_job_still_completes_the_import(session):
     )
     job = jobs[0]
     message = VisionResultMessage(
-        job_id=job.id, import_id=vision_import.id, status="failed", error="not a roster"
+        job_id=job.id,
+        import_id=vision_import.id,
+        status=VisionJobStatus.FAILED,
+        error="not a roster",
     )
 
     await VisionResultService.handle(session, message)
@@ -329,7 +338,7 @@ async def test_succeed_persists_candidates(session):
 
     stored = (
         await session.exec(
-            select(VisionPredictionCandidate).order_by(VisionPredictionCandidate.position)
+            select(VisionPredictionCandidate).order_by(col(VisionPredictionCandidate.position))
         )
     ).all()
     assert [(c.name, c.score, c.position) for c in stored] == [

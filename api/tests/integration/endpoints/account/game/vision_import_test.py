@@ -15,6 +15,7 @@ from src.dto.account.game.dto_vision_result import (
     VisionResultMessage,
 )
 from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.messaging import get_publisher
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
@@ -145,13 +146,13 @@ async def _fail_job(job_id: str) -> None:
     failure would — rather than poking the row by hand."""
 
     async for session in get_test_session():
-        job = await session.get(VisionJob, uuid.UUID(job_id))
+        job = await session.get_one(VisionJob, uuid.UUID(job_id))
         await VisionResultService.handle(
             session,
             VisionResultMessage(
                 job_id=job.id,
                 import_id=job.import_id,
-                status="failed",
+                status=VisionJobStatus.FAILED,
                 error="not a roster",
             ),
         )
@@ -435,13 +436,13 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
     # Drive the job to done with one prediction through the real service.
 
     async for session in get_test_session():
-        job = await session.get(VisionJob, uuid.UUID(job_id))
+        job = await session.get_one(VisionJob, uuid.UUID(job_id))
         await VisionResultService.handle(
             session,
             VisionResultMessage(
                 job_id=job.id,
                 import_id=job.import_id,
-                status="done",
+                status=VisionJobStatus.DONE,
                 result_key="imports/a/b/result.json",
                 predictions=[
                     VisionPredictionMessage(
@@ -604,13 +605,13 @@ async def _drive_job_done_with_prediction(job_id: str) -> None:
     as the vision worker would report a successful read."""
 
     async for session in get_test_session():
-        job = await session.get(VisionJob, uuid.UUID(job_id))
+        job = await session.get_one(VisionJob, uuid.UUID(job_id))
         await VisionResultService.handle(
             session,
             VisionResultMessage(
                 job_id=job.id,
                 import_id=job.import_id,
-                status="done",
+                status=VisionJobStatus.DONE,
                 result_key="imports/a/b/result.json",
                 predictions=[
                     VisionPredictionMessage(
@@ -825,7 +826,7 @@ async def test_current_excludes_an_import_whose_images_expired(fake_infra):
     created = await _post_import(headers, account.id, [_png("a.png")])
 
     async for session in get_test_session():
-        row = await session.get(VisionImport, uuid.UUID(created.json()["id"]))
+        row = await session.get_one(VisionImport, uuid.UUID(created.json()["id"]))
         row.created_at = datetime.now(UTC) - timedelta(days=SECRET.VISION_RETENTION_DAYS + 1)
         session.add(row)
         await session.commit()
@@ -1139,7 +1140,7 @@ async def test_current_ignores_an_import_stuck_mid_upload_past_the_url_ttl(fake_
     await _drive_job_done_with_prediction(first["job_id"])
 
     async for session in get_test_session():
-        row = await session.get(VisionImport, uuid.UUID(import_id))
+        row = await session.get_one(VisionImport, uuid.UUID(import_id))
         assert row.status.value == "running"
         row.created_at = datetime.now(UTC) - timedelta(seconds=UPLOAD_URL_TTL_SECONDS + 60)
         session.add(row)

@@ -1,6 +1,7 @@
 """Unit tests for the matchup DTO validators."""
 
 import uuid
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -82,7 +83,7 @@ def test_upsert_accepts_one_defender_and_one_node():
 
 
 def test_upsert_rejects_two_node_targets():
-    node = {"target_type": MatchupTargetType.NODE, "verdict": MatchupVerdict.OK}
+    node: dict[str, Any] = {"target_type": MatchupTargetType.NODE, "verdict": MatchupVerdict.OK}
     targets = [
         MatchupTargetInput(**node, node_number=1),
         MatchupTargetInput(**node, node_number=2),

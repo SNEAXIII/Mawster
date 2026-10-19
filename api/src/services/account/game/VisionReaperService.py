@@ -2,7 +2,7 @@ import logging
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import col, select
 
 from src.enums.VisionImportStatus import VisionImportStatus
 from src.enums.VisionJobStatus import VisionJobStatus
@@ -45,7 +45,7 @@ class VisionReaperService:
             .where(
                 VisionJob.status == VisionJobStatus.PENDING,
                 VisionJob.attempts < MAX_ATTEMPTS,
-                VisionImport.status.not_in(FINISHED_IMPORT_STATUSES),
+                col(VisionImport.status).not_in(FINISHED_IMPORT_STATUSES),
             )
             .options(selectinload(VisionJob.vision_import))
         )

@@ -74,7 +74,7 @@ class DefensePlanService:
         result = await session.exec(
             select(DefensePlan)
             .where(*_scope(alliance_id, battlegroup, fmt))
-            .order_by(DefensePlan.created_at)  # type: ignore[arg-type]
+            .order_by(col(DefensePlan.created_at))
             .options(*PLAN_OPTIONS)
         )
         return list(result.all())
@@ -85,7 +85,7 @@ class DefensePlanService:
     ) -> DefensePlan | None:
         result = await session.exec(
             select(DefensePlan)
-            .join(DefenseActivePlan, DefenseActivePlan.plan_id == DefensePlan.id)  # type: ignore[arg-type]
+            .join(DefenseActivePlan, col(DefenseActivePlan.plan_id) == DefensePlan.id)
             .where(*_scope(alliance_id, battlegroup, fmt, DefenseActivePlan))
             .options(*PLAN_OPTIONS)
         )
@@ -116,7 +116,7 @@ class DefensePlanService:
         """Roster Entries "on defense": on an Active Plan. Other plans block nothing."""
         stmt = (
             select(DefensePlanNode.champion_user_id)
-            .join(DefenseActivePlan, DefenseActivePlan.plan_id == DefensePlanNode.plan_id)  # type: ignore[arg-type]
+            .join(DefenseActivePlan, col(DefenseActivePlan.plan_id) == DefensePlanNode.plan_id)
             .where(
                 DefenseActivePlan.alliance_id == alliance_id,
                 DefenseActivePlan.format == fmt,
@@ -135,8 +135,8 @@ class DefensePlanService:
         nodes = (
             await session.exec(
                 select(DefensePlanNode)
-                .join(DefensePlan, DefensePlan.id == DefensePlanNode.plan_id)  # type: ignore[arg-type]
-                .join(ChampionUser, ChampionUser.id == DefensePlanNode.champion_user_id)  # type: ignore[arg-type]
+                .join(DefensePlan, col(DefensePlan.id) == DefensePlanNode.plan_id)
+                .join(ChampionUser, col(ChampionUser.id) == DefensePlanNode.champion_user_id)
                 .where(
                     DefensePlan.alliance_id == alliance_id,
                     ChampionUser.game_account_id == game_account_id,
@@ -195,7 +195,9 @@ class DefensePlanService:
             assert_same_format(template.format, fmt)
             plan.source_template_id = template.id
             plan.nodes = [
-                DefensePlanNode(node_number=n.node_number, champion_id=n.champion_id)
+                DefensePlanNode(
+                    plan_id=plan.id, node_number=n.node_number, champion_id=n.champion_id
+                )
                 for n in template.nodes
             ]
         elif source_plan_id is not None:
@@ -206,6 +208,7 @@ class DefensePlanService:
             plan.source_template_id = source.source_template_id
             plan.nodes = [
                 DefensePlanNode(
+                    plan_id=plan.id,
                     node_number=n.node_number,
                     champion_id=n.champion_id,
                     champion_user_id=n.champion_user_id,
@@ -254,7 +257,10 @@ class DefensePlanService:
         ).first()
         if pointer is None:
             pointer = DefenseActivePlan(
-                alliance_id=plan.alliance_id, battlegroup=plan.battlegroup, format=plan.format
+                alliance_id=plan.alliance_id,
+                battlegroup=plan.battlegroup,
+                format=plan.format,
+                plan_id=plan.id,
             )
         pointer.plan_id = plan.id
         session.add(pointer)

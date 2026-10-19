@@ -2,6 +2,7 @@
 
 import uuid
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -215,7 +216,7 @@ class TestUpgradeRequestResponseModelValidate:
 # ---------------------------------------------------------------------------
 
 
-_BASE_CREATE = {
+_BASE_CREATE: dict[str, Any] = {
     "game_account_id": uuid.uuid4(),
     "champion_id": uuid.uuid4(),
     "rarity": "7r3",

@@ -1,4 +1,4 @@
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.enums.SeasonStatus import SeasonStatus
@@ -18,6 +18,6 @@ class SeasonService:
             await session.exec(
                 select(Season)
                 .where(Season.status == SeasonStatus.ENDED)
-                .order_by(Season.number.desc())
+                .order_by(col(Season.number).desc())
             )
         ).first()

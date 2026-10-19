@@ -293,7 +293,7 @@ async def _push_admin(session):
         id=uuid.uuid4(),
         login="modadmin",
         email_hash="modadmin_hash",
-        discord_id=999999,
+        discord_id="999999",
         role=Roles.ADMIN,
     )
     session.add(admin)
@@ -809,7 +809,7 @@ async def test_three_reports_block_note_in_war_map(session):
             id=uuid.uuid4(),
             login=f"reporter{i}",
             email_hash=f"reporter{i}_hash",
-            discord_id=70000 + i,
+            discord_id=str(70000 + i),
             role=Roles.USER,
         )
         session.add(reporter_user)

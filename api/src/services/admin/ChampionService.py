@@ -2,7 +2,7 @@ import uuid
 from typing import Any
 
 from sqlalchemy import and_, func
-from sqlmodel import or_, select
+from sqlmodel import col, or_, select
 
 from src.dto.admin.dto_champion import (
     ChampionFilters,
@@ -53,8 +53,8 @@ class ChampionService:
             sql = sql.outerjoin(
                 ChampionSagaRole,
                 and_(
-                    ChampionSagaRole.champion_id == Champion.id,
-                    ChampionSagaRole.season_id == filters.season_id,
+                    col(ChampionSagaRole.champion_id) == Champion.id,
+                    col(ChampionSagaRole.season_id) == filters.season_id,
                 ),
             )
         if filters.champion_class:
@@ -63,8 +63,8 @@ class ChampionService:
             like_pattern = f"%{filters.search}%"
             sql = sql.where(
                 or_(
-                    Champion.name.ilike(like_pattern),
-                    Champion.alias.ilike(like_pattern),
+                    col(Champion.name).ilike(like_pattern),
+                    col(Champion.alias).ilike(like_pattern),
                 )
             )
         if filters.is_7_stars_available is not None:
@@ -86,7 +86,7 @@ class ChampionService:
         if filters.order_by == ChampionOrderBy.NAME:
             return sql.order_by(primary)
         # Class is not unique, so name breaks the tie and keeps pagination stable.
-        return sql.order_by(primary, Champion.name.asc())
+        return sql.order_by(primary, col(Champion.name).asc())
 
     @classmethod
     async def get_total_champions(

@@ -1,7 +1,7 @@
 import uuid
 
 import pytest
-from sqlmodel import select
+from sqlmodel import col, select
 
 from src.enums.VisionImportStatus import VisionImportStatus
 from src.enums.VisionJobStatus import VisionJobStatus
@@ -119,7 +119,7 @@ async def test_candidates_come_back_best_first(session):
         await session.exec(
             select(VisionPredictionCandidate)
             .where(VisionPredictionCandidate.prediction_id == pred.id)
-            .order_by(VisionPredictionCandidate.position)
+            .order_by(col(VisionPredictionCandidate.position))
         )
     ).all()
 

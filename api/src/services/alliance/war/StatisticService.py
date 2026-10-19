@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import HTTPException
 from sqlalchemy import Float, Integer, and_, case, cast, func, union
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.dto.alliance.war.dto_statistic import (
@@ -74,22 +74,23 @@ class StatisticService:
 
         assist_sq = (
             select(
-                ChampionUser.game_account_id.label("game_account_id"),
-                func.count(WarDefensePlacement.id).label("total_assists"),
-                cast(func.count(WarDefensePlacement.id) * 0.5, Float).label("assist_fights"),
+                col(ChampionUser.game_account_id).label("game_account_id"),
+                func.count(col(WarDefensePlacement.id)).label("total_assists"),
+                cast(func.count(col(WarDefensePlacement.id)) * 0.5, Float).label("assist_fights"),
             )
             .join(
-                WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
+                WarDefensePlacement,
+                col(WarDefensePlacement.assist_champion_user_id) == ChampionUser.id,
             )
-            .join(War, WarDefensePlacement.war_id == War.id)
+            .join(War, col(WarDefensePlacement.war_id) == War.id)
             .where(*war_scope)
-            .group_by(ChampionUser.game_account_id)
+            .group_by(col(ChampionUser.game_account_id))
             .subquery()
         )
 
         attacker_sq = (
             select(
-                GameAccount.id.label("game_account_id"),
+                col(GameAccount.id).label("game_account_id"),
                 cast(total_kos, Integer).label("total_kos"),
                 cast(total_fights, Float).label("attack_fights"),
                 cast(total_weighted_fights, Float).label("attack_weighted_fights"),
@@ -114,19 +115,23 @@ class StatisticService:
         # Distinct (game_account_id, war_id) pairs across attackers and assistors.
         # UNION deduplicates shared wars. Used both as participant filter and wars_participated.
         _war_pairs = union(
-            select(GameAccount.id.label("game_account_id"), War.id.label("war_id"))
-            .join(ChampionUser, ChampionUser.game_account_id == GameAccount.id)
+            select(col(GameAccount.id).label("game_account_id"), col(War.id).label("war_id"))
+            .join(ChampionUser, col(ChampionUser.game_account_id) == GameAccount.id)
             .join(
                 WarDefensePlacement,
-                WarDefensePlacement.attacker_champion_user_id == ChampionUser.id,
+                col(WarDefensePlacement.attacker_champion_user_id) == ChampionUser.id,
             )
-            .join(War, WarDefensePlacement.war_id == War.id)
+            .join(War, col(WarDefensePlacement.war_id) == War.id)
             .where(*war_scope),
-            select(ChampionUser.game_account_id.label("game_account_id"), War.id.label("war_id"))
-            .join(
-                WarDefensePlacement, WarDefensePlacement.assist_champion_user_id == ChampionUser.id
+            select(
+                col(ChampionUser.game_account_id).label("game_account_id"),
+                col(War.id).label("war_id"),
             )
-            .join(War, WarDefensePlacement.war_id == War.id)
+            .join(
+                WarDefensePlacement,
+                col(WarDefensePlacement.assist_champion_user_id) == ChampionUser.id,
+            )
+            .join(War, col(WarDefensePlacement.war_id) == War.id)
             .where(*war_scope),
         ).subquery()
         wars_sq = (
@@ -177,7 +182,7 @@ class StatisticService:
                     / func.nullif(_wars, 0),
                     Float,
                 ).label("avg_boss_miniboss_per_war"),
-                case((GameAccount.alliance_id == alliance_id, True), else_=False).label(
+                case((col(GameAccount.alliance_id) == alliance_id, True), else_=False).label(
                     "is_current_member"
                 ),
             )
@@ -229,7 +234,7 @@ class StatisticService:
             conditions.append(GameAccount.alliance_group == alliance_group)
 
         stmt = champion_usage_statement(conditions, deathless, perspective).join(
-            GameAccount, GameAccount.id == ChampionUser.game_account_id
+            GameAccount, col(GameAccount.id) == ChampionUser.game_account_id
         )
         rows = (await session.exec(stmt)).mappings().all()
         return [ChampionUsageResponse.model_validate(dict(row)) for row in rows]
@@ -255,7 +260,7 @@ class StatisticService:
 
         stmt = (
             select(
-                War.id.label("war_id"),
+                col(War.id).label("war_id"),
                 War.opponent_name,
                 War.win,
                 War.opponent_deaths,
@@ -280,7 +285,7 @@ class StatisticService:
                 War.created_at,
                 WarDefensePlacement.battlegroup,
             )
-            .order_by(War.created_at.asc(), WarDefensePlacement.battlegroup.asc())
+            .order_by(col(War.created_at).asc(), col(WarDefensePlacement.battlegroup).asc())
         )
         rows = (await session.exec(stmt)).mappings().all()
 

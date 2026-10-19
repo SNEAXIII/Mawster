@@ -3,7 +3,7 @@
 import uuid
 
 import pytest
-from sqlmodel import select
+from sqlmodel import col, select
 
 from main import app
 from src.models.alliance.DefensePlan import DefensePlan, DefensePlanNode
@@ -103,7 +103,7 @@ async def _node_players(session, alliance_id) -> dict[uuid.UUID, uuid.UUID | Non
     """Every node of the alliance's plans, mapped to the Player's roster entry on it."""
     result = await session.exec(
         select(DefensePlanNode.id, DefensePlanNode.champion_user_id)
-        .join(DefensePlan, DefensePlan.id == DefensePlanNode.plan_id)  # type: ignore[arg-type]
+        .join(DefensePlan, col(DefensePlan.id) == DefensePlanNode.plan_id)
         .where(DefensePlan.alliance_id == alliance_id)
     )
     return dict(result.all())

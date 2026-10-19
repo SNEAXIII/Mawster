@@ -281,8 +281,10 @@ async def run_fixtures(session: SessionDep):
         if fixture_file.stem.startswith("_"):
             continue
         spec = importlib.util.spec_from_file_location(f"fixtures.{fixture_file.stem}", fixture_file)
-        module = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
-        spec.loader.exec_module(module)  # type: ignore[union-attr]
+        if spec is None or spec.loader is None:
+            continue
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
         if hasattr(module, "run"):
             results[fixture_file.stem] = await module.run(session)
 

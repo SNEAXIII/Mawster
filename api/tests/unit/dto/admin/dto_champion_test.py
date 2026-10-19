@@ -89,11 +89,11 @@ class TestChampionLoadRequest:
 
     def test_name_required(self):
         with pytest.raises(ValidationError):
-            ChampionLoadRequest(champion_class="Science")
+            ChampionLoadRequest(champion_class="Science")  # ty: ignore[missing-argument]
 
     def test_champion_class_required(self):
         with pytest.raises(ValidationError):
-            ChampionLoadRequest(name="Spider-Man")
+            ChampionLoadRequest(name="Spider-Man")  # ty: ignore[missing-argument]
 
     def test_alias_max_length(self):
         with pytest.raises(ValidationError):

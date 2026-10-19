@@ -1,7 +1,7 @@
 import uuid
 
 from sqlalchemy import delete, func
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.dto.account.dto_tierlist import (
@@ -36,7 +36,9 @@ class TierListService:
         """The account's tier lists, oldest first, without loading their contents."""
         tier_lists = (
             await session.exec(
-                select(TierList).where(TierList.user_id == user_id).order_by(TierList.created_at)
+                select(TierList)
+                .where(TierList.user_id == user_id)
+                .order_by(col(TierList.created_at))
             )
         ).all()
         if not tier_lists:
@@ -66,9 +68,9 @@ class TierListService:
         """How many rows of ``model`` each of those tier lists holds."""
         rows = (
             await session.exec(
-                select(model.tierlist_id, func.count(model.id))
-                .where(model.tierlist_id.in_(tierlist_ids))
-                .group_by(model.tierlist_id)
+                select(model.tierlist_id, func.count(col(model.id)))
+                .where(col(model.tierlist_id).in_(tierlist_ids))
+                .group_by(col(model.tierlist_id))
             )
         ).all()
         return dict(rows)
@@ -76,7 +78,9 @@ class TierListService:
     @classmethod
     async def count_for_user(cls, session: AsyncSession, user_id: uuid.UUID) -> int:
         return (
-            await session.exec(select(func.count(TierList.id)).where(TierList.user_id == user_id))
+            await session.exec(
+                select(func.count(col(TierList.id))).where(TierList.user_id == user_id)
+            )
         ).one()
 
     @classmethod
@@ -105,7 +109,7 @@ class TierListService:
         if not referenced:
             return []
         known = set(
-            (await session.exec(select(Champion.id).where(Champion.id.in_(referenced)))).all()
+            (await session.exec(select(Champion.id).where(col(Champion.id).in_(referenced)))).all()
         )
         return sorted(referenced - known)
 
@@ -146,14 +150,14 @@ class TierListService:
             await session.exec(
                 select(TierListTier)
                 .where(TierListTier.tierlist_id == tier_list.id)
-                .order_by(TierListTier.position)
+                .order_by(col(TierListTier.position))
             )
         ).all()
         rankings = (
             await session.exec(
                 select(TierListRanking)
                 .where(TierListRanking.tierlist_id == tier_list.id)
-                .order_by(TierListRanking.position)
+                .order_by(col(TierListRanking.position))
             )
         ).all()
         tags = (
@@ -190,11 +194,11 @@ class TierListService:
         MariaDB and leave orphans in the tests.
         """
         await session.exec(
-            delete(TierListRanking).where(TierListRanking.tierlist_id == tierlist_id)
+            delete(TierListRanking).where(col(TierListRanking.tierlist_id) == tierlist_id)
         )
-        await session.exec(delete(TierListTier).where(TierListTier.tierlist_id == tierlist_id))
+        await session.exec(delete(TierListTier).where(col(TierListTier.tierlist_id) == tierlist_id))
         await session.exec(
-            delete(TierListChampionTag).where(TierListChampionTag.tierlist_id == tierlist_id)
+            delete(TierListChampionTag).where(col(TierListChampionTag.tierlist_id) == tierlist_id)
         )
 
     @staticmethod
