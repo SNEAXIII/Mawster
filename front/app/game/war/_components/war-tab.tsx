@@ -9,6 +9,7 @@ import { WarMode } from './war-types'
 import { useWar } from '@/app/contexts/war-context'
 import { useCurrentSeason } from '@/hooks/use-current-season'
 import WarOverview from './war-overview'
+import WarAttackFrame from './war-attack-frame'
 import ExportHeader from '@/app/game/_components/export-header'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import { downloadElementAsPng } from '@/app/lib/export-image'
@@ -120,7 +121,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
           <FullPageSpinner />
         ) : (
           <div className='flex flex-col-reverse lg:flex-row gap-4'>
-            <div className='overflow-x-auto flex-1 min-w-0 rounded-xl border bg-card shadow-sm'>
+            <WarAttackFrame>
               <div
                 ref={exportMapRef}
                 className={cn('p-2 sm:p-3 w-max mx-auto', exporting && 'bg-black')}
@@ -145,7 +146,7 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
                   format={currentWar?.format ?? currentSeason?.format ?? 'regular'}
                 />
               </div>
-            </div>
+            </WarAttackFrame>
             <div
               className={cn(
                 exporting

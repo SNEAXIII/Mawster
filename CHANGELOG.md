@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.30.0](https://github.com/SNEAXIII/Mawster/compare/v1.29.0...v1.30.0) (2026-10-19)
+
+
+### Ajouté
+
+* open or close a battlegroup's attacks from the war map ([1efbf6e](https://github.com/SNEAXIII/Mawster/commit/1efbf6ecd41ace891ae7d4d4693c8b2f2b1aeb44))
+
 ## [1.29.0](https://github.com/SNEAXIII/Mawster/compare/v1.28.1...v1.29.0) (2026-10-16)
 
 

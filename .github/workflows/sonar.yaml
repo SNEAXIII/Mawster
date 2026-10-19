@@ -77,12 +77,43 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  coverage-front:
+    name: Frontend coverage
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./front
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci --ignore-scripts
+      - name: Run frontend unit tests with coverage
+        run: npm run test:coverage
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: front-coverage
+          path: front/coverage/lcov.info
+          retention-days: 1
+          if-no-files-found: error
+
   sonar:
     name: Sonar
     permissions:
       contents: read
       pull-requests: read
-    needs: [coverage-backend, coverage-static-assets]
+    needs: [coverage-backend, coverage-static-assets, coverage-front]
     uses: $/.github/workflows/_sonar.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

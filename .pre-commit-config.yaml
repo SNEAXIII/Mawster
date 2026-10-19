@@ -61,7 +61,7 @@ repos:
         name: prettier (front)
         entry: node front/node_modules/prettier/bin/prettier.cjs --write --ignore-path front/.prettierignore
         language: system
-        files: ^front/.*\.(ts|tsx|js|jsx|mjs|cjs|css|json|md)$
+        files: ^front/.*\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|css|json|md)$
 
       - id: cargo-fmt
         name: rustfmt (static-assets)

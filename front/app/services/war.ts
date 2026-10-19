@@ -120,6 +120,7 @@ export interface WarDefenseSummary {
   battlegroup: number
   placements: WarPlacement[]
   progress: WarProgress | null
+  is_ready: boolean
 }
 
 export type UnrecordedReason = 'on_defense' | 'not_in_roster' | 'recorded_copy_free'
@@ -314,6 +315,19 @@ export async function clearWarBg(
     `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/clear`,
     'Failed to clear war battlegroup',
     { method: 'DELETE' }
+  )
+}
+
+export async function setWarBgReady(
+  allianceId: string,
+  warId: string,
+  battlegroup: number,
+  ready: boolean
+): Promise<void> {
+  await api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/ready`,
+    'Failed to update the attack status',
+    jsonBody('PUT', { ready })
   )
 }
 
