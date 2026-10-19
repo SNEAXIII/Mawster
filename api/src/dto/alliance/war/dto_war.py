@@ -211,6 +211,11 @@ class WarDefenseSummaryResponse(BaseModel):
     battlegroup: int
     placements: list[WarPlacementResponse] = []
     progress: WarProgressResponse | None = None
+    is_ready: bool = False
+
+
+class WarBgReadyRequest(BaseModel):
+    ready: bool
 
 
 class WarAttackerAssignRequest(BaseModel):

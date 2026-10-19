@@ -79,6 +79,7 @@ from src.models.war.WarBan import WarBan
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightNote import WarFightNote
 from src.models.war.WarPrefightAttacker import WarPrefightAttacker
+from src.models.war.WarReadyBattlegroup import WarReadyBattlegroup
 from src.models.war.WarSynergyAttacker import WarSynergyAttacker
 from src.services.admin.ModerationService import AUTO_BLOCK_THRESHOLD, ModerationService
 from src.services.admin.SagaService import SagaService
@@ -371,7 +372,34 @@ class WarService:
             battlegroup=battlegroup,
             placements=await cls._placement_dtos(session, placements),
             progress=await cls._war_progress(session, war_id),
+            is_ready=await cls._ready_row(session, war_id, battlegroup) is not None,
         )
+
+    @staticmethod
+    async def _ready_row(
+        session: SessionDep, war_id: uuid.UUID, battlegroup: int
+    ) -> WarReadyBattlegroup | None:
+        return (
+            await session.exec(
+                select(WarReadyBattlegroup).where(
+                    WarReadyBattlegroup.war_id == war_id,
+                    WarReadyBattlegroup.battlegroup == battlegroup,
+                )
+            )
+        ).first()
+
+    @classmethod
+    async def set_bg_ready(
+        cls, session: SessionDep, war: War, battlegroup: int, ready: bool
+    ) -> bool:
+        ClosedWarPolicy.assert_open(war)
+        row = await cls._ready_row(session, war.id, battlegroup)
+        if ready and row is None:
+            session.add(WarReadyBattlegroup(war_id=war.id, battlegroup=battlegroup))
+        elif not ready and row is not None:
+            await session.delete(row)
+        await session.commit()
+        return ready
 
     @classmethod
     async def _war_progress(cls, session: SessionDep, war_id: uuid.UUID) -> WarProgressResponse:
