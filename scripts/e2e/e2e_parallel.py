@@ -421,6 +421,8 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
         "npx",
         "cypress",
         "run",
+        "--browser",
+        "chrome",
         "--spec",
         spec_arg,
         "--expose",
@@ -430,10 +432,7 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     ]
     log(f"Worker {worker}: launching Cypress ({spec_count} spec(s))...")
 
-    env = {
-        **os.environ,
-        "ELECTRON_EXTRA_LAUNCH_ARGS": f"--remote-debugging-port={BASE_CDP_PORT + worker}",
-    }
+    env = {**os.environ, "CYPRESS_REMOTE_DEBUGGING_PORT": str(BASE_CDP_PORT + worker)}
     proc = subprocess.Popen(
         cmd,
         cwd=str(FRONT_DIR),
