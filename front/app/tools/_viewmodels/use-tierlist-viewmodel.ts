@@ -36,7 +36,9 @@ export function useTierListViewModel() {
     setBoard,
     knownIds: catalog.knownIds,
     catalogReady: !catalog.loading,
-    listsReady: !tierLists.loading,
+    // Not ready until the first list is picked: in between, the default board
+    // would show and the list's fetch would wipe whatever was done on it.
+    listsReady: !tierLists.loading && (tierLists.lists.length === 0 || activeId !== null),
     activeListId: activeId,
     onListCreated: handleListCreatedBySave,
   })

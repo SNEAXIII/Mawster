@@ -39,6 +39,18 @@ function expectStrategistEntries(pseudo: string, offered: { promote: boolean; de
 }
 
 /**
+ * Click a menu entry, then let the membership refresh it triggers land: it
+ * re-renders the rows, and a menu reopened before then loses its entries.
+ */
+function actAndAwaitRefresh(dataCy: string) {
+  cy.intercept('GET', '**/alliances/*/invitations').as('pendingInvitations');
+  cy.intercept('GET', '**/alliances/eligible-owners').as('eligibleOwners');
+  cy.intercept('GET', '**/game-accounts').as('gameAccounts');
+  cy.getByCy(dataCy).click();
+  cy.wait(['@pendingInvitations', '@eligibleOwners', '@gameAccounts']);
+}
+
+/**
  * Assert a viewer gets no actions at all on a row — the trigger itself is never
  * rendered. Unlike an unopened menu's contents, a missing trigger is a real
  * assertion about the permission predicates.
@@ -64,7 +76,7 @@ describe('Alliance strategist rank', () => {
 
         // The entry acts immediately — there is deliberately no confirmation
         // dialog on this rank, unlike promotion to officer.
-        cy.getByCy('promote-strategist-StratMember').click();
+        actAndAwaitRefresh('promote-strategist-StratMember');
 
         // The menu flips. Both entries are driven by `member.is_strategist`,
         // and the component refetches the alliance after acting, so this
@@ -73,7 +85,7 @@ describe('Alliance strategist rank', () => {
         openMemberMenu('StratAlliance', 'StratMember');
         expectStrategistEntries('StratMember', { promote: false, demote: true });
 
-        cy.getByCy('demote-strategist-StratMember').click();
+        actAndAwaitRefresh('demote-strategist-StratMember');
 
         openMemberMenu('StratAlliance', 'StratMember');
         expectStrategistEntries('StratMember', { promote: true, demote: false });
