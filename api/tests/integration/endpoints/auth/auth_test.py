@@ -326,7 +326,8 @@ class TestDiscordLogin:
     @pytest.mark.parametrize("flag", ["disabled_at", "deleted_at"])
     async def test_login_refused_when_account_unavailable(self, flag):
         """A disabled or deleted account gets no token and no login log."""
-        existing = User(login="gonebutlinked", discord_id="1", role=Roles.USER, **{flag: utcnow()})
+        existing = User(login="gonebutlinked", discord_id="1", role=Roles.USER)
+        setattr(existing, flag, utcnow())
         await load_objects([existing])
 
         response = await execute_post_request(

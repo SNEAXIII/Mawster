@@ -15,6 +15,7 @@ from src.dto.account.game.dto_vision_result import (
     VisionResultMessage,
 )
 from src.enums.VisionImportStatus import VisionImportStatus
+from src.enums.VisionJobStatus import VisionJobStatus
 from src.messaging import get_publisher
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
@@ -151,7 +152,7 @@ async def _fail_job(job_id: str) -> None:
             VisionResultMessage(
                 job_id=job.id,
                 import_id=job.import_id,
-                status="failed",
+                status=VisionJobStatus.FAILED,
                 error="not a roster",
             ),
         )
@@ -441,7 +442,7 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
             VisionResultMessage(
                 job_id=job.id,
                 import_id=job.import_id,
-                status="done",
+                status=VisionJobStatus.DONE,
                 result_key="imports/a/b/result.json",
                 predictions=[
                     VisionPredictionMessage(
@@ -610,7 +611,7 @@ async def _drive_job_done_with_prediction(job_id: str) -> None:
             VisionResultMessage(
                 job_id=job.id,
                 import_id=job.import_id,
-                status="done",
+                status=VisionJobStatus.DONE,
                 result_key="imports/a/b/result.json",
                 predictions=[
                     VisionPredictionMessage(
