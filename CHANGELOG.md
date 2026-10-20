@@ -3,6 +3,18 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.30.1](https://github.com/SNEAXIII/Mawster/compare/v1.30.0...v1.30.1) (2026-10-19)
+
+
+### Corrigé
+
+* keep changes made during a load or a quick burst of clicks, and steady the flaky E2E ([#732](https://github.com/SNEAXIII/Mawster/issues/732)) ([4836ab2](https://github.com/SNEAXIII/Mawster/commit/4836ab27910e515804621e53303511eaf2fb3985))
+
+
+### Modifié
+
+* fix the type errors ty reports on the backend, by kind ([#728](https://github.com/SNEAXIII/Mawster/issues/728)) ([62abce9](https://github.com/SNEAXIII/Mawster/commit/62abce951e97e0c3432e2a7b4cb37847b2b3e913))
+
 ## [1.30.0](https://github.com/SNEAXIII/Mawster/compare/v1.29.0...v1.30.0) (2026-10-19)
 
 
