@@ -46,6 +46,8 @@ the user runs `make e2e-open` (Cypress UI) — never launch it yourself.
 the user's own account; `PSEUDO=<game_pseudo>` acts as another player. The DB stores UUIDs as 32
 hex chars, the API answers them dashed.
 
+**Driving the front**: the `dev-browser` skill (`--browser mawster`, dev-login on `/login`).
+
 ---
 
 ## Architecture
