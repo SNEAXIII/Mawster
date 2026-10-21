@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import LabeledSlider from '@/components/labeled-slider'
 import { SearchInput } from '@/components/search-input'
 import { CollapsibleSection } from '@/components/collapsible-section'
 import { getChampionImageUrl } from '@/app/services/champions'
-import { type RosterEntry, RARITIES, RARITY_LABELS, SIGNATURE_PRESETS } from '@/app/services/roster'
+import { type RosterEntry, RARITIES, RARITY_LABELS } from '@/app/services/roster'
+import { MAX_SIGNATURE } from '@/components/roster/roster-filters'
 import { useAddChampionForm } from '@/hooks/use-add-champion-form'
 
 interface AddChampionFormProps {
@@ -170,35 +171,22 @@ export default function AddChampionForm({
           </div>
 
           <div>
-            {/* Rarity buttons */}
             <div className='mb-3'>
               <Label className='mb-1.5 block'>{t.roster.rarity}</Label>
-              <ToggleGroup
-                type='single'
-                value={selectedRarity}
-                onValueChange={(val) => {
-                  if (val) setSelectedRarity(val)
-                }}
-                variant='outline'
-                className='flex flex-wrap justify-start gap-1'
-              >
-                {RARITIES.map((r) => (
-                  <ToggleGroupItem
-                    key={r}
-                    value={r}
-                    data-cy={`rarity-${r}`}
-                    className='px-3 py-1.5 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
-                  >
-                    {RARITY_LABELS[r]}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
+              <LabeledSlider
+                max={RARITIES.length - 1}
+                value={[Math.max(0, (RARITIES as readonly string[]).indexOf(selectedRarity))]}
+                onChange={([i]) => setSelectedRarity(RARITIES[i])}
+                format={(i) => RARITY_LABELS[RARITIES[i]]}
+                cy='rarity'
+                className='w-full max-w-sm'
+              />
             </div>
 
-            {/* Signature field with quick-fill buttons */}
+            {/* Signature: the input stays for exact values, the slider for quick ones */}
             <div className='mb-4'>
               <Label className='mb-1.5 block'>{t.roster.signature}</Label>
-              <div className='flex flex-wrap items-center gap-2'>
+              <div className='flex flex-wrap items-end gap-3'>
                 <Input
                   type='number'
                   min={0}
@@ -206,31 +194,19 @@ export default function AddChampionForm({
                   value={signatureValue}
                   onChange={(e) =>
                     setSignatureValue(
-                      Math.min(200, Math.max(0, Number.parseInt(e.target.value) || 0))
+                      Math.min(MAX_SIGNATURE, Math.max(0, Number.parseInt(e.target.value) || 0))
                     )
                   }
                   data-cy='sig-input'
                 />
-                <ToggleGroup
-                  type='single'
-                  value={String(signatureValue)}
-                  onValueChange={(val) => {
-                    if (val) setSignatureValue(Number(val))
-                  }}
-                  variant='outline'
-                  size='sm'
-                  className='flex gap-1'
-                >
-                  {SIGNATURE_PRESETS.map((v) => (
-                    <ToggleGroupItem
-                      key={v}
-                      value={String(v)}
-                      className='text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground'
-                    >
-                      {v}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
+                <LabeledSlider
+                  max={MAX_SIGNATURE}
+                  value={[signatureValue]}
+                  onChange={([v]) => setSignatureValue(v)}
+                  format={String}
+                  cy='sig-slider'
+                  className='w-full max-w-60 flex-1'
+                />
               </div>
             </div>
 
@@ -258,31 +234,14 @@ export default function AddChampionForm({
             {/* Ascension */}
             <div className='mb-4'>
               <Label className='mb-1.5 block'>Ascension</Label>
-              <ToggleGroup
-                type='single'
-                value={String(ascension)}
-                onValueChange={(val) => {
-                  if (val) setAscension(Number(val))
-                }}
-                variant='outline'
-                className='flex justify-start gap-1'
-              >
-                {[0, 1, 2].map((level) => {
-                  const isAscendable = selectedChampion?.is_ascendable ?? false
-                  const disabled = !isAscendable && level > 0
-                  return (
-                    <ToggleGroupItem
-                      key={level}
-                      value={String(level)}
-                      disabled={disabled}
-                      data-cy={`ascension-${level}`}
-                      className='px-3 py-1.5 text-sm data-[state=on]:bg-purple-600 data-[state=on]:text-white'
-                    >
-                      {level === 0 ? 'None' : `A${level}`}
-                    </ToggleGroupItem>
-                  )
-                })}
-              </ToggleGroup>
+              <LabeledSlider
+                max={2}
+                value={[ascension]}
+                onChange={([level]) => setAscension(level)}
+                format={(level) => (level === 0 ? 'None' : `A${level}`)}
+                disabled={!selectedChampion?.is_ascendable}
+                cy='ascension'
+              />
               {selectedChampion && !selectedChampion.is_ascendable && (
                 <p className='text-xs text-muted-foreground mt-1'>
                   This champion cannot be ascended.

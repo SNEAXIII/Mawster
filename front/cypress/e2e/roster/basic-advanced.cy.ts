@@ -26,7 +26,7 @@ describe('Roster – Basic (advanced)', () => {
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Iron Man');
         cy.getByCy('champion-submit').should('not.be.disabled');
-        cy.getByCy('rarity-7r2').click();
+        cy.slideTo('rarity', '7R2');
         cy.getByCy('champion-submit').click();
         cy.contains('Iron Man added / updated').should('be.visible');
       });
@@ -54,7 +54,7 @@ describe('Roster – Basic (advanced)', () => {
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Storm');
         cy.getByCy('champion-submit').should('not.be.disabled');
-        cy.getByCy('rarity-7r2').click();
+        cy.slideTo('rarity', '7R2');
         cy.getByCy('champion-submit').click();
         cy.contains('Storm added / updated').should('be.visible');
 
@@ -72,8 +72,8 @@ describe('Roster – Basic (advanced)', () => {
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('DoctorSig');
       cy.getByCy('champion-submit').should('not.be.disabled');
-      cy.getByCy('rarity-6r4').click();
-      cy.contains('button', '200').click();
+      cy.slideTo('rarity', '6R4');
+      cy.getByCy('sig-slider').find('[role="slider"]').type('{end}');
       cy.getByCy('champion-submit').click();
       cy.contains('DoctorSig added / updated').scrollIntoView().should('be.visible');
       cy.get('[data-cy="champion-sig"]').contains('200').scrollIntoView().should('be.visible');
