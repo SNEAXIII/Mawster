@@ -90,6 +90,7 @@ const fr: Translations = {
     statParticipatingPlayers: 'Joueurs participants',
     statKnowledgeBaseFights: 'Combats dans la base de connaissances',
     statWarsRecorded: 'Guerres enregistrées',
+    statLiveSince: "En production depuis la saison 66 de la Guerre d'Alliance (avril 2026)",
 
     featuresEyebrow: 'Fonctionnalités principales',
     featuresTitle: "Tout ce qu'il faut pour gérer la Guerre d'Alliance.",
@@ -105,7 +106,7 @@ const fr: Translations = {
       'Assigne les attaquants aux nœuds avec notes, synergies et prefights, place ta défense par bataillon et verrouille ta liste de bannissements — puis suis les KO et assists au fil de la guerre.',
     featOnboardingTitle: 'Gestion des rosters',
     featOnboardingDesc:
-      'Garde les rosters de tous tes équipiers au même endroit, toujours à jour. Remplis tout ton roster en vingt minutes maximum — et ne le retape plus jamais dans un tableur.',
+      'Garde les rosters de tous tes équipiers au même endroit, toujours à jour. Remplis tout ton roster depuis des captures d’écran en cinq minutes environ — et ne le retape plus jamais dans un tableur.',
     featPrivacyTitle: 'Vos données restent privées',
     featPrivacyDesc:
       "Aucun écran d'administration n'expose vos rosters, vos guerres ni vos plans : ils restent dans votre alliance. Une seule exception, et elle est assumée — une note signalée est lue par un modérateur, avec son historique d'édition.",

@@ -88,6 +88,7 @@ const en = {
     statParticipatingPlayers: 'Participating players',
     statKnowledgeBaseFights: 'Fights in the knowledge base',
     statWarsRecorded: 'Wars recorded',
+    statLiveSince: 'In production since Alliance War Season 66 (April 2026)',
 
     featuresEyebrow: 'Main features',
     featuresTitle: 'Everything you need to run Alliance War.',
@@ -103,7 +104,7 @@ const en = {
       'Assign attackers to nodes with fight notes, synergies and prefights, lay out your defense per battlegroup and lock your ban list — then track KOs and assists as the war runs.',
     featOnboardingTitle: 'Roster management',
     featOnboardingDesc:
-      'Keep every teammate roster in one place, always up to date. Fill your entire roster in twenty minutes, tops — then never type it into a spreadsheet again.',
+      'Keep every teammate roster in one place, always up to date. Fill your entire roster from screenshots in about five minutes — then never type it into a spreadsheet again.',
     featPrivacyTitle: 'Your data stays private',
     featPrivacyDesc:
       'No admin screen exposes your rosters, wars or plans — they stay inside your alliance. One exception, stated up front: a reported note is read by a moderator, along with its edit history.',

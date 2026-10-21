@@ -11,6 +11,6 @@ export type Testimonial = {
 // (no fake quotes in production). Add a real quoteKey to publish it.
 export const TESTIMONIALS: Testimonial[] = [
   { name: 'Babayaga', alliance: '2-1-1', roleKey: 'leader', quoteKey: 'babayaga' },
-  { name: 'Aragorn', alliance: 'WAM6', roleKey: 'leader', quoteKey: 'aragorn' },
+  { name: 'Aragorn', alliance: 'CΞ•OR', roleKey: 'leader', quoteKey: 'aragorn' },
   { name: 'Elliebingo', alliance: 'SPYTY', roleKey: 'leader', quoteKey: 'elliebingo' },
 ]
