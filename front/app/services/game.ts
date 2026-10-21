@@ -139,6 +139,8 @@ export interface AllianceRosterQuery {
   preferredAttacker?: boolean
   allianceGroup?: number
   noGroup?: boolean
+  minSignature?: number
+  maxSignature?: number
   distinctChampionLimit?: number
 }
 
@@ -156,6 +158,8 @@ export async function getAllianceRoster(
   if (query?.preferredAttacker) qs.set('preferred_attacker', 'true')
   if (query?.allianceGroup != null) qs.set('alliance_group', String(query.allianceGroup))
   if (query?.noGroup) qs.set('no_group', 'true')
+  if (query?.minSignature != null) qs.set('min_signature', String(query.minSignature))
+  if (query?.maxSignature != null) qs.set('max_signature', String(query.maxSignature))
   if (query?.distinctChampionLimit != null)
     qs.set('distinct_champion_limit', String(query.distinctChampionLimit))
   const suffix = qs.toString() ? `?${qs.toString()}` : ''

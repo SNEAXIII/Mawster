@@ -82,6 +82,21 @@ Cypress.Commands.add('selectOption', (trigger: string, label: string) => {
   cy.contains('[role="option"]', label).should('be.visible').click();
 });
 
+Cypress.Commands.add('slideTo', (slider: string, label: string) => {
+  cy.getByCy(slider).find('[role="slider"]').first().type('{home}');
+  const step = (left: number): void => {
+    cy.getByCy(`${slider}-value`)
+      .invoke('text')
+      .then((text) => {
+        if (text === label) return;
+        expect(left, `"${label}" reachable on ${slider}`).to.be.greaterThan(0);
+        cy.getByCy(slider).find('[role="slider"]').first().type('{rightarrow}');
+        step(left - 1);
+      });
+  };
+  step(10);
+});
+
 // ── Truncate DB (direct backend call) ────────────────────────────────────────
 
 Cypress.Commands.add('truncateDb', () => {

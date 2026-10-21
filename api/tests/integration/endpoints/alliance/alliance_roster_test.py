@@ -134,8 +134,8 @@ class TestAllianceRosterFilters:
         herc = await push_champion(name="Hercules", champion_class="Cosmic", alias="Herc")
         doom = await push_champion(name="Doctor Doom", champion_class="Mystic")
         beast = await push_champion(name="Beast", champion_class="Mutant")
-        await push_champion_user(owner_acc, herc, stars=7, rank=5, ascension=1)
-        await push_champion_user(owner_acc, doom, stars=7, rank=2, ascension=0)
+        await push_champion_user(owner_acc, herc, stars=7, rank=5, ascension=1, signature=200)
+        await push_champion_user(owner_acc, doom, stars=7, rank=2, ascension=0, signature=20)
         await push_champion_user(owner_acc, beast, stars=6, rank=5, ascension=0)
         return alliance, owner_acc, (herc, doom, beast)
 
@@ -191,6 +191,22 @@ class TestAllianceRosterFilters:
             f"/alliances/{alliance.id}/roster?ascensions=1", headers=HEADERS_OWNER
         )
         assert [r["champion_name"] for r in response.json()] == ["Hercules"]
+
+    @pytest.mark.parametrize(
+        ("signature_query", "expected"),
+        [
+            ("min_signature=20", ["Doctor Doom", "Hercules"]),
+            ("max_signature=20", ["Beast", "Doctor Doom"]),
+            ("min_signature=1&max_signature=100", ["Doctor Doom"]),
+        ],
+    )
+    @pytest.mark.asyncio
+    async def test_signature_range_filter(self, signature_query, expected):
+        alliance, *_ = await self._alliance_with_three_champs()
+        response = await execute_get_request(
+            f"/alliances/{alliance.id}/roster?{signature_query}", headers=HEADERS_OWNER
+        )
+        assert sorted(r["champion_name"] for r in response.json()) == expected
 
     @pytest.mark.asyncio
     async def test_preferred_attacker_filter(self):

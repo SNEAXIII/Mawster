@@ -4,6 +4,9 @@ import {
   applyRosterFilters,
   EMPTY_FILTERS,
   isFilterActive,
+  optionRange,
+  optionSlice,
+  RANK_OPTIONS,
   type RosterFilters,
 } from '@/components/roster/roster-filters'
 import type { PreviewRow } from '@/components/roster/import-preview-row'
@@ -88,8 +91,8 @@ describe('roster filters', () => {
     { sagaAttacker: true },
     { sagaDefender: true },
     { preferredAttacker: true },
-    { awakened: true },
     { minSignature: 20 },
+    { maxSignature: 199 },
   ])('is active with %j', (over) => {
     expect(isFilterActive({ ...EMPTY_FILTERS, ...over })).toBe(true)
   })
@@ -129,10 +132,23 @@ describe('roster filters', () => {
     [{ sagaAttacker: true }, ['Storm']],
     [{ sagaDefender: true }, ['Hulk']],
     [{ preferredAttacker: true }, ['Iron Man']],
-    [{ awakened: true }, ['Storm', 'Hulk']],
     [{ minSignature: 100 }, ['Storm']],
-    [{ awakened: true, championClass: 'Mutant' }, ['Storm']],
+    [{ maxSignature: 20 }, ['Iron Man', 'Hulk']],
+    [{ minSignature: 1, maxSignature: 100 }, ['Hulk']],
+    [{ minSignature: 1, championClass: 'Mutant' }, ['Storm']],
   ])('%j → %j', (filters, expected) => {
     expect(names(filters)).toEqual(expected)
+  })
+})
+
+describe('option range', () => {
+  it('maps an empty selection to the full range and back', () => {
+    expect(optionRange(RANK_OPTIONS, [])).toEqual([0, 5])
+    expect(optionSlice(RANK_OPTIONS, [0, 5])).toEqual([])
+  })
+
+  it('round-trips a partial range', () => {
+    expect(optionSlice(RANK_OPTIONS, [2, 4])).toEqual(['7r3', '7r4', '7r5'])
+    expect(optionRange(RANK_OPTIONS, ['7r5', '7r3', '7r4'])).toEqual([2, 4])
   })
 })
