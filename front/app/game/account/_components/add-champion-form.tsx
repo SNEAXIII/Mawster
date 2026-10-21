@@ -15,6 +15,8 @@ import { type RosterEntry, RARITIES, RARITY_LABELS } from '@/app/services/roster
 import { MAX_SIGNATURE } from '@/components/roster/roster-filters'
 import { useAddChampionForm } from '@/hooks/use-add-champion-form'
 
+const FORM_SLIDER = 'w-full max-w-sm gap-2'
+
 interface AddChampionFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -171,26 +173,24 @@ export default function AddChampionForm({
           </div>
 
           <div>
-            <div className='mb-3'>
-              <Label className='mb-1.5 block'>{t.roster.rarity}</Label>
-              <LabeledSlider
-                max={RARITIES.length - 1}
-                value={[Math.max(0, (RARITIES as readonly string[]).indexOf(selectedRarity))]}
-                onChange={([i]) => setSelectedRarity(RARITIES[i])}
-                format={(i) => RARITY_LABELS[RARITIES[i]]}
-                cy='rarity'
-                className='w-full max-w-sm'
-              />
-            </div>
+            <LabeledSlider
+              title={<Label>{t.roster.rarity}</Label>}
+              max={RARITIES.length - 1}
+              value={[Math.max(0, (RARITIES as readonly string[]).indexOf(selectedRarity))]}
+              onChange={([i]) => setSelectedRarity(RARITIES[i])}
+              format={(i) => RARITY_LABELS[RARITIES[i]]}
+              cy='rarity'
+              className={`${FORM_SLIDER} mb-4`}
+            />
 
-            {/* Signature: the input stays for exact values, the slider for quick ones */}
-            <div className='mb-4'>
-              <Label className='mb-1.5 block'>{t.roster.signature}</Label>
-              <div className='flex flex-wrap items-end gap-3'>
+            {/* The input keeps exact values reachable; 200 steps are too fine to drag on a phone */}
+            <LabeledSlider
+              title={<Label>{t.roster.signature}</Label>}
+              valueSlot={
                 <Input
                   type='number'
                   min={0}
-                  className='w-24'
+                  className='h-7 w-16 text-right text-xs tabular-nums'
                   value={signatureValue}
                   onChange={(e) =>
                     setSignatureValue(
@@ -199,16 +199,14 @@ export default function AddChampionForm({
                   }
                   data-cy='sig-input'
                 />
-                <LabeledSlider
-                  max={MAX_SIGNATURE}
-                  value={[signatureValue]}
-                  onChange={([v]) => setSignatureValue(v)}
-                  format={String}
-                  cy='sig-slider'
-                  className='w-full max-w-60 flex-1'
-                />
-              </div>
-            </div>
+              }
+              max={MAX_SIGNATURE}
+              value={[signatureValue]}
+              onChange={([v]) => setSignatureValue(v)}
+              format={String}
+              cy='sig-slider'
+              className={`${FORM_SLIDER} mb-4`}
+            />
 
             {/* Preferred Attacker */}
             <div className='mb-4'>
@@ -226,15 +224,13 @@ export default function AddChampionForm({
                   {t.roster.preferredAttacker}
                 </Label>
               </div>
-              <p className='text-xs text-muted-foreground mt-1 ml-6'>
-                {t.roster.preferredAttackerHint}
-              </p>
             </div>
 
             {/* Ascension */}
             <div className='mb-4'>
-              <Label className='mb-1.5 block'>Ascension</Label>
               <LabeledSlider
+                title={<Label>Ascension</Label>}
+                className={FORM_SLIDER}
                 max={2}
                 value={[ascension]}
                 onChange={([level]) => setAscension(level)}

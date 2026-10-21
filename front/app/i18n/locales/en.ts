@@ -1361,10 +1361,8 @@ const en = {
       deleteError: 'An error occurred while removing the champion',
       upgradeError: 'An error occurred while upgrading the champion',
     },
-    preferredAttacker: 'Preferred Attacker',
+    preferredAttacker: 'Mark as preferred Attacker',
     preferredAttackerToggle: 'Toggle preferred attacker flag',
-    preferredAttackerHint:
-      'Marked as preferred attacker — officers can still place them in defense.',
     manageTab: 'Manage',
     filter: {
       namePlaceholder: 'Search by name…',

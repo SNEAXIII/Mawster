@@ -1375,10 +1375,8 @@ const fr: Translations = {
       deleteError: 'Une erreur est survenue lors de la suppression du champion',
       upgradeError: "Une erreur est survenue lors de l'amélioration du champion",
     },
-    preferredAttacker: 'Attaquant Préféré',
+    preferredAttacker: 'Indiqué comme attaquant préféré',
     preferredAttackerToggle: "Basculer le statut d'attaquant préféré",
-    preferredAttackerHint:
-      'Marqué comme attaquant préféré — les officiers peuvent quand même le placer en défense.',
     manageTab: 'Gérer',
     filter: {
       namePlaceholder: 'Rechercher par nom…',
