@@ -15,15 +15,14 @@ describe('Roster – Ascension', () => {
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('AscHero');
       cy.getByCy('champion-submit').should('not.be.disabled');
-      cy.getByCy('rarity-7r3').click();
+      cy.slideTo('rarity', '7R3');
 
-      // Ascension buttons should be enabled for ascendable champion
-      cy.getByCy('ascension-1').should('not.be.disabled');
-      cy.getByCy('ascension-2').should('not.be.disabled');
+      // Ascension slider should be enabled for ascendable champion
+      cy.getByCy('ascension').find('[role="slider"]').should('not.have.attr', 'data-disabled');
 
       // Select A1
-      cy.getByCy('ascension-1').click();
-      cy.getByCy('ascension-1').should('have.attr', 'data-state', 'on');
+      cy.slideTo('ascension', 'A1');
+      cy.getByCy('ascension-value').should('have.text', 'A1');
 
       cy.getByCy('champion-submit').click();
       cy.contains('AscHero added / updated').should('be.visible');
@@ -44,11 +43,11 @@ describe('Roster – Ascension', () => {
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('AscHeroMax');
       cy.getByCy('champion-submit').should('not.be.disabled');
-      cy.getByCy('rarity-7r4').click();
+      cy.slideTo('rarity', '7R4');
 
       // Select A2
-      cy.getByCy('ascension-2').click();
-      cy.getByCy('ascension-2').should('have.attr', 'data-state', 'on');
+      cy.slideTo('ascension', 'A2');
+      cy.getByCy('ascension-value').should('have.text', 'A2');
 
       cy.getByCy('champion-submit').click();
       cy.contains('AscHeroMax added / updated').should('be.visible');
@@ -72,11 +71,9 @@ describe('Roster – Ascension', () => {
       cy.getByCy('champion-search').type('NoAscChamp');
       cy.getByCy('champion-submit').should('not.be.disabled');
 
-      // A1 and A2 buttons should be disabled
-      cy.getByCy('ascension-1').should('be.disabled');
-      cy.getByCy('ascension-2').should('be.disabled');
-      // None button should still be enabled and selected
-      cy.getByCy('ascension-0').should('not.be.disabled');
+      // Ascension slider should be locked on None
+      cy.getByCy('ascension').find('[role="slider"]').should('have.attr', 'data-disabled');
+      cy.getByCy('ascension-value').should('have.text', 'None');
 
       // Message "This champion cannot be ascended." should appear
       cy.contains('This champion cannot be ascended.').should('be.visible');

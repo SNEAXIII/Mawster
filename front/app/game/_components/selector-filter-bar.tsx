@@ -10,8 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/app/lib/utils'
-import { sortByClassOrder } from '@/app/lib/champion-class'
-import { ClassChip } from '@/components/class-chip'
+import ClassFilterSelect from '@/components/class-filter-select'
 
 export interface ToggleConfig {
   key: string
@@ -76,28 +75,12 @@ export default function SelectorFilterBar({
       )}
 
       {classes.length > 0 && (
-        <Select
-          value={classFilter || 'all'}
-          onValueChange={(val) => onClassChange(val === 'all' ? '' : val)}
-        >
-          <SelectTrigger
-            className='h-8 w-32 text-xs'
-            data-cy='selector-class-filter'
-          >
-            <SelectValue placeholder={t.roster.selectClass} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>{t.roster.classFilter}</SelectItem>
-            {sortByClassOrder(classes).map((c) => (
-              <SelectItem
-                key={c}
-                value={c}
-              >
-                <ClassChip championClass={c} />
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <ClassFilterSelect
+          value={classFilter}
+          onChange={onClassChange}
+          classes={classes}
+          dataCy='selector-class-filter'
+        />
       )}
 
       {toggles.map((toggle) => (

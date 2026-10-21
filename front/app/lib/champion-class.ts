@@ -58,6 +58,8 @@ export function getClassColors(championClass: string) {
 }
 
 /** Class icons sit next to the frames on the static server. */
+export const ALL_CLASSES_ICON_URL = '/static/icons/class-all.webp'
+
 export function getClassIconUrl(championClass: string): string | null {
   if (!(championClass in CLASS_COLORS)) return null
   return `/static/icons/class-${championClass.toLowerCase()}.webp`

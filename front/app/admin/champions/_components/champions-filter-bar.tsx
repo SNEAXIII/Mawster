@@ -1,11 +1,11 @@
 'use client'
 
-import DropdownRadioMenu from '@/components/dashboard/pagination/dropdown-radio-menu'
 import SeasonSelect from '@/app/components/season-select'
 import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/app/i18n'
-import { championClasses, type BoolFilter } from '@/app/services/champions'
+import type { BoolFilter } from '@/app/services/champions'
+import ClassFilterSelect from '@/components/class-filter-select'
 import type { Season } from '@/app/services/season'
 import type { ChampionFiltersState } from '@/app/admin/_viewmodels/champion-filters'
 import type { ChampionAttribute } from '@/app/admin/_viewmodels/champion-attributes'
@@ -45,14 +45,10 @@ export default function ChampionsFilterBar({
         className='w-full sm:w-64'
         data-cy='champion-search'
       />
-      <DropdownRadioMenu
-        labelButton={t.champions.classFilter}
-        labelDescription={t.champions.selectClass}
-        possibleValues={championClasses.map((c) => ({ value: c.value, label: c.label }))}
-        selectedValue={filters.championClass}
-        showSelected
-        setValue={(value) => onFilterChange('championClass', value)}
-        data-cy='filter-class'
+      <ClassFilterSelect
+        value={filters.championClass === 'all' ? '' : filters.championClass}
+        onChange={(value) => onFilterChange('championClass', value || 'all')}
+        dataCy='filter-class'
       />
       <SeasonSelect
         seasons={seasons}

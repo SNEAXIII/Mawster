@@ -61,7 +61,7 @@ describe('Roster – Basic', () => {
       cy.getByCy('champion-search').should('have.value', 'SpiderA');
       cy.getByCy('champion-selected-preview').should('be.visible').and('contain', 'SpiderA').and('contain', 'Science');
 
-      cy.getByCy('rarity-6r4').click();
+      cy.slideTo('rarity', '6R4');
       cy.getByCy('champion-submit').click();
       cy.contains('SpiderA added / updated').should('be.visible');
     });
@@ -93,7 +93,7 @@ describe('Roster – Basic', () => {
       cy.getByCy('champion-search').should('have.value', 'Wolverine');
       cy.getByCy('champion-selected-preview').should('be.visible').and('contain', 'Wolverine').and('contain', 'Mutant');
 
-      cy.getByCy('rarity-6r4').click();
+      cy.slideTo('rarity', '6R4');
       cy.getByCy('champion-submit').click();
 
       cy.contains('Wolverine added / updated').should('be.visible');
@@ -115,7 +115,7 @@ describe('Roster – Basic', () => {
       cy.contains('Add / Update a Champion').click();
       cy.getByCy('champion-search').type('HulkDel');
       cy.getByCy('champion-submit').should('not.be.disabled');
-      cy.getByCy('rarity-6r4').click();
+      cy.slideTo('rarity', '6R4');
       cy.getByCy('champion-submit').click();
       cy.contains('HulkDel added / updated').should('be.visible');
 

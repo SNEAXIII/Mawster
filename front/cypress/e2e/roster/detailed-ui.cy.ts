@@ -21,17 +21,17 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
         cy.getByCy('champion-selected-preview').should('exist');
 
         // Set rarity 7r5
-        cy.getByCy('rarity-7r5').click();
+        cy.slideTo('rarity', '7R5');
 
         // Set signature to 200
-        cy.contains('button', '200').click();
+        cy.getByCy('sig-slider').find('[role="slider"]').type('{end}');
         cy.getByCy('sig-input').should('have.value', '200');
 
         // Check preferred attacker
         cy.getByCy('preferred-attacker-checkbox').should('be.visible').click();
 
         // Set ascension A2
-        cy.getByCy('ascension-2').click();
+        cy.slideTo('ascension', 'A2');
 
         cy.getByCy('champion-submit').click();
         cy.contains('Omega added / updated').should('be.visible');
@@ -81,13 +81,13 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
           cy.contains('EditHero').should('be.visible');
 
           // Rarity 7r3 should be selected (active state)
-          cy.getByCy('rarity-7r3').should('have.attr', 'data-state', 'on');
+          cy.getByCy('rarity-value').should('have.text', '7R3');
 
           // Signature input should show 120
           cy.getByCy('sig-input').should('have.value', '120');
 
           // Ascension A1 should be selected
-          cy.getByCy('ascension-1').should('have.attr', 'data-state', 'on');
+          cy.getByCy('ascension-value').should('have.text', 'A1');
         });
       });
     });
@@ -108,13 +108,13 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
           cy.getByCy('champion-edit').first().focus().click();
 
           // Change rarity to 7r4
-          cy.getByCy('rarity-7r4').click();
+          cy.slideTo('rarity', '7R4');
 
           // Change signature to 200
           cy.getByCy('sig-input').clear().type('200');
 
           // Set ascension to A1
-          cy.getByCy('ascension-1').click();
+          cy.slideTo('ascension', 'A1');
 
           // Submit update
           cy.getByCy('champion-submit').click();
@@ -169,8 +169,8 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
         cy.contains('Add / Update a Champion').click();
         cy.getByCy('champion-search').type('Kingpin');
         cy.getByCy('champion-selected-preview').should('exist');
-        cy.getByCy('rarity-7r1').click();
-        cy.contains('button', '20').click();
+        cy.slideTo('rarity', '7R1');
+        cy.getByCy('sig-input').type('{selectall}20');
         cy.getByCy('champion-submit').click();
         cy.contains('Kingpin added / updated').should('be.visible');
 
@@ -183,8 +183,8 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
         cy.getByCy('already-in-roster').should('contain', 'sig 20');
 
         // Update with different rarity and sig
-        cy.getByCy('rarity-7r2').click();
-        cy.contains('button', '200').click();
+        cy.slideTo('rarity', '7R2');
+        cy.getByCy('sig-slider').find('[role="slider"]').type('{end}');
         cy.getByCy('champion-submit').click();
         cy.contains('Kingpin added / updated').should('be.visible');
 

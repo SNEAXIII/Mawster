@@ -1,15 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { FullPageSpinner } from '@/components/full-page-spinner'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 import AllianceSelect from '@/app/game/_components/alliance-select'
 import type { AllianceWithVisitorFlag } from '@/hooks/use-alliance-selector'
 import RosterFilterBar from '@/components/roster/roster-filter-bar'
@@ -21,17 +15,12 @@ import {
 import UpgradeRequestDialogs from '@/components/upgrade-request-dialogs'
 import { useUpgradeRequests } from '@/hooks/use-upgrade-requests'
 import { CLASS_ORDER } from '@/app/lib/champion-class'
-import type { AllianceRosterEntry, AllianceRosterQuery } from '@/app/services/game'
+import { cn } from '@/app/lib/utils'
 import { useAllianceRosterSearch } from '../_viewmodels/use-alliance-roster-search'
 import AllianceChampionGroup from './alliance-champion-group'
-
-/** Max distinct champions the API returns for this tab. */
-const DISTINCT_CHAMPION_LIMIT = 20
-/** Debounce for the free-text name filter before hitting the API. */
-const NAME_DEBOUNCE_MS = 300
+import ChampionSearchGroupSelect from './champion-search-group-select'
 
 const AVAILABLE_CLASSES = CLASS_ORDER
-const GROUP_OPTIONS = ['1', '2', '3'] as const
 
 interface Props {
   alliances: AllianceWithVisitorFlag[]
@@ -48,8 +37,8 @@ export default function AllianceChampionSearchTab({
   const cs = t.game.alliances.championSearch
   const [filters, setFilters] = useState<RosterFilters>(EMPTY_FILTERS)
   const [group, setGroup] = useState('all')
-  const [debouncedName, setDebouncedName] = useState('')
   const [lastAllianceId, setLastAllianceId] = useState(selectedAllianceId)
+  const [showAll, setShowAll] = useState(false)
   const upgrade = useUpgradeRequests()
 
   // Reset the group filter when the alliance changes. Done during render rather than
@@ -58,85 +47,14 @@ export default function AllianceChampionSearchTab({
   if (lastAllianceId !== selectedAllianceId) {
     setLastAllianceId(selectedAllianceId)
     setGroup('all')
+    setShowAll(false)
   }
 
-  // Debounce the free-text name filter so typing doesn't hammer the API.
-  useEffect(() => {
-    const id = setTimeout(() => setDebouncedName(filters.name), NAME_DEBOUNCE_MS)
-    return () => clearTimeout(id)
-  }, [filters.name])
-
-  // Server-side query: all filtering + the distinct-champion cap happen in the API.
-  const query = useMemo<AllianceRosterQuery>(
-    () => ({
-      name: debouncedName,
-      championClass: filters.championClass || undefined,
-      ranks: filters.ranks.length ? filters.ranks : undefined,
-      ascensions: filters.ascensions.length ? filters.ascensions : undefined,
-      sagaAttacker: filters.sagaAttacker || undefined,
-      sagaDefender: filters.sagaDefender || undefined,
-      preferredAttacker: filters.preferredAttacker || undefined,
-      allianceGroup: /^\d+$/.test(group) ? Number(group) : undefined,
-      noGroup: group === 'none' || undefined,
-      distinctChampionLimit: DISTINCT_CHAMPION_LIMIT,
-    }),
-    [
-      debouncedName,
-      filters.championClass,
-      filters.ranks,
-      filters.ascensions,
-      filters.sagaAttacker,
-      filters.sagaDefender,
-      filters.preferredAttacker,
-      group,
-    ]
-  )
-
-  const { roster, loading, canRequestUpgrade } = useAllianceRosterSearch(selectedAllianceId, query)
-
-  // Group the returned entries by champion for display (API already filtered + capped).
-  const groups = useMemo(() => {
-    const byChampion = new Map<string, AllianceRosterEntry[]>()
-    for (const e of roster) {
-      const list = byChampion.get(e.champion_id) ?? []
-      list.push(e)
-      byChampion.set(e.champion_id, list)
-    }
-    return Array.from(byChampion.values())
-      .map((entries) => ({
-        championId: entries[0].champion_id,
-        championName: entries[0].champion_name,
-        championClass: entries[0].champion_class,
-        imageUrl: entries[0].image_url,
-        entries,
-      }))
-      .sort((a, b) => a.championName.localeCompare(b.championName))
-  }, [roster])
-
-  const groupSelect = (
-    <Select
-      value={group}
-      onValueChange={setGroup}
-    >
-      <SelectTrigger
-        className='h-8 w-40 text-xs'
-        data-cy='champion-search-group-select'
-      >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value='all'>{cs.allGroups}</SelectItem>
-        {GROUP_OPTIONS.map((g) => (
-          <SelectItem
-            key={g}
-            value={g}
-          >
-            {cs.groupOption.replace('{n}', g)}
-          </SelectItem>
-        ))}
-        <SelectItem value='none'>{cs.noGroup}</SelectItem>
-      </SelectContent>
-    </Select>
+  const { groups, loading, canRequestUpgrade } = useAllianceRosterSearch(
+    selectedAllianceId,
+    filters,
+    group,
+    showAll
   )
 
   return (
@@ -158,9 +76,25 @@ export default function AllianceChampionSearchTab({
         onChange={(patch) => setFilters((f) => ({ ...f, ...patch }))}
         onReset={() => setFilters(EMPTY_FILTERS)}
         availableClasses={AVAILABLE_CLASSES}
-        leading={groupSelect}
-        showAwakened={false}
-        showMinSig={false}
+        leading={
+          <ChampionSearchGroupSelect
+            value={group}
+            onChange={setGroup}
+          />
+        }
+        trailing={
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            aria-pressed={showAll}
+            className={cn(showAll && 'bg-primary/10 border-primary text-primary')}
+            onClick={() => setShowAll((v) => !v)}
+            data-cy='champion-search-show-all'
+          >
+            {cs.showAll}
+          </Button>
+        }
         showCount={false}
       />
 

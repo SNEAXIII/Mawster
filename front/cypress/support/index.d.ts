@@ -284,6 +284,12 @@ declare global {
        */
       selectOption(trigger: string, label: string): Chainable<JQuery<HTMLElement>>;
 
+      /**
+       * Move a single-thumb `LabeledSlider` until its label reads `label`.
+       * @param slider - `data-cy` of the slider
+       */
+      slideTo(slider: string, label: string): Chainable<void>;
+
       /** Declare a war against an opponent (direct backend call). */
       apiCreateWar(
         token: string,

@@ -26,6 +26,8 @@ class AllianceRosterService:
         preferred_attacker: bool,
         alliance_group: int | None,
         no_group: bool,
+        min_signature: int | None,
+        max_signature: int | None,
         saga_attacker_ids: set[uuid.UUID] | None,
         saga_defender_ids: set[uuid.UUID] | None,
     ) -> Select:
@@ -57,10 +59,21 @@ class AllianceRosterService:
             stmt = stmt.where(col(GameAccount.alliance_group).is_(None))
         elif alliance_group is not None:
             stmt = stmt.where(col(GameAccount.alliance_group) == alliance_group)
+        stmt = cls._apply_signature_range(stmt, min_signature, max_signature)
         if saga_attacker_ids is not None:
             stmt = stmt.where(col(ChampionUser.champion_id).in_(saga_attacker_ids))
         if saga_defender_ids is not None:
             stmt = stmt.where(col(ChampionUser.champion_id).in_(saga_defender_ids))
+        return stmt
+
+    @staticmethod
+    def _apply_signature_range(
+        stmt: Select, min_signature: int | None, max_signature: int | None
+    ) -> Select:
+        if min_signature is not None:
+            stmt = stmt.where(col(ChampionUser.signature) >= min_signature)
+        if max_signature is not None:
+            stmt = stmt.where(col(ChampionUser.signature) <= max_signature)
         return stmt
 
     @classmethod
@@ -76,6 +89,8 @@ class AllianceRosterService:
         preferred_attacker: bool = False,
         alliance_group: int | None = None,
         no_group: bool = False,
+        min_signature: int | None = None,
+        max_signature: int | None = None,
         saga_attacker_ids: set[uuid.UUID] | None = None,
         saga_defender_ids: set[uuid.UUID] | None = None,
         distinct_champion_limit: int | None = None,
@@ -96,6 +111,8 @@ class AllianceRosterService:
             "preferred_attacker": preferred_attacker,
             "alliance_group": alliance_group,
             "no_group": no_group,
+            "min_signature": min_signature,
+            "max_signature": max_signature,
             "saga_attacker_ids": saga_attacker_ids,
             "saga_defender_ids": saga_defender_ids,
         }
