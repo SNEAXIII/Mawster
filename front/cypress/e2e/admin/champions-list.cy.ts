@@ -31,7 +31,7 @@ describe('Admin — champions list & filters', () => {
     ]).then(() => {
       cy.goToAdminChampionsTab();
       cy.getByCy('filter-class').click();
-      cy.contains('[role="menuitemradio"]', 'Tech').click();
+      cy.contains('[role="option"]', 'Tech').click();
       cy.getByCy('champion-row-Iron Man').should('be.visible');
       cy.getByCy('champion-row-Wolverine').should('not.exist');
     });
@@ -167,14 +167,14 @@ describe('Admin — champions list & filters', () => {
     ]).then(() => {
       cy.goToAdminChampionsTab();
       cy.getByCy('filter-class').click();
-      cy.contains('[role="menuitemradio"]', 'Tech').click();
+      cy.contains('[role="option"]', 'Tech').click();
       cy.getByCy('champion-row-Wolverine').should('not.exist');
-      // Wait for the Radix menu to fully close before reopening — reopening
+      // Wait for the Radix listbox to fully close before reopening — reopening
       // mid-exit-animation swallows the toggle and the content never remounts.
-      cy.get('[role="menu"]').should('not.exist');
+      cy.get('[role="listbox"]').should('not.exist');
       cy.getByCy('filter-class').click();
-      cy.get('[role="menu"]').should('be.visible');
-      cy.contains('[role="menuitemradio"]', 'All').click();
+      cy.get('[role="listbox"]').should('be.visible');
+      cy.contains('[role="option"]', 'All classes').click();
       cy.getByCy('champion-row-Iron Man').should('be.visible');
       cy.getByCy('champion-row-Wolverine').should('be.visible');
     });
