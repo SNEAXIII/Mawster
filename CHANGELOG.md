@@ -3,6 +3,19 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.31.0](https://github.com/SNEAXIII/Mawster/compare/v1.30.1...v1.31.0) (2026-10-21)
+
+
+### Ajouté
+
+* roster filter and form sliders, shared class dropdown ([#739](https://github.com/SNEAXIII/Mawster/issues/739)) ([67750ad](https://github.com/SNEAXIII/Mawster/commit/67750ad5c4d3e253de7a5af15980ae348d6957dc))
+
+
+### Corrigé
+
+* refresh landing copy with the live-since date, screenshot roster import and current testimonial alliance ([3606447](https://github.com/SNEAXIII/Mawster/commit/36064473b446cade5f30ae8b750d4c38d9527f71))
+* retarget the landing tagline, add the fan-made notice and drop the Discord bot roadmap ([#738](https://github.com/SNEAXIII/Mawster/issues/738)) ([4a415ee](https://github.com/SNEAXIII/Mawster/commit/4a415ee0b874ad2160a78f1b6c21d9c14ee8f9b0))
+
 ## [1.30.1](https://github.com/SNEAXIII/Mawster/compare/v1.30.0...v1.30.1) (2026-10-19)
 
 
