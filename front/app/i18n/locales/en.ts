@@ -68,7 +68,7 @@ const en = {
 
     eyebrow: 'Alliance War manager',
     evolving: 'Evolving · Open source',
-    heroTitle: 'Win your wars with a real plan.',
+    heroTitle: 'Plan the war. Know who carried it.',
     heroSubtitle:
       'Mawster turns Alliance War into one clear plan — roster management, fight history, defense, attack, synergies and stats in one place. No more screenshots or Excel sheets to manage your teammates rosters.',
     heroCtaPrimary: 'Create an account',
@@ -183,13 +183,6 @@ const en = {
       'Premium supporters get their requests moved to the front of the queue, plus faster bug fixes.',
     requestCta: 'Request a feature',
 
-    soonEyebrow: 'Roadmap',
-    soonTitle: 'Roadmap',
-    soonBadge: 'Soon',
-    soonBotTitle: 'Discord bot',
-    soonBotDesc:
-      'Run Mawster straight from Discord — check placements, post war plans and ping your battlegroups without leaving the server.',
-
     openSourceEyebrow: 'Open source',
     openSourceTitle: 'Contribute with the community',
     openSourceDesc:
@@ -203,6 +196,8 @@ const en = {
     ctaDiscord: 'Continue with Discord',
     ctaGoogle: 'Continue with Google',
     ctaSoon: 'Line and more coming soon',
+    notAffiliated:
+      'Mawster is a fan-made tool, not affiliated with or endorsed by Kabam or Marvel.',
   },
 
   // Login page

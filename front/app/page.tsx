@@ -3,7 +3,6 @@ import { StatStrip } from './_components/landing/stat-strip'
 import { FeatureGrid } from './_components/landing/feature-grid'
 import { StatsShowcase } from './_components/landing/stats-showcase'
 import { FeatureRequest } from './_components/landing/feature-request'
-import { ComingSoon } from './_components/landing/coming-soon'
 import { Testimonials } from './_components/landing/testimonials'
 import { Faq } from './_components/landing/faq'
 import { Community } from './_components/landing/community'
@@ -19,7 +18,6 @@ export default function Page() {
           <StatStrip />
           <FeatureGrid />
           <Testimonials />
-          <ComingSoon />
           <FeatureRequest />
           <StatsShowcase />
           <Community />

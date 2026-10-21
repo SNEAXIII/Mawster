@@ -45,6 +45,8 @@ export function Cta() {
         <p className='mt-5 text-xs uppercase tracking-wider text-muted-foreground'>
           {t.landing.ctaSoon}
         </p>
+
+        <p className='mt-16 text-xs text-muted-foreground'>{t.landing.notAffiliated}</p>
       </div>
     </section>
   )

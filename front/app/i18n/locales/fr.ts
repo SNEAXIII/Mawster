@@ -70,7 +70,7 @@ const fr: Translations = {
 
     eyebrow: "Gestion de Guerre d'Alliance",
     evolving: 'En évolution · Open source',
-    heroTitle: 'Gagne tes guerres avec un vrai plan.',
+    heroTitle: 'Planifie la guerre. Découvre qui l’a portée.',
     heroSubtitle:
       "Mawster transforme la Guerre d'Alliance en un plan clair — gestion des rosters, historique des combats, défense, attaque, synergies et stats au même endroit. Fini les screenshots et les fichiers Excel pour gérer les rosters de tes équipiers.",
     heroCtaPrimary: 'Créez un compte',
@@ -185,13 +185,6 @@ const fr: Translations = {
       'Les soutiens premium voient leurs demandes passer en tête de file, avec des corrections de bugs accélérées.',
     requestCta: 'Proposer une fonctionnalité',
 
-    soonEyebrow: 'Roadmap',
-    soonTitle: 'Roadmap',
-    soonBadge: 'Bientôt',
-    soonBotTitle: 'Bot Discord',
-    soonBotDesc:
-      'Pilotez Mawster directement depuis Discord — consultez les placements, publiez les plans de guerre et pinguez vos battlegroups sans quitter le serveur.',
-
     openSourceEyebrow: 'Open source',
     openSourceTitle: 'Contribue avec la communauté',
     openSourceDesc:
@@ -205,6 +198,8 @@ const fr: Translations = {
     ctaDiscord: 'Continuer avec Discord',
     ctaGoogle: 'Continuer avec Google',
     ctaSoon: 'Line et plus à venir',
+    notAffiliated:
+      'Mawster est un outil créé par un fan, sans lien avec Kabam ni Marvel et non approuvé par eux.',
   },
 
   // Login page
