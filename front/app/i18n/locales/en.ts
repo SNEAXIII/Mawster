@@ -68,7 +68,7 @@ const en = {
 
     eyebrow: 'Alliance War manager',
     evolving: 'Evolving · Open source',
-    heroTitle: 'Win your wars with a real plan.',
+    heroTitle: 'Plan the war. Know who carried it.',
     heroSubtitle:
       'Mawster turns Alliance War into one clear plan — roster management, fight history, defense, attack, synergies and stats in one place. No more screenshots or Excel sheets to manage your teammates rosters.',
     heroCtaPrimary: 'Create an account',
@@ -88,6 +88,7 @@ const en = {
     statParticipatingPlayers: 'Participating players',
     statKnowledgeBaseFights: 'Fights in the knowledge base',
     statWarsRecorded: 'Wars recorded',
+    statLiveSince: 'In production since Alliance War Season 66 (April 2026)',
 
     featuresEyebrow: 'Main features',
     featuresTitle: 'Everything you need to run Alliance War.',
@@ -103,7 +104,7 @@ const en = {
       'Assign attackers to nodes with fight notes, synergies and prefights, lay out your defense per battlegroup and lock your ban list — then track KOs and assists as the war runs.',
     featOnboardingTitle: 'Roster management',
     featOnboardingDesc:
-      'Keep every teammate roster in one place, always up to date. Fill your entire roster in twenty minutes, tops — then never type it into a spreadsheet again.',
+      'Keep every teammate roster in one place, always up to date. Fill your entire roster from screenshots in about five minutes — then never type it into a spreadsheet again.',
     featPrivacyTitle: 'Your data stays private',
     featPrivacyDesc:
       'No admin screen exposes your rosters, wars or plans — they stay inside your alliance. One exception, stated up front: a reported note is read by a moderator, along with its edit history.',
@@ -182,13 +183,6 @@ const en = {
       'Premium supporters get their requests moved to the front of the queue, plus faster bug fixes.',
     requestCta: 'Request a feature',
 
-    soonEyebrow: 'Roadmap',
-    soonTitle: 'Roadmap',
-    soonBadge: 'Soon',
-    soonBotTitle: 'Discord bot',
-    soonBotDesc:
-      'Run Mawster straight from Discord — check placements, post war plans and ping your battlegroups without leaving the server.',
-
     openSourceEyebrow: 'Open source',
     openSourceTitle: 'Contribute with the community',
     openSourceDesc:
@@ -202,6 +196,8 @@ const en = {
     ctaDiscord: 'Continue with Discord',
     ctaGoogle: 'Continue with Google',
     ctaSoon: 'Line and more coming soon',
+    notAffiliated:
+      'Mawster is a fan-made tool, not affiliated with or endorsed by Kabam or Marvel.',
   },
 
   // Login page
@@ -509,6 +505,7 @@ const en = {
         allGroups: 'All groups',
         groupOption: 'Group {n}',
         noGroup: 'No group',
+        showAll: 'Show all',
       },
     },
     defense: {
@@ -1166,7 +1163,6 @@ const en = {
   champions: {
     title: 'Champions Management',
     classFilter: 'Class',
-    selectClass: 'Filter by class',
     searchPlaceholder: 'Search by name or alias...',
     ascendableFilter: 'Ascendable',
     prefightFilter: 'Pre-fight',
@@ -1215,8 +1211,6 @@ const en = {
     selectAccount: 'Select a game account',
     chooseAccount: '-- Choose an account --',
     noAccounts: 'You need to create a game account first to manage your roster.',
-    classFilter: 'Class',
-    selectClass: 'Filter by class',
     addChampion: 'Add Champion',
     addOrUpdate: 'Add / Update a Champion',
     champion: 'Champion',
@@ -1362,22 +1356,18 @@ const en = {
       deleteError: 'An error occurred while removing the champion',
       upgradeError: 'An error occurred while upgrading the champion',
     },
-    preferredAttacker: 'Preferred Attacker',
+    preferredAttacker: 'Mark as preferred Attacker',
     preferredAttackerToggle: 'Toggle preferred attacker flag',
-    preferredAttackerHint:
-      'Marked as preferred attacker — officers can still place them in defense.',
     manageTab: 'Manage',
     filter: {
       namePlaceholder: 'Search by name…',
       rank: 'Rank',
       ascension: 'Asc',
-      classLabel: 'Class',
       allClasses: 'All classes',
       sagaAttacker: 'Saga Off',
       sagaDefender: 'Saga Def',
       preferred: 'Preferred',
-      awakened: 'Awakened',
-      minSignature: 'Min sig',
+      signature: 'Sig',
       reset: 'Reset',
       count: '{filtered} / {total} champions',
       noResults: 'No champion matches the current filters.',

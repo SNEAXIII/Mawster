@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import col, select
 
 from src.dto.alliance.dto_matchup import (
     ChampionRef,
@@ -141,7 +141,9 @@ class MatchupService:
                 referenced.add(target.prefight_champion_id)
             referenced.update(synergy.champion_id for synergy in target.synergies)
 
-        found = (await session.exec(select(Champion.id).where(Champion.id.in_(referenced)))).all()
+        found = (
+            await session.exec(select(Champion.id).where(col(Champion.id).in_(referenced)))
+        ).all()
         if len(set(found)) != len(referenced):
             raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
 
@@ -187,7 +189,7 @@ class MatchupService:
     async def _reload(cls, session: SessionDep, rating_ids: list[uuid.UUID]) -> list[MatchupRating]:
         result = await session.exec(
             select(MatchupRating)
-            .where(MatchupRating.id.in_(rating_ids))
+            .where(col(MatchupRating.id).in_(rating_ids))
             .options(*cls._RATING_RELATIONS)
         )
         return list(result.all())
@@ -368,7 +370,7 @@ class MatchupService:
                         .where(
                             MatchupRating.alliance_id == alliance_id,
                             MatchupRating.target_type == MatchupTargetType.NODE,
-                            MatchupRating.champion_id.in_(attacker_ids),
+                            col(MatchupRating.champion_id).in_(attacker_ids),
                         )
                         .options(*cls._RATING_RELATIONS)
                     )
@@ -432,7 +434,7 @@ class MatchupService:
 
         sql = select(MatchupRating).where(
             MatchupRating.alliance_id == alliance_id,
-            MatchupRating.target_key.in_(target_keys),
+            col(MatchupRating.target_key).in_(target_keys),
         )
         if champion_id is not None:
             sql = sql.where(MatchupRating.champion_id == champion_id)

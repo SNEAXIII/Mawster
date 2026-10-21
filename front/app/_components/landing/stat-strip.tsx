@@ -29,6 +29,7 @@ export function StatStrip() {
           </div>
         ))}
       </dl>
+      <p className='pb-6 text-center text-xs text-muted-foreground'>{t.landing.statLiveSince}</p>
     </section>
   )
 }

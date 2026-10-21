@@ -50,7 +50,7 @@ async def accept_invitation(
     invitation = await AllianceInvitationService.accept_invitation(
         session, invitation_id, current_user.id
     )
-    reloaded = await session.get(AllianceInvitation, invitation.id)
+    reloaded = await session.get_one(AllianceInvitation, invitation.id)
     await session.refresh(reloaded, ["alliance", "game_account", "invited_by"])
     return _invitation_to_response(reloaded)
 
@@ -67,7 +67,7 @@ async def decline_invitation(
     invitation = await AllianceInvitationService.decline_invitation(
         session, invitation_id, current_user.id
     )
-    reloaded = await session.get(AllianceInvitation, invitation.id)
+    reloaded = await session.get_one(AllianceInvitation, invitation.id)
     await session.refresh(reloaded, ["alliance", "game_account", "invited_by"])
     return _invitation_to_response(reloaded)
 

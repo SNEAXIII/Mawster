@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.expression import Select
-from sqlmodel import or_, select, tuple_
+from sqlmodel import col, or_, select, tuple_
 
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
@@ -26,21 +26,23 @@ class AllianceRosterService:
         preferred_attacker: bool,
         alliance_group: int | None,
         no_group: bool,
+        min_signature: int | None,
+        max_signature: int | None,
         saga_attacker_ids: set[uuid.UUID] | None,
         saga_defender_ids: set[uuid.UUID] | None,
     ) -> Select:
         """Apply the champion-search filters at the instance level."""
         stmt = (
-            stmt.join(GameAccount, ChampionUser.game_account_id == GameAccount.id)
-            .join(Champion, ChampionUser.champion_id == Champion.id)
-            .where(GameAccount.alliance_id == alliance_id)
+            stmt.join(GameAccount, col(ChampionUser.game_account_id) == GameAccount.id)
+            .join(Champion, col(ChampionUser.champion_id) == Champion.id)
+            .where(col(GameAccount.alliance_id) == alliance_id)
         )
 
         if name:
             like = f"%{name.strip()}%"
-            stmt = stmt.where(or_(Champion.name.ilike(like), Champion.alias.ilike(like)))
+            stmt = stmt.where(or_(col(Champion.name).ilike(like), col(Champion.alias).ilike(like)))
         if champion_class:
-            stmt = stmt.where(Champion.champion_class == champion_class)
+            stmt = stmt.where(col(Champion.champion_class) == champion_class)
         if ranks:
             pairs = [
                 (int(s), int(r))
@@ -50,17 +52,28 @@ class AllianceRosterService:
             if pairs:
                 stmt = stmt.where(tuple_(ChampionUser.stars, ChampionUser.rank).in_(pairs))
         if ascensions:
-            stmt = stmt.where(ChampionUser.ascension.in_(ascensions))
+            stmt = stmt.where(col(ChampionUser.ascension).in_(ascensions))
         if preferred_attacker:
-            stmt = stmt.where(ChampionUser.is_preferred_attacker.is_(True))
+            stmt = stmt.where(col(ChampionUser.is_preferred_attacker).is_(True))
         if no_group:
-            stmt = stmt.where(GameAccount.alliance_group.is_(None))
+            stmt = stmt.where(col(GameAccount.alliance_group).is_(None))
         elif alliance_group is not None:
-            stmt = stmt.where(GameAccount.alliance_group == alliance_group)
+            stmt = stmt.where(col(GameAccount.alliance_group) == alliance_group)
+        stmt = cls._apply_signature_range(stmt, min_signature, max_signature)
         if saga_attacker_ids is not None:
-            stmt = stmt.where(ChampionUser.champion_id.in_(saga_attacker_ids))
+            stmt = stmt.where(col(ChampionUser.champion_id).in_(saga_attacker_ids))
         if saga_defender_ids is not None:
-            stmt = stmt.where(ChampionUser.champion_id.in_(saga_defender_ids))
+            stmt = stmt.where(col(ChampionUser.champion_id).in_(saga_defender_ids))
+        return stmt
+
+    @staticmethod
+    def _apply_signature_range(
+        stmt: Select, min_signature: int | None, max_signature: int | None
+    ) -> Select:
+        if min_signature is not None:
+            stmt = stmt.where(col(ChampionUser.signature) >= min_signature)
+        if max_signature is not None:
+            stmt = stmt.where(col(ChampionUser.signature) <= max_signature)
         return stmt
 
     @classmethod
@@ -76,6 +89,8 @@ class AllianceRosterService:
         preferred_attacker: bool = False,
         alliance_group: int | None = None,
         no_group: bool = False,
+        min_signature: int | None = None,
+        max_signature: int | None = None,
         saga_attacker_ids: set[uuid.UUID] | None = None,
         saga_defender_ids: set[uuid.UUID] | None = None,
         distinct_champion_limit: int | None = None,
@@ -96,6 +111,8 @@ class AllianceRosterService:
             "preferred_attacker": preferred_attacker,
             "alliance_group": alliance_group,
             "no_group": no_group,
+            "min_signature": min_signature,
+            "max_signature": max_signature,
             "saga_attacker_ids": saga_attacker_ids,
             "saga_defender_ids": saga_defender_ids,
         }
@@ -105,14 +122,14 @@ class AllianceRosterService:
         if distinct_champion_limit is not None:
             distinct_ids = cls._apply_filters(select(ChampionUser.champion_id), **filter_kwargs)
             distinct_ids = (
-                distinct_ids.group_by(ChampionUser.champion_id, Champion.name)
+                distinct_ids.group_by(col(ChampionUser.champion_id), Champion.name)
                 .order_by(Champion.name)
                 .limit(distinct_champion_limit)
             )
             # Wrap the limited select in a derived table: MariaDB rejects LIMIT
             # directly inside an IN (...) subquery, but allows it in a FROM subquery.
             capped = distinct_ids.subquery()
-            stmt = stmt.where(ChampionUser.champion_id.in_(select(capped.c.champion_id)))
+            stmt = stmt.where(col(ChampionUser.champion_id).in_(select(capped.c.champion_id)))
 
         stmt = stmt.options(
             selectinload(ChampionUser.champion),  # type: ignore[arg-type]

@@ -203,7 +203,7 @@ class WarService:
                 select(War)
                 .where(War.alliance_id == alliance_id)
                 .options(*_WAR_OPTIONS)
-                .order_by(War.created_at.desc())  # type: ignore[attr-defined]
+                .order_by(col(War.created_at).desc())
             )
         ).all()
         latest_season = await DisplaySeasonService.get_display_season(session)
@@ -228,16 +228,23 @@ class WarService:
 
     @classmethod
     async def get_war(cls, session: SessionDep, war_id: uuid.UUID, alliance_id: uuid.UUID) -> War:
-        war = await cls._load_war(session, war_id)
+        war = await cls._find_war(session, war_id)
         if war is None or war.alliance_id != alliance_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, WAR_NOT_FOUND)
         return war
 
     @staticmethod
-    async def _load_war(session: SessionDep, war_id: uuid.UUID) -> War | None:
+    async def _find_war(session: SessionDep, war_id: uuid.UUID) -> War | None:
         return (
             await session.exec(select(War).where(War.id == war_id).options(*_WAR_OPTIONS))
         ).first()
+
+    @classmethod
+    async def _load_war(cls, session: SessionDep, war_id: uuid.UUID) -> War:
+        war = await cls._find_war(session, war_id)
+        if war is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, WAR_NOT_FOUND)
+        return war
 
     @staticmethod
     async def _war_format(
@@ -305,7 +312,7 @@ class WarService:
     ) -> WarResponse:
         war = await cls.get_war(session, war_id, alliance_id)
         ClosedWarPolicy.assert_open(war)
-        alliance = await session.get(Alliance, alliance_id)
+        alliance = await session.get_one(Alliance, alliance_id)
 
         if war.season_id is not None:
             if elo_change is None:
@@ -355,7 +362,7 @@ class WarService:
                 select(WarFightNote).where(
                     WarFightNote.war_id == war_id,
                     WarFightNote.battlegroup == battlegroup,
-                    WarFightNote.deleted_at.is_(None),
+                    col(WarFightNote.deleted_at).is_(None),
                 )
             )
         ).all()
@@ -461,7 +468,7 @@ class WarService:
     def _placement_to_dto(
         placement: WarDefensePlacement,
         saga: dict[uuid.UUID, tuple[bool, bool]],
-        war: War | None,
+        war: War,
     ) -> WarPlacementResponse:
         dto = WarPlacementResponse.model_validate(placement)
         dto.is_saga_attacker, dto.is_saga_defender = saga.get(placement.champion_id, NO_SAGA)
@@ -477,8 +484,10 @@ class WarService:
     async def _placement_dtos(
         cls, session: SessionDep, placements: Sequence[WarDefensePlacement]
     ) -> list[WarPlacementResponse]:
+        if not placements:
+            return []
         saga = await SagaService.resolve_current(session)
-        war = await session.get(War, placements[0].war_id) if placements else None
+        war = await session.get_one(War, placements[0].war_id)
         return [cls._placement_to_dto(p, saga, war) for p in placements]
 
     @classmethod
@@ -516,7 +525,7 @@ class WarService:
         cls, session: SessionDep, placement: WarDefensePlacement
     ) -> None:
         ClosedWarPolicy.assert_attacker_unlocked(
-            await session.get(War, placement.war_id),
+            await session.get_one(War, placement.war_id),
             await cls._load_placement(session, placement.id),
         )
 
@@ -586,8 +595,8 @@ class WarService:
                     WarSynergyAttacker.war_id == war_id,
                     WarSynergyAttacker.battlegroup == battlegroup,
                     or_(
-                        WarSynergyAttacker.champion_user_id == champion_user_id,
-                        WarSynergyAttacker.target_champion_user_id == champion_user_id,
+                        col(WarSynergyAttacker.champion_user_id) == champion_user_id,
+                        col(WarSynergyAttacker.target_champion_user_id) == champion_user_id,
                     ),
                 )
             )
@@ -643,7 +652,7 @@ class WarService:
 
     @classmethod
     async def clear_bg(cls, session: SessionDep, war_id: uuid.UUID, battlegroup: int) -> int:
-        ClosedWarPolicy.assert_open(await session.get(War, war_id))
+        ClosedWarPolicy.assert_open(await session.get_one(War, war_id))
         placements = (
             await session.exec(
                 select(WarDefensePlacement).where(
@@ -677,7 +686,9 @@ class WarService:
                 WarDefensePlacement.attacker_champion_user_id,
                 WarDefensePlacement.node_number,
             )
-            .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
+            .join(
+                ChampionUser, col(WarDefensePlacement.attacker_champion_user_id) == ChampionUser.id
+            )
             .where(
                 WarDefensePlacement.war_id == war_id, WarDefensePlacement.battlegroup == battlegroup
             )
@@ -818,8 +829,8 @@ class WarService:
         return set((await session.exec(stmt)).all())
 
     @staticmethod
-    async def _load_champion(session: SessionDep, champion_id: uuid.UUID) -> Champion:
-        champion = await session.get(Champion, champion_id)
+    async def _load_champion(session: SessionDep, champion_id: uuid.UUID | None) -> Champion:
+        champion = None if champion_id is None else await session.get(Champion, champion_id)
         if champion is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, CHAMPION_NOT_FOUND)
         return champion
@@ -909,18 +920,20 @@ class WarService:
         on_defense = await cls._defender_ids(session, alliance_id, fmt, battlegroup)
         stmt = (
             select(ChampionUser, GameAccount, Champion)
-            .join(GameAccount, ChampionUser.game_account_id == GameAccount.id)  # type: ignore[arg-type]
-            .join(Champion, ChampionUser.champion_id == Champion.id)  # type: ignore[arg-type]
+            .join(GameAccount, col(ChampionUser.game_account_id) == GameAccount.id)
+            .join(Champion, col(ChampionUser.champion_id) == Champion.id)
             .where(
                 GameAccount.alliance_id == alliance_id,
                 GameAccount.alliance_group == battlegroup,
-                Champion.has_prefight.is_(True),
+                col(Champion.has_prefight).is_(True),
             )
         )
         if not include_defense and on_defense:
             stmt = stmt.where(col(ChampionUser.id).not_in(on_defense))
         if war and war.bans:
-            stmt = stmt.where(ChampionUser.champion_id.not_in([b.champion_id for b in war.bans]))  # type: ignore[union-attr]
+            stmt = stmt.where(
+                col(ChampionUser.champion_id).not_in([b.champion_id for b in war.bans])
+            )
 
         def strength(cu: ChampionUser) -> tuple[bool, int, int, int]:
             return (cu.id not in on_defense, *_copy_strength(cu))
@@ -1253,7 +1266,7 @@ class WarService:
         else:
             if champion_id == target.champion_id:
                 raise HTTPException(status.HTTP_409_CONFLICT, SYNERGY_PROVIDER_CANNOT_BE_TARGET)
-            await cls._load_champion(session, champion_id)
+            champion_id = (await cls._load_champion(session, champion_id)).id
             game_account = target.game_account
         cls._assert_in_bg(game_account, alliance_id, battlegroup)
 

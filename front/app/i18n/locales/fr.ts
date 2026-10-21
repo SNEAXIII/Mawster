@@ -70,7 +70,7 @@ const fr: Translations = {
 
     eyebrow: "Gestion de Guerre d'Alliance",
     evolving: 'En évolution · Open source',
-    heroTitle: 'Gagne tes guerres avec un vrai plan.',
+    heroTitle: 'Planifie la guerre. Découvre qui l’a portée.',
     heroSubtitle:
       "Mawster transforme la Guerre d'Alliance en un plan clair — gestion des rosters, historique des combats, défense, attaque, synergies et stats au même endroit. Fini les screenshots et les fichiers Excel pour gérer les rosters de tes équipiers.",
     heroCtaPrimary: 'Créez un compte',
@@ -90,6 +90,7 @@ const fr: Translations = {
     statParticipatingPlayers: 'Joueurs participants',
     statKnowledgeBaseFights: 'Combats dans la base de connaissances',
     statWarsRecorded: 'Guerres enregistrées',
+    statLiveSince: "En production depuis la saison 66 de la Guerre d'Alliance (avril 2026)",
 
     featuresEyebrow: 'Fonctionnalités principales',
     featuresTitle: "Tout ce qu'il faut pour gérer la Guerre d'Alliance.",
@@ -105,7 +106,7 @@ const fr: Translations = {
       'Assigne les attaquants aux nœuds avec notes, synergies et prefights, place ta défense par bataillon et verrouille ta liste de bannissements — puis suis les KO et assists au fil de la guerre.',
     featOnboardingTitle: 'Gestion des rosters',
     featOnboardingDesc:
-      'Garde les rosters de tous tes équipiers au même endroit, toujours à jour. Remplis tout ton roster en vingt minutes maximum — et ne le retape plus jamais dans un tableur.',
+      'Garde les rosters de tous tes équipiers au même endroit, toujours à jour. Remplis tout ton roster depuis des captures d’écran en cinq minutes environ — et ne le retape plus jamais dans un tableur.',
     featPrivacyTitle: 'Vos données restent privées',
     featPrivacyDesc:
       "Aucun écran d'administration n'expose vos rosters, vos guerres ni vos plans : ils restent dans votre alliance. Une seule exception, et elle est assumée — une note signalée est lue par un modérateur, avec son historique d'édition.",
@@ -184,13 +185,6 @@ const fr: Translations = {
       'Les soutiens premium voient leurs demandes passer en tête de file, avec des corrections de bugs accélérées.',
     requestCta: 'Proposer une fonctionnalité',
 
-    soonEyebrow: 'Roadmap',
-    soonTitle: 'Roadmap',
-    soonBadge: 'Bientôt',
-    soonBotTitle: 'Bot Discord',
-    soonBotDesc:
-      'Pilotez Mawster directement depuis Discord — consultez les placements, publiez les plans de guerre et pinguez vos battlegroups sans quitter le serveur.',
-
     openSourceEyebrow: 'Open source',
     openSourceTitle: 'Contribue avec la communauté',
     openSourceDesc:
@@ -204,6 +198,8 @@ const fr: Translations = {
     ctaDiscord: 'Continuer avec Discord',
     ctaGoogle: 'Continuer avec Google',
     ctaSoon: 'Line et plus à venir',
+    notAffiliated:
+      'Mawster est un outil créé par un fan, sans lien avec Kabam ni Marvel et non approuvé par eux.',
   },
 
   // Login page
@@ -513,6 +509,7 @@ const fr: Translations = {
         allGroups: 'Tous les groupes',
         groupOption: 'Groupe {n}',
         noGroup: 'Sans groupe',
+        showAll: 'Tout afficher',
       },
     },
     defense: {
@@ -1178,7 +1175,6 @@ const fr: Translations = {
   champions: {
     title: 'Gestion des Champions',
     classFilter: 'Classe',
-    selectClass: 'Filtrer par classe',
     searchPlaceholder: 'Rechercher par nom ou alias...',
     ascendableFilter: 'Ascentionnable',
     prefightFilter: 'Précombat',
@@ -1228,8 +1224,6 @@ const fr: Translations = {
     selectAccount: 'Sélectionner un compte de jeu',
     chooseAccount: '-- Choisir un compte --',
     noAccounts: "Vous devez d'abord créer un compte de jeu pour gérer votre roster.",
-    classFilter: 'Classe',
-    selectClass: 'Filtrer par classe',
     addChampion: 'Ajouter un champion',
     addOrUpdate: 'Ajouter / Mettre à jour un champion',
     champion: 'Champion',
@@ -1376,22 +1370,18 @@ const fr: Translations = {
       deleteError: 'Une erreur est survenue lors de la suppression du champion',
       upgradeError: "Une erreur est survenue lors de l'amélioration du champion",
     },
-    preferredAttacker: 'Attaquant Préféré',
+    preferredAttacker: 'Indiqué comme attaquant préféré',
     preferredAttackerToggle: "Basculer le statut d'attaquant préféré",
-    preferredAttackerHint:
-      'Marqué comme attaquant préféré — les officiers peuvent quand même le placer en défense.',
     manageTab: 'Gérer',
     filter: {
       namePlaceholder: 'Rechercher par nom…',
       rank: 'Rang',
       ascension: 'Asc',
-      classLabel: 'Classe',
       allClasses: 'Toutes les classes',
       sagaAttacker: 'Saga Off',
       sagaDefender: 'Saga Déf',
       preferred: 'Préféré',
-      awakened: 'Eveillé',
-      minSignature: 'Sig min',
+      signature: 'Sig',
       reset: 'Réinitialiser',
       count: '{filtered} / {total} champions',
       noResults: 'Aucun champion ne correspond aux filtres.',

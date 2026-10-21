@@ -4,24 +4,19 @@ import type { ReactNode } from 'react'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { cn } from '@/app/lib/utils'
 import { RARITY_LABELS } from '@/app/services/roster'
-import { sortByClassOrder } from '@/app/lib/champion-class'
-import { ClassChip } from '@/components/class-chip'
+import ClassFilterSelect from '@/components/class-filter-select'
 import {
   type RosterFilters,
   RANK_OPTIONS,
   ASCENSION_OPTIONS,
+  MAX_SIGNATURE,
   isFilterActive,
+  optionRange,
+  optionSlice,
 } from './roster-filters'
-import FilterToggleGroup from './filter-toggle-group'
+import LabeledSlider from '@/components/labeled-slider'
 
 interface RosterFilterBarProps {
   filters: RosterFilters
@@ -34,10 +29,8 @@ interface RosterFilterBarProps {
   totalCount?: number
   /** Optional control rendered at the start of the filter row (e.g. a group selector). */
   leading?: ReactNode
-  /** Show the "awakened" toggle. Default true. */
-  showAwakened?: boolean
-  /** Show the minimum-signature input. Default true. */
-  showMinSig?: boolean
+  /** Optional control rendered after the last filter, before the reset button. */
+  trailing?: ReactNode
   /** Show the "{filtered} / {total}" count line. Default true. */
   showCount?: boolean
 }
@@ -50,15 +43,14 @@ export default function RosterFilterBar({
   filteredCount = 0,
   totalCount = 0,
   leading,
-  showAwakened = true,
-  showMinSig = true,
+  trailing,
   showCount = true,
 }: Readonly<RosterFilterBarProps>) {
   const { t } = useI18n()
   const f = t.roster.filter
 
   const boolToggle = (
-    key: 'sagaAttacker' | 'sagaDefender' | 'preferredAttacker' | 'awakened',
+    key: 'sagaAttacker' | 'sagaDefender' | 'preferredAttacker',
     label: string,
     cy: string
   ) => (
@@ -87,66 +79,42 @@ export default function RosterFilterBar({
           data-cy='roster-filter-name'
         />
         {availableClasses.length > 0 && (
-          <Select
-            value={filters.championClass || 'all'}
-            onValueChange={(val) => onChange({ championClass: val === 'all' ? '' : val })}
-          >
-            <SelectTrigger
-              className='h-8 w-32 text-xs'
-              data-cy='roster-filter-class'
-            >
-              <SelectValue placeholder={f.classLabel} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value='all'>{f.allClasses}</SelectItem>
-              {sortByClassOrder(availableClasses).map((c) => (
-                <SelectItem
-                  key={c}
-                  value={c}
-                >
-                  <ClassChip championClass={c} />
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ClassFilterSelect
+            value={filters.championClass}
+            onChange={(championClass) => onChange({ championClass })}
+            classes={availableClasses}
+            dataCy='roster-filter-class'
+          />
         )}
 
         {/* Center: rank + ascension */}
-        <FilterToggleGroup
-          options={RANK_OPTIONS}
-          selected={filters.ranks}
-          onChange={(ranks) => onChange({ ranks })}
-          labelFor={(r) => RARITY_LABELS[r] ?? r}
-          cyPrefix='roster-filter-rank'
+        <LabeledSlider
+          max={RANK_OPTIONS.length - 1}
+          value={optionRange(RANK_OPTIONS, filters.ranks)}
+          onChange={(r) => onChange({ ranks: optionSlice(RANK_OPTIONS, r) })}
+          format={(i) => RARITY_LABELS[RANK_OPTIONS[i]] ?? RANK_OPTIONS[i]}
+          cy='roster-filter-rank'
         />
-        <FilterToggleGroup
-          options={ASCENSION_OPTIONS}
-          selected={filters.ascensions}
-          onChange={(ascensions) => onChange({ ascensions })}
-          labelFor={(a) => `${f.ascension} ${a}`}
-          cyPrefix='roster-filter-asc'
+        <LabeledSlider
+          max={ASCENSION_OPTIONS.length - 1}
+          value={optionRange(ASCENSION_OPTIONS, filters.ascensions)}
+          onChange={(r) => onChange({ ascensions: optionSlice(ASCENSION_OPTIONS, r) })}
+          format={(i) => `${f.ascension} ${ASCENSION_OPTIONS[i]}`}
+          cy='roster-filter-asc'
         />
 
         {/* Right: toggles + min sig + reset */}
         {boolToggle('sagaAttacker', f.sagaAttacker, 'roster-filter-saga-attacker')}
         {boolToggle('sagaDefender', f.sagaDefender, 'roster-filter-saga-defender')}
         {boolToggle('preferredAttacker', f.preferred, 'roster-filter-preferred')}
-        {showAwakened && boolToggle('awakened', f.awakened, 'roster-filter-awakened')}
-        {showMinSig && (
-          <Input
-            type='number'
-            min={0}
-            max={200}
-            value={filters.minSignature}
-            onChange={(e) => {
-              const n = Number(e.target.value)
-              onChange({ minSignature: Number.isNaN(n) ? 0 : Math.min(200, Math.max(0, n)) })
-            }}
-            className='h-8 w-20 text-xs'
-            placeholder={f.minSignature}
-            data-cy='roster-filter-min-sig'
-          />
-        )}
+        <LabeledSlider
+          max={MAX_SIGNATURE}
+          value={[filters.minSignature, filters.maxSignature]}
+          onChange={([minSignature, maxSignature]) => onChange({ minSignature, maxSignature })}
+          format={(i) => `${f.signature} ${i}`}
+          cy='roster-filter-sig'
+        />
+        {trailing}
         {isFilterActive(filters) && (
           <Button
             type='button'

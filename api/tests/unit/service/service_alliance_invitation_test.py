@@ -282,6 +282,7 @@ class TestAcceptInvitation:
 
         get_map = {inv_id: invitation, ga_id: game_account}
         session.get = mocker.AsyncMock(side_effect=lambda model, obj_id: get_map.get(obj_id))
+        session.get_one = session.get
 
         accounts_mock = mocker.MagicMock()
         accounts_mock.all.return_value = [user_acc]

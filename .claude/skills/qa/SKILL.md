@@ -30,6 +30,8 @@ While talking to the user, search the relevant area with `Grep` / `ctx_batch_exe
 - Understand what the feature is supposed to do
 - Identify the user-facing behavior boundary
 
+When the stack runs locally, reproduce the bug with the `dev-browser` skill before filing.
+
 This context helps you write a better issue — but the issue itself should NOT reference specific files, line numbers, or internal implementation details.
 
 ### 3. Assess scope: single issue or breakdown?

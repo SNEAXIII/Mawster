@@ -7,7 +7,7 @@ import { setupRosterUser } from '../../support/e2e';
 function addChampion(name: string, rarity: string, sig: number) {
   cy.getByCy('champion-search').type(name);
   cy.getByCy('champion-selected-preview').should('contain', name);
-  cy.getByCy(`rarity-${rarity}`).click();
+  cy.slideTo('rarity', rarity.toUpperCase());
   cy.getByCy('sig-input').type(`{selectall}${sig}`);
   cy.getByCy('champion-submit').click();
   cy.contains(`${name} added / updated`).scrollIntoView().should('be.visible');
@@ -57,7 +57,7 @@ describe('Roster – Filter bar', () => {
   });
 
   it('filters by rank (7r1)', () => {
-    cy.getByCy('roster-filter-rank-7r1').click();
+    cy.getByCy('roster-filter-rank').find('[role="slider"]').last().focus().type('{leftarrow}'.repeat(5));
     cy.getByCy('champion-card-Hyperion').should('exist');
     cy.getByCy('champion-card-Hercules').should('not.exist');
     cy.getByCy('champion-card-Magik').should('not.exist');
@@ -71,15 +71,8 @@ describe('Roster – Filter bar', () => {
     cy.getByCy('champion-card-Hyperion').should('not.exist');
   });
 
-  it('filters by awakened (sig > 0)', () => {
-    cy.getByCy('roster-filter-awakened').click();
-    cy.getByCy('champion-card-Hercules').should('exist');
-    cy.getByCy('champion-card-Hyperion').should('not.exist');
-    cy.getByCy('champion-card-Magik').should('not.exist');
-  });
-
   it('filters by minimum signature (>= 100)', () => {
-    cy.getByCy('roster-filter-min-sig').type('{selectall}100');
+    cy.getByCy('roster-filter-sig').find('[role="slider"]').first().focus().type('{pageup}'.repeat(10));
     cy.getByCy('champion-card-Hercules').should('exist');
     cy.getByCy('champion-card-Hyperion').should('not.exist');
     cy.getByCy('champion-card-Magik').should('not.exist');

@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import datetime
+from typing import Any
 
 from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceOfficer import AllianceOfficer
@@ -241,7 +242,7 @@ async def push_champion_user(
 # Masteries
 # ---------------------------------------------------------------------------
 
-INITIAL_MASTERIES = [
+INITIAL_MASTERIES: list[dict[str, Any]] = [
     {"name": "MYSTIC DISPERSION", "max_value": 5, "order": 0},
     {"name": "STAND YOUR GROUND", "max_value": 5, "order": 1},
     {"name": "LIMBER", "max_value": 3, "order": 2},

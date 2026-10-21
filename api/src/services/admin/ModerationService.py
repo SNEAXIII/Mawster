@@ -4,7 +4,7 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
-from sqlmodel import or_, select
+from sqlmodel import col, or_, select
 from starlette import status
 
 from src.dto.admin.dto_moderation import (
@@ -42,8 +42,8 @@ def _revision_pseudo(
 
 
 def _mute_is_active():
-    return UserMute.lifted_at.is_(None), or_(
-        UserMute.expires_at.is_(None), UserMute.expires_at > utcnow()
+    return col(UserMute.lifted_at).is_(None), or_(
+        col(UserMute.expires_at).is_(None), col(UserMute.expires_at) > utcnow()
     )
 
 
@@ -174,9 +174,10 @@ class ModerationService:
             await session.exec(
                 select(NoteReport.note_id, func.count())
                 .where(
-                    NoteReport.note_id.in_(note_ids), NoteReport.status == NoteReportStatus.PENDING
+                    col(NoteReport.note_id).in_(note_ids),
+                    NoteReport.status == NoteReportStatus.PENDING,
                 )
-                .group_by(NoteReport.note_id)
+                .group_by(col(NoteReport.note_id))
             )
         ).all()
         return dict(rows)
@@ -191,16 +192,18 @@ class ModerationService:
 
         base = (
             select(NoteReport, WarFightNote, Alliance, GameAccount)
-            .join(WarFightNote, NoteReport.note_id == WarFightNote.id)
-            .join(Alliance, WarFightNote.alliance_id == Alliance.id)
-            .join(GameAccount, NoteReport.reporter_game_account_id == GameAccount.id)
+            .join(WarFightNote, col(NoteReport.note_id) == WarFightNote.id)
+            .join(Alliance, col(WarFightNote.alliance_id) == Alliance.id)
+            .join(GameAccount, col(NoteReport.reporter_game_account_id) == GameAccount.id)
             .where(*conds)
         )
 
         total = (await session.exec(select(func.count()).select_from(base.subquery()))).one()
         rows = (
             await session.exec(
-                base.order_by(NoteReport.created_at.desc()).offset((page - 1) * size).limit(size)
+                base.order_by(col(NoteReport.created_at).desc())
+                .offset((page - 1) * size)
+                .limit(size)
             )
         ).all()
 
@@ -246,12 +249,12 @@ class ModerationService:
                 select(WarFightNoteRevision, GameAccount, admin)
                 .join(
                     GameAccount,
-                    WarFightNoteRevision.edited_by_game_account_id == GameAccount.id,
+                    col(WarFightNoteRevision.edited_by_game_account_id) == GameAccount.id,
                     isouter=True,
                 )
-                .join(admin, WarFightNoteRevision.edited_by_user_id == admin.id, isouter=True)
+                .join(admin, col(WarFightNoteRevision.edited_by_user_id) == admin.id, isouter=True)
                 .where(WarFightNoteRevision.note_id == note_id)
-                .order_by(WarFightNoteRevision.edited_at.desc())
+                .order_by(col(WarFightNoteRevision.edited_at).desc())
             )
         ).all()
         return [
@@ -272,12 +275,12 @@ class ModerationService:
         admin = aliased(User)
         stmt = (
             select(UserMute, User, admin)
-            .join(User, UserMute.user_id == User.id)
-            .join(admin, UserMute.muted_by_id == admin.id, isouter=True)
+            .join(User, col(UserMute.user_id) == User.id)
+            .join(admin, col(UserMute.muted_by_id) == admin.id, isouter=True)
         )
         if active_only:
             stmt = stmt.where(*_mute_is_active())
-        rows = (await session.exec(stmt.order_by(UserMute.created_at.desc()))).all()
+        rows = (await session.exec(stmt.order_by(col(UserMute.created_at).desc()))).all()
         return [
             MuteResponse(
                 id=m.id,
@@ -297,12 +300,12 @@ class ModerationService:
         admin = aliased(User)
         stmt = (
             select(UserWarn, User, admin)
-            .join(User, UserWarn.user_id == User.id)
-            .join(admin, UserWarn.warned_by_id == admin.id, isouter=True)
+            .join(User, col(UserWarn.user_id) == User.id)
+            .join(admin, col(UserWarn.warned_by_id) == admin.id, isouter=True)
         )
         if user_id is not None:
             stmt = stmt.where(UserWarn.user_id == user_id)
-        rows = (await session.exec(stmt.order_by(UserWarn.created_at.desc()))).all()
+        rows = (await session.exec(stmt.order_by(col(UserWarn.created_at).desc()))).all()
         return [
             WarnResponse(
                 id=w.id,

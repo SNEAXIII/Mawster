@@ -121,26 +121,28 @@ class VisionResultService:
     @classmethod
     def _succeed(cls, session: SessionDep, job: VisionJob, message: VisionResultMessage) -> None:
         for predicted in message.predictions:
-            session.add(
-                VisionPrediction(
-                    job_id=job.id,
-                    champion_name=predicted.champion_name,
-                    champion_class=predicted.champion_class,
-                    stars=predicted.stars,
-                    rank=predicted.rank,
-                    signature=predicted.signature,
-                    ascension=predicted.ascension,
-                    confidence=predicted.confidence,
-                    reranked=predicted.reranked,
-                    crop_key=predicted.crop_key,
-                    candidates=[
-                        VisionPredictionCandidate(
-                            name=candidate.name, score=candidate.score, position=position
-                        )
-                        for position, candidate in enumerate(predicted.candidates)
-                    ],
-                )
+            prediction = VisionPrediction(
+                job_id=job.id,
+                champion_name=predicted.champion_name,
+                champion_class=predicted.champion_class,
+                stars=predicted.stars,
+                rank=predicted.rank,
+                signature=predicted.signature,
+                ascension=predicted.ascension,
+                confidence=predicted.confidence,
+                reranked=predicted.reranked,
+                crop_key=predicted.crop_key,
             )
+            prediction.candidates = [
+                VisionPredictionCandidate(
+                    prediction_id=prediction.id,
+                    name=candidate.name,
+                    score=candidate.score,
+                    position=position,
+                )
+                for position, candidate in enumerate(predicted.candidates)
+            ]
+            session.add(prediction)
         job.status = VisionJobStatus.DONE
         job.result_key = message.result_key
         job.error = None

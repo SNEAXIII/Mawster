@@ -1,9 +1,11 @@
+import uuid
+
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionSagaRole import ChampionSagaRole
 
 
 def test_champion_saga_role_defaults():
-    role = ChampionSagaRole(season_id=None, champion_id=None)
+    role = ChampionSagaRole(season_id=uuid.uuid4(), champion_id=uuid.uuid4())
     assert role.is_saga_attacker is False
     assert role.is_saga_defender is False
 

@@ -12,16 +12,24 @@ export function useAllianceSeasonHistory(allianceId: string, seasonId: string | 
   const [rankingSeasonNumber, setRankingSeasonNumber] = useState<number | null>(null)
   const [rankingSeasonStatus, setRankingSeasonStatus] = useState<SeasonStatus | null>(null)
 
+  // No blanking on a season change: the tab pins the season right after load,
+  // and emptying the rows then would drop a cell being edited.
   useEffect(() => {
     if (!allianceId) return
-    setSeasonWars([])
+    let cancelled = false
     getSeasonWarStats(allianceId, seasonId ?? undefined)
-      .then(setSeasonWars)
+      .then((wars) => {
+        if (!cancelled) setSeasonWars(wars)
+      })
       .catch(() => {})
+    return () => {
+      cancelled = true
+    }
   }, [allianceId, seasonId])
 
   useEffect(() => {
     if (!allianceId) return
+    setSeasonWars([])
     setRankingPoints([])
     setRankingSeasonNumber(null)
     setRankingSeasonStatus(null)

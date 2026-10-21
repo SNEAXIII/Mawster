@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import or_, select
+from sqlmodel import col, or_, select
 from starlette import status
 
 from src.Messages.game_account_messages import (
@@ -58,7 +58,7 @@ class GameAccountService:
             select(GameAccount).where(
                 GameAccount.user_id == user_id,
                 GameAccount.id != primary_id,
-                GameAccount.is_primary.is_(True),
+                col(GameAccount.is_primary).is_(True),
             )
         )
         for acc in result.all():
@@ -80,8 +80,8 @@ class GameAccountService:
             select(GameAccount).where(
                 GameAccount.user_id == user_id,
                 or_(
-                    GameAccount.deleted_at.is_(None),
-                    GameAccount.deleted_at > cls._restore_cutoff(),
+                    col(GameAccount.deleted_at).is_(None),
+                    col(GameAccount.deleted_at) > cls._restore_cutoff(),
                 ),
             )
         )
@@ -114,11 +114,11 @@ class GameAccountService:
         """Live game accounts of a user, sorted by primary first."""
         sql = select(GameAccount).where(
             GameAccount.user_id == user_id,
-            GameAccount.deleted_at.is_(None),
+            col(GameAccount.deleted_at).is_(None),
         )
         if load_alliance:
             sql = sql.options(selectinload(GameAccount.alliance))  # type: ignore[arg-type]
-        sql = sql.order_by(GameAccount.is_primary.desc())  # type: ignore[union-attr]
+        sql = sql.order_by(col(GameAccount.is_primary).desc())
         result = await session.exec(sql)
         return list(result.all())
 
@@ -131,10 +131,10 @@ class GameAccountService:
             select(GameAccount)
             .where(
                 GameAccount.user_id == user_id,
-                GameAccount.deleted_at.is_not(None),
-                GameAccount.deleted_at > cls._restore_cutoff(),
+                col(GameAccount.deleted_at).is_not(None),
+                col(GameAccount.deleted_at) > cls._restore_cutoff(),
             )
-            .order_by(GameAccount.deleted_at.desc())  # type: ignore[union-attr]
+            .order_by(col(GameAccount.deleted_at).desc())
         )
         result = await session.exec(sql)
         return list(result.all())
@@ -174,9 +174,9 @@ class GameAccountService:
             select(GameAccount)
             .where(
                 GameAccount.user_id == user_id,
-                GameAccount.deleted_at.is_(None),
+                col(GameAccount.deleted_at).is_(None),
             )
-            .order_by(GameAccount.created_at)  # type: ignore[arg-type]
+            .order_by(col(GameAccount.created_at))
         )
         accounts = result.all()
         if not accounts or any(acc.is_primary for acc in accounts):
@@ -198,7 +198,7 @@ class GameAccountService:
         owned = await session.exec(
             select(Alliance)
             .where(Alliance.owner_id == game_account.id)
-            .where(Alliance.deleted_at.is_(None))  # type: ignore[union-attr]
+            .where(col(Alliance.deleted_at).is_(None))
         )
         if owned.first() is not None:
             raise HTTPException(status.HTTP_409_CONFLICT, GAME_ACCOUNT_IS_ALLIANCE_OWNER)

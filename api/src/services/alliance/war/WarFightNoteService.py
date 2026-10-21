@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
@@ -156,7 +156,7 @@ class WarFightNoteService:
                     WarFightNote.war_id == war_id,
                     WarFightNote.battlegroup == battlegroup,
                     WarFightNote.node_number == node_number,
-                    WarFightNote.deleted_at.is_(None),
+                    col(WarFightNote.deleted_at).is_(None),
                 )
             )
         ).first()

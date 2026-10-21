@@ -1,7 +1,7 @@
 import uuid
 
 from sqlalchemy import func
-from sqlmodel import select
+from sqlmodel import col, select
 
 from src.dto.auth.dto_utilisateurs import UserAdminViewAllUsers, UserAdminViewSingleUser
 from src.enums.Roles import Roles
@@ -108,11 +108,13 @@ class UserAdminService:
     @classmethod
     def build_status_filter(cls, sql, status: str | None):
         if status == DELETED_STATUS:
-            sql = sql.where(User.deleted_at.is_not(None))
+            sql = sql.where(col(User.deleted_at).is_not(None))
         elif status == DISABLED_STATUS:
-            sql = sql.where(User.deleted_at.is_(None)).where(User.disabled_at.is_not(None))
+            sql = sql.where(col(User.deleted_at).is_(None)).where(
+                col(User.disabled_at).is_not(None)
+            )
         elif status == ENABLED_STATUS:
-            sql = sql.where(User.deleted_at.is_(None)).where(User.disabled_at.is_(None))
+            sql = sql.where(col(User.deleted_at).is_(None)).where(col(User.disabled_at).is_(None))
         return sql
 
     @classmethod
@@ -125,7 +127,7 @@ class UserAdminService:
     def build_search_filter(cls, sql, search: str | None):
         if search and search.strip():
             pattern = f"%{search.strip()}%"
-            sql = sql.where(User.login.ilike(pattern))
+            sql = sql.where(col(User.login).ilike(pattern))
         return sql
 
     @classmethod
@@ -157,7 +159,7 @@ class UserAdminService:
         search: str | None = None,
     ) -> int:
         result = await session.exec(
-            cls._filtered(select(func.count(User.id)), status, role, search)
+            cls._filtered(select(func.count(col(User.id))), status, role, search)
         )
         return result.one()
 

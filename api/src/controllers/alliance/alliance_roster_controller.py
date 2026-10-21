@@ -34,6 +34,8 @@ async def get_alliance_roster(
     preferred_attacker: bool = False,
     alliance_group: int | None = None,
     no_group: bool = False,
+    min_signature: Annotated[int | None, Query(ge=0)] = None,
+    max_signature: Annotated[int | None, Query(ge=0)] = None,
     distinct_champion_limit: int | None = None,
 ):
     """Get every champion owned across the whole alliance. Members, officers, owner or visitors.
@@ -54,6 +56,8 @@ async def get_alliance_roster(
         preferred_attacker=preferred_attacker,
         alliance_group=alliance_group,
         no_group=no_group,
+        min_signature=min_signature,
+        max_signature=max_signature,
         saga_attacker_ids=saga_attacker_ids,
         saga_defender_ids=saga_defender_ids,
         distinct_champion_limit=distinct_champion_limit,

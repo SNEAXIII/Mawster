@@ -1,5 +1,7 @@
 """The one join path from a Fight Record to the war data it no longer copies."""
 
+from sqlmodel import col
+
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.war.War import War
 from src.models.war.WarDefensePlacement import WarDefensePlacement
@@ -19,5 +21,5 @@ def join_fight_context[S](stmt: S) -> S:
         )
         .join(War, WarDefensePlacement.war_id == War.id)
         .join(ChampionUser, WarDefensePlacement.attacker_champion_user_id == ChampionUser.id)
-        .where(WarDefensePlacement.is_fight_not_done.is_(False))
+        .where(col(WarDefensePlacement.is_fight_not_done).is_(False))
     )

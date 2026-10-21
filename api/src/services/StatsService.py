@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from sqlalchemy import func, select
+from sqlmodel import col
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.dto.dto_stats import PublicStatsResponse
@@ -15,7 +16,9 @@ class StatsService:
         cutoff = utcnow() - timedelta(days=30)
         active_alliances = (
             await session.exec(
-                select(func.count(func.distinct(War.alliance_id))).where(War.created_at >= cutoff)
+                select(func.count(func.distinct(War.alliance_id))).where(
+                    col(War.created_at) >= cutoff
+                )
             )
         ).scalar_one()
         participating_players = (
@@ -24,9 +27,9 @@ class StatsService:
             )
         ).scalar_one()
         knowledge_base_fights = (
-            await session.exec(join_fight_context(select(func.count(WarFightRecord.id))))
+            await session.exec(join_fight_context(select(func.count(col(WarFightRecord.id)))))
         ).scalar_one()
-        wars_recorded = (await session.exec(select(func.count(War.id)))).scalar_one()
+        wars_recorded = (await session.exec(select(func.count(col(War.id))))).scalar_one()
         return PublicStatsResponse(
             active_alliances=active_alliances,
             participating_players=participating_players,

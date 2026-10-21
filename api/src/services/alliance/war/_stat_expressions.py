@@ -2,21 +2,24 @@
 formula so alliance and player stats never diverge."""
 
 from sqlalchemy import Float, and_, case, cast, func
+from sqlmodel import col
 
 from src.dto.alliance.war.dto_statistic import NOT_FOUGHT_KOS
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 
 is_normal = and_(
-    WarDefensePlacement.is_fight_not_done.is_(False),
-    WarDefensePlacement.is_planning_error.is_(False),
+    col(WarDefensePlacement.is_fight_not_done).is_(False),
+    col(WarDefensePlacement.is_planning_error).is_(False),
 )
 is_not_done = and_(
-    WarDefensePlacement.is_fight_not_done.is_(True),
-    WarDefensePlacement.is_planning_error.is_(False),
+    col(WarDefensePlacement.is_fight_not_done).is_(True),
+    col(WarDefensePlacement.is_planning_error).is_(False),
 )
-miniboss_case = case((and_(is_normal, WarDefensePlacement.node_number.between(37, 49)), 1), else_=0)
-boss_case = case((and_(is_normal, WarDefensePlacement.node_number == 50), 1), else_=0)
-is_assisted = WarDefensePlacement.assist_champion_user_id.is_not(None)
+miniboss_case = case(
+    (and_(is_normal, col(WarDefensePlacement.node_number).between(37, 49)), 1), else_=0
+)
+boss_case = case((and_(is_normal, col(WarDefensePlacement.node_number) == 50), 1), else_=0)
+is_assisted = col(WarDefensePlacement.assist_champion_user_id).is_not(None)
 fight_weight = case((is_normal, 1.0), else_=0)
 weighted_fight_weight = case(
     (and_(is_normal, is_assisted), 0.5),

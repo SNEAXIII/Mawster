@@ -1,6 +1,7 @@
 import secrets
 import string
 from abc import ABC, abstractmethod
+from typing import TypeGuard
 
 from fastapi import HTTPException
 from sqlmodel import select
@@ -130,7 +131,7 @@ class OAuthService(ABC):
         return await cls._link_provider(session, match, provider_field, provider_id)
 
     @staticmethod
-    def _is_linkable_email(email: str | None, email_verified: bool) -> bool:
+    def _is_linkable_email(email: str | None, email_verified: bool) -> TypeGuard[str]:
         return bool(email) and email_verified and not email.endswith(PLACEHOLDER_EMAIL_SUFFIX)
 
     @staticmethod
@@ -167,7 +168,7 @@ class OAuthService(ABC):
         ):
             user.email_hash = hash_email(email)
             user.email_hash_version = SECRET.EMAIL_PEPPER_VERSION
-        session.add(LoginLog(user=user))
+        session.add(LoginLog(user_id=user.id))
         session.add(user)
         await session.commit()
         await session.refresh(user)
@@ -187,7 +188,7 @@ class OAuthService(ABC):
         setattr(user, provider_field, provider_id)
         user.set_last_login_date(utcnow())
         session.add(user)
-        session.add(LoginLog(user=user))
+        session.add(LoginLog(user_id=user.id))
         await session.commit()
         await session.refresh(user)
         return user
@@ -203,7 +204,7 @@ class OAuthService(ABC):
 
         setattr(user, provider_field, provider_id)
         user.set_last_login_date(utcnow())
-        session.add(LoginLog(user=user))
+        session.add(LoginLog(user_id=user.id))
         session.add(user)
         await session.commit()
         await session.refresh(user)

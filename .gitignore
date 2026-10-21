@@ -218,3 +218,6 @@ backups*/
 /image*.png
 /screenshot*.png
 /Capture*.png
+
+# founder-skill business planning workspace
+/founder/

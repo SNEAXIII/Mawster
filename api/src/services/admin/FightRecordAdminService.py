@@ -1,5 +1,5 @@
 from sqlalchemy import func
-from sqlmodel import select
+from sqlmodel import col, select
 
 from src.enums.WarStatus import WarStatus
 from src.models.alliance.Alliance import Alliance
@@ -30,13 +30,13 @@ class FightRecordAdminService:
     async def get_snapshot_stats(cls, session: SessionDep) -> list:
         stmt = (
             select(
-                Alliance.id.label("alliance_id"),
-                Alliance.name.label("alliance_name"),
-                func.count(War.id).label("war_count"),
+                col(Alliance.id).label("alliance_id"),
+                col(Alliance.name).label("alliance_name"),
+                func.count(col(War.id)).label("war_count"),
             )
-            .join(War, War.alliance_id == Alliance.id)
-            .where(War.snapshotted_at.isnot(None))
-            .group_by(Alliance.id, Alliance.name)
+            .join(War, col(War.alliance_id) == Alliance.id)
+            .where(col(War.snapshotted_at).isnot(None))
+            .group_by(col(Alliance.id), Alliance.name)
         )
         result = await session.exec(stmt)
         rows = result.all()

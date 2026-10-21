@@ -1,5 +1,4 @@
 import { api, jsonBody, type SortOrder } from '@/app/services/utils'
-import { CLASS_ORDER } from '@/app/lib/champion-class'
 
 // ─── Types ───────────────────────────────────────────────
 export interface Champion {
@@ -22,11 +21,6 @@ export interface FetchChampionsResponse {
   total_pages: number
   current_page: number
 }
-
-export const championClasses = [
-  { value: 'all', label: 'All' },
-  ...CLASS_ORDER.map((c) => ({ value: c, label: c })),
-]
 
 // ─── API ─────────────────────────────────────────────────
 export const BOOL_FILTERS = ['all', 'true', 'false'] as const

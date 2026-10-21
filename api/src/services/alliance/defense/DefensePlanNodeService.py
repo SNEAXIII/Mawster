@@ -3,7 +3,7 @@ from collections import Counter
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.Messages.defense_messages import (
@@ -62,10 +62,10 @@ class DefensePlanNodeService:
                 session, plan, node_number, champion_id, champion_user_id
             )
         else:
-            await assert_champion_exists(session, champion_id)
+            champion_id = await assert_champion_exists(session, champion_id)
         assert_champion_free(plan.nodes, champion_id, node_number)
         node = find_node(plan.nodes, node_number) or DefensePlanNode(
-            plan_id=plan.id, node_number=node_number
+            plan_id=plan.id, node_number=node_number, champion_id=champion_id
         )
         node.champion_id = champion_id
         node.champion_user_id = champion_user_id
@@ -120,7 +120,7 @@ class DefensePlanNodeService:
         roster = (
             await session.exec(
                 select(ChampionUser)
-                .where(ChampionUser.game_account_id.in_(member_map))  # type: ignore[attr-defined]
+                .where(col(ChampionUser.game_account_id).in_(member_map))
                 .options(selectinload(ChampionUser.champion))  # type: ignore[arg-type]
             )
         ).all()

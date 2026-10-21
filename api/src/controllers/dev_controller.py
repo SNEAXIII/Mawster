@@ -254,25 +254,28 @@ async def dev_login_by_pseudo(body: DevLoginByPseudoRequest, session: SessionDep
     return LoginResponse(access_token=access_token, refresh_token=refresh_token)
 
 
+async def _empty_all_tables(session: SessionDep) -> None:
+    # DELETE, not TRUNCATE: InnoDB rebuilds every table on TRUNCATE, even an empty one. One round
+    # trip, since asyncmy enables multi-statements. Nothing to reset either: every key is a UUID.
+    deletes = "".join(
+        f"DELETE FROM `{table.name}`;"  # noqa: S608, the table names come from SQLModel.metadata
+        for table in reversed(SQLModel.metadata.sorted_tables)
+    )
+    await session.exec(text(f"SET FOREIGN_KEY_CHECKS = 0; {deletes} SET FOREIGN_KEY_CHECKS = 1;"))
+    await session.commit()
+
+
 @dev_controller.post("/truncate", status_code=200)
 async def truncate_database(session: SessionDep):
-    """Truncate all tables in the database. For testing purposes only."""
-    await session.exec(text("SET FOREIGN_KEY_CHECKS = 0"))
-    for table in reversed(SQLModel.metadata.sorted_tables):
-        await session.exec(text(f"TRUNCATE TABLE `{table.name}`"))
-    await session.exec(text("SET FOREIGN_KEY_CHECKS = 1"))
-    await session.commit()
+    """Empty all tables in the database. For testing purposes only."""
+    await _empty_all_tables(session)
     return {"message": "All tables truncated"}
 
 
 @dev_controller.post("/fixtures", status_code=200)
 async def run_fixtures(session: SessionDep):
-    """Truncate all tables then run every fixture script in /fixtures/. Testing only."""
-    await session.exec(text("SET FOREIGN_KEY_CHECKS = 0"))
-    for table in reversed(SQLModel.metadata.sorted_tables):
-        await session.exec(text(f"TRUNCATE TABLE `{table.name}`"))
-    await session.exec(text("SET FOREIGN_KEY_CHECKS = 1"))
-    await session.commit()
+    """Empty all tables then run every fixture script in /fixtures/. Testing only."""
+    await _empty_all_tables(session)
 
     # ASYNC240: testing-only route that already blocks on exec_module below.
     fixtures_dir = Path(__file__).resolve().parent.parent.parent / "fixtures"  # noqa: ASYNC240
@@ -281,8 +284,10 @@ async def run_fixtures(session: SessionDep):
         if fixture_file.stem.startswith("_"):
             continue
         spec = importlib.util.spec_from_file_location(f"fixtures.{fixture_file.stem}", fixture_file)
-        module = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
-        spec.loader.exec_module(module)  # type: ignore[union-attr]
+        if spec is None or spec.loader is None:
+            continue
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
         if hasattr(module, "run"):
             results[fixture_file.stem] = await module.run(session)
 

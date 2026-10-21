@@ -22,43 +22,47 @@ def _default_database() -> int:
 
 
 class Settings(BaseSettings):
-    MARIADB_DATABASE: str = Field(... if IS_PROD else "mawster")
-    MARIADB_USER: str = Field(... if IS_PROD else "user")
-    MARIADB_PASSWORD: str = Field(... if IS_PROD else "password")
+    MARIADB_DATABASE: str = Field(...) if IS_PROD else Field("mawster")
+    MARIADB_USER: str = Field(...) if IS_PROD else Field("user")
+    MARIADB_PASSWORD: str = Field(...) if IS_PROD else Field("password")
     MARIADB_ROOT_PASSWORD: str | None = Field(None if IS_PROD else "rootpassword")
-    MARIADB_PORT: int = Field(... if IS_PROD else _default_database())
+    MARIADB_PORT: int = Field(...) if IS_PROD else Field(_default_database())
     # Not "localhost": on Windows it resolves to ::1, and that route stalls ~44 ms
     # once a statement outgrows a buffer - which selectinload does on a full roster.
     MARIADB_HOST: str = Field("mariadb" if IS_PROD else "127.0.0.1")
-    SECRET_KEY: str = Field(... if IS_PROD else "dev-secret-key_dev-secret-key_dev-secret-key")
+    SECRET_KEY: str = (
+        Field(...) if IS_PROD else Field("dev-secret-key_dev-secret-key_dev-secret-key")
+    )
     ALGORITHM: str = Field("HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(... if IS_PROD else 60, le=60)
-    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(... if IS_PROD else 7, le=30)
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(..., le=60) if IS_PROD else Field(60, le=60)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(..., le=30) if IS_PROD else Field(7, le=30)
     # Comma-separated CORS origins (e.g. "https://mawster.example.com").
     # Permissive default in dev; in prod it MUST be set in api.env.
-    ALLOWED_ORIGINS: str = Field(... if IS_PROD else "http://localhost:3000")
-    API_PORT: int = Field(... if IS_PROD else 8000)
-    EMAIL_PEPPER: str = Field(... if IS_PROD else "dev-email-pepper")
+    ALLOWED_ORIGINS: str = Field(...) if IS_PROD else Field("http://localhost:3000")
+    API_PORT: int = Field(...) if IS_PROD else Field(8000)
+    EMAIL_PEPPER: str = Field(...) if IS_PROD else Field("dev-email-pepper")
     EMAIL_PEPPER_VERSION: int = Field(default=1)
     # --- OAuth audience ------------------------------------------------------
     # The application an access token must have been issued to. Without this check,
     # a token issued for any other application still resolves to a valid profile, and
     # Mawster would sign a JWT for that user. Mandatory in prod: a deployment unable to
     # verify the audience must refuse to start rather than accept every token.
-    DISCORD_CLIENT_ID: str = Field(... if IS_PROD else "dev-discord-client-id")
-    GOOGLE_CLIENT_ID: str = Field(... if IS_PROD else "dev-google-client-id")
+    DISCORD_CLIENT_ID: str = Field(...) if IS_PROD else Field("dev-discord-client-id")
+    GOOGLE_CLIENT_ID: str = Field(...) if IS_PROD else Field("dev-google-client-id")
     # --- Vision (roster import) ---------------------------------------------
-    RABBITMQ_URL: str = Field(... if _VISION_REQUIRED else "amqp://mawster:mawster@localhost:5672/")
-    RUSTFS_ENDPOINT: str = Field(... if _VISION_REQUIRED else "http://localhost:9000")
+    RABBITMQ_URL: str = (
+        Field(...) if _VISION_REQUIRED else Field("amqp://mawster:mawster@localhost:5672/")
+    )
+    RUSTFS_ENDPOINT: str = Field(...) if _VISION_REQUIRED else Field("http://localhost:9000")
     # The endpoint the BROWSER calls to upload directly (presigned URL). Distinct from
     # RUSTFS_ENDPOINT, which stays the internal server-to-RustFS address: SigV4 signs the
     # Host header, so a URL signed for `http://rustfs:9000` is rejected
     # (SignatureDoesNotMatch) as soon as a browser sends it to the public name. Mandatory
     # in prod - without it the feature can only produce dead URLs, and a failing boot
     # beats a broken upload. In dev the two coincide: RustFS publishes 9000 on the host.
-    RUSTFS_PUBLIC_ENDPOINT: str = Field(... if _VISION_REQUIRED else "http://localhost:9000")
-    RUSTFS_ACCESS_KEY: str = Field(... if _VISION_REQUIRED else "mawster")
-    RUSTFS_SECRET_KEY: str = Field(... if _VISION_REQUIRED else "mawsterpassword")
+    RUSTFS_PUBLIC_ENDPOINT: str = Field(...) if _VISION_REQUIRED else Field("http://localhost:9000")
+    RUSTFS_ACCESS_KEY: str = Field(...) if _VISION_REQUIRED else Field("mawster")
+    RUSTFS_SECRET_KEY: str = Field(...) if _VISION_REQUIRED else Field("mawsterpassword")
     RUSTFS_BUCKET_VISION: str = Field("vision")
     RUSTFS_BUCKET_DATASET: str = Field("dataset")
     # The AMQP consumer runs in dev and in prod; disabled under MODE=testing so CI and

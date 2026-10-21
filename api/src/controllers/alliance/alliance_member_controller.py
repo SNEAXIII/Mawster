@@ -117,7 +117,7 @@ async def add_strategist(
     # Expire and re-fetch so the response reflects the new row, the same way
     # `transfer_ownership` already does for its own reload.
     session.expire_all()
-    updated = await AllianceService.get_alliance(session, alliance_id)
+    updated = await AllianceService._require_alliance_with_relations(session, alliance_id)
     return _to_response(updated)
 
 
@@ -139,7 +139,7 @@ async def remove_strategist(
     # Same identity-map staleness as `add_strategist` above — re-fetch after
     # expiring so the response reflects the demotion.
     session.expire_all()
-    updated = await AllianceService.get_alliance(session, alliance_id)
+    updated = await AllianceService._require_alliance_with_relations(session, alliance_id)
     return _to_response(updated)
 
 

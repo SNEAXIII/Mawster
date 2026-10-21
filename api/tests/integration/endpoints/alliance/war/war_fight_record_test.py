@@ -3,7 +3,7 @@
 import uuid
 
 import pytest
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.dto.alliance.war.dto_war_note import WarFightNoteUpsertRequest
@@ -147,7 +147,7 @@ async def _fetch_records(session, war_id):
             select(WarFightRecord)
             .join(
                 WarDefensePlacement,
-                WarFightRecord.war_defense_placement_id == WarDefensePlacement.id,
+                col(WarFightRecord.war_defense_placement_id) == WarDefensePlacement.id,
             )
             .where(WarDefensePlacement.war_id == war_id)
         )
@@ -168,7 +168,7 @@ async def _snapshot_war_with_note(data, *, content="frozen note", battlegroup=1,
     which is what links WarFightNote to the WarFightRecord.
     """
     async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as s:
-        war = await s.get(War, data["war"].id)
+        war = await s.get_one(War, data["war"].id)
         war.tier = 1
         s.add(war)
         await s.commit()
@@ -546,7 +546,7 @@ class TestListFightRecords:
         await load_objects([season])
 
         async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
-            war = await session.get(War, data["war"].id)
+            war = await session.get_one(War, data["war"].id)
             war.season_id = season.id
             session.add(war)
             await session.commit()
@@ -610,7 +610,7 @@ class TestListFightRecords:
 
         # Mark the placement as a planning error before snapshot
         async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
-            placement = await session.get(WarDefensePlacement, data["placement"].id)
+            placement = await session.get_one(WarDefensePlacement, data["placement"].id)
             placement.is_planning_error = True
             session.add(placement)
             await session.commit()
@@ -802,7 +802,7 @@ class TestFightRecordReadsTheWar:
         season = Season(number=80, status=SeasonStatus.ACTIVE)
         await load_objects([season])
         async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
-            war = await session.get(War, data["war"].id)
+            war = await session.get_one(War, data["war"].id)
             war.season_id = season.id
             session.add(war)
             await session.commit()

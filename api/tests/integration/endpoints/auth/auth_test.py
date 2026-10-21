@@ -262,7 +262,7 @@ class TestDiscordLogin:
         assert response.status_code == 200
 
         async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
-            refreshed = await session.get(User, existing.id)
+            refreshed = await session.get_one(User, existing.id)
             assert refreshed.email_hash == stale_hash
             assert refreshed.email_hash_version == 0
 
@@ -326,7 +326,8 @@ class TestDiscordLogin:
     @pytest.mark.parametrize("flag", ["disabled_at", "deleted_at"])
     async def test_login_refused_when_account_unavailable(self, flag):
         """A disabled or deleted account gets no token and no login log."""
-        existing = User(login="gonebutlinked", discord_id="1", role=Roles.USER, **{flag: utcnow()})
+        existing = User(login="gonebutlinked", discord_id="1", role=Roles.USER)
+        setattr(existing, flag, utcnow())
         await load_objects([existing])
 
         response = await execute_post_request(

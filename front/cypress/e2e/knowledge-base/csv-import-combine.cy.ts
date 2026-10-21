@@ -123,6 +123,8 @@ describe('Knowledge Base – CSV Import combined records', () => {
         // Imported record is visible with no player filter
         cy.getByCy('filter-source-trigger').click();
         cy.getByCy('filter-source-all').click();
+        // The closing select hands focus back to its trigger; typed before that, the keys land there.
+        cy.getByCy('filter-source-trigger').should('have.focus');
         cy.getByCy('fight-records-table').should('contain.text', 'Magik');
 
         // Imported records have no game account → a player filter must exclude them

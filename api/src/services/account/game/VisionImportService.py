@@ -408,7 +408,7 @@ class VisionImportService:
             await session.exec(
                 select(VisionJob)
                 .where(VisionJob.import_id == vision_import.id)
-                .order_by(VisionJob.created_at)
+                .order_by(col(VisionJob.created_at))
             )
         ).all()
         # Filtered here rather than in the WHERE clause: every other job in this
@@ -541,13 +541,13 @@ class VisionImportService:
             select(VisionImport)
             .where(
                 VisionImport.game_account_id == game_account_id,
-                VisionImport.status.notin_(
+                col(VisionImport.status).notin_(
                     [VisionImportStatus.CONFIRMED, VisionImportStatus.CANCELLED]
                 ),
                 VisionImport.created_at > cutoff,
-                or_(~has_pending_upload, VisionImport.created_at > upload_cutoff),
+                or_(~has_pending_upload, col(VisionImport.created_at) > upload_cutoff),
             )
-            .order_by(VisionImport.created_at.desc(), VisionImport.id.desc())
+            .order_by(col(VisionImport.created_at).desc(), col(VisionImport.id).desc())
             .limit(1)
         )
         return (await session.exec(statement)).first()
@@ -578,9 +578,9 @@ class VisionImportService:
 
         cutoff = datetime.now(UTC) - timedelta(hours=hours)
         statement = (
-            select(func.count(VisionJob.id))
-            .join(VisionImport, VisionImport.id == VisionJob.import_id)
-            .join(GameAccount, GameAccount.id == VisionImport.game_account_id)
+            select(func.count(col(VisionJob.id)))
+            .join(VisionImport, col(VisionImport.id) == VisionJob.import_id)
+            .join(GameAccount, col(GameAccount.id) == VisionImport.game_account_id)
             .where(GameAccount.user_id == user_id, VisionImport.created_at > cutoff)
         )
         return (await session.exec(statement)).one()
@@ -590,8 +590,8 @@ class VisionImportService:
         """How many champions were read across every job of this import."""
 
         statement = (
-            select(func.count(VisionPrediction.id))
-            .join(VisionJob, VisionJob.id == VisionPrediction.job_id)
+            select(func.count(col(VisionPrediction.id)))
+            .join(VisionJob, col(VisionJob.id) == VisionPrediction.job_id)
             .where(VisionJob.import_id == import_id)
         )
         return (await session.exec(statement)).one()
@@ -607,7 +607,7 @@ class VisionImportService:
             await session.exec(
                 select(VisionJob)
                 .where(VisionJob.import_id == import_id)
-                .order_by(VisionJob.created_at)
+                .order_by(col(VisionJob.created_at))
             )
         ).all()
         job_index = {job.id: i for i, job in enumerate(jobs)}

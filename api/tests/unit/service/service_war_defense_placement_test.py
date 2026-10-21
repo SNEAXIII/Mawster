@@ -1,6 +1,7 @@
 """Unit tests for war placement DTO rank validation (7r6 support)."""
 
 import uuid
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -9,7 +10,7 @@ from src.dto.alliance.war.dto_war import WarPlacementCreateRequest
 
 
 def _make_request(**overrides) -> WarPlacementCreateRequest:
-    defaults = {
+    defaults: dict[str, Any] = {
         "node_number": 10,
         "champion_id": uuid.uuid4(),
         "stars": 7,

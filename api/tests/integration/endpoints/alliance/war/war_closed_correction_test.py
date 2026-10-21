@@ -1,7 +1,7 @@
 """A closed War: its terms are sealed, its map stays correctable during the Latest Season."""
 
 import pytest
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.enums.SeasonFormat import SeasonFormat
@@ -35,7 +35,7 @@ MEMBER = create_auth_headers(user_id=str(USER2_ID))
 
 async def _end_season(season: Season) -> None:
     async with AsyncSession(sqlite_async_engine) as session:
-        db_season = await session.get(Season, season.id)
+        db_season = await session.get_one(Season, season.id)
         db_season.status = SeasonStatus.ENDED
         session.add(db_season)
         await session.commit()
@@ -126,7 +126,7 @@ async def _record_of_node(war_id, battlegroup: int, node: int) -> WarFightRecord
                 select(WarFightRecord)
                 .join(
                     WarDefensePlacement,
-                    WarFightRecord.war_defense_placement_id == WarDefensePlacement.id,
+                    col(WarFightRecord.war_defense_placement_id) == WarDefensePlacement.id,
                 )
                 .where(
                     WarDefensePlacement.war_id == war_id,
@@ -228,7 +228,7 @@ class TestClosedWarFightRecordSync:
     async def test_reassigning_same_attacker_keeps_old_rank(self):
         data = await _setup_closed_war_scenario()
         async with AsyncSession(sqlite_async_engine) as session:
-            cu = await session.get(ChampionUser, data["champion_user"].id)
+            cu = await session.get_one(ChampionUser, data["champion_user"].id)
             cu.rank = 6
             session.add(cu)
             await session.commit()

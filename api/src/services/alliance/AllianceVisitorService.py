@@ -3,7 +3,7 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.Messages.visitor_messages import NOT_A_VISITOR
@@ -18,7 +18,9 @@ class AllianceVisitorService:
     @staticmethod
     async def count_visitors(session: SessionDep, alliance_id: uuid.UUID) -> int:
         result = await session.exec(
-            select(func.count(AllianceVisitor.id)).where(AllianceVisitor.alliance_id == alliance_id)
+            select(func.count(col(AllianceVisitor.id))).where(
+                AllianceVisitor.alliance_id == alliance_id
+            )
         )
         return result.one()
 
@@ -87,8 +89,8 @@ class AllianceVisitorService:
         """Return all active visits for game accounts belonging to this user."""
         result = await session.exec(
             select(AllianceVisitor)
-            .join(GameAccount, AllianceVisitor.game_account_id == GameAccount.id)
-            .where(GameAccount.user_id == user_id, GameAccount.deleted_at.is_(None))
+            .join(GameAccount, col(AllianceVisitor.game_account_id) == GameAccount.id)
+            .where(GameAccount.user_id == user_id, col(GameAccount.deleted_at).is_(None))
             .options(selectinload(AllianceVisitor.alliance))  # type: ignore[arg-type]
         )
         return list(result.all())

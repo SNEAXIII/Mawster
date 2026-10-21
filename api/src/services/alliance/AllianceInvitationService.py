@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import or_, select
+from sqlmodel import col, or_, select
 from starlette import status
 
 from src.enums.InvitationStatus import InvitationStatus
@@ -136,10 +136,10 @@ class AllianceInvitationService:
         """Get all pending invitations for live game accounts owned by the user."""
         result = await session.exec(
             select(AllianceInvitation)
-            .join(GameAccount, AllianceInvitation.game_account_id == GameAccount.id)
+            .join(GameAccount, col(AllianceInvitation.game_account_id) == GameAccount.id)
             .where(
                 GameAccount.user_id == user_id,
-                GameAccount.deleted_at.is_(None),
+                col(GameAccount.deleted_at).is_(None),
                 AllianceInvitation.status == InvitationStatus.PENDING,
             )
             .options(*_INVITATION_OPTIONS)
@@ -179,7 +179,7 @@ class AllianceInvitationService:
             )
             return await cls._respond(session, invitation, InvitationStatus.ACCEPTED)
 
-        game_account = await session.get(GameAccount, invitation.game_account_id)
+        game_account = await session.get_one(GameAccount, invitation.game_account_id)
         AllianceService.assert_not_in_alliance(game_account)
         await AllianceService.assert_room_for_member(session, invitation.alliance_id)
         await AllianceVisitorService.remove_if_visitor(

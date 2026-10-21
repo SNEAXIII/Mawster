@@ -5,7 +5,7 @@ from collections import defaultdict
 from fastapi import HTTPException
 from sqlalchemy import func, literal, null, union_all
 from sqlalchemy.orm import aliased, selectinload
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.dto.admin.dto_fight_record import (
@@ -58,8 +58,8 @@ class FightRecordService:
             select(WarDefensePlacement)
             .where(
                 WarDefensePlacement.war_id == war.id,
-                WarDefensePlacement.attacker_champion_user_id.isnot(None),
-                WarDefensePlacement.is_fight_not_done.is_(False),
+                col(WarDefensePlacement.attacker_champion_user_id).isnot(None),
+                col(WarDefensePlacement.is_fight_not_done).is_(False),
             )
             .options(selectinload(WarDefensePlacement.attacker_champion_user))
         )
@@ -143,7 +143,7 @@ class FightRecordService:
     async def assert_user_in_alliance(cls, session: SessionDep, user_id: uuid.UUID) -> None:
         member_result = await session.exec(
             select(GameAccount).where(
-                GameAccount.user_id == user_id, GameAccount.alliance_id.isnot(None)
+                GameAccount.user_id == user_id, col(GameAccount.alliance_id).isnot(None)
             )
         )
         if member_result.first() is not None:
@@ -151,7 +151,7 @@ class FightRecordService:
 
         visitor_result = await session.exec(
             select(AllianceVisitor)
-            .join(GameAccount, AllianceVisitor.game_account_id == GameAccount.id)
+            .join(GameAccount, col(AllianceVisitor.game_account_id) == GameAccount.id)
             .where(GameAccount.user_id == user_id)
         )
         if visitor_result.first() is None:
@@ -165,14 +165,14 @@ class FightRecordService:
     ) -> list[uuid.UUID]:
         member_result = await session.exec(
             select(GameAccount.alliance_id).where(
-                GameAccount.user_id == user_id, GameAccount.alliance_id.isnot(None)
+                GameAccount.user_id == user_id, col(GameAccount.alliance_id).isnot(None)
             )
         )
         member_ids: set[uuid.UUID] = set(member_result.all())
 
         visitor_result = await session.exec(
             select(AllianceVisitor.alliance_id)
-            .join(GameAccount, AllianceVisitor.game_account_id == GameAccount.id)
+            .join(GameAccount, col(AllianceVisitor.game_account_id) == GameAccount.id)
             .where(GameAccount.user_id == user_id)
         )
         visitor_ids: set[uuid.UUID] = set(visitor_result.all())
@@ -236,7 +236,7 @@ class FightRecordService:
         sub_queries = []
 
         if include_reg:
-            reg_conds = [War.alliance_id.in_(accessible_alliance_ids)]
+            reg_conds = [col(War.alliance_id).in_(accessible_alliance_ids)]
             if champion_id:
                 reg_conds.append(ChampionUser.champion_id == champion_id)
             if defender_champion_id:
@@ -250,7 +250,7 @@ class FightRecordService:
             if planning_error_only is not None:
                 reg_conds.append(WarDefensePlacement.is_planning_error == planning_error_only)
             if game_account_pseudo is not None:
-                reg_conds.append(GameAccount.game_pseudo.ilike(f"%{game_account_pseudo}%"))
+                reg_conds.append(col(GameAccount.game_pseudo).ilike(f"%{game_account_pseudo}%"))
             if alliance_id:
                 reg_conds.append(War.alliance_id == alliance_id)
             reg_conds.extend(cls._season_conditions(War, season_selector, season_id, season_format))
@@ -258,42 +258,44 @@ class FightRecordService:
             reg_sub = (
                 join_fight_context(
                     select(
-                        WarFightRecord.id.label("id"),
-                        War.alliance_id.label("alliance_id"),
-                        War.season_id.label("season_id"),
-                        reg_season.number.label("season_number"),
-                        reg_season.format.label("season_format"),
-                        WarDefensePlacement.node_number.label("node_number"),
-                        ChampionUser.champion_id.label("champion_id"),
-                        WarDefensePlacement.champion_id.label("defender_champion_id"),
-                        WarDefensePlacement.ko_count.label("ko_count"),
-                        WarFightRecord.created_at.label("created_at"),
-                        War.id.label("war_id"),
-                        WarDefensePlacement.battlegroup.label("battlegroup"),
-                        War.tier.label("tier"),
-                        ChampionUser.stars.label("stars"),
-                        WarFightRecord.rank.label("rank"),
-                        WarFightRecord.ascension.label("ascension"),
-                        ChampionUser.id.label("attacker_champion_user_id"),
-                        WarDefensePlacement.stars.label("defender_stars"),
-                        WarDefensePlacement.rank.label("defender_rank"),
-                        WarDefensePlacement.ascension.label("defender_ascension"),
-                        WarDefensePlacement.is_planning_error.label("is_planning_error"),
-                        WarDefensePlacement.assist_champion_user_id.isnot(None).label("assisted"),
-                        WarDefensePlacement.war_boost.label("war_boost"),
-                        WarDefensePlacement.has_defense_boost.label("has_defense_boost"),
-                        WarDefensePlacement.has_power_boost.label("has_power_boost"),
-                        WarDefensePlacement.has_specials_boost.label("has_specials_boost"),
+                        col(WarFightRecord.id).label("id"),
+                        col(War.alliance_id).label("alliance_id"),
+                        col(War.season_id).label("season_id"),
+                        col(reg_season.number).label("season_number"),
+                        col(reg_season.format).label("season_format"),
+                        col(WarDefensePlacement.node_number).label("node_number"),
+                        col(ChampionUser.champion_id).label("champion_id"),
+                        col(WarDefensePlacement.champion_id).label("defender_champion_id"),
+                        col(WarDefensePlacement.ko_count).label("ko_count"),
+                        col(WarFightRecord.created_at).label("created_at"),
+                        col(War.id).label("war_id"),
+                        col(WarDefensePlacement.battlegroup).label("battlegroup"),
+                        col(War.tier).label("tier"),
+                        col(ChampionUser.stars).label("stars"),
+                        col(WarFightRecord.rank).label("rank"),
+                        col(WarFightRecord.ascension).label("ascension"),
+                        col(ChampionUser.id).label("attacker_champion_user_id"),
+                        col(WarDefensePlacement.stars).label("defender_stars"),
+                        col(WarDefensePlacement.rank).label("defender_rank"),
+                        col(WarDefensePlacement.ascension).label("defender_ascension"),
+                        col(WarDefensePlacement.is_planning_error).label("is_planning_error"),
+                        col(WarDefensePlacement.assist_champion_user_id)
+                        .isnot(None)
+                        .label("assisted"),
+                        col(WarDefensePlacement.war_boost).label("war_boost"),
+                        col(WarDefensePlacement.has_defense_boost).label("has_defense_boost"),
+                        col(WarDefensePlacement.has_power_boost).label("has_power_boost"),
+                        col(WarDefensePlacement.has_specials_boost).label("has_specials_boost"),
                         literal(False).label("is_imported"),
-                        Alliance.name.label("alliance_name"),
-                        Alliance.tag.label("alliance_tag"),
-                        reg_attacker.name.label("champion_name"),
-                        reg_attacker.champion_class.label("champion_class"),
-                        reg_attacker.image_url.label("image_url"),
-                        reg_defender.name.label("defender_champion_name"),
-                        reg_defender.champion_class.label("defender_champion_class"),
-                        reg_defender.image_url.label("defender_image_url"),
-                        GameAccount.game_pseudo.label("game_account_pseudo"),
+                        col(Alliance.name).label("alliance_name"),
+                        col(Alliance.tag).label("alliance_tag"),
+                        col(reg_attacker.name).label("champion_name"),
+                        col(reg_attacker.champion_class).label("champion_class"),
+                        col(reg_attacker.image_url).label("image_url"),
+                        col(reg_defender.name).label("defender_champion_name"),
+                        col(reg_defender.champion_class).label("defender_champion_class"),
+                        col(reg_defender.image_url).label("defender_image_url"),
+                        col(GameAccount.game_pseudo).label("game_account_pseudo"),
                     )
                 )
                 .join(Alliance, War.alliance_id == Alliance.id)
@@ -307,7 +309,7 @@ class FightRecordService:
 
         # Imported records have no game account and no tier, so those filters can never match them.
         if include_imp and game_account_pseudo is None and tier is None:
-            imp_conds = [WarFightRecordImport.alliance_id.in_(accessible_alliance_ids)]
+            imp_conds = [col(WarFightRecordImport.alliance_id).in_(accessible_alliance_ids)]
             if champion_id:
                 imp_conds.append(WarFightRecordImport.champion_id == champion_id)
             if defender_champion_id:
@@ -324,16 +326,16 @@ class FightRecordService:
 
             imp_sub = (
                 select(
-                    WarFightRecordImport.id.label("id"),
-                    WarFightRecordImport.alliance_id.label("alliance_id"),
-                    WarFightRecordImport.season_id.label("season_id"),
-                    imp_season.number.label("season_number"),
-                    imp_season.format.label("season_format"),
-                    WarFightRecordImport.node_number.label("node_number"),
-                    WarFightRecordImport.champion_id.label("champion_id"),
-                    WarFightRecordImport.defender_champion_id.label("defender_champion_id"),
-                    WarFightRecordImport.ko_count.label("ko_count"),
-                    WarFightRecordImport.created_at.label("created_at"),
+                    col(WarFightRecordImport.id).label("id"),
+                    col(WarFightRecordImport.alliance_id).label("alliance_id"),
+                    col(WarFightRecordImport.season_id).label("season_id"),
+                    col(imp_season.number).label("season_number"),
+                    col(imp_season.format).label("season_format"),
+                    col(WarFightRecordImport.node_number).label("node_number"),
+                    col(WarFightRecordImport.champion_id).label("champion_id"),
+                    col(WarFightRecordImport.defender_champion_id).label("defender_champion_id"),
+                    col(WarFightRecordImport.ko_count).label("ko_count"),
+                    col(WarFightRecordImport.created_at).label("created_at"),
                     null().label("war_id"),
                     null().label("battlegroup"),
                     null().label("tier"),
@@ -352,14 +354,14 @@ class FightRecordService:
                     literal(False).label("has_power_boost"),
                     literal(False).label("has_specials_boost"),
                     literal(True).label("is_imported"),
-                    Alliance.name.label("alliance_name"),
-                    Alliance.tag.label("alliance_tag"),
-                    imp_attacker.name.label("champion_name"),
-                    imp_attacker.champion_class.label("champion_class"),
-                    imp_attacker.image_url.label("image_url"),
-                    imp_defender.name.label("defender_champion_name"),
-                    imp_defender.champion_class.label("defender_champion_class"),
-                    imp_defender.image_url.label("defender_image_url"),
+                    col(Alliance.name).label("alliance_name"),
+                    col(Alliance.tag).label("alliance_tag"),
+                    col(imp_attacker.name).label("champion_name"),
+                    col(imp_attacker.champion_class).label("champion_class"),
+                    col(imp_attacker.image_url).label("image_url"),
+                    col(imp_defender.name).label("defender_champion_name"),
+                    col(imp_defender.champion_class).label("defender_champion_class"),
+                    col(imp_defender.image_url).label("defender_image_url"),
                     null().label("game_account_pseudo"),
                 )
                 .join(Alliance, WarFightRecordImport.alliance_id == Alliance.id)
@@ -427,8 +429,8 @@ class FightRecordService:
         notes = (
             await session.exec(
                 select(WarFightNote).where(
-                    WarFightNote.war_fight_record_id.in_([it.id for it in items]),
-                    WarFightNote.deleted_at.is_(None),
+                    col(WarFightNote.war_fight_record_id).in_([it.id for it in items]),
+                    col(WarFightNote.deleted_at).is_(None),
                 )
             )
         ).all()
@@ -436,7 +438,7 @@ class FightRecordService:
         # The author shown is whoever wrote the latest version.
         editors = await session.exec(
             select(GameAccount.id, GameAccount.game_pseudo).where(
-                GameAccount.id.in_({n.updated_by_game_account_id for n in notes})
+                col(GameAccount.id).in_({n.updated_by_game_account_id for n in notes})
             )
         )
         pseudo_by_account = dict(editors.all())
@@ -477,7 +479,7 @@ class FightRecordService:
         prefights = (
             await session.exec(
                 select(WarPrefightAttacker)
-                .where(WarPrefightAttacker.war_id.in_(war_ids))
+                .where(col(WarPrefightAttacker.war_id).in_(war_ids))
                 .options(
                     selectinload(WarPrefightAttacker.champion),
                     selectinload(WarPrefightAttacker.champion_user),
@@ -487,7 +489,7 @@ class FightRecordService:
         synergies = (
             await session.exec(
                 select(WarSynergyAttacker)
-                .where(WarSynergyAttacker.war_id.in_(war_ids))
+                .where(col(WarSynergyAttacker.war_id).in_(war_ids))
                 .options(
                     selectinload(WarSynergyAttacker.champion),
                     selectinload(WarSynergyAttacker.champion_user),

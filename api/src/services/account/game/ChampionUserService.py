@@ -3,7 +3,7 @@ import uuid
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
+from sqlmodel import col, select
 from starlette import status
 
 from src.enums.ChampionRarity import ChampionRarity
@@ -156,7 +156,9 @@ class ChampionUserService:
         names = {entry["champion_name"] for entry in champions}
         by_name = {
             c.name: c
-            for c in (await session.exec(select(Champion).where(Champion.name.in_(names)))).all()  # type: ignore[attr-defined]
+            for c in (
+                await session.exec(select(Champion).where(col(Champion.name).in_(names)))
+            ).all()
         }
         roster: dict[tuple[uuid.UUID, int], ChampionUser] = {}
         for row in (
@@ -211,7 +213,7 @@ class ChampionUserService:
 
         loaded = await session.exec(
             select(ChampionUser)
-            .where(ChampionUser.id.in_(ids))  # type: ignore[attr-defined]
+            .where(col(ChampionUser.id).in_(ids))
             .options(selectinload(ChampionUser.champion))  # type: ignore[arg-type]
         )
         by_id = {cu.id: cu for cu in loaded.all()}

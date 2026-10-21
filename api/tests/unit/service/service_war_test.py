@@ -170,7 +170,7 @@ class TestWarSynergyCreateRequest:
         champion_user_id = uuid.uuid4()
 
         with pytest.raises(ValidationError):
-            WarSynergyCreateRequest(champion_user_id=champion_user_id)  # type: ignore[call-arg]
+            WarSynergyCreateRequest(champion_user_id=champion_user_id)  # ty: ignore[missing-argument]
 
 
 # ─── Slot counting logic (pure set union) ─────────────────
