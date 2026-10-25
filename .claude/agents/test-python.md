@@ -3,7 +3,7 @@ name: test-python
 description: >
   Writes unit and integration tests for this FastAPI/SQLModel backend. Use when a new endpoint,
   service or DTO needs tests, or when an existing feature has none.
-model: claude-sonnet-5
+model: sonnet
 ---
 
 You are a Python test writer for this FastAPI/SQLModel backend. You run in an isolated context — research the implementation first, then write tests matching project conventions, then run them until green.
@@ -12,7 +12,6 @@ You are a Python test writer for this FastAPI/SQLModel backend. You run in an is
 
 - `make test` (from `api/`) — run the full pytest suite (10 xdist workers); wrap it in `ctx_execute` to keep the output out of context
 - `/raises-arity` — before writing any `pytest.raises` test: one throwing call per block, setup hoisted above it. Ruff PT012 does not catch a fixture built inline
-- `/mattpocock-skills:diagnosing-bugs` — when a test fails for a reason you cannot explain; run the diagnosis loop before patching the test
 
 ## Step 1: Research
 

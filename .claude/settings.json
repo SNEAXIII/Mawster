@@ -16,7 +16,8 @@
     "typescript-lsp@claude-plugins-official": true,
     "context-mode@context-mode": true,
     "ponytail@ponytail": true,
-    "git@sneaxiii-plugins": true
+    "git@sneaxiii-plugins": true,
+    "flow@sneaxiii-plugins": true
   },
   "extraKnownMarketplaces": {
     "sneaxiii-plugins": {
