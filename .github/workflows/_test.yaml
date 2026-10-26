@@ -57,7 +57,7 @@ jobs:
         # `auto` is the runner's 4 vCPUs. Oversubscribing does not pay: 6 workers measured
         run: uv run --no-sync --no-build pytest tests/integration -v --tb=short -n auto --cov --cov-append --cov-report=xml:coverage.xml
       - name: Upload backend coverage
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: backend-coverage
           path: api/coverage.xml
@@ -126,7 +126,7 @@ jobs:
         working-directory: ./front
         run: pnpm test:coverage
       - name: Upload frontend coverage
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: front-coverage
           path: front/coverage/lcov.info
@@ -165,7 +165,7 @@ jobs:
       - name: Run static-assets tests with coverage
         run: cargo llvm-cov --locked --all-features --lcov --output-path lcov.info
       - name: Upload static-assets coverage
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: static-assets-coverage
           path: static-assets/lcov.info
@@ -233,7 +233,7 @@ jobs:
       - name: Archive frontend build
         run: tar -czf /tmp/next-e2e-build.tar.gz -C front .next-e2e
       - name: Upload frontend build
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: next-e2e-build
           path: /tmp/next-e2e-build.tar.gz
@@ -323,7 +323,7 @@ jobs:
         run: python3 scripts/e2e/e2e_parallel.py --spec "${{ matrix.specs }}"
       - name: Upload Cypress results
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: cypress-results-runner-${{ matrix.runner }}
           path: front/cypress/results
