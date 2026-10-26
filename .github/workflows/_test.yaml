@@ -89,6 +89,8 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Enable pnpm
+        run: corepack enable
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
@@ -97,32 +99,32 @@ jobs:
           # Deliberately not the `node-modules-` key the E2E jobs use: theirs also carries
           # Cypress, and a cache this job populated without it would give them a hit and
           # skip their `cypress install`.
-          key: node-modules-lint-${{ runner.os }}-${{ hashFiles('front/package-lock.json') }}
+          key: node-modules-lint-${{ runner.os }}-${{ hashFiles('front/pnpm-lock.yaml') }}
       - name: Install frontend dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         working-directory: ./front
         # Neither oxlint nor oxlint-tsgolint has an install script — their binaries ship as
         # per-platform optional dependencies — so --ignore-scripts costs nothing here.
-        run: npm ci --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Run oxlint
         working-directory: ./front
         # --type-aware needs oxlint-tsgolint, which package.json carries. Warnings do not
         # fail the build yet: the sonarjs recommended set is new here and still has a
         # backlog. Add --deny-warnings once it is down to zero.
-        run: npx --no-install oxlint --type-aware
+        run: pnpm exec oxlint --type-aware
       - name: Check frontend formatting
         working-directory: ./front
-        run: npx --no-install prettier --check .
+        run: pnpm exec prettier --check .
       - name: Typecheck frontend
         working-directory: ./front
-        run: npx --no-install tsc --noEmit
+        run: pnpm exec tsc --noEmit
       # Own TS project: the app tsconfig and oxlint both exclude cypress/.
       - name: Typecheck Cypress specs
         working-directory: ./front
-        run: npx --no-install tsc -p cypress/tsconfig.json --noEmit
+        run: pnpm exec tsc -p cypress/tsconfig.json --noEmit
       - name: Run frontend unit tests with coverage
         working-directory: ./front
-        run: npm run test:coverage
+        run: pnpm test:coverage
       - name: Upload frontend coverage
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -201,6 +203,8 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Enable pnpm
+        run: corepack enable
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
@@ -208,13 +212,13 @@ jobs:
           path: |
             front/node_modules
             ~/.cache/Cypress
-          key: node-modules-${{ runner.os }}-${{ hashFiles('front/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ hashFiles('front/pnpm-lock.yaml') }}
       - name: Install frontend dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         working-directory: ./front
         run: |
-          npm ci --ignore-scripts
-          npx --no-install cypress install
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm exec cypress install
       - name: Build frontend (next build)
         working-directory: ./front
         env:
@@ -225,7 +229,7 @@ jobs:
           API_SERVER_HOST: localhost
           STATIC_SERVER_HOST: 127.0.0.1 # rewrites are baked at build; e2e_parallel.py serves static-assets there
           STATIC_PORT: '8009'
-        run: npm run build
+        run: pnpm build
       - name: Archive frontend build
         run: tar -czf /tmp/next-e2e-build.tar.gz -C front .next-e2e
       - name: Upload frontend build
@@ -281,6 +285,8 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Enable pnpm
+        run: corepack enable
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
@@ -288,13 +294,13 @@ jobs:
           path: |
             front/node_modules
             ~/.cache/Cypress
-          key: node-modules-${{ runner.os }}-${{ hashFiles('front/package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ hashFiles('front/pnpm-lock.yaml') }}
       - name: Install frontend dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         working-directory: ./front
         run: |
-          npm ci --ignore-scripts
-          npx --no-install cypress install
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm exec cypress install
       - name: Download frontend build
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:

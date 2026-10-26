@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { encode } from '@auth/core/jwt'
+import { encode } from 'next-auth/jwt'
 import { isServerDev } from '@/app/lib/dev-mode'
 import { getServerApiUrl } from '@/app/lib/serverApiUrl'
 import { withBackendProfile } from '@/app/lib/backend-profile'

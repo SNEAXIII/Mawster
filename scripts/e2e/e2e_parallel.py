@@ -384,7 +384,7 @@ def start_frontend(worker: int, base_env: dict) -> None:
     log_dir = worker_log_dir(worker)
     log_dir.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(
-        ["npx", "next", "start", "--port", str(front_port)],
+        ["pnpm", "exec", "next", "start", "--port", str(front_port)],
         cwd=str(FRONT_DIR),
         env=env,
         stdout=subprocess.PIPE,
@@ -418,7 +418,8 @@ def run_cypress(worker: int, specs: list[Path], stats: dict) -> int:
     cmd = [
         "xvfb-run",
         "-a",
-        "npx",
+        "pnpm",
+        "exec",
         "cypress",
         "run",
         "--browser",
