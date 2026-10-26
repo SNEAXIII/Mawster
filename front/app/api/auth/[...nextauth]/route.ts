@@ -21,6 +21,8 @@ export const {
 } = NextAuth({
   providers: [
     Discord({
+      // Discord now sends `iss` on the callback (RFC 9207); without this Auth.js expects authjs.dev
+      issuer: 'https://discord.com',
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
       authorization: {
