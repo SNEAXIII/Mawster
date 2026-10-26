@@ -6,7 +6,10 @@ use axum::{
 };
 use mawster_static_files::config::Config;
 use tokio::net::{TcpListener, TcpStream};
-use tower_http::{services::ServeDir, set_header::SetResponseHeader};
+use tower_http::{
+    services::{ServeDir, ServeFile},
+    set_header::SetResponseHeader,
+};
 use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::EnvFilter;
 
@@ -34,6 +37,12 @@ async fn main() -> anyhow::Result<()> {
     let config = Config::from_env()?;
     setup_logger();
 
+    // Traefik serves this page under the player's own URL: cached, it would outlive the outage.
+    let maintenance = SetResponseHeader::overriding(
+        ServeFile::new(config.static_dir.join("maintenance.html")),
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("no-store"),
+    );
     let service_serve = SetResponseHeader::overriding(
         ServeDir::new(config.static_dir),
         header::CACHE_CONTROL,
@@ -42,6 +51,7 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/health", get(|| async {}))
+        .route_service("/static/maintenance.html", maintenance)
         .nest_service("/static", service_serve);
 
     let listener = TcpListener::bind(config.bind_url)

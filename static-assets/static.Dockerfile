@@ -26,6 +26,7 @@ RUN cargo build --release --locked --bin mawster-static-files --features=server
 FROM scratch AS runtime
 WORKDIR /app
 COPY --from=assets /app/build /app/static
+COPY static/maintenance.html /app/static/maintenance.html
 COPY --from=server /app/target/release/mawster-static-files /mawster-static-files
 USER 65534:65534
 EXPOSE 8005

@@ -83,9 +83,28 @@ describe('refreshBackendToken', () => {
     expect(await refreshBackendToken(token as JWT)).toMatchObject(EXPIRED)
   })
 
-  it('expires the session when the network throws', async () => {
-    fetch.mockRejectedValueOnce(new Error('down'))
-    expect(await refreshBackendToken({ backendRefreshToken: 'r1' } as JWT)).toMatchObject(EXPIRED)
+  const down = () => new Response(null, { status: 502 })
+
+  it.each([
+    ['the network throws', () => fetch.mockRejectedValueOnce(new Error('down'))],
+    ['the API answers 5xx', () => fetch.mockResolvedValueOnce(down())],
+  ])('keeps the session untouched, without burning Discord, when %s', async (_, arrange) => {
+    arrange()
+    const token = { backendRefreshToken: 'r1', discordRefreshToken: 'd1' } as JWT
+    expect(await refreshBackendToken(token)).toEqual(token)
+    expect(fetch).toHaveBeenCalledOnce()
+  })
+
+  it('keeps the rotated Discord token when the API goes down after Discord', async () => {
+    fetch
+      .mockResolvedValueOnce(fail())
+      .mockResolvedValueOnce(ok({ access_token: 'discord', refresh_token: 'd2' }))
+      .mockRejectedValueOnce(new Error('down'))
+    const result = await refreshBackendToken({
+      backendRefreshToken: 'r1',
+      discordRefreshToken: 'd1',
+    } as JWT)
+    expect(result).toEqual({ backendRefreshToken: 'r1', discordRefreshToken: 'd2' })
   })
 })
 

@@ -148,7 +148,7 @@ services:
         - traefik.http.routers.front-staging.tls.certresolver=letsencrypt
         - traefik.http.routers.front-staging.service=front-staging
         - traefik.http.services.front-staging.loadbalancer.server.port=3000
-        - traefik.http.routers.front-staging.middlewares=security-headers-staging
+        - traefik.http.routers.front-staging.middlewares=security-headers-staging,maintenance-staging
         - traefik.http.middlewares.security-headers-staging.headers.frameDeny=true
         - traefik.http.middlewares.security-headers-staging.headers.contentTypeNosniff=true
         - traefik.http.middlewares.security-headers-staging.headers.referrerPolicy=strict-origin-when-cross-origin
@@ -174,6 +174,9 @@ services:
       - traefik-public
     deploy:
       replicas: 1
+      # The front router references the maintenance middleware served here: never leave it without a task.
+      update_config:
+        order: start-first
       restart_policy:
         condition: on-failure
       labels:
@@ -183,6 +186,17 @@ services:
         - traefik.http.routers.static-staging.tls.certresolver=letsencrypt
         - traefik.http.routers.static-staging.service=static-staging
         - traefik.http.services.static-staging.loadbalancer.server.port=8005
+        - traefik.http.middlewares.maintenance-staging.errors.status=502-504
+        - traefik.http.middlewares.maintenance-staging.errors.service=static-staging
+        - traefik.http.middlewares.maintenance-staging.errors.query=/static/maintenance.html
+        # Lowest priority: only answers once Swarm has dropped the front router (no task left).
+        - traefik.http.routers.maintenance-staging.rule=Host(`www.staging.mawster.app`)
+        - traefik.http.routers.maintenance-staging.priority=1
+        - traefik.http.routers.maintenance-staging.entrypoints=websecure
+        - traefik.http.routers.maintenance-staging.tls.certresolver=letsencrypt
+        - traefik.http.routers.maintenance-staging.service=static-staging
+        - traefik.http.routers.maintenance-staging.middlewares=to-maintenance-staging
+        - traefik.http.middlewares.to-maintenance-staging.replacepath.path=/static/maintenance.html
         - traefik.docker.network=traefik-public
     logging:
       driver: json-file
