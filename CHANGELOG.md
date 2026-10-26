@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.32.0](https://github.com/SNEAXIII/Mawster/compare/v1.31.0...v1.32.0) (2026-10-26)
+
+
+### Ajouté
+
+* keep players signed in and show a maintenance page when the API or front is down ([#756](https://github.com/SNEAXIII/Mawster/issues/756)) ([3678329](https://github.com/SNEAXIII/Mawster/commit/36783297a9a058bf9bc4c75f083d8f71e4c4282b))
+
 ## [1.31.0](https://github.com/SNEAXIII/Mawster/compare/v1.30.1...v1.31.0) (2026-10-21)
 
 
