@@ -1,6 +1,6 @@
 [package]
 name = "mawster-static-files"
-version = "1.32.0"
+version = "1.32.1"
 edition = "2024"
 publish = false
 description = "Rust Web server for static asset, ngninx like"
@@ -68,5 +68,5 @@ module_name_repetitions = "allow"
 multiple_crate_versions = "allow"
 
 [dev-dependencies]
-rstest = "0.27.0"
+rstest = "0.28.0"
 tempfile = "3.27.0"

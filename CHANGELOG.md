@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.32.1](https://github.com/SNEAXIII/Mawster/compare/v1.32.0...v1.32.1) (2026-10-26)
+
+
+### Corrigé
+
+* accept Discord's issuer parameter on OAuth login ([50ef54e](https://github.com/SNEAXIII/Mawster/commit/50ef54efb58d8608e5f2f0550742f48d8f517ee9))
+
 ## [1.32.0](https://github.com/SNEAXIII/Mawster/compare/v1.31.0...v1.32.0) (2026-10-26)
 
 
