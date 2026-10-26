@@ -45,13 +45,13 @@ updates:
       - /static-assets
     schedule:
       interval: monthly
-    groups:
-      docker:
-        patterns:
-          - '*'
 
   # Actions GitHub
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - '*'
