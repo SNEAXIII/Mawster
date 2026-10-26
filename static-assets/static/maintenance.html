@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="fr" class="dark" data-look="new-a">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content="20" />
+    <title>Mawster</title>
+    <script>
+      // Same keys as next-themes, app/lib/look.ts and app/i18n: the player sees their own site.
+      try {
+        const html = document.documentElement
+        const theme = localStorage.getItem('theme') ?? 'dark'
+        const dark =
+          theme === 'system' ? matchMedia('(prefers-color-scheme: dark)').matches : theme !== 'light'
+        html.classList.toggle('dark', dark)
+        if (localStorage.getItem('look') === 'classic') html.dataset.look = 'classic'
+        const locale = localStorage.getItem('mawster-locale') ?? navigator.language
+        html.lang = locale.startsWith('fr') ? 'fr' : 'en'
+      } catch {}
+    </script>
+    <style>
+      [data-look='classic'] {
+        --background: 0 0% 100%;
+        --foreground: 240 10% 3.9%;
+        --card: 0 0% 100%;
+        --muted-foreground: 240 3.8% 46.1%;
+        --border: 240 5.9% 90%;
+        --primary: 240 5.9% 10%;
+        --primary-foreground: 0 0% 98%;
+      }
+      .dark[data-look='classic'] {
+        --background: 240 10% 3.9%;
+        --foreground: 0 0% 98%;
+        --card: 240 10% 3.9%;
+        --muted-foreground: 240 5% 64.9%;
+        --border: 240 3.7% 15.9%;
+        --primary: 0 0% 98%;
+        --primary-foreground: 240 5.9% 10%;
+      }
+      [data-look='new-a'] {
+        --background: 210 40% 98%;
+        --foreground: 222 47% 11%;
+        --card: 0 0% 100%;
+        --muted-foreground: 215 16% 45%;
+        --border: 214 32% 88%;
+        --primary: 200 90% 40%;
+        --primary-foreground: 0 0% 100%;
+      }
+      .dark[data-look='new-a'] {
+        --background: 222 47% 6%;
+        --foreground: 210 40% 96%;
+        --card: 222 40% 7%;
+        --muted-foreground: 215 20% 62%;
+        --border: 220 28% 15%;
+        --primary: 199 80% 48%;
+        --primary-foreground: 222 47% 8%;
+      }
+      :root {
+        --radius: 0.5rem;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      main {
+        width: 100%;
+        max-width: 600px;
+        padding: 32px 24px;
+        text-align: center;
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+      }
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.25rem;
+        font-weight: 700;
+      }
+      h1 {
+        margin: 24px 0 8px;
+        font-size: 2rem;
+        font-weight: 600;
+      }
+      p {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: hsl(var(--muted-foreground));
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        margin: 40px auto 0;
+        border: 3px solid hsl(var(--border));
+        border-top-color: hsl(var(--primary));
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .spinner {
+          animation: none;
+        }
+      }
+      footer {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid hsl(var(--border));
+        display: grid;
+        gap: 8px;
+        justify-items: center;
+      }
+      /* Mirrors the default Button variant of components/ui/button.tsx. */
+      .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 36px;
+        padding: 8px 16px;
+        border-radius: calc(var(--radius) - 2px);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        white-space: nowrap;
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        box-shadow:
+          0 1px 3px 0 rgb(0 0 0 / 0.1),
+          0 1px 2px -1px rgb(0 0 0 / 0.1);
+        transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .button:hover {
+        background: hsl(var(--primary) / 0.9);
+      }
+      .button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px hsl(var(--primary) / 0.5);
+      }
+      .button svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+      .handles {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px 12px;
+        font-size: 0.75rem;
+      }
+      .handles span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: hsl(var(--foreground));
+      }
+      .handles svg {
+        width: 14px;
+        height: 14px;
+      }
+      html[lang='fr'] [lang='en'],
+      html[lang='en'] [lang='fr'] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">
+        <img src="/static/logos/main_logo.webp" alt="mawster logo" width="100" height="100" />
+      </div>
+      <h1 lang="fr">Maintenance en cours</h1>
+      <h1 lang="en">Maintenance in progress</h1>
+      <p lang="fr">Mawster revient dans un instant. Cette page se recharge toute seule.</p>
+      <p lang="en">Mawster will be back in a moment. This page reloads by itself.</p>
+      <div class="spinner" aria-hidden="true"></div>
+      <footer>
+        <p lang="fr">Un souci qui dure ? Contacte-moi :</p>
+        <p lang="en">Still down after a while? Reach me:</p>
+        <a class="button" href="https://discord.gg/dBJXaVq2bC" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 640 512" fill="currentColor" aria-hidden="true"><path d="M524.531,69.836a1.5,1.5,0,0,0-.764-.7A485.065,485.065,0,0,0,404.081,32.03a1.816,1.816,0,0,0-1.923.91,337.461,337.461,0,0,0-14.9,30.6,447.848,447.848,0,0,0-134.426,0,309.541,309.541,0,0,0-15.135-30.6,1.89,1.89,0,0,0-1.924-.91A483.689,483.689,0,0,0,116.085,69.137a1.712,1.712,0,0,0-.788.676C39.068,183.651,18.186,294.69,28.43,404.354a2.016,2.016,0,0,0,.765,1.375A487.666,487.666,0,0,0,176.02,479.918a1.9,1.9,0,0,0,2.063-.676A348.2,348.2,0,0,0,208.12,430.4a1.86,1.86,0,0,0-1.019-2.588,321.173,321.173,0,0,1-45.868-21.853,1.885,1.885,0,0,1-.185-3.126c3.082-2.309,6.166-4.711,9.109-7.137a1.819,1.819,0,0,1,1.9-.256c96.229,43.917,200.41,43.917,295.5,0a1.812,1.812,0,0,1,1.924.233c2.944,2.426,6.027,4.851,9.132,7.16a1.884,1.884,0,0,1-.162,3.126,301.407,301.407,0,0,1-45.89,21.83,1.875,1.875,0,0,0-1,2.611,391.055,391.055,0,0,0,30.014,48.815,1.864,1.864,0,0,0,2.063.7A486.048,486.048,0,0,0,610.7,405.729a1.882,1.882,0,0,0,.765-1.352C623.729,277.594,590.933,167.465,524.531,69.836ZM222.491,337.58c-28.972,0-52.844-26.587-52.844-59.239S193.056,219.1,222.491,219.1c29.665,0,53.306,26.82,52.843,59.239C275.334,310.993,251.924,337.58,222.491,337.58Zm195.38,0c-28.971,0-52.843-26.587-52.843-59.239S388.437,219.1,417.871,219.1c29.667,0,53.307,26.82,52.844,59.239C470.715,310.993,447.538,337.58,417.871,337.58Z"/></svg>
+          <span lang="fr">Contacte moi sur Discord</span>
+          <span lang="en">Contact me on Discord</span>
+        </a>
+        <p class="handles">
+          <span><svg viewBox="0 0 640 512" fill="currentColor" aria-hidden="true"><path d="M524.531,69.836a1.5,1.5,0,0,0-.764-.7A485.065,485.065,0,0,0,404.081,32.03a1.816,1.816,0,0,0-1.923.91,337.461,337.461,0,0,0-14.9,30.6,447.848,447.848,0,0,0-134.426,0,309.541,309.541,0,0,0-15.135-30.6,1.89,1.89,0,0,0-1.924-.91A483.689,483.689,0,0,0,116.085,69.137a1.712,1.712,0,0,0-.788.676C39.068,183.651,18.186,294.69,28.43,404.354a2.016,2.016,0,0,0,.765,1.375A487.666,487.666,0,0,0,176.02,479.918a1.9,1.9,0,0,0,2.063-.676A348.2,348.2,0,0,0,208.12,430.4a1.86,1.86,0,0,0-1.019-2.588,321.173,321.173,0,0,1-45.868-21.853,1.885,1.885,0,0,1-.185-3.126c3.082-2.309,6.166-4.711,9.109-7.137a1.819,1.819,0,0,1,1.9-.256c96.229,43.917,200.41,43.917,295.5,0a1.812,1.812,0,0,1,1.924.233c2.944,2.426,6.027,4.851,9.132,7.16a1.884,1.884,0,0,1-.162,3.126,301.407,301.407,0,0,1-45.89,21.83,1.875,1.875,0,0,0-1,2.611,391.055,391.055,0,0,0,30.014,48.815,1.864,1.864,0,0,0,2.063.7A486.048,486.048,0,0,0,610.7,405.729a1.882,1.882,0,0,0,.765-1.352C623.729,277.594,590.933,167.465,524.531,69.836ZM222.491,337.58c-28.972,0-52.844-26.587-52.844-59.239S193.056,219.1,222.491,219.1c29.665,0,53.306,26.82,52.843,59.239C275.334,310.993,251.924,337.58,222.491,337.58Zm195.38,0c-28.971,0-52.843-26.587-52.843-59.239S388.437,219.1,417.871,219.1c29.667,0,53.307,26.82,52.844,59.239C470.715,310.993,447.538,337.58,417.871,337.58Z"/></svg>@misterbalise</span>
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
