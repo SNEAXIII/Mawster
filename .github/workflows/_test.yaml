@@ -114,7 +114,7 @@ jobs:
         run: pnpm exec oxlint --type-aware
       - name: Check frontend formatting
         working-directory: ./front
-        run: pnpm exec prettier --check .
+        run: pnpm format:check
       - name: Typecheck frontend
         working-directory: ./front
         run: pnpm exec tsc --noEmit
