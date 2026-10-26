@@ -17,7 +17,7 @@ Installation, une fois par machine : `npm install -g dev-browser && dev-browser 
 - Un script = une décision. Finir par un `console.log` de l'état utile à la suite, rien de plus.
 - Cible : `http://localhost:3000` uniquement. Prod et staging seulement sur demande, en lecture.
 - Connexion refusée sur `goto` → la stack n'est pas lancée : demander à l'utilisateur de lancer
-  `docker compose -f compose-dev.yaml up -d`, `make run-dev` (`api/`) et `npm run dev` (`front/`).
+  `docker compose -f compose-dev.yaml up -d`, `make run-dev` (`api/`) et `pnpm dev` (`front/`).
 
 ## Connexion (dev-login)
 

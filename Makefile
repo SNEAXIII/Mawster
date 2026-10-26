@@ -62,8 +62,8 @@ all:
 	wt -d "$$(pwd)" powershell -Command "make e2e-open"
 	wt -d "$$(pwd)/api" powershell -Command "make run-dev"
 	wt -d "$$(pwd)/api" powershell -Command "make run-testing"
-	wt -d "$$(pwd)/front" powershell -Command "npm run dev"
-	wt -d "$$(pwd)/front" powershell -Command "npm run testing"
+	wt -d "$$(pwd)/front" powershell -Command "pnpm dev"
+	wt -d "$$(pwd)/front" powershell -Command "pnpm testing"
 	wt -d "$$(pwd)" powershell -Command "make db-dev"
 
 e2e-stop:
@@ -72,10 +72,10 @@ e2e-stop:
 
 e2e-open: e2e-db
 	$$env:MODE = 'testing'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c uv run app_testing.py 2>&1' -WorkingDirectory api -RedirectStandardOutput ../.e2e-api.log).Id | Out-File -Encoding ascii .e2e-api.pid
-	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c npm run testing 2>&1' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
+	$$env:NEXTAUTH_SECRET = '$(NEXTAUTH_SECRET)'; $$env:NEXTAUTH_URL = '$(NEXTAUTH_URL)'; (Start-Process -PassThru -NoNewWindow -FilePath cmd -ArgumentList '/c pnpm testing 2>&1' -WorkingDirectory front -RedirectStandardOutput ../.e2e-front.log).Id | Out-File -Encoding ascii .e2e-front.pid
 	@echo 'Attente de l API (port 8001)...'; for ($$i = 0; $$i -lt 30; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 8001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
 	@echo 'Attente du frontend (port 3001)...'; for ($$i = 0; $$i -lt 60; $$i++) { if ((Test-NetConnection -ComputerName localhost -Port 3001 -WarningAction SilentlyContinue).TcpTestSucceeded) { break }; Start-Sleep 2 }
-	@echo 'Lancement de Cypress...'; Set-Location front; npx cypress open
+	@echo 'Lancement de Cypress...'; Set-Location front; pnpm exec cypress open
 
 backup-list:
 	Get-ChildItem backups\mawster_*.sql.gz -ErrorAction SilentlyContinue | Select-Object Length,Name | Format-Table -AutoSize; if (-not (Test-Path 'backups\mawster_*.sql.gz')) { Write-Host '(no local backups)' }
@@ -159,13 +159,13 @@ e2e-stop:
 
 e2e-open: e2e-db
 	cd api && MODE=testing uv run app_testing.py > /dev/null 2>&1 & echo $$! > .e2e-api.pid
-	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) npm run testing > /dev/null 2>&1 & echo $$! > .e2e-front.pid
+	cd front && NEXTAUTH_SECRET=$(NEXTAUTH_SECRET) NEXTAUTH_URL=$(NEXTAUTH_URL) pnpm testing > /dev/null 2>&1 & echo $$! > .e2e-front.pid
 	@echo "Attente de l'API (port 8001)..."; \
 	for i in $$(seq 1 30); do curl -s http://localhost:8001 >/dev/null 2>&1 && break || sleep 2; done
 	@echo "Attente du frontend (port 3001)..."; \
 	for i in $$(seq 1 60); do curl -s http://localhost:3001 >/dev/null 2>&1 && break || sleep 2; done
 	@echo "Lancement de Cypress..."
-	(cd front && npx cypress open)
+	(cd front && pnpm exec cypress open)
 
 backup-list:
 	ls -lh backups/mawster_*.sql.gz 2>/dev/null || echo "(no local backups)"

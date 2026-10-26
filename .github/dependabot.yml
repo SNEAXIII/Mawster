@@ -1,51 +1,54 @@
 version: 2
 updates:
-  # Dépendances Python (pip/uv)
-  - package-ecosystem: pip
+  # Dépendances Python : `pip` ne lit pas uv.lock et n'ouvrait aucun PR.
+  - package-ecosystem: uv
     directory: /api
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
-    # Une dépendance ne rejoint que le PREMIER groupe qui la matche : les
-    # groupes ciblés restent donc avant le fourre-tout.
+    # Un seul PR hebdo par projet, majors comprises.
     groups:
-      fastapi:
-        patterns:
-          - fastapi*
-          - starlette*
-          - uvicorn*
-      # Un seul PR relisible pour tout le reste ; les majors, elles, gardent
-      # leur PR dédiée avec le changelog.
-      minor-patch:
+      api:
         patterns:
           - '*'
-        update-types:
-          - minor
-          - patch
 
-  # Dépendances Node.js (npm)
+  # Dépendances Rust du serveur d'assets statiques
+  - package-ecosystem: cargo
+    directory: /static-assets
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      static-assets:
+        patterns:
+          - '*'
+
+  # Dépendances Node.js (pnpm — même écosystème `npm` pour Dependabot)
   - package-ecosystem: npm
     directory: /front
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Ne couvre que les dépendances directes : les transitives ne bougent que
+    # par ricochet ou sur alerte de sécurité.
     groups:
-      react:
-        patterns:
-          - react*
-          - '@types/react*'
-      nextjs:
-        patterns:
-          - next*
-      # Idem : un PR groupé plutôt que cinq. Ne couvre que les dépendances
-      # directes — les transitives ne bougent que par ricochet ou sur alerte
-      # de sécurité, d'où le `npm update` périodique à côté.
-      minor-patch:
+      front:
         patterns:
           - '*'
-        update-types:
-          - minor
-          - patch
+
+  # Images de base des Dockerfiles
+  - package-ecosystem: docker
+    directories:
+      - /api
+      - /front
+      - /backup
+      - /static-assets
+    schedule:
+      interval: monthly
+    groups:
+      docker:
+        patterns:
+          - '*'
 
   # Actions GitHub
   - package-ecosystem: github-actions
