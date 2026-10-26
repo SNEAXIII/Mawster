@@ -36,77 +36,83 @@ export function tokenFromBackend(data: BackendTokens) {
   }
 }
 
+const EXPIRED = { expired: true, backendAuthenticated: false }
+
 /**
  * Rafraichit le token backend via le refresh_token backend.
  * Si le refresh backend échoue, tente un re-login via Discord refresh token.
  * Partagé entre le callback JWT NextAuth et le proxy API.
+ *
+ * API injoignable ou en 5xx (un déploiement) : le token est rendu intact, pour
+ * réessayer à la requête suivante au lieu de déconnecter l'utilisateur.
  */
 export async function refreshBackendToken(token: JWT): Promise<JWT> {
-  try {
-    // 1. Try backend refresh token first
-    if (token.backendRefreshToken) {
+  if (token.backendRefreshToken) {
+    try {
       const refreshRes = await fetch(`${getServerApiUrl()}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: token.backendRefreshToken }),
       })
 
+      if (refreshRes.status >= 500) return token
       if (refreshRes.ok) {
         const fields = tokenFromBackend(await refreshRes.json())
         if (fields) return { ...token, ...fields }
       }
+    } catch (error) {
+      console.error('Erreur lors du refresh token:', error)
+      return token
     }
+  }
 
-    // 2. Fallback: use Discord refresh token to re-authenticate
-    if (token.discordRefreshToken) {
-      const params = new URLSearchParams({
+  if (token.discordRefreshToken) return reloginWithDiscord(token, token.discordRefreshToken)
+  return { ...token, ...EXPIRED }
+}
+
+async function reloginWithDiscord(token: JWT, discordRefreshToken: string): Promise<JWT> {
+  // Discord rotates its refresh token: once consumed, the new one must survive an API outage.
+  let current = token
+  try {
+    const discordRes = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
         grant_type: 'refresh_token',
-        refresh_token: token.discordRefreshToken,
+        refresh_token: discordRefreshToken,
         client_id: process.env.DISCORD_CLIENT_ID!,
         client_secret: process.env.DISCORD_CLIENT_SECRET!,
-      })
+      }).toString(),
+    })
 
-      const discordRes = await fetch('https://discord.com/api/oauth2/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString(),
-      })
-
-      if (!discordRes.ok) {
-        console.error('Echec du refresh Discord:', discordRes.status)
-        return { ...token, expired: true, backendAuthenticated: false }
-      }
-
-      const discordTokens = await discordRes.json()
-
-      const backendRes = await fetch(`${getServerApiUrl()}/auth/discord`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ access_token: discordTokens.access_token }),
-      })
-
-      if (!backendRes.ok) {
-        console.error('Echec backend apres refresh Discord:', backendRes.status)
-        return { ...token, expired: true, backendAuthenticated: false }
-      }
-
-      const fields = tokenFromBackend(await backendRes.json())
-
-      if (!fields) {
-        console.error('Impossible de décoder le JWT backend après refresh')
-        return { ...token, expired: true, backendAuthenticated: false }
-      }
-
-      return {
-        ...token,
-        ...fields,
-        discordRefreshToken: discordTokens.refresh_token ?? token.discordRefreshToken,
-      }
+    if (!discordRes.ok) {
+      console.error('Echec du refresh Discord:', discordRes.status)
+      return { ...token, ...EXPIRED }
     }
 
-    return { ...token, expired: true, backendAuthenticated: false }
+    const discordTokens = await discordRes.json()
+    current = { ...token, discordRefreshToken: discordTokens.refresh_token ?? discordRefreshToken }
+
+    const backendRes = await fetch(`${getServerApiUrl()}/auth/discord`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ access_token: discordTokens.access_token }),
+    })
+
+    if (backendRes.status >= 500) return current
+    if (!backendRes.ok) {
+      console.error('Echec backend apres refresh Discord:', backendRes.status)
+      return { ...token, ...EXPIRED }
+    }
+
+    const fields = tokenFromBackend(await backendRes.json())
+    if (!fields) {
+      console.error('Impossible de décoder le JWT backend après refresh')
+      return { ...token, ...EXPIRED }
+    }
+    return { ...current, ...fields }
   } catch (error) {
-    console.error('Erreur lors du refresh token:', error)
-    return { ...token, expired: true, backendAuthenticated: false }
+    console.error('Erreur lors du refresh Discord:', error)
+    return current
   }
 }
