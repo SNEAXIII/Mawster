@@ -1,12 +1,13 @@
 {
   "private": true,
   "license": "AGPL-3.0-or-later",
+  "packageManager": "pnpm@12.15.0",
   "scripts": {
     "build": "next build",
     "dev": "cross-env API_PORT=8000 next dev",
     "testing": "cross-env NEXTAUTH_URL='http://localhost:3001' cross-env API_PORT=8001 next dev --turbopack --port 3001",
     "start": "next start",
-    "prod": "npm run build && npm run start",
+    "prod": "pnpm build && pnpm start",
     "cypress:open": "cypress open",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

@@ -202,7 +202,7 @@ services:
         - traefik.http.routers.front.tls.certresolver=letsencrypt
         - traefik.http.routers.front.service=front
         - traefik.http.services.front.loadbalancer.server.port=3000
-        - traefik.http.routers.front.middlewares=security-headers
+        - traefik.http.routers.front.middlewares=security-headers,maintenance
         - traefik.http.middlewares.security-headers.headers.frameDeny=true
         - traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true
         - traefik.http.middlewares.security-headers.headers.referrerPolicy=strict-origin-when-cross-origin
@@ -228,6 +228,9 @@ services:
       - traefik-public
     deploy:
       replicas: 1
+      # The front router references the maintenance middleware served here: never leave it without a task.
+      update_config:
+        order: start-first
       restart_policy:
         condition: on-failure
       labels:
@@ -237,6 +240,17 @@ services:
         - traefik.http.routers.static.tls.certresolver=letsencrypt
         - traefik.http.routers.static.service=static
         - traefik.http.services.static.loadbalancer.server.port=8005
+        - traefik.http.middlewares.maintenance.errors.status=502-504
+        - traefik.http.middlewares.maintenance.errors.service=static
+        - traefik.http.middlewares.maintenance.errors.query=/static/maintenance.html
+        # Lowest priority: only answers once Swarm has dropped the front router (no task left).
+        - traefik.http.routers.maintenance.rule=Host(`www.mawster.app`)
+        - traefik.http.routers.maintenance.priority=1
+        - traefik.http.routers.maintenance.entrypoints=websecure
+        - traefik.http.routers.maintenance.tls.certresolver=letsencrypt
+        - traefik.http.routers.maintenance.service=static
+        - traefik.http.routers.maintenance.middlewares=to-maintenance
+        - traefik.http.middlewares.to-maintenance.replacepath.path=/static/maintenance.html
         - traefik.docker.network=traefik-public
     logging:
       driver: json-file

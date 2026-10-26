@@ -15,7 +15,7 @@ description: >
 L'outil a été retiré du repo. Ce skill sait le remettre et le re-retirer, parce que
 l'installation touche cinq points dont trois ne sont pas évidents.
 
-## Pourquoi ce n'est pas un simple `npm i`
+## Pourquoi ce n'est pas un simple `pnpm add`
 
 Le paquet a besoin de trois pièces qui vivent chacune ailleurs :
 
@@ -38,7 +38,7 @@ Tout se passe dans `front/`.
 ### 1. Dépendances
 
 ```bash
-npm i -D react-dev-inspector @react-dev-inspector/babel-plugin react-dev-utils
+pnpm add -D react-dev-inspector @react-dev-inspector/babel-plugin react-dev-utils
 ```
 
 `react-dev-utils` était historiquement tiré en transitif. L'installer explicitement : sinon
@@ -135,11 +135,11 @@ puis dans le `<body>`, juste après `<TestModeBanner />` :
 ### 7. Vérifier
 
 ```bash
-npm run build
+pnpm build
 ```
 
 Le build doit lister `ƒ /api/dev/open-editor` dans les routes. Puis relancer le serveur dev
-(`npm run dev` dans `front/`) et tester `Ctrl+Shift+X` sur un élément.
+(`pnpm dev` dans `front/`) et tester `Ctrl+Shift+X` sur un élément.
 
 ## Retirer
 
@@ -147,7 +147,7 @@ Le build doit lister `ƒ /api/dev/open-editor` dans les routes. Puis relancer le
 cd front
 rm -f app/_components/dev-inspector.tsx babel.config.js
 rm -rf app/api/dev/open-editor
-npm uninstall react-dev-inspector @react-dev-inspector/babel-plugin react-dev-utils
+pnpm remove react-dev-inspector @react-dev-inspector/babel-plugin react-dev-utils
 ```
 
 Puis retirer l'import et le `<DevInspector />` de `app/layout.tsx`, et les deux rewrites
@@ -167,7 +167,7 @@ font échouer le typecheck du build :
 Ce n'est pas une vraie erreur de code. Purger et rebuilder :
 
 ```bash
-rm -rf .next/dev/types .next-3001/dev/types && npm run build
+rm -rf .next/dev/types .next-3001/dev/types && pnpm build
 ```
 
 ## État actuel du repo

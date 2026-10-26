@@ -56,12 +56,12 @@ repos:
         files: ^front/(?!cypress/).*\.(ts|tsx)$|^front/tsconfig\.json$
 
       # After oxlint --fix so formatting has the last word. Through node: Windows can't run the
-      # node_modules/.bin `#!/bin/sh` wrapper.
+      # node_modules/.bin `#!/bin/sh` wrapper. Scope is .prettierignore's alone, as in CI.
       - id: prettier
         name: prettier (front)
-        entry: node front/node_modules/prettier/bin/prettier.cjs --write --ignore-path front/.prettierignore
+        entry: node front/node_modules/prettier/bin/prettier.cjs --write --ignore-unknown --ignore-path front/.prettierignore
         language: system
-        files: ^front/.*\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|css|json|md)$
+        files: ^front/
 
       - id: cargo-fmt
         name: rustfmt (static-assets)

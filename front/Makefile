@@ -9,24 +9,24 @@ help:
 	@echo "all          --> fix, then format, then types"
 	@echo "data-cy      --> list every data-cy selector in the codebase"
 
-# Both delegate to the npm scripts rather than calling oxlint directly, so a target
-# and its npm counterpart can never drift apart on the same flags.
+# Both delegate to the package.json scripts rather than calling oxlint directly, so a target
+# and its script counterpart can never drift apart on the same flags.
 check:
-	npm run lint:check
+	pnpm lint:check
 
 fix:
-	npm run lint
+	pnpm lint
 
 format:
-	npm run format
+	pnpm format
 
 format-check:
-	npm run format:check
+	pnpm format:check
 
 # The pre-commit hook runs oxlint and prettier but never tsc, so a type error only
 # surfaces at `next build`. This is the cheap way to catch it before pushing.
 types:
-	npx tsc --noEmit
+	pnpm exec tsc --noEmit
 
 # fix before format: oxlint --fix rewrites code, prettier gets the last word on layout —
 # the same order the pre-commit hooks run in.

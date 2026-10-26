@@ -29,8 +29,8 @@ Single test file: `uv run pytest tests/unit/dto/dto_from_model_test.py -v`
 **Migrations** — **never hand-write one**: always the `/db-migrate` skill. Only edit the generated
 file for review-level corrections.
 
-**Frontend** (`front/`): `npm run dev`. The build runs in CI — check a change with
-`npx oxlint --type-aware <files>`. Lint is oxlint alone: suppress with oxlint directives, convert any
+**Frontend** (`front/`): pnpm — `pnpm dev`. The build runs in CI — check a change with
+`pnpm exec oxlint --type-aware <files>`. Lint is oxlint alone: suppress with oxlint directives, convert any
 `eslint-disable` you meet.
 
 **Never run by hand what `.pre-commit-config.yaml` already runs** — ruff (check + format),
@@ -40,7 +40,7 @@ raises-arity, zizmor, oxlint, prettier, app and cypress `tsc`.
 the user runs `make e2e-open` (Cypress UI) — never launch it yourself.
 
 **Servers**: `docker compose -f compose-dev.yaml up -d`, then `make run-dev` (`api/`) and
-`npm run dev` (`front/`).
+`pnpm dev` (`front/`).
 
 **Calling the dev API**: `curl -H "Authorization: Bearer $(make -s dev-token)"` from `api/` acts as
 the user's own account; `PSEUDO=<game_pseudo>` acts as another player. The DB stores UUIDs as 32
@@ -141,7 +141,7 @@ A fresh worktree has none of `node_modules` (root), `front/node_modules`, `api/.
 checkout and wait for a yes** — never install per worktree, never link silently. On Windows use a
 junction (`mklink /J <link> <target>`), same volume only.
 
-A link **shares** the environment: read-only tooling is safe; anything that writes (`npm install`,
+A link **shares** the environment: read-only tooling is safe; anything that writes (`pnpm install`,
 `uv sync`, `uv run` on a changed lockfile) corrupts the main checkout — warn first and install for
 real instead.
 
