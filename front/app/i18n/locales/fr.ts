@@ -1420,6 +1420,9 @@ const fr: Translations = {
     defenseTitle: 'Mes champions en défense',
     node: 'Nœud {node}',
     aiImportTitle: 'Import IA de mon roster',
+    warTitle: 'Guerre contre {opponent}',
+    warNotReady: 'Groupe de combat pas encore prêt',
+    warReady: 'Groupe de combat prêt',
     loadError: 'Impossible de charger tes joueurs.',
   },
 

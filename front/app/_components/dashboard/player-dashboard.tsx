@@ -10,6 +10,7 @@ import { DashboardDefense } from './dashboard-defense'
 import { DashboardHeader } from './dashboard-header'
 import { DashboardInvitations } from './dashboard-invitations'
 import { DashboardUpgradeRequests } from './dashboard-upgrade-requests'
+import { DashboardWar } from './dashboard-war'
 import { usePlayerDashboard } from './use-player-dashboard'
 
 export function PlayerDashboard() {
@@ -51,7 +52,14 @@ export function PlayerDashboard() {
                 invitations={vm.dashboard.invitations}
                 onAnswered={vm.afterInvitationAnswered}
               />
-              {/* Task 4: the war block mounts here when vm.dashboard.war is non-null, keyed by vm.refreshKey. */}
+              {vm.dashboard.war && vm.dashboard.alliance && (
+                <DashboardWar
+                  key={vm.refreshKey}
+                  allianceId={vm.dashboard.alliance.alliance_id}
+                  war={vm.dashboard.war}
+                  pseudo={vm.selected.game_pseudo}
+                />
+              )}
               <DashboardUpgradeRequests requests={vm.dashboard.upgrade_requests} />
               <DashboardDefense nodes={vm.dashboard.defense} />
             </>

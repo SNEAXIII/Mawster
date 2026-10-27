@@ -1406,6 +1406,9 @@ const en = {
     defenseTitle: 'My champions on defense',
     node: 'Node {node}',
     aiImportTitle: 'Import my roster with AI',
+    warTitle: 'War against {opponent}',
+    warNotReady: 'Battlegroup not Ready yet',
+    warReady: 'Battlegroup Ready',
     loadError: 'Your players could not be loaded.',
   },
 
