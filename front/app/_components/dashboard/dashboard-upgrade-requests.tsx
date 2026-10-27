@@ -1,0 +1,46 @@
+'use client'
+
+import { useI18n } from '@/app/i18n'
+import { type UpgradeRequest, RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
+import ChampionPortrait from '@/components/champion-portrait'
+import { Card, CardContent } from '@/components/ui/card'
+
+export function DashboardUpgradeRequests({ requests }: Readonly<{ requests: UpgradeRequest[] }>) {
+  const { t } = useI18n()
+  if (requests.length === 0) return null
+
+  return (
+    <Card data-cy='dashboard-upgrade-requests'>
+      <CardContent className='flex flex-col gap-3 p-3 sm:p-4'>
+        <h2 className='text-sm font-medium text-muted-foreground'>
+          {t.roster.upgradeRequests.title} ({requests.length})
+        </h2>
+        <ul className='grid gap-2 sm:grid-cols-2'>
+          {requests.map((req) => (
+            <li
+              key={req.id}
+              data-cy='dashboard-upgrade-request'
+              className='flex items-center gap-3 rounded-md border border-border bg-accent/50 p-2'
+            >
+              <ChampionPortrait
+                imageUrl={req.image_url}
+                name={req.champion_name}
+                rarity={req.current_rarity}
+                size={40}
+              />
+              <div className='min-w-0 flex-1 text-sm'>
+                <p className='truncate font-semibold'>
+                  {shortenChampionName(req.champion_name)} →{' '}
+                  {RARITY_LABELS[req.requested_rarity] ?? req.requested_rarity}
+                </p>
+                <p className='text-xs text-muted-foreground'>
+                  {t.roster.upgradeRequests.requestedBy.replace('{pseudo}', req.requester_pseudo)}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  )
+}

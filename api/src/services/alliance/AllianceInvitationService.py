@@ -131,10 +131,10 @@ class AllianceInvitationService:
 
     @classmethod
     async def get_invitations_for_user(
-        cls, session: SessionDep, user_id: uuid.UUID
+        cls, session: SessionDep, user_id: uuid.UUID, game_account_id: uuid.UUID | None = None
     ) -> list[AllianceInvitation]:
-        """Get all pending invitations for live game accounts owned by the user."""
-        result = await session.exec(
+        """Get all pending invitations for live game accounts owned by the user, or one of them."""
+        stmt = (
             select(AllianceInvitation)
             .join(GameAccount, col(AllianceInvitation.game_account_id) == GameAccount.id)
             .where(
@@ -144,6 +144,9 @@ class AllianceInvitationService:
             )
             .options(*_INVITATION_OPTIONS)
         )
+        if game_account_id is not None:
+            stmt = stmt.where(AllianceInvitation.game_account_id == game_account_id)
+        result = await session.exec(stmt)
         return list(result.all())
 
     @classmethod

@@ -79,6 +79,13 @@ _Avoid_: alliance group, BG (in prose), group.
 _Debt_: `GameAccount.alliance_group` spells this concept a second time, untyped and
 unbounded — should be renamed to `battlegroup` and given the `Battlegroup` type.
 
+**Player Dashboard**:
+The signed-in home: what one Player has to act on right now — Alliance invitations, Upgrade
+Requests, their own fights in the running War, their Champions on the Active Plan. Shows one
+Player at a time, picked among the Account's Players. Acts as a plain member even for an
+Officer or a Strategist: planning stays on the War and Defense screens.
+_Avoid_: board (taken by Tier List), user dashboard, Admin dashboard (the platform one).
+
 ### Champions
 
 **Champion**:

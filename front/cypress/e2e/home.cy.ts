@@ -1,4 +1,4 @@
-import { setupUser } from '../support/e2e';
+import { setupAllianceOwner } from '../support/e2e';
 
 const SIGN_UP_CTAS = ['hero-cta-primary', 'cta-discord', 'cta-google'];
 
@@ -15,13 +15,28 @@ describe('Home', () => {
     cy.getByCy('home-signed-in').should('not.exist');
   });
 
-  it('replaces the landing with a placeholder for signed-in players', () => {
-    setupUser('home-signed-in').then(({ user_id }) => {
-      cy.apiLogin(user_id);
+  it('shows the Player Dashboard to signed-in players', () => {
+    cy.apiBatchSetup([{ discord_token: 'home-signed-in', game_pseudo: 'HomePlayer' }]).then((users) => {
+      cy.apiLogin(users['home-signed-in'].user_id);
       cy.getByCy('home-signed-in').should('be.visible');
-      cy.getByCy('home-signed-in-cta').should('have.attr', 'href', '/game/account');
+      cy.getByCy('dashboard-refresh').should('be.visible');
+      cy.getByCy('dashboard-player-select').should('not.exist');
+      cy.getByCy('import-vision-button').should('be.visible');
       SIGN_UP_CTAS.forEach((cyId) => {
         cy.getByCy(cyId).should('not.exist');
+      });
+    });
+  });
+
+  it('lets a Player accept a pending invitation from the dashboard', () => {
+    setupAllianceOwner('home-invite', 'OwnerAcc', 'DashAlliance', 'DA').then(({ userData: owner, allianceId }) => {
+      cy.apiBatchSetup([{ discord_token: 'home-invitee', game_pseudo: 'Invitee' }]).then((users) => {
+        const invitee = users['home-invitee'];
+        cy.apiInviteMember(owner.access_token, allianceId, invitee.account_id!);
+        cy.apiLogin(invitee.user_id);
+        cy.getByCy('my-invitation-DashAlliance').should('be.visible');
+        cy.getByCy('accept-invitation').click();
+        cy.getByCy('my-invitations-section').should('not.exist');
       });
     });
   });
