@@ -13,7 +13,6 @@ class PlayerDashboardAlliance(BaseModel):
 
 
 class PlayerDashboardWar(BaseModel):
-    war_id: uuid.UUID
     opponent_name: str
     battlegroup: int
     is_ready: bool

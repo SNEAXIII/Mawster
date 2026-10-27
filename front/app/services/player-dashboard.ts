@@ -9,7 +9,6 @@ export interface PlayerDashboardAlliance {
 }
 
 export interface PlayerDashboardWar {
-  war_id: string
   opponent_name: string
   battlegroup: number
   is_ready: boolean

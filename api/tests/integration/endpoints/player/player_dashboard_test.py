@@ -120,7 +120,6 @@ async def test_player_in_alliance_sees_ready_war_and_own_active_defense():
     assert body["alliance"]["battlegroup"] == 1
     assert [n["node_number"] for n in body["defense"]] == [1]
     assert body["war"] == {
-        "war_id": str(war.id),
         "opponent_name": "Enemy",
         "battlegroup": 1,
         "is_ready": True,

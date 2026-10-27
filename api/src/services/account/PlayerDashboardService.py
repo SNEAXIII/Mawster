@@ -77,7 +77,6 @@ class PlayerDashboardService:
         if war is None:
             return None
         return PlayerDashboardWar(
-            war_id=war.id,
             opponent_name=war.opponent_name,
             battlegroup=player.alliance_group,
             is_ready=await WarService.ready_row(session, war.id, player.alliance_group) is not None,
