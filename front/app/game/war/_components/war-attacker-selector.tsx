@@ -16,7 +16,7 @@ import { slotKey, type AvailableAttacker, type WarPlacement } from '@/app/servic
 import AttackerEntryRow from './attacker-entry-row'
 import WarNoteEditor from './war-note-editor'
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar'
-import RarityFilterToggles from '@/app/game/_components/rarity-filter-toggles'
+import RankRangeFilter from '@/app/game/_components/rank-range-filter'
 import { useRarityFilter, rarityWeight } from '@/app/game/_components/use-rarity-filter'
 import { useCurrentSeason } from '@/hooks/use-current-season'
 
@@ -66,8 +66,8 @@ export default function WarAttackerSelector({
   const [sagaFilter, setSagaFilter] = useState(false)
   const [preferredFilter, setPreferredFilter] = useState(false)
   const {
-    activeTiers,
-    toggleTier,
+    range: rankRange,
+    setRange: setRankRange,
     matches: matchRarity,
   } = useRarityFilter('mawster:war-attacker-rarity-tiers')
 
@@ -368,9 +368,9 @@ export default function WarAttackerSelector({
                 canReset={canReset}
                 onReset={handleReset}
               />
-              <RarityFilterToggles
-                activeTiers={activeTiers}
-                onToggle={toggleTier}
+              <RankRangeFilter
+                range={rankRange}
+                onChange={setRankRange}
                 label={t.game.war.rankFilter}
                 cyPrefix='war-attacker-rarity'
               />

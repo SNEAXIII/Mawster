@@ -1,4 +1,4 @@
-import { setupAttackerScenario, openWarNode } from '../../support/e2e';
+import { setupAttackerScenario, openWarNode, sliderThumb } from '../../support/e2e';
 
 /** Pseudos built by setupAttackerScenario — mirrors its `${prefix}Owner`.slice(0, 16). */
 const ownerPseudo = (prefix: string) => `${prefix}Owner`.slice(0, 16);
@@ -50,6 +50,8 @@ const expectHidden = (...names: string[]) =>
 /** Two member groups overflow the dialog's scrollable list — scroll before asserting. */
 const expectVisibleInList = (...names: string[]) =>
   names.forEach((name) => cy.getByCy(`attacker-card-${name}`).scrollIntoView().should('be.visible'));
+
+const lowRankThumb = () => sliderThumb('war-attacker-rarity');
 
 describe('War – WarAttackerSelector filters', () => {
   beforeEach(() => {
@@ -250,7 +252,7 @@ describe('War – WarAttackerSelector rarity filter', () => {
   // 6★ attackers are hidden by default but a toggle reveals them
   // =========================================================================
 
-  it('hides 6-star attackers by default and reveals them via the 6-star toggle', () => {
+  it('hides 6-star attackers by default and reveals them when the low end moves down', () => {
     setupAttackerScenario('atk-rar-def').then(({ adminToken, memberData, ownerData, memberAccId }) => {
       // Member already has Wolverine 7r3; add a 6r5 champion
       giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', rarity: '6r5' });
@@ -261,19 +263,18 @@ describe('War – WarAttackerSelector rarity filter', () => {
       expectVisible('Wolverine');
       expectHidden('Storm');
 
-      // The rarity filter exposes 6★ tiers too — enabling 6r5 reveals the attacker.
-      cy.getByCy('war-attacker-rarity-6r4').should('be.visible');
-      cy.getByCy('war-attacker-rarity-7r3').should('be.visible');
-      cy.getByCy('war-attacker-rarity-6r5').click();
+      // One step left puts the low end on 6r5 (index 1) and reveals the attacker.
+      cy.getByCy('war-attacker-rarity').should('be.visible');
+      lowRankThumb().type('{leftarrow}').should('have.attr', 'aria-valuenow', '1');
       expectVisible('Storm', 'Wolverine');
     });
   });
 
   // =========================================================================
-  // Toggling a 7★ tier off hides that tier
+  // Raising the low end hides the ranks below it
   // =========================================================================
 
-  it('deactivating a 7-star tier hides attackers of that exact tier', () => {
+  it('raising the low end of the range hides attackers below it', () => {
     setupAttackerScenario('atk-rar-tier').then(({ adminToken, memberData, ownerData, memberAccId }) => {
       // Member has Wolverine 7r3; add Storm at 7r5
       giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', rarity: '7r5' });
@@ -283,8 +284,8 @@ describe('War – WarAttackerSelector rarity filter', () => {
       // Both 7★ visible by default
       expectVisible('Wolverine', 'Storm');
 
-      // Turn 7r3 off → Wolverine (7r3) hidden, Storm (7r5) stays
-      cy.getByCy('war-attacker-rarity-7r3').click();
+      // Low end 7r1 → 7r4 hides Wolverine (7r3), Storm (7r5) stays
+      lowRankThumb().type('{rightarrow}{rightarrow}{rightarrow}').should('have.attr', 'aria-valuenow', '5');
       expectHidden('Wolverine');
       expectVisible('Storm');
     });
@@ -301,8 +302,8 @@ describe('War – WarAttackerSelector rarity filter', () => {
 
       openAttackerSelector(ownerData.user_id);
 
-      // Turn 7r3 off → Wolverine (7r3) hidden, Storm (7r5) stays
-      cy.getByCy('war-attacker-rarity-7r3').click();
+      // Low end 7r1 → 7r4 hides Wolverine (7r3), Storm (7r5) stays
+      lowRankThumb().type('{rightarrow}{rightarrow}{rightarrow}').should('have.attr', 'aria-valuenow', '5');
       expectHidden('Wolverine');
       expectVisible('Storm');
 
@@ -317,6 +318,15 @@ describe('War – WarAttackerSelector rarity filter', () => {
       cy.getByCy('war-attacker-search').should('not.exist');
       openWarNode(10);
       cy.getByCy('war-attacker-search').should('be.visible');
+      expectHidden('Wolverine');
+      expectVisible('Storm');
+
+      // A page reload reads it back from storage
+      cy.reload();
+      cy.getByCy('war-mode-attackers').click();
+      openWarNode(10);
+      cy.getByCy('war-attacker-search').should('be.visible');
+      lowRankThumb().should('have.attr', 'aria-valuenow', '5');
       expectHidden('Wolverine');
       expectVisible('Storm');
     });

@@ -97,6 +97,9 @@ Cypress.Commands.add('slideTo', (slider: string, label: string) => {
   step(10);
 });
 
+/** Thumb `index` of a `LabeledSlider` — 0 is the low end of a range, 1 the high end. */
+export const sliderThumb = (slider: string, index = 0) => cy.getByCy(slider).find('[role="slider"]').eq(index);
+
 // ── Truncate DB (direct backend call) ────────────────────────────────────────
 
 Cypress.Commands.add('truncateDb', () => {
