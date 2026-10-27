@@ -552,6 +552,8 @@ const en = {
         select: 'Plan',
         none: 'No plan yet for this battlegroup and format.',
         noActive: 'No active defense plan for this battlegroup yet.',
+        noActiveManager:
+          'No active plan: members see no defense. Validate a plan, then set it as active.',
         createFirst: 'Create a plan to start placing defenders.',
         create: 'New plan',
         createTitle: 'New defense plan',
