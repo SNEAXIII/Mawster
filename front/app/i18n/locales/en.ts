@@ -72,10 +72,6 @@ const en = {
     heroSubtitle:
       'Mawster turns Alliance War into one clear plan — roster management, fight history, defense, attack, synergies and stats in one place. No more screenshots or Excel sheets to manage your teammates rosters.',
     heroCtaPrimary: 'Create an account',
-    signedInTitle: 'Welcome, {name}',
-    signedInTitleAnonymous: 'Welcome back',
-    signedInSubtitle: 'Your dashboard is on its way.',
-    signedInCta: 'Go to my roster',
     heroCtaSecondary: 'See features',
     heroNote: 'Discord & Google login · Line and more coming soon',
     heroContactQuestion: 'Any concern? Reach me on',
@@ -1400,6 +1396,19 @@ const en = {
       9: 'Unfazed',
     },
   },
+  playerDashboard: {
+    title: 'My dashboard',
+    pickPlayer: 'Choose a player',
+    refresh: 'Refresh',
+    noPlayer: 'Create a player to see what you have to do.',
+    createPlayer: 'Create a player',
+    openRoster: 'Open roster',
+    defenseTitle: 'My champions on defense',
+    node: 'Node {node}',
+    aiImportTitle: 'Import my roster with AI',
+    loadError: 'Your players could not be loaded.',
+  },
+
   tierlist: {
     clearTierConfirm: 'Send the {count} champions in row {label} back to the pool?',
     removeTierConfirm: 'Delete row {label}? Its champions go back to the pool.',
