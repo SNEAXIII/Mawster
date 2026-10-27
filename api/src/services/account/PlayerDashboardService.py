@@ -1,7 +1,6 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlmodel import select
 from starlette import status
 
 from src.dto.account.game.dto_upgrade_request import UpgradeRequestResponse
@@ -12,10 +11,8 @@ from src.dto.player.dto_player_dashboard import (
     PlayerDashboardResponse,
     PlayerDashboardWar,
 )
-from src.enums.WarStatus import WarStatus
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
 from src.models.user.GameAccount import GameAccount
-from src.models.war.War import War
 from src.services.account.game.GameAccountService import GameAccountService
 from src.services.admin.SeasonService import SeasonService
 from src.services.alliance.AllianceInvitationService import AllianceInvitationService
@@ -67,13 +64,7 @@ class PlayerDashboardService:
 
     @staticmethod
     async def _war(session: SessionDep, player: GameAccount) -> PlayerDashboardWar | None:
-        war = (
-            await session.exec(
-                select(War).where(
-                    War.alliance_id == player.alliance_id, War.status == WarStatus.ACTIVE
-                )
-            )
-        ).first()
+        war = await WarService.find_active_war(session, player.alliance_id)
         if war is None:
             return None
         return PlayerDashboardWar(

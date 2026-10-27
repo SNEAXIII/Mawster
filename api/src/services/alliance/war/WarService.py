@@ -215,13 +215,17 @@ class WarService:
             for w in wars
         ]
 
-    @classmethod
-    async def get_current_war(cls, session: SessionDep, alliance_id: uuid.UUID) -> WarResponse:
-        war = (
+    @staticmethod
+    async def find_active_war(session: SessionDep, alliance_id: uuid.UUID) -> War | None:
+        return (
             await session.exec(
                 select(War).where(War.alliance_id == alliance_id, War.status == WarStatus.ACTIVE)
             )
         ).first()
+
+    @classmethod
+    async def get_current_war(cls, session: SessionDep, alliance_id: uuid.UUID) -> WarResponse:
+        war = await cls.find_active_war(session, alliance_id)
         if war is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, NO_ACTIVE_WAR_FOR_ALLIANCE)
         return await cls._war_response(session, war.id)
