@@ -20,7 +20,7 @@ Usage:
     python -m src.fixtures.sample_data
 """
 
-from datetime import timedelta
+from datetime import UTC, timedelta
 
 from faker import Faker
 from sqlmodel import Session, select
@@ -302,7 +302,7 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
                 login="misterbalise2",
                 discord_id="403941390586871808",
                 role=Roles.SUPER_ADMIN,
-                created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
+                created_at=fake.date_time_between(start_date="-1y", end_date=NOW, tzinfo=UTC),
                 last_login_date=NOW,
             )
             session.add(super_admin)
@@ -328,8 +328,8 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
                 login="misterbalise",
                 discord_id="1274730290698256406",
                 role=Roles.ADMIN,
-                created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
-                last_login_date=fake.date_time_between(start_date="-7d", end_date=NOW),
+                created_at=fake.date_time_between(start_date="-1y", end_date=NOW, tzinfo=UTC),
+                last_login_date=fake.date_time_between(start_date="-7d", end_date=NOW, tzinfo=UTC),
             )
             session.add(simple_admin)
             session.flush()
@@ -361,8 +361,10 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
                     discord_id=None if google_only else f"discord_{slug}_{user_index}",
                     google_id=f"google_{slug}_{user_index}" if has_google else None,
                     role=Roles.USER,
-                    created_at=fake.date_time_between(start_date="-1y", end_date=NOW),
-                    last_login_date=fake.date_time_between(start_date="-30d", end_date=NOW),
+                    created_at=fake.date_time_between(start_date="-1y", end_date=NOW, tzinfo=UTC),
+                    last_login_date=fake.date_time_between(
+                        start_date="-30d", end_date=NOW, tzinfo=UTC
+                    ),
                     disabled_at=(NOW - timedelta(days=3)) if user_index == 15 else None,
                 )
                 session.add(user)
@@ -394,7 +396,9 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
                 session.add(
                     LoginLog(
                         user_id=user.id,
-                        date_connexion=fake.date_time_between(start_date="-30d", end_date=NOW),
+                        date_connexion=fake.date_time_between(
+                            start_date="-30d", end_date=NOW, tzinfo=UTC
+                        ),
                     )
                 )
 
@@ -461,7 +465,9 @@ def load_sample_data(engine=sync_engine):  # noqa: C901, PLR0912, PLR0915
                     AllianceOfficer(
                         alliance_id=alliance.id,
                         game_account_id=game_accounts[idx].id,
-                        assigned_at=fake.date_time_between(start_date="-30d", end_date=NOW),
+                        assigned_at=fake.date_time_between(
+                            start_date="-30d", end_date=NOW, tzinfo=UTC
+                        ),
                     )
                 )
 
