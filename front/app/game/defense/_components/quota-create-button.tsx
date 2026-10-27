@@ -29,6 +29,7 @@ export default function QuotaCreateButton({
     >
       <Button
         size='sm'
+        variant='outline'
         onClick={onClick}
         disabled={full}
         data-cy={`${dataCy}-create-btn`}
