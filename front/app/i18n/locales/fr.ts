@@ -556,6 +556,8 @@ const fr: Translations = {
         select: 'Plan',
         none: 'Aucun plan pour ce groupe et ce format.',
         noActive: "Aucun plan de défense actif pour ce groupe pour l'instant.",
+        noActiveManager:
+          'Aucun plan actif : les membres ne voient aucune défense. Validez un plan, puis activez-le.',
         createFirst: 'Créez un plan pour commencer à placer des défenseurs.',
         create: 'Nouveau plan',
         createTitle: 'Nouveau plan de défense',

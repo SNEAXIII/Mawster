@@ -14,10 +14,11 @@ describe('Defense – plans', () => {
     setupAllianceOwner('def-plans-quota', 'PlanOwner', 'PlanAlliance', 'PQ').then(({ userData }) => {
       cy.apiLogin(userData.user_id, 'defense');
       cy.getByCy('plan-quota').should('have.text', '0/10');
+      cy.getByCy('defense-no-active-plan-warning').should('not.exist');
       cy.getByCy('plan-create-btn').click();
       submitName('Rush');
       cy.getByCy('plan-quota').should('have.text', '1/10');
-      cy.getByCy('plan-state-badge').should('be.visible');
+      cy.getByCy('plan-state-badge').should('have.attr', 'data-state', 'incomplete');
     });
   });
 
@@ -56,10 +57,21 @@ describe('Defense – plans', () => {
   it('activates a validated plan', () => {
     setupActiveDefense('def-plans-activate', { activate: false }).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
+      cy.getByCy('plan-state-badge').should('have.attr', 'data-state', 'validated');
       cy.getByCy('plan-active-badge').should('not.exist');
+      cy.getByCy('defense-no-active-plan-warning').should('be.visible');
       cy.getByCy('plan-activate-btn').should('be.enabled').click();
       cy.getByCy('plan-active-badge').should('be.visible');
       cy.getByCy('plan-activate-btn').should('not.exist');
+      cy.getByCy('defense-no-active-plan-warning').should('not.exist');
+    });
+  });
+
+  it('warns the manager only, not the members, when no plan is active', () => {
+    setupActiveDefense('def-plans-noactive', { activate: false }).then(({ memberData }) => {
+      cy.apiLogin(memberData.user_id, 'defense');
+      cy.getByCy('defense-no-active-plan').should('be.visible');
+      cy.getByCy('defense-no-active-plan-warning').should('not.exist');
     });
   });
 
