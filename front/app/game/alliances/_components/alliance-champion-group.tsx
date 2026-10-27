@@ -77,32 +77,24 @@ export default function AllianceChampionGroup({
             >
               {e.game_pseudo}
             </span>
-            <span className='text-xs font-bold text-muted-foreground'>
+            <span className='text-xs font-bold tabular-nums text-muted-foreground'>
               {RARITY_LABELS[e.rarity] ?? e.rarity}
             </span>
-            {e.signature > 0 ? (
-              <span
-                className='text-amber-400 text-xs font-semibold'
-                data-cy='champion-owner-sig'
-              >
-                sig {e.signature}
-              </span>
-            ) : (
-              <span
-                className='text-white/50 text-xs'
-                data-cy='champion-owner-sig'
-              >
-                sig 0
-              </span>
-            )}
-            {e.ascension > 0 && (
-              <span
-                className='text-purple-400 text-xs font-semibold'
-                data-cy='champion-owner-ascension'
-              >
-                A{e.ascension}
-              </span>
-            )}
+            <span
+              className={cn(
+                'w-12 text-xs tabular-nums',
+                e.signature > 0 ? 'font-semibold text-amber-400' : 'text-muted-foreground'
+              )}
+              data-cy='champion-owner-sig'
+            >
+              sig {e.signature}
+            </span>
+            <span
+              className='w-5 text-xs font-semibold tabular-nums text-purple-400'
+              data-cy={e.ascension > 0 ? 'champion-owner-ascension' : undefined}
+            >
+              {e.ascension > 0 && `A${e.ascension}`}
+            </span>
             {canRequestUpgrade && (
               <Button
                 type='button'
