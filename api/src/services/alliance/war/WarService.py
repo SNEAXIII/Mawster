@@ -379,11 +379,11 @@ class WarService:
             battlegroup=battlegroup,
             placements=await cls._placement_dtos(session, placements),
             progress=await cls._war_progress(session, war_id),
-            is_ready=await cls._ready_row(session, war_id, battlegroup) is not None,
+            is_ready=await cls.ready_row(session, war_id, battlegroup) is not None,
         )
 
     @staticmethod
-    async def _ready_row(
+    async def ready_row(
         session: SessionDep, war_id: uuid.UUID, battlegroup: int
     ) -> WarReadyBattlegroup | None:
         return (
@@ -400,7 +400,7 @@ class WarService:
         cls, session: SessionDep, war: War, battlegroup: int, ready: bool
     ) -> bool:
         ClosedWarPolicy.assert_open(war)
-        row = await cls._ready_row(session, war.id, battlegroup)
+        row = await cls.ready_row(session, war.id, battlegroup)
         if ready and row is None:
             session.add(WarReadyBattlegroup(war_id=war.id, battlegroup=battlegroup))
         elif not ready and row is not None:

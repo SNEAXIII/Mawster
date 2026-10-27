@@ -2,6 +2,7 @@ from src.controllers.account.game.champion_user_controller import champion_user_
 from src.controllers.account.game.game_account_controller import game_account_controller
 from src.controllers.account.game.upgrade_request_controller import upgrade_request_controller
 from src.controllers.account.game.vision_controller import vision_controller
+from src.controllers.account.me_dashboard_controller import me_dashboard_controller
 from src.controllers.account.me_moderation_controller import me_moderation_controller
 from src.controllers.account.tierlist_controller import tierlist_controller
 from src.controllers.account.user_controller import user_controller
@@ -70,6 +71,7 @@ routers = [
     note_report_controller,
     moderation_controller,
     me_moderation_controller,
+    me_dashboard_controller,
     war_attacker_controller,
     war_synergy_controller,
     war_prefight_controller,
