@@ -1,11 +1,8 @@
 'use client'
 
-import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
-import { type UpgradeRequest, RARITY_LABELS } from '@/app/services/roster'
+import { type UpgradeRequest, RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
 import ChampionPortrait from '@/components/champion-portrait'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
 export function DashboardUpgradeRequests({ requests }: Readonly<{ requests: UpgradeRequest[] }>) {
@@ -15,25 +12,10 @@ export function DashboardUpgradeRequests({ requests }: Readonly<{ requests: Upgr
   return (
     <Card data-cy='dashboard-upgrade-requests'>
       <CardContent className='flex flex-col gap-3 p-3 sm:p-4'>
-        <div className='flex items-center justify-between gap-2'>
-          <h2 className='text-sm font-medium text-muted-foreground'>
-            {t.roster.upgradeRequests.title} ({requests.length})
-          </h2>
-          <Button
-            asChild
-            variant='ghost'
-            size='sm'
-          >
-            <Link
-              href='/game/account'
-              data-cy='dashboard-upgrade-requests-link'
-            >
-              {t.playerDashboard.openRoster}
-              <ArrowRight className='h-4 w-4' />
-            </Link>
-          </Button>
-        </div>
-        <ul className='grid gap-2 sm:grid-cols-2 lg:grid-cols-3'>
+        <h2 className='text-sm font-medium text-muted-foreground'>
+          {t.roster.upgradeRequests.title} ({requests.length})
+        </h2>
+        <ul className='grid gap-2 sm:grid-cols-2'>
           {requests.map((req) => (
             <li
               key={req.id}
@@ -48,7 +30,7 @@ export function DashboardUpgradeRequests({ requests }: Readonly<{ requests: Upgr
               />
               <div className='min-w-0 flex-1 text-sm'>
                 <p className='truncate font-semibold'>
-                  {req.champion_name} →{' '}
+                  {shortenChampionName(req.champion_name)} →{' '}
                   {RARITY_LABELS[req.requested_rarity] ?? req.requested_rarity}
                 </p>
                 <p className='text-xs text-muted-foreground'>

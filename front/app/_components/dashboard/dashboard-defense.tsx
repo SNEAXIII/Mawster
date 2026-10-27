@@ -2,6 +2,7 @@
 
 import { useI18n } from '@/app/i18n'
 import type { DefensePlanNode } from '@/app/services/defense'
+import { shortenChampionName } from '@/app/services/roster'
 import ChampionPortrait from '@/components/champion-portrait'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -15,7 +16,7 @@ export function DashboardDefense({ nodes }: Readonly<{ nodes: DefensePlanNode[] 
         <h2 className='text-sm font-medium text-muted-foreground'>
           {t.playerDashboard.defenseTitle} ({nodes.length})
         </h2>
-        <ul className='grid gap-2 sm:grid-cols-2 lg:grid-cols-3'>
+        <ul className='grid gap-2 sm:grid-cols-2'>
           {[...nodes]
             .sort((a, b) => a.node_number - b.node_number)
             .map((node) => (
@@ -31,7 +32,9 @@ export function DashboardDefense({ nodes }: Readonly<{ nodes: DefensePlanNode[] 
                   size={40}
                 />
                 <div className='min-w-0 flex-1 text-sm'>
-                  <p className='truncate font-semibold'>{node.champion_name}</p>
+                  <p className='truncate font-semibold'>
+                    {shortenChampionName(node.champion_name)}
+                  </p>
                   <p className='text-xs text-muted-foreground'>
                     {t.playerDashboard.node.replace('{node}', String(node.node_number))}
                   </p>

@@ -34,6 +34,7 @@ export function usePlayerDashboard() {
 
   const selectPlayer = (id: string) => {
     setPicked(id)
+    setDashboard(null)
     try {
       window.localStorage.setItem(STORAGE_KEY, id)
     } catch {
@@ -44,7 +45,6 @@ export function usePlayerDashboard() {
   useEffect(() => {
     if (!selectedId) return
     let stale = false
-    setDashboard(null)
     getPlayerDashboard(selectedId)
       .then((data) => !stale && setDashboard(data))
       .catch((err: unknown) => console.error(err))

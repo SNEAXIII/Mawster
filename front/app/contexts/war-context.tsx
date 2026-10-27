@@ -121,6 +121,8 @@ interface WarContextValue {
     opponentDeaths: number | null
   ) => Promise<void>
   refreshAlliances: () => Promise<void>
+  /** Reloads the map without the loading spinner, as the poll does. */
+  reloadWarSilently: () => void
   handlePlaceDefender: (
     championId: string,
     championName: string,
@@ -901,6 +903,7 @@ export function WarProvider({
       handleEditWar,
       handleEndWar,
       refreshAlliances: refresh,
+      reloadWarSilently: () => void fetchWarDefense(true),
       handlePlaceDefender,
       handleRemoveDefender,
       handleConfirmRemoveDefender,
@@ -961,6 +964,7 @@ export function WarProvider({
       handleNodeClick,
       synergies,
       prefights,
+      fetchWarDefense,
     ]
   )
 

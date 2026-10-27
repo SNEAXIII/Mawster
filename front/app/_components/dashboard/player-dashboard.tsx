@@ -9,6 +9,7 @@ import { DashboardAiImport } from './dashboard-ai-import'
 import { DashboardDefense } from './dashboard-defense'
 import { DashboardHeader } from './dashboard-header'
 import { DashboardInvitations } from './dashboard-invitations'
+import { DashboardLinks } from './dashboard-links'
 import { DashboardUpgradeRequests } from './dashboard-upgrade-requests'
 import { DashboardWar } from './dashboard-war'
 import { usePlayerDashboard } from './use-player-dashboard'
@@ -18,8 +19,8 @@ export function PlayerDashboard() {
   const vm = usePlayerDashboard()
 
   return (
-    <section
-      className='mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6'
+    <div
+      className='flex flex-col gap-4'
       data-cy='home-signed-in'
     >
       {vm.accountsLoadError && <ErrorBanner message={t.playerDashboard.loadError} />}
@@ -46,30 +47,39 @@ export function PlayerDashboard() {
             onRefresh={vm.refresh}
             refreshDisabled={vm.coolingDown}
           />
-          {vm.dashboard && (
-            <>
-              <DashboardInvitations
-                invitations={vm.dashboard.invitations}
-                onAnswered={vm.afterInvitationAnswered}
-              />
-              {vm.dashboard.war && vm.dashboard.alliance && (
+          <div className='flex flex-wrap items-center gap-2'>
+            <DashboardLinks alliance={vm.dashboard?.alliance ?? null} />
+            <DashboardAiImport
+              key={vm.selected.id}
+              gameAccountId={vm.selected.id}
+            />
+          </div>
+          <div className='flex flex-col gap-4 lg:flex-row lg:items-start'>
+            <div className='grid min-w-0 flex-1 items-start gap-4 xl:grid-cols-2'>
+              {vm.dashboard && (
+                <>
+                  <DashboardInvitations
+                    invitations={vm.dashboard.invitations}
+                    onAnswered={vm.afterInvitationAnswered}
+                  />
+                  <DashboardUpgradeRequests requests={vm.dashboard.upgrade_requests} />
+                  <DashboardDefense nodes={vm.dashboard.defense} />
+                </>
+              )}
+            </div>
+            {vm.dashboard?.war && vm.dashboard.alliance && (
+              <div className='w-full lg:w-92 lg:shrink-0'>
                 <DashboardWar
-                  key={vm.refreshKey}
+                  refreshKey={vm.refreshKey}
                   allianceId={vm.dashboard.alliance.alliance_id}
                   war={vm.dashboard.war}
                   pseudo={vm.selected.game_pseudo}
                 />
-              )}
-              <DashboardUpgradeRequests requests={vm.dashboard.upgrade_requests} />
-              <DashboardDefense nodes={vm.dashboard.defense} />
-            </>
-          )}
-          <DashboardAiImport
-            key={vm.selected.id}
-            gameAccountId={vm.selected.id}
-          />
+              </div>
+            )}
+          </div>
         </>
       )}
-    </section>
+    </div>
   )
 }

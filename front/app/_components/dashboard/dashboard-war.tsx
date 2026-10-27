@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Swords } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
@@ -20,10 +20,11 @@ interface DashboardWarProps {
   allianceId: string
   war: PlayerDashboardWar
   pseudo: string
+  refreshKey: number
 }
 
 /** The selected Player's fights in the running War, acted on as a plain member. */
-export function DashboardWar({ allianceId, war, pseudo }: Readonly<DashboardWarProps>) {
+export function DashboardWar({ allianceId, war, pseudo, refreshKey }: Readonly<DashboardWarProps>) {
   const { t } = useI18n()
 
   return (
@@ -36,8 +37,8 @@ export function DashboardWar({ allianceId, war, pseudo }: Readonly<DashboardWarP
         <p
           data-cy={war.is_ready ? 'dashboard-war-ready' : 'dashboard-war-not-ready'}
           className={cn(
-            'rounded-md px-3 py-2 text-sm',
-            war.is_ready ? 'text-xs text-green-500' : 'bg-amber-500/15 font-medium text-amber-500'
+            'rounded-md px-3 py-2 text-sm font-medium',
+            war.is_ready ? 'bg-green-500/15 text-green-500' : 'bg-amber-500/15 text-amber-500'
           )}
         >
           {war.is_ready ? t.playerDashboard.warReady : t.playerDashboard.warNotReady}
@@ -48,7 +49,10 @@ export function DashboardWar({ allianceId, war, pseudo }: Readonly<DashboardWarP
             initialBg={war.battlegroup}
             asPlainMember
           >
-            <DashboardWarPanel pseudo={pseudo} />
+            <DashboardWarPanel
+              pseudo={pseudo}
+              refreshKey={refreshKey}
+            />
           </WarProvider>
         </AllianceRoleProvider>
       </CardContent>
@@ -56,10 +60,20 @@ export function DashboardWar({ allianceId, war, pseudo }: Readonly<DashboardWarP
   )
 }
 
-function DashboardWarPanel({ pseudo }: Readonly<{ pseudo: string }>) {
-  const { loading, warLoading, currentWar } = useWar()
+function DashboardWarPanel({
+  pseudo,
+  refreshKey,
+}: Readonly<{ pseudo: string; refreshKey: number }>) {
+  const { loading, warLoading, currentWar, reloadWarSilently } = useWar()
+  const firstKey = useRef(refreshKey)
   const [playerFilter, setPlayerFilter] = useState(pseudo)
   const [combatFilter, setCombatFilter] = useState<fightStateFilter>('todo')
+
+  // A refresh reloads in place: remounting would flash the spinner.
+  useEffect(() => {
+    if (refreshKey !== firstKey.current) reloadWarSilently()
+    // oxlint-disable-next-line react/exhaustive-deps
+  }, [refreshKey])
 
   // The running War sorts first in the provider's selection, so it is the one on screen.
   if (loading || warLoading || !currentWar) return <FullPageSpinner />
