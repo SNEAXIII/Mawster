@@ -2,6 +2,7 @@
 
 import type { RefObject } from 'react'
 import { FiUserMinus } from 'react-icons/fi'
+import { AlertTriangle } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { FullPageSpinner } from '@/components/full-page-spinner'
@@ -34,6 +35,8 @@ export default function PlanWorkspace({
       : undefined
   const waitingForList = vm.userCanPlace && !vm.planList.listLoaded
   const noPlan = vm.userCanPlace && vm.planList.listLoaded && vm.planList.selectedPlanId === null
+  const noActivePlan =
+    vm.userCanPlace && vm.planList.plans.length > 0 && !vm.planList.plans.some((p) => p.is_active)
 
   return (
     <>
@@ -60,6 +63,15 @@ export default function PlanWorkspace({
               {t.game.defense.clearAll}
             </Button>
           )}
+        </div>
+      )}
+      {noActivePlan && (
+        <div
+          className='flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-500'
+          data-cy='defense-no-active-plan-warning'
+        >
+          <AlertTriangle className='h-4 w-4 shrink-0' />
+          {t.game.defense.plans.noActiveManager}
         </div>
       )}
       {!vm.userCanPlace && vm.gridActions.plan === null && (
