@@ -9,8 +9,6 @@ from src.dto.alliance.dto_invitation import AllianceInvitationResponse
 
 class PlayerDashboardAlliance(BaseModel):
     alliance_id: uuid.UUID
-    name: str
-    tag: str
     battlegroup: int | None = None
 
 

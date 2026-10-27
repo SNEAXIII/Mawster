@@ -5,8 +5,6 @@ import type { DefensePlanNode } from '@/app/services/defense'
 
 export interface PlayerDashboardAlliance {
   alliance_id: string
-  name: string
-  tag: string
   battlegroup: number | null
 }
 

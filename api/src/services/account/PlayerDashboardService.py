@@ -14,7 +14,6 @@ from src.dto.player.dto_player_dashboard import (
 )
 from src.enums.WarStatus import WarStatus
 from src.Messages.game_account_messages import GAME_ACCOUNT_NOT_FOUND
-from src.models.alliance.Alliance import Alliance
 from src.models.user.GameAccount import GameAccount
 from src.models.war.War import War
 from src.services.account.game.GameAccountService import GameAccountService
@@ -47,12 +46,8 @@ class PlayerDashboardService:
         if player.alliance_id is None:
             return dashboard
 
-        alliance = await session.get_one(Alliance, player.alliance_id)
         dashboard.alliance = PlayerDashboardAlliance(
-            alliance_id=alliance.id,
-            name=alliance.name,
-            tag=alliance.tag,
-            battlegroup=player.alliance_group,
+            alliance_id=player.alliance_id, battlegroup=player.alliance_group
         )
         if player.alliance_group is not None:
             dashboard.defense = await cls._defense(session, player)
