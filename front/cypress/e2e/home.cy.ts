@@ -19,7 +19,8 @@ describe('Home', () => {
     cy.apiBatchSetup([{ discord_token: 'home-signed-in', game_pseudo: 'HomePlayer' }]).then((users) => {
       cy.apiLogin(users['home-signed-in'].user_id);
       cy.getByCy('home-signed-in').should('be.visible');
-      cy.getByCy('dashboard-player-select').should('be.visible');
+      cy.getByCy('dashboard-refresh').should('be.visible');
+      cy.getByCy('dashboard-player-select').should('not.exist');
       cy.getByCy('import-vision-button').should('be.visible');
       SIGN_UP_CTAS.forEach((cyId) => {
         cy.getByCy(cyId).should('not.exist');
