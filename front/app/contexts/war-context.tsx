@@ -121,6 +121,8 @@ interface WarContextValue {
     opponentDeaths: number | null
   ) => Promise<void>
   refreshAlliances: () => Promise<void>
+  /** Reloads the map without the loading spinner, as the poll does. */
+  reloadWarSilently: () => void
   handlePlaceDefender: (
     championId: string,
     championName: string,
@@ -189,11 +191,13 @@ export function WarProvider({
   onStateChange,
   initialAllianceId,
   initialBg,
+  asPlainMember = false,
 }: Readonly<{
   children: ReactNode
   onStateChange?: (allianceId: string, bg: number) => void
   initialAllianceId?: string
   initialBg?: number
+  asPlainMember?: boolean
 }>) {
   const { t } = useI18n()
   const { canManage, canPlace, isMine } = useAllianceRole()
@@ -285,8 +289,8 @@ export function WarProvider({
     }
   }, [warSummary, placements])
   const selectedAlliance = alliances.find((a) => a.id === selectedAllianceId)
-  const canManageWar = selectedAlliance ? canManage(selectedAlliance) : false
-  const canPlaceWar = selectedAlliance ? canPlace(selectedAlliance) : false
+  const canManageWar = !asPlainMember && selectedAlliance ? canManage(selectedAlliance) : false
+  const canPlaceWar = !asPlainMember && selectedAlliance ? canPlace(selectedAlliance) : false
   const isVisitor = useMemo(
     () => alliances.find((a) => a.id === selectedAllianceId)?.isVisitor ?? false,
     [alliances, selectedAllianceId]
@@ -366,7 +370,7 @@ export function WarProvider({
   }, [activeWarId, selectedBg, fetchWarDefense])
 
   // Polling every 10s, on-screen tabs only
-  useVisiblePoll(() => void fetchWarDefense(true), 10_000, Boolean(activeWarId))
+  useVisiblePoll(() => void fetchWarDefense(true), 10_000, Boolean(activeWarId) && !asPlainMember)
 
   const reloadSynergies = async () => {
     if (!selectedAllianceId || !activeWarId) return
@@ -899,6 +903,7 @@ export function WarProvider({
       handleEditWar,
       handleEndWar,
       refreshAlliances: refresh,
+      reloadWarSilently: () => void fetchWarDefense(true),
       handlePlaceDefender,
       handleRemoveDefender,
       handleConfirmRemoveDefender,
@@ -959,6 +964,7 @@ export function WarProvider({
       handleNodeClick,
       synergies,
       prefights,
+      fetchWarDefense,
     ]
   )
 

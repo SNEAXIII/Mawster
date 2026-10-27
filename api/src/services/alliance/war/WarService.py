@@ -215,13 +215,17 @@ class WarService:
             for w in wars
         ]
 
-    @classmethod
-    async def get_current_war(cls, session: SessionDep, alliance_id: uuid.UUID) -> WarResponse:
-        war = (
+    @staticmethod
+    async def find_active_war(session: SessionDep, alliance_id: uuid.UUID) -> War | None:
+        return (
             await session.exec(
                 select(War).where(War.alliance_id == alliance_id, War.status == WarStatus.ACTIVE)
             )
         ).first()
+
+    @classmethod
+    async def get_current_war(cls, session: SessionDep, alliance_id: uuid.UUID) -> WarResponse:
+        war = await cls.find_active_war(session, alliance_id)
         if war is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, NO_ACTIVE_WAR_FOR_ALLIANCE)
         return await cls._war_response(session, war.id)
@@ -379,11 +383,11 @@ class WarService:
             battlegroup=battlegroup,
             placements=await cls._placement_dtos(session, placements),
             progress=await cls._war_progress(session, war_id),
-            is_ready=await cls._ready_row(session, war_id, battlegroup) is not None,
+            is_ready=await cls.ready_row(session, war_id, battlegroup) is not None,
         )
 
     @staticmethod
-    async def _ready_row(
+    async def ready_row(
         session: SessionDep, war_id: uuid.UUID, battlegroup: int
     ) -> WarReadyBattlegroup | None:
         return (
@@ -400,7 +404,7 @@ class WarService:
         cls, session: SessionDep, war: War, battlegroup: int, ready: bool
     ) -> bool:
         ClosedWarPolicy.assert_open(war)
-        row = await cls._ready_row(session, war.id, battlegroup)
+        row = await cls.ready_row(session, war.id, battlegroup)
         if ready and row is None:
             session.add(WarReadyBattlegroup(war_id=war.id, battlegroup=battlegroup))
         elif not ready and row is not None:

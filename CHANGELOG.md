@@ -3,6 +3,18 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.33.0](https://github.com/SNEAXIII/Mawster/compare/v1.32.1...v1.33.0) (2026-10-27)
+
+
+### Ajouté
+
+* show a Player Dashboard on the signed-in home ([091f2d0](https://github.com/SNEAXIII/Mawster/commit/091f2d0ff47faa12e4cd0e04f458a145ea8bd3dc))
+
+
+### Corrigé
+
+* align owner stats in champion search ([7dd1ba0](https://github.com/SNEAXIII/Mawster/commit/7dd1ba06c3e18898f9f5a3964305c6d4b21ef520))
+
 ## [1.32.1](https://github.com/SNEAXIII/Mawster/compare/v1.32.0...v1.32.1) (2026-10-26)
 
 
