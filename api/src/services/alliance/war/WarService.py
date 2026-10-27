@@ -556,6 +556,14 @@ class WarService:
         old_attacker_id = None
         if old_placement:
             await cls._assert_attacker_unlocked(session, old_placement)
+            if old_placement.champion_id == placement_request.champion_id:
+                old_placement.stars = placement_request.stars
+                old_placement.rank = placement_request.rank
+                old_placement.ascension = placement_request.ascension
+                old_placement.placed_by_id = placed_by_id
+                await session.commit()
+                session.expire(old_placement, ["placed_by"])
+                return await cls._placement_response(session, old_placement.id)
             old_attacker_id = old_placement.attacker_champion_user_id
             await FightRecordService.drop_node_record(session, old_placement.id)
             await session.delete(old_placement)
