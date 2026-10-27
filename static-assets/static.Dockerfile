@@ -1,4 +1,4 @@
-FROM rust:1.99.0-alpine3.24 AS base-rust
+FROM rust:1.99.1-alpine3.24 AS base-rust
 RUN cargo install --locked cargo-chef --version 0.1.78
 WORKDIR /app
 
