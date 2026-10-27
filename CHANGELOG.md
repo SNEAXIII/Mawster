@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.34.0](https://github.com/SNEAXIII/Mawster/compare/v1.33.0...v1.34.0) (2026-10-27)
+
+
+### Ajouté
+
+* warn managers when no defense plan is active ([2fcffdc](https://github.com/SNEAXIII/Mawster/commit/2fcffdcf3ff4844d00faabcf327d3b3dce9f1bac))
+
 ## [1.33.0](https://github.com/SNEAXIII/Mawster/compare/v1.32.1...v1.33.0) (2026-10-27)
 
 
