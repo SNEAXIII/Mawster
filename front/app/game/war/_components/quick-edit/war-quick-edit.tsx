@@ -80,28 +80,30 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
           slices={slices}
           onSlices={setSlices}
         />
-        {/* As many 50rem columns as fit, filled top to bottom so nodes read in order. */}
-        <div className='flex-1 columns-[50rem] gap-x-8 overflow-y-auto pr-1'>
-          {sliceNodes(nodeCount, slices).map((node) => {
-            const placement = byNode.get(node)
-            const fromMap = placement ? draftOf(placement) : null
-            const value = node in saves.drafts ? saves.drafts[node] : fromMap
-            return (
-              <QuickEditRow
-                key={node}
-                node={node}
-                value={value}
-                champion={value ? championsById.get(value.championId) : undefined}
-                ascendable={!!value && ascendable.has(value.championId)}
-                locked={!!placement?.is_attacker_locked || saves.states[node] === 'saving'}
-                saveState={saves.states[node]}
-                rankRange={rankRange}
-                onPickChampion={(id) => actions.pick(node, value, id)}
-                onEdit={(draft) => saves.edit(node, draft)}
-                onRemove={() => actions.remove(node)}
-              />
-            )
-          })}
+        <div className='flex-1 overflow-y-auto pr-1'>
+          {/* Columns need an unbounded height: inside the scroller they balance, not overflow sideways. */}
+          <div className='columns-[50rem] gap-x-8'>
+            {sliceNodes(nodeCount, slices).map((node) => {
+              const placement = byNode.get(node)
+              const fromMap = placement ? draftOf(placement) : null
+              const value = node in saves.drafts ? saves.drafts[node] : fromMap
+              return (
+                <QuickEditRow
+                  key={node}
+                  node={node}
+                  value={value}
+                  champion={value ? championsById.get(value.championId) : undefined}
+                  ascendable={!!value && ascendable.has(value.championId)}
+                  locked={!!placement?.is_attacker_locked || saves.states[node] === 'saving'}
+                  saveState={saves.states[node]}
+                  rankRange={rankRange}
+                  onPickChampion={(id) => actions.pick(node, value, id)}
+                  onEdit={(draft) => saves.edit(node, draft)}
+                  onRemove={() => actions.remove(node)}
+                />
+              )
+            })}
+          </div>
         </div>
       </DialogContent>
       <ConfirmationDialog
