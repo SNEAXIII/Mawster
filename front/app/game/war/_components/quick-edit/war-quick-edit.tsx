@@ -81,7 +81,7 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
           onSlices={setSlices}
         />
         <div className='flex-1 overflow-y-auto pr-1'>
-          <div className='grid gap-x-8 lg:grid-cols-2 min-[2400px]:grid-cols-3'>
+          <div className='grid gap-x-8 min-[750px]:grid-cols-2 min-[1000px]:grid-cols-3'>
             {sliceNodes(nodeCount, slices).map((node) => {
               const placement = byNode.get(node)
               const fromMap = placement ? draftOf(placement) : null

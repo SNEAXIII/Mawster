@@ -23,6 +23,8 @@ interface ChampionFilterSelectProps {
   placeholder: string
   /** Label of the entry that clears the value; defaults to "All champions". */
   clearLabel?: string
+  /** Merged onto the wrapper, which sets the width (`w-48` by default). */
+  className?: string
   'data-cy'?: string
 }
 
@@ -31,6 +33,7 @@ export default function ChampionFilterSelect({
   onChange,
   placeholder,
   clearLabel,
+  className,
   'data-cy': dataCy,
 }: Readonly<ChampionFilterSelectProps>) {
   const { t } = useI18n()
@@ -51,7 +54,7 @@ export default function ChampionFilterSelect({
       open={open}
       onOpenChange={setOpen}
     >
-      <div className='relative w-48'>
+      <div className={cn('relative w-48', className)}>
         <PopoverTrigger asChild>
           <Button
             variant='outline'

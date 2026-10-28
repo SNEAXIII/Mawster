@@ -97,6 +97,7 @@ export default function QuickEditRow({
         onChange={onPickChampion}
         placeholder={q.empty}
         clearLabel={q.empty}
+        className='w-40'
         data-cy={`war-quick-edit-champion-${node}`}
       />
       <LabeledSlider
@@ -118,7 +119,7 @@ export default function QuickEditRow({
         format={(a) => (a === 0 ? t.game.war.ascensionNone : `A${a}`)}
         cy={`war-quick-edit-asc-${node}`}
         disabled={locked || !value || !ascendable}
-        className={cn('w-28', (!value || !ascendable) && 'invisible')}
+        className={cn('w-20', (!value || !ascendable) && 'invisible')}
         title={t.game.war.ascension}
       />
       <span
