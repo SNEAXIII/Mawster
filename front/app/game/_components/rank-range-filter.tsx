@@ -27,7 +27,7 @@ export default function RankRangeFilter({
       onChange={onChange}
       format={(i) => RARITY_LABELS[RARITIES[i]]}
       cy={cyPrefix}
-      title={<span className='text-[11px] font-medium text-muted-foreground'>{label}</span>}
+      title={label}
     />
   )
 }

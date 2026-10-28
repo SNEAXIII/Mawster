@@ -5,8 +5,6 @@ import {
   createDefenderTracker,
   createNodeChain,
   keepNodes,
-  keptOnReopen,
-  scopeOf,
   type Draft,
   type WriteTarget,
 } from './quick-edit-logic'
@@ -48,12 +46,7 @@ export function useQuickEditSaves(writes: QuickEditWrites, target: WriteTarget) 
     return () => versions.current.get(node) === version
   }
   const setState = (node: number, state: SaveState | null) =>
-    setStates((prev) => {
-      const next = { ...prev }
-      if (state) next[node] = state
-      else delete next[node]
-      return next
-    })
+    setStates(({ [node]: _, ...rest }) => (state ? { ...rest, [node]: state } : rest))
   const setDraft = (node: number, draft: Draft | null | undefined) =>
     setDrafts(({ [node]: _, ...rest }) => (draft === undefined ? rest : { ...rest, [node]: draft }))
 
@@ -124,8 +117,9 @@ export function useQuickEditSaves(writes: QuickEditWrites, target: WriteTarget) 
   // On the same war and BG, a write in flight keeps its row locked, its draft and what it
   // knows of the node. Elsewhere all starts afresh, and older writes no longer set a status.
   const reset = useCallback(() => {
-    const scope = scopeOf(targetRef.current)
-    const keep = keptOnReopen(lastScope.current, scope, (node) => chain.current.busy(node))
+    const scope = `${targetRef.current.warId}:${targetRef.current.bg}`
+    // Node numbers repeat from one BG to the next: elsewhere, nothing is kept.
+    const keep = (node: number) => lastScope.current === scope && chain.current.busy(node)
     if (lastScope.current !== scope) {
       tracker.current = createDefenderTracker()
       versions.current = new Map()

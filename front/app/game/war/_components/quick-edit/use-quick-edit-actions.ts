@@ -5,10 +5,10 @@ import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import { useWar } from '@/app/contexts/war-context'
 import { parseRarity } from '@/app/game/defense/_components/defense-utils'
-import { RARITIES } from '@/app/services/roster'
+import { RARITIES, rarityIndex } from '@/app/services/roster'
 import { placeWarDefender, removeWarDefender, type WarPlacement } from '@/app/services/war'
 import { useLastDefenderRarity } from '../use-last-defender-rarity'
-import { clamp, rarityIndex, type Draft, type Range } from './quick-edit-logic'
+import { clamp, type Draft, type Range } from './quick-edit-logic'
 import { useQuickEditSaves } from './use-quick-edit-saves'
 
 interface PendingConfirm {

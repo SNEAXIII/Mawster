@@ -51,6 +51,7 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
     [champions]
   )
   const byNode = useMemo(() => new Map(placements.map((p) => [p.node_number, p])), [placements])
+  const nodeCount = currentWar?.node_count ?? 50
   const actions = useQuickEditActions({ byNode, ascendable, rankRange, ascRange })
   const { saves, confirm, setConfirm } = actions
   const { reset, flush } = saves
@@ -79,7 +80,7 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
           <DialogTitle>{q.title.replace('{bg}', String(selectedBg))}</DialogTitle>
         </DialogHeader>
         <QuickEditHeader
-          nodeCount={currentWar?.node_count ?? 50}
+          nodeCount={nodeCount}
           rankRange={rankRange}
           onRankRange={setRankRange}
           ascRange={ascRange}
@@ -88,7 +89,7 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
           onSlices={setSlices}
         />
         <div className='flex-1 overflow-y-auto pr-1'>
-          {sliceNodes(currentWar?.node_count ?? 50, slices).map((node) => {
+          {sliceNodes(nodeCount, slices).map((node) => {
             const placement = byNode.get(node)
             const fromMap = placement ? draftOf(placement) : null
             const value = node in saves.drafts ? saves.drafts[node] : fromMap

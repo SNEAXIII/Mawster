@@ -1,5 +1,4 @@
-import { parseRarity } from '@/app/game/defense/_components/defense-utils'
-import { RARITIES } from '@/app/services/roster'
+import { RARITIES, rarityIndex } from '@/app/services/roster'
 import type { WarPlacement } from '@/app/services/war'
 
 /** The node slider always splits the map in this many slices: 50 → 10 nodes, 10 → 2. */
@@ -63,16 +62,6 @@ export interface WriteTarget {
   bg: number
 }
 
-export const scopeOf = (target: WriteTarget) => `${target.warId}:${target.bg}`
-
-/**
- * What a reopen keeps: on the same war and BG, the nodes still in flight; on another one,
- * nothing, since node numbers repeat from one BG to the next.
- */
-export const keptOnReopen =
-  (lastScope: string | null, scope: string, busy: (node: number) => boolean) => (node: number) =>
-    lastScope === scope && busy(node)
-
 /** The entries of `record` whose node `keep` accepts. */
 export function keepNodes<T>(record: Record<number, T>, keep: (node: number) => boolean) {
   return Object.fromEntries(Object.entries(record).filter(([node]) => keep(Number(node))))
@@ -97,11 +86,6 @@ export const widen = ([lo, hi]: Range, value: number): Range => [
   Math.min(lo, value),
   Math.max(hi, value),
 ]
-
-export function rarityIndex(rarity: string): number {
-  const { stars, rank } = parseRarity(rarity)
-  return Math.max(0, RARITIES.indexOf(`${stars}r${rank}` as (typeof RARITIES)[number]))
-}
 
 export function draftOf(placement: WarPlacement): Draft {
   return {

@@ -5,13 +5,11 @@ import {
   createNodeChain,
   FULL_RANK_RANGE,
   keepNodes,
-  keptOnReopen,
   parseRangeWithin,
-  rarityIndex,
-  scopeOf,
   sliceNodes,
   widen,
 } from '@/app/game/war/_components/quick-edit/quick-edit-logic'
+import { rarityIndex } from '@/app/services/roster'
 
 describe('sliceNodes', () => {
   it.each([
@@ -123,27 +121,5 @@ describe('row bounds', () => {
   it('maps a placement rarity to its RARITIES index', () => {
     expect(rarityIndex('6r4')).toBe(0)
     expect(rarityIndex('7r3')).toBe(4)
-  })
-})
-
-describe('keptOnReopen', () => {
-  const busy = (node: number) => node === 11
-  const bg1 = scopeOf({ allianceId: 'a', warId: 'w', bg: 1 })
-  const bg2 = scopeOf({ allianceId: 'a', warId: 'w', bg: 2 })
-
-  it('keeps the nodes still in flight on the same war and BG', () => {
-    const keep = keptOnReopen(bg1, bg1, busy)
-    expect([keep(11), keep(12)]).toEqual([true, false])
-  })
-
-  it.each([
-    ['another BG', bg2],
-    ['another war', scopeOf({ allianceId: 'a', warId: 'w2', bg: 1 })],
-  ])('keeps nothing on %s, even a node in flight', (_label, scope) => {
-    expect(keptOnReopen(bg1, scope, busy)(11)).toBe(false)
-  })
-
-  it('keeps nothing on the first opening', () => {
-    expect(keptOnReopen(null, bg1, busy)(11)).toBe(false)
   })
 })

@@ -21,9 +21,6 @@ export default function QuickEditHeader(props: Readonly<QuickEditHeaderProps>) {
   const { t } = useI18n()
   const q = t.game.war.quickEdit
   const shown = sliceNodes(nodeCount, slices)
-  const title = (label: string) => (
-    <span className='text-[11px] font-medium text-muted-foreground'>{label}</span>
-  )
 
   return (
     <div className='flex flex-wrap items-end gap-6'>
@@ -39,7 +36,7 @@ export default function QuickEditHeader(props: Readonly<QuickEditHeaderProps>) {
         onChange={onAscRange}
         format={(a) => (a === 0 ? t.game.war.ascensionNone : `A${a}`)}
         cy='war-quick-edit-asc-range'
-        title={title(q.ascRange)}
+        title={q.ascRange}
       />
       <LabeledSlider
         max={NODE_SLICES - 1}
@@ -47,7 +44,7 @@ export default function QuickEditHeader(props: Readonly<QuickEditHeaderProps>) {
         onChange={onSlices}
         format={String}
         cy='war-quick-edit-nodes'
-        title={title(q.nodes)}
+        title={q.nodes}
         valueSlot={
           <span
             className='text-xs text-muted-foreground tabular-nums'

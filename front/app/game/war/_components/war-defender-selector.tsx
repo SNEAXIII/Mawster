@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { SearchInput } from '@/components/search-input'
 import ChampionPortrait from '@/components/champion-portrait'
 import { cn } from '@/app/lib/utils'
-import { RARITIES, RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
+import { RARITIES, RARITY_LABELS, rarityIndex, shortenChampionName } from '@/app/services/roster'
 import { parseRarity } from '@/app/game/defense/_components/defense-utils'
 import { getClassColors } from '@/app/lib/champion-class'
 import type { Champion } from '@/app/services/champions'
@@ -56,12 +56,7 @@ export default function WarDefenderSelector({
 
   useEffect(() => {
     if (open) {
-      setRankIndex(
-        Math.max(
-          0,
-          RARITIES.findIndex((r) => r === `${last.stars}r${last.rank}`)
-        )
-      )
+      setRankIndex(rarityIndex(`${last.stars}r${last.rank}`))
       setAscension(last.ascension)
     } else {
       setSelected(null)

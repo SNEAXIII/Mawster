@@ -47,9 +47,6 @@ export default function QuickEditRow({
   const q = t.game.war.quickEdit
   const rankBounds = widen(rankRange, value?.rankIndex ?? rankRange[0])
   const ascBounds = widen(ascRange, value?.ascension ?? ascRange[0])
-  const sliderTitle = (label: string) => (
-    <span className='text-xs text-muted-foreground'>{label}</span>
-  )
 
   return (
     <fieldset
@@ -74,7 +71,7 @@ export default function QuickEditRow({
         cy={`war-quick-edit-rank-${node}`}
         disabled={locked || !value}
         className='w-28'
-        title={sliderTitle(t.game.war.rarity)}
+        title={t.game.war.rarity}
       />
       <LabeledSlider
         min={ascBounds[0]}
@@ -85,7 +82,7 @@ export default function QuickEditRow({
         cy={`war-quick-edit-asc-${node}`}
         disabled={locked || !value || !ascendable}
         className='w-28'
-        title={sliderTitle(t.game.war.ascension)}
+        title={t.game.war.ascension}
       />
       <span
         className='flex size-5 items-center justify-center'
