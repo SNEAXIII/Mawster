@@ -13,6 +13,9 @@ function pickChampion(node: number, name: string) {
 
 const rows = () => cy.get('[data-cy^="war-quick-edit-row-"]');
 
+// Radix's Home always moves the first thumb: narrow from the top with arrows instead.
+const firstSliceOnly = () => sliderThumb('war-quick-edit-nodes', 1).type('{leftarrow}'.repeat(4));
+
 describe('War – quick edit', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -66,7 +69,7 @@ describe('War – quick edit', () => {
   it('narrows the listed nodes with the node slider', () => {
     setupAttackerScenario('war-qe-slices').then(({ ownerData }) => {
       openQuickEdit(ownerData.user_id);
-      sliderThumb('war-quick-edit-nodes', 1).type('{home}');
+      firstSliceOnly();
       cy.getByCy('war-quick-edit-nodes-value').should('have.text', '1 – 10');
       rows().should('have.length', 10);
       cy.getByCy('war-quick-edit-row-11').should('not.exist');
@@ -79,7 +82,7 @@ describe('War – quick edit', () => {
       cy.apiCreateWar(ownerData.access_token, allianceId, 'QEBTEnemy');
       openQuickEdit(ownerData.user_id);
       rows().should('have.length', 10);
-      sliderThumb('war-quick-edit-nodes', 1).type('{home}');
+      firstSliceOnly();
       cy.getByCy('war-quick-edit-nodes-value').should('have.text', '1 – 2');
       rows().should('have.length', 2);
     });
