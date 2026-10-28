@@ -17,7 +17,7 @@ export default defineConfig({
         'app/lib/**/*.ts',
         'app/services/**/*.ts',
         'app/tools/_lib/**/*.ts',
-        'app/game/**/_components/*.ts',
+        'app/game/**/_components/**/*.ts',
         'components/roster/*.ts',
       ],
       exclude: ['**/use-*.ts'],

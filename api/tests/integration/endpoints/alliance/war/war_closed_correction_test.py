@@ -10,6 +10,10 @@ from src.models.champion.ChampionUser import ChampionUser
 from src.models.war.Season import Season
 from src.models.war.WarDefensePlacement import WarDefensePlacement
 from src.models.war.WarFightRecord import WarFightRecord
+from tests.integration.endpoints.alliance.war.war_synergy_test import (
+    _add_synergy_on_attacker,
+    _synergy_url,
+)
 from tests.integration.endpoints.setup.game_setup import (
     push_champion,
     push_champion_user,
@@ -26,7 +30,7 @@ from tests.utils.utils_client import (
     execute_patch_request,
     execute_post_request,
 )
-from tests.utils.utils_constant import USER2_ID, USER_ID
+from tests.utils.utils_constant import GAME_PSEUDO_2, USER2_ID, USER_ID
 from tests.utils.utils_db import load_objects, sqlite_async_engine
 
 OWNER = create_auth_headers(user_id=str(USER_ID))
@@ -150,6 +154,20 @@ async def _placement_id_of_node(war_id, battlegroup: int, node: int):
         ).first()
 
 
+async def _place_on_node_10(data, champion_id, *, rank=3, ascension=0, headers=OWNER):
+    return await execute_post_request(
+        f"{data['base']}/bg/1/place",
+        payload={
+            "node_number": 10,
+            "champion_id": str(champion_id),
+            "stars": 7,
+            "rank": rank,
+            "ascension": ascension,
+        },
+        headers=headers,
+    )
+
+
 async def _record_by_placement_id(placement_id) -> WarFightRecord | None:
     """No join through the placement: SQLite in tests never enables foreign_keys,
     so a deleted placement would otherwise leave an orphaned record invisible."""
@@ -210,19 +228,37 @@ class TestClosedWarFightRecordSync:
         data = await _setup_closed_war_scenario()
         old_placement_id = await _placement_id_of_node(data["war"].id, 1, 10)
         champ = await push_champion(name="Iron Man", champion_class="Tech")
-        response = await execute_post_request(
-            f"{data['base']}/bg/1/place",
-            payload={
-                "node_number": 10,
-                "champion_id": str(champ.id),
-                "stars": 7,
-                "rank": 3,
-                "ascension": 0,
-            },
-            headers=OWNER,
+        response = await _place_on_node_10(data, champ.id)
+        assert response.status_code == 201
+        assert response.json()["attacker_champion_user_id"] is None
+        assert await _record_by_placement_id(old_placement_id) is None
+
+    @pytest.mark.asyncio
+    async def test_same_defender_new_rank_keeps_the_fight(self):
+        data = await _setup_closed_war_scenario()
+        await push_strategist(data["alliance"], data["member"])
+        deadpool = await push_champion(name="Deadpool", champion_class="Mutant")
+        synergy = {
+            **data,
+            "attacker_cu": data["champion_user"],
+            "synergy_cu": await push_champion_user(data["member"], deadpool, stars=7, rank=3),
+            "headers_member": MEMBER,
+        }
+        await _add_synergy_on_attacker(synergy)
+        placement_id = await _placement_id_of_node(data["war"].id, 1, 10)
+        response = await _place_on_node_10(
+            data, data["champ"].id, rank=4, ascension=1, headers=MEMBER
         )
         assert response.status_code == 201
-        assert await _record_by_placement_id(old_placement_id) is None
+        body = response.json()
+        assert (body["rarity"], body["ascension"]) == ("7r4", 1)
+        assert body["placed_by_pseudo"] == GAME_PSEUDO_2
+        assert body["attacker_champion_user_id"] == str(data["champion_user"].id)
+        assert await _record_by_placement_id(placement_id) is not None
+        synergies = await execute_get_request(
+            _synergy_url(data["alliance"].id, data["war"].id), headers=MEMBER
+        )
+        assert len(synergies.json()) == 1
 
     @pytest.mark.asyncio
     async def test_reassigning_same_attacker_keeps_old_rank(self):
@@ -282,20 +318,11 @@ class TestDepartedAttackerLock:
         assert await _record_by_placement_id(placement_id) is not None
 
     @pytest.mark.asyncio
-    async def test_replace_defender_locked(self):
+    @pytest.mark.parametrize("champion_key", ["champ2", "champ"])
+    async def test_replace_defender_locked(self, champion_key):
         data = await _setup_closed_war_scenario()
         await self._move_member_out(data)
-        response = await execute_post_request(
-            f"{data['base']}/bg/1/place",
-            payload={
-                "node_number": 10,
-                "champion_id": str(data["champ2"].id),
-                "stars": 7,
-                "rank": 3,
-                "ascension": 0,
-            },
-            headers=OWNER,
-        )
+        response = await _place_on_node_10(data, data[champion_key].id)
         assert response.status_code == 409
 
     @pytest.mark.asyncio

@@ -683,6 +683,20 @@ const fr: Translations = {
       rarity: 'Rareté',
       ascension: 'Ascension',
       ascensionNone: 'Aucune',
+      quickEdit: {
+        button: 'Édition rapide',
+        title: 'Édition rapide — G{bg}',
+        rankRange: 'Rang',
+        nodes: 'Nœuds',
+        empty: 'Aucun défenseur',
+        remove: 'Retirer le défenseur',
+        states: {
+          pending: 'Enregistrement dans une seconde',
+          saving: 'Enregistrement…',
+          saved: 'Enregistré',
+          error: 'Non enregistré',
+        },
+      },
       changeChampion: '← Changer',
       placeOnNode: 'Placer sur le nœud #{node}',
       // Attackers

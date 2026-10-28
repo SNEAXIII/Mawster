@@ -30,6 +30,11 @@ export function splitRarity(rarity: string): { stars: number; rank: number } | n
   return { stars: Number.parseInt(parts[1], 10), rank: Number.parseInt(parts[2], 10) }
 }
 
+/** Index of a rarity in RARITIES; an unknown one falls back to the lowest. */
+export function rarityIndex(rarity: string): number {
+  return Math.max(0, RARITIES.indexOf(rarity.toLowerCase() as ChampionRarity))
+}
+
 /** Shorten a champion name for card display.
  *  Removes parenthesized suffixes: "Spider-Woman (Jessica Drew)" → "Spider-Woman" */
 export function shortenChampionName(name: string): string {

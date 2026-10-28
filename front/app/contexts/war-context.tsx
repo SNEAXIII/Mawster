@@ -123,6 +123,8 @@ interface WarContextValue {
   refreshAlliances: () => Promise<void>
   /** Reloads the map without the loading spinner, as the poll does. */
   reloadWarSilently: () => void
+  /** Runs a map write so a poll started before it cannot restore the old map. */
+  write: <T>(call: () => Promise<T>) => Promise<T>
   handlePlaceDefender: (
     championId: string,
     championName: string,
@@ -904,6 +906,7 @@ export function WarProvider({
       handleEndWar,
       refreshAlliances: refresh,
       reloadWarSilently: () => void fetchWarDefense(true),
+      write,
       handlePlaceDefender,
       handleRemoveDefender,
       handleConfirmRemoveDefender,

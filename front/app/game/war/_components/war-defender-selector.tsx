@@ -7,30 +7,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { SearchInput } from '@/components/search-input'
 import ChampionPortrait from '@/components/champion-portrait'
 import { cn } from '@/app/lib/utils'
-import { shortenChampionName } from '@/app/services/roster'
+import { RARITIES, RARITY_LABELS, rarityIndex, shortenChampionName } from '@/app/services/roster'
+import { parseRarity } from '@/app/game/defense/_components/defense-utils'
 import { getClassColors } from '@/app/lib/champion-class'
 import type { Champion } from '@/app/services/champions'
 import { useChampionPages } from '@/hooks/use-champion-catalog'
 import type { WarPlacement } from '@/app/services/war'
 import { Separator } from '@/components/ui/separator'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
+import LabeledSlider from '@/components/labeled-slider'
 import AttackerEntryRow from './attacker-entry-row'
-
-interface SelectedRarity {
-  stars: number
-  rank: number
-}
-
-const WAR_RARITIES: { label: string; stars: number; rank: number }[] = [
-  { label: '6R4', stars: 6, rank: 4 },
-  { label: '6R5', stars: 6, rank: 5 },
-  { label: '7R1', stars: 7, rank: 1 },
-  { label: '7R2', stars: 7, rank: 2 },
-  { label: '7R3', stars: 7, rank: 3 },
-  { label: '7R4', stars: 7, rank: 4 },
-  { label: '7R5', stars: 7, rank: 5 },
-  { label: '7R6', stars: 7, rank: 6 },
-]
+import { useLastDefenderRarity } from './use-last-defender-rarity'
 
 interface WarDefenderSelectorProps {
   open: boolean
@@ -59,26 +46,30 @@ export default function WarDefenderSelector({
 
   // Selection state
   const [selected, setSelected] = useState<Champion | null>(null)
-  const [selectedRarity, setSelectedRarity] = useState<SelectedRarity>({ stars: 7, rank: 3 })
+  const { last, remember } = useLastDefenderRarity()
+  const [rankIndex, setRankIndex] = useState(0)
   const [ascension, setAscension] = useState(0)
   const [showReplaceConfirm, setShowReplaceConfirm] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const rarity = RARITIES[rankIndex]
+  const placedAscension = selected?.is_ascendable ? ascension : 0
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setRankIndex(rarityIndex(`${last.stars}r${last.rank}`))
+      setAscension(last.ascension)
+    } else {
       setSelected(null)
       setSearch('')
     }
-  }, [open])
-
-  const handleChampionClick = (champ: Champion) => {
-    setSelected(champ)
-    setAscension(0)
-  }
+  }, [open, last])
 
   const handleConfirm = () => {
     if (!selected) return
-    if (currentPlacement?.attacker_champion_user_id) {
+    // Same champion only changes rank/ascension: the attacker stays.
+    const replacesAttacked =
+      currentPlacement?.attacker_champion_user_id && currentPlacement.champion_id !== selected.id
+    if (replacesAttacked) {
       setShowReplaceConfirm(true)
       return
     }
@@ -87,7 +78,9 @@ export default function WarDefenderSelector({
 
   const doSelect = () => {
     if (!selected) return
-    onSelect(selected.id, selected.name, selectedRarity.stars, selectedRarity.rank, ascension)
+    const { stars, rank } = parseRarity(rarity)
+    onSelect(selected.id, selected.name, stars, rank, placedAscension)
+    remember({ stars, rank, ascension: selected.is_ascendable ? ascension : last.ascension })
     onClose()
   }
 
@@ -108,14 +101,16 @@ export default function WarDefenderSelector({
               <ChampionPortrait
                 imageUrl={selected.image_url}
                 name={selected.name}
-                rarity={`${selectedRarity.stars}r${selectedRarity.rank}`}
+                rarity={rarity}
                 size={48}
               />
               <div>
                 <div className='text-sm font-semibold'>{selected.name}</div>
                 <div className='text-xs text-muted-foreground'>
-                  {selectedRarity.stars}R{selectedRarity.rank}
-                  {ascension > 0 && <span className='text-purple-400'> · A{ascension}</span>}
+                  {RARITY_LABELS[rarity]}
+                  {placedAscension > 0 && (
+                    <span className='text-purple-400'> · A{placedAscension}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -199,7 +194,7 @@ export default function WarDefenderSelector({
                               'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
                               'hover:ring-2 hover:ring-primary/60 hover:border-primary/60'
                             )}
-                            onClick={() => handleChampionClick(champ)}
+                            onClick={() => setSelected(champ)}
                             data-cy={`war-champion-card-${champ.name.replaceAll(/\s+/g, '-')}`}
                           >
                             <ChampionPortrait
@@ -241,7 +236,7 @@ export default function WarDefenderSelector({
                 <ChampionPortrait
                   imageUrl={selected.image_url}
                   name={selected.name}
-                  rarity={`${selectedRarity.stars}r${selectedRarity.rank}`}
+                  rarity={rarity}
                   size={56}
                 />
                 <div>
@@ -258,49 +253,25 @@ export default function WarDefenderSelector({
                 </Button>
               </div>
 
-              {/* Rarity selector */}
-              <div>
-                <div className='text-sm font-medium mb-2'>{t.game.war.rarity}</div>
-                <div className='flex flex-wrap gap-2'>
-                  {WAR_RARITIES.map((r) => (
-                    <button
-                      key={r.label}
-                      className={cn(
-                        'px-3 py-1 rounded border text-sm font-medium transition-colors',
-                        selectedRarity.stars === r.stars && selectedRarity.rank === r.rank
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-muted hover:bg-accent border-border'
-                      )}
-                      onClick={() => setSelectedRarity({ stars: r.stars, rank: r.rank })}
-                      data-cy={`rarity-${r.label.replace('', 's')}`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Ascension selector */}
+              <LabeledSlider
+                max={RARITIES.length - 1}
+                value={[rankIndex]}
+                onChange={([i]) => setRankIndex(i)}
+                format={(i) => RARITY_LABELS[RARITIES[i]]}
+                cy='war-defender-rank'
+                className='w-full'
+                title={<span className='text-sm font-medium'>{t.game.war.rarity}</span>}
+              />
               {selected.is_ascendable && (
-                <div>
-                  <div className='text-sm font-medium mb-2'>{t.game.war.ascension}</div>
-                  <div className='flex gap-2'>
-                    {[0, 1, 2].map((a) => (
-                      <button
-                        key={a}
-                        className={cn(
-                          'px-3 py-1 rounded border text-sm font-medium transition-colors',
-                          ascension === a
-                            ? 'bg-purple-600 text-white border-purple-600'
-                            : 'bg-muted hover:bg-accent border-border'
-                        )}
-                        onClick={() => setAscension(a)}
-                      >
-                        {a === 0 ? t.game.war.ascensionNone : `A${a}`}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <LabeledSlider
+                  max={2}
+                  value={[ascension]}
+                  onChange={([a]) => setAscension(a)}
+                  format={(a) => (a === 0 ? t.game.war.ascensionNone : `A${a}`)}
+                  cy='war-defender-ascension'
+                  className='w-full'
+                  title={<span className='text-sm font-medium'>{t.game.war.ascension}</span>}
+                />
               )}
 
               <div className='mt-auto pt-4 border-t flex justify-end gap-2'>

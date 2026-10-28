@@ -12,7 +12,7 @@ import { RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
 import { Separator } from '@/components/ui/separator'
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar'
-import RarityFilterToggles from '@/app/game/_components/rarity-filter-toggles'
+import RankRangeFilter from '@/app/game/_components/rank-range-filter'
 import { useRarityFilter, rarityWeight } from '@/app/game/_components/use-rarity-filter'
 
 interface AllianceDefenseSelectorProps {
@@ -41,8 +41,8 @@ export default function AllianceDefenseSelector({
   const [selectedChampion, setSelectedChampion] = useState<AvailableChampion | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const {
-    activeTiers,
-    toggleTier,
+    range: rankRange,
+    setRange: setRankRange,
     matches: matchRarity,
   } = useRarityFilter('mawster:defense-rarity-tiers')
 
@@ -239,9 +239,9 @@ export default function AllianceDefenseSelector({
               onReset={handleReset}
             />
             <div className='mt-2'>
-              <RarityFilterToggles
-                activeTiers={activeTiers}
-                onToggle={toggleTier}
+              <RankRangeFilter
+                range={rankRange}
+                onChange={setRankRange}
                 label={t.game.defense.rankFilter}
                 cyPrefix='defense-rarity'
               />
