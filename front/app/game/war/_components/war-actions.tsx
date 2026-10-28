@@ -77,14 +77,13 @@ export default function WarActions({
         <Button
           key={b.cy}
           variant='outline'
-          size='icon'
+          size='sm'
           onClick={b.onClick}
           disabled={exporting}
-          aria-label={b.label}
-          title={b.label}
           data-cy={b.cy}
         >
           {b.icon}
+          {b.label}
         </Button>
       ))}
       {canManageOpenWar && (
