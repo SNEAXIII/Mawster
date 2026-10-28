@@ -21,6 +21,8 @@ interface ChampionFilterSelectProps {
   value: string | null
   onChange: (id: string | null) => void
   placeholder: string
+  /** Label of the entry that clears the value; defaults to "All champions". */
+  clearLabel?: string
   'data-cy'?: string
 }
 
@@ -28,11 +30,13 @@ export default function ChampionFilterSelect({
   value,
   onChange,
   placeholder,
+  clearLabel,
   'data-cy': dataCy,
 }: Readonly<ChampionFilterSelectProps>) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
-  const { champions } = useChampionCatalog(open)
+  // A preset value needs the catalog for its label; the shared fetch serves every instance.
+  const { champions } = useChampionCatalog(open || value !== null, true)
 
   const selectedChampion = champions.find((c) => c.id === value)
   const displayLabel = selectedChampion ? selectedChampion.name : placeholder
@@ -83,7 +87,9 @@ export default function ChampionFilterSelect({
                 onSelect={() => handleSelect(null)}
                 data-cy={dataCy ? `${dataCy}-all` : undefined}
               >
-                <span className='text-muted-foreground'>{t.game.knowledgeBase.allChampions}</span>
+                <span className='text-muted-foreground'>
+                  {clearLabel ?? t.game.knowledgeBase.allChampions}
+                </span>
               </CommandItem>
               {champions.map((champ) => (
                 <CommandItem

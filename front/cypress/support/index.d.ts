@@ -494,6 +494,8 @@ declare global {
 
       /** Create then open a season — yields the season id. */
       apiCreateOpenSeason(token: string, number: number): Chainable<string>;
+      /** Create then open a big_thing season — yields the season id. */
+      apiOpenBigThingSeason(token: string, number: number): Chainable<string>;
 
       /** Load a champion then add it to a game account roster. */
       apiGiveChampion(

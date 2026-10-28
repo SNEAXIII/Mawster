@@ -5,6 +5,7 @@ import { cn } from '@/app/lib/utils'
 import { Slider } from '@/components/ui/slider'
 
 interface LabeledSliderProps<T extends number[]> {
+  min?: number
   max: number
   /** One value draws a single thumb, two draw a range. */
   value: T
@@ -20,6 +21,7 @@ interface LabeledSliderProps<T extends number[]> {
 }
 
 export default function LabeledSlider<T extends number[]>({
+  min = 0,
   max,
   value,
   onChange,
@@ -32,7 +34,9 @@ export default function LabeledSlider<T extends number[]>({
 }: Readonly<LabeledSliderProps<T>>) {
   // Dragging only moves the draft; the value changes on release so the API isn't hit per step.
   const [draft, setDraft] = useState<number[] | null>(null)
-  const shown = draft ?? value
+  // Radix drops the release of a drag cut by `disabled`: the draft would never clear.
+  if (disabled && draft) setDraft(null)
+  const shown = disabled ? value : (draft ?? value)
   const [lo, hi = lo] = shown
 
   return (
@@ -52,7 +56,7 @@ export default function LabeledSlider<T extends number[]>({
         )}
       </div>
       <Slider
-        min={0}
+        min={min}
         max={max}
         step={1}
         value={shown}

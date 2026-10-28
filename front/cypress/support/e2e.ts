@@ -1841,6 +1841,14 @@ Cypress.Commands.add('apiCreateOpenSeason', (token: string, number: number) => {
   });
 });
 
+// Create a big_thing season and open it — yields the season id.
+Cypress.Commands.add('apiOpenBigThingSeason', (token: string, number: number) => {
+  return cy.apiRequest(token, 'POST', '/admin/seasons', { number, format: 'big_thing' }).then((res) => {
+    const seasonId = res.body.id as string;
+    return cy.apiOpenSeason(token, seasonId).then(() => seasonId);
+  });
+});
+
 // ── Champion on a roster ─────────────────────────────────────────────────────
 // Load the champion catalogue entry then add it to a game account in one step.
 Cypress.Commands.add(

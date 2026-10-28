@@ -1,9 +1,13 @@
 'use client'
 
-import { List, Map as MapIcon, Pencil, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import dynamic from 'next/dynamic'
+import { List, ListPlus, Map as MapIcon, Pencil, Trash2 } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { useWar } from '@/app/contexts/war-context'
 import { Button } from '@/components/ui/button'
+
+const WarQuickEdit = dynamic(() => import('./quick-edit/war-quick-edit'), { loading: () => null })
 
 interface WarActionsProps {
   onEditClick: () => void
@@ -28,12 +32,19 @@ export default function WarActions({
     setShowClearConfirm,
     setShowEndConfirm,
   } = useWar()
+  const [quickEditOpen, setQuickEditOpen] = useState(false)
 
   const canManageOpenWar = canManageWar && !isWarClosed
   const canExport = placements.length > 0
   const canClear = canPlaceWar && !isWarClosed && placements.length > 0
 
   const iconButtons = [
+    canPlaceWar && {
+      cy: 'war-quick-edit-btn',
+      label: t.game.war.quickEdit.button,
+      icon: <ListPlus />,
+      onClick: () => setQuickEditOpen(true),
+    },
     canManageOpenWar && {
       cy: 'edit-war-btn',
       label: t.game.war.editWar,
@@ -85,6 +96,12 @@ export default function WarActions({
         >
           {t.game.war.endWar}
         </Button>
+      )}
+      {canPlaceWar && (
+        <WarQuickEdit
+          open={quickEditOpen}
+          onClose={() => setQuickEditOpen(false)}
+        />
       )}
     </>
   )

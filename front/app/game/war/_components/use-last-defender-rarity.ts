@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
 import { RARITIES } from '@/app/services/roster'
+import { useStoredValue } from '@/hooks/use-stored-value'
 
 export interface DefenderRarity {
   stars: number
@@ -25,28 +25,8 @@ export function parseDefenderRarity(raw: unknown): DefenderRarity {
   }
 }
 
-/** Last rank/ascension a war defender was recorded with, remembered across sessions. */
+/** Last rank/ascension a war defender was recorded with, shared by the selector and the quick edit. */
 export function useLastDefenderRarity() {
-  const [last, setLast] = useState<DefenderRarity>(DEFAULT_RARITY)
-
-  // Hydrate after mount to avoid an SSR mismatch.
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY)
-      if (raw) setLast(parseDefenderRarity(JSON.parse(raw)))
-    } catch {
-      // Corrupt / unavailable storage — keep the default.
-    }
-  }, [])
-
-  const remember = useCallback((next: DefenderRarity) => {
-    setLast(next)
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    } catch {
-      // Ignore storage failures (private browsing).
-    }
-  }, [])
-
+  const [last, remember] = useStoredValue(STORAGE_KEY, parseDefenderRarity, DEFAULT_RARITY)
   return { last, remember }
 }
