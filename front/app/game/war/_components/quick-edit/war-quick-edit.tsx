@@ -80,7 +80,8 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
           slices={slices}
           onSlices={setSlices}
         />
-        <div className='flex-1 overflow-y-auto pr-1'>
+        {/* As many 50rem columns as fit, filled top to bottom so nodes read in order. */}
+        <div className='flex-1 columns-[50rem] gap-x-8 overflow-y-auto pr-1'>
           {sliceNodes(nodeCount, slices).map((node) => {
             const placement = byNode.get(node)
             const fromMap = placement ? draftOf(placement) : null

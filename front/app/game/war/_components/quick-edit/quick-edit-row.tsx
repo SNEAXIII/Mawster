@@ -56,10 +56,10 @@ export default function QuickEditRow({
   return (
     <fieldset
       disabled={locked}
-      className='flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border py-2 disabled:opacity-50'
+      className='flex break-inside-avoid flex-wrap items-center gap-x-4 gap-y-2 border-b border-border py-2 disabled:opacity-50'
       data-cy={`war-quick-edit-row-${node}`}
     >
-      <span className='w-10 shrink-0 font-mono text-sm tabular-nums'>#{node}</span>
+      <span className='w-5 shrink-0 font-mono text-sm tabular-nums'>#{node}</span>
       {/* Fixed-size slot so rows stay aligned whether a champion is picked or not. */}
       <span
         className='size-10 shrink-0'
@@ -74,7 +74,7 @@ export default function QuickEditRow({
           />
         )}
       </span>
-      <span className='flex w-8 shrink-0 flex-col text-xs font-semibold leading-tight tabular-nums'>
+      <span className='flex w-6 shrink-0 flex-col text-xs font-semibold leading-tight tabular-nums'>
         {rarity && (
           <span
             className={rarityBadgeClass(rarity)}
