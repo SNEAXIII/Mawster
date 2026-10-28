@@ -7,24 +7,19 @@ describe('Big Thing season format — war page', () => {
 
   it('renders a 10-node map and a Big Thing badge under an active big_thing season', () => {
     setupWarOwner('bigthing', 'BTOwner', 'BTAlliance', 'BT').then(({ adminData, ownerData, allianceId }) => {
-      cy.apiRequest(adminData.access_token, 'POST', '/admin/seasons', { number: 70, format: 'big_thing' }).then(
-        (res) => {
-          cy.apiRequest(adminData.access_token, 'PATCH', `/admin/seasons/${res.body.id}/open`).then(() => {
-            cy.apiCreateWar(ownerData.access_token, allianceId, 'BTEnemy');
-            cy.apiLogin(ownerData.user_id, 'war');
+      cy.apiOpenBigThingSeason(adminData.access_token, 70);
+      cy.apiCreateWar(ownerData.access_token, allianceId, 'BTEnemy');
+      cy.apiLogin(ownerData.user_id, 'war');
 
-            // Big Thing format badge is shown
-            cy.getByCy('season-format-banner').should('be.visible').and('contain', 'Big Thing');
+      // Big Thing format badge is shown
+      cy.getByCy('season-format-banner').should('be.visible').and('contain', 'Big Thing');
 
-            // Big Thing map has exactly 10 nodes (1..10); node 11+ from the
-            // regular 50-node layout must not be rendered.
-            cy.getByCy('war-node-10').should('exist');
-            cy.getByCy('war-node-1').should('exist');
-            cy.getByCy('war-node-11').should('not.exist');
-            cy.getByCy('war-node-50').should('not.exist');
-          });
-        },
-      );
+      // Big Thing map has exactly 10 nodes (1..10); node 11+ from the
+      // regular 50-node layout must not be rendered.
+      cy.getByCy('war-node-10').should('exist');
+      cy.getByCy('war-node-1').should('exist');
+      cy.getByCy('war-node-11').should('not.exist');
+      cy.getByCy('war-node-50').should('not.exist');
     });
   });
 
@@ -81,14 +76,12 @@ describe('Big Thing season format — war page', () => {
       const owner = users[ownerToken];
       const member = users[memberToken];
       const allianceId = owner.alliance_id!;
-      cy.apiRequest(admin.access_token, 'POST', '/admin/seasons', { number: 72, format: 'big_thing' }).then((res) => {
-        cy.apiOpenSeason(admin.access_token, res.body.id);
-        cy.apiCreateWar(owner.access_token, allianceId, 'BTOrderEnemy').then((war) => {
-          cy.apiPlaceWarDefender(owner.access_token, allianceId, war.id, 1, 1, champions['Iron Man'], 7, 3, 0);
-          cy.apiPlaceWarDefender(owner.access_token, allianceId, war.id, 1, 3, champions['Wolverine'], 7, 3, 0);
-          cy.apiAssignWarAttacker(member.access_token, allianceId, war.id, 1, 3, member.champion_user_ids['Storm']);
-          cy.apiAssignWarAttacker(owner.access_token, allianceId, war.id, 1, 1, owner.champion_user_ids['Spider-Man']);
-        });
+      cy.apiOpenBigThingSeason(admin.access_token, 72);
+      cy.apiCreateWar(owner.access_token, allianceId, 'BTOrderEnemy').then((war) => {
+        cy.apiPlaceWarDefender(owner.access_token, allianceId, war.id, 1, 1, champions['Iron Man'], 7, 3, 0);
+        cy.apiPlaceWarDefender(owner.access_token, allianceId, war.id, 1, 3, champions['Wolverine'], 7, 3, 0);
+        cy.apiAssignWarAttacker(member.access_token, allianceId, war.id, 1, 3, member.champion_user_ids['Storm']);
+        cy.apiAssignWarAttacker(owner.access_token, allianceId, war.id, 1, 1, owner.champion_user_ids['Spider-Man']);
       });
 
       cy.openWarAttackerPanel(owner.user_id);

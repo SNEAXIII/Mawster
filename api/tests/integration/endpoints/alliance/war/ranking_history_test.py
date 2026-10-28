@@ -159,3 +159,43 @@ class TestRankingHistoryData:
         assert body["season_number"] == 64
         assert body["season_status"] == "ended"
         assert len(body["points"]) == 2
+
+
+class TestRankingHistorySeasonParam:
+    @pytest.mark.anyio
+    async def test_past_season_returns_its_own_wars(self):
+        alliance, owner = await _base_setup()
+        alliance.elo = 1000
+        await load_objects([alliance])
+        past, _ = await _setup_wars(alliance, owner, [40, 20], season_status=SeasonStatus.ENDED)
+        current = Season(number=65, status=SeasonStatus.ACTIVE)
+        later_war = War(
+            id=uuid.uuid4(),
+            alliance_id=alliance.id,
+            opponent_name="Later",
+            created_by_id=owner.id,
+            season_id=current.id,
+            status=WarStatus.ENDED,
+            elo_change=-50,
+            win=False,
+        )
+        await load_objects([current, later_war])
+
+        resp = await execute_get_request(
+            f"{_url(alliance.id)}?season_id={past.id}", headers=OWNER_HEADERS
+        )
+
+        body = resp.json()
+        assert body["season_number"] == 64
+        assert body["season_status"] == "ended"
+        assert [p["opponent_name"] for p in body["points"]] == ["Enemy1", "Enemy2"]
+        # Season 65 cost 50, so season 64 ended at 1050.
+        assert [p["elo_after"] for p in body["points"]] == [1030, 1050]
+
+    @pytest.mark.anyio
+    async def test_unknown_season_returns_404(self):
+        alliance, _ = await _base_setup()
+        resp = await execute_get_request(
+            f"{_url(alliance.id)}?season_id={uuid.uuid4()}", headers=OWNER_HEADERS
+        )
+        assert resp.status_code == 404

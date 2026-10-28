@@ -97,6 +97,9 @@ Cypress.Commands.add('slideTo', (slider: string, label: string) => {
   step(10);
 });
 
+/** Thumb `index` of a `LabeledSlider` — 0 is the low end of a range, 1 the high end. */
+export const sliderThumb = (slider: string, index = 0) => cy.getByCy(slider).find('[role="slider"]').eq(index);
+
 // ── Truncate DB (direct backend call) ────────────────────────────────────────
 
 Cypress.Commands.add('truncateDb', () => {
@@ -1833,6 +1836,14 @@ Cypress.Commands.add('apiCloseSeason', (token: string, seasonId: string) => {
 // Create a season and immediately open it — yields the season id.
 Cypress.Commands.add('apiCreateOpenSeason', (token: string, number: number) => {
   return cy.apiCreateSeason(token, number).then((res) => {
+    const seasonId = res.body.id as string;
+    return cy.apiOpenSeason(token, seasonId).then(() => seasonId);
+  });
+});
+
+// Create a big_thing season and open it — yields the season id.
+Cypress.Commands.add('apiOpenBigThingSeason', (token: string, number: number) => {
+  return cy.apiRequest(token, 'POST', '/admin/seasons', { number, format: 'big_thing' }).then((res) => {
     const seasonId = res.body.id as string;
     return cy.apiOpenSeason(token, seasonId).then(() => seasonId);
   });

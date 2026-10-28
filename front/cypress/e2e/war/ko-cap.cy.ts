@@ -38,9 +38,7 @@ describe('War – KO cap', () => {
 
   it('lets a Big Thing war go up to ten KOs', () => {
     setupAssignedAttacker('ko-cap-bt').then(({ adminToken, ownerData, allianceId, warId }) => {
-      cy.apiRequest(adminToken, 'POST', '/admin/seasons', { number: 73, format: 'big_thing' }).then((res) => {
-        cy.apiOpenSeason(adminToken, res.body.id);
-      });
+      cy.apiOpenBigThingSeason(adminToken, 73);
       cy.apiUpdateWarKo(ownerData.access_token, allianceId, warId, 1, 10, BIG_THING_MAX_KO - 1);
       cy.openWarAttackerPanel(ownerData.user_id);
 

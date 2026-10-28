@@ -1,14 +1,16 @@
 import uuid
 
 from fastapi import HTTPException
-from sqlmodel import col, select
+from sqlmodel import col, func, select
 from starlette import status
 
 from src.dto.alliance.war.dto_ranking_history import RankingHistoryPoint, RankingHistoryResponse
 from src.enums.WarStatus import WarStatus
 from src.Messages.alliance_messages import ALLIANCE_NOT_FOUND
+from src.Messages.season_messages import SEASON_NOT_FOUND
 from src.models.alliance.Alliance import Alliance
 from src.models.user.User import User
+from src.models.war.Season import Season
 from src.models.war.War import War
 from src.services.alliance.AllianceService import AllianceService
 from src.services.SeasonService import SeasonService
@@ -42,6 +44,7 @@ class RankingHistoryService:
         session: SessionDep,
         current_user: User,
         alliance_id: uuid.UUID,
+        season_id: uuid.UUID | None = None,
     ) -> RankingHistoryResponse:
         alliance = await session.get(Alliance, alliance_id)
         if alliance is None:
@@ -49,7 +52,12 @@ class RankingHistoryService:
         if not await AllianceService.is_visitor(session, current_user.id, alliance_id):
             raise HTTPException(status.HTTP_404_NOT_FOUND, ALLIANCE_NOT_FOUND)
 
-        display_season = await SeasonService.get_display_season(session)
+        if season_id is not None:
+            display_season = await session.get(Season, season_id)
+            if display_season is None:
+                raise HTTPException(status.HTTP_404_NOT_FOUND, SEASON_NOT_FOUND)
+        else:
+            display_season = await SeasonService.get_display_season(session)
 
         if display_season is None:
             return RankingHistoryResponse(season_number=None, season_status=None, points=[])
@@ -66,7 +74,19 @@ class RankingHistoryService:
             )
         ).all()
 
-        points = cls._reconstruct_elo(list(wars), alliance.elo)
+        # A past season ends at today's ELO minus everything the later seasons moved it by.
+        later_change = (
+            await session.exec(
+                select(func.coalesce(func.sum(War.elo_change), 0))
+                .join(Season, col(Season.id) == col(War.season_id))
+                .where(
+                    War.alliance_id == alliance_id,
+                    War.status == WarStatus.ENDED,
+                    Season.number > display_season.number,
+                )
+            )
+        ).one()
+        points = cls._reconstruct_elo(list(wars), alliance.elo - later_change)
         return RankingHistoryResponse(
             season_number=display_season.number,
             season_status=display_season.status,

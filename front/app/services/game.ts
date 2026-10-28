@@ -215,10 +215,12 @@ export interface RankingHistoryResponse {
 }
 
 export async function fetchAllianceRankingHistory(
-  allianceId: string
+  allianceId: string,
+  seasonId?: string
 ): Promise<RankingHistoryResponse> {
+  const query = seasonId ? `?season_id=${seasonId}` : ''
   return api(
-    `/alliances/${allianceId}/ranking-history`,
+    `/alliances/${allianceId}/ranking-history${query}`,
     "Erreur lors de la récupération de l'historique de classement"
   )
 }

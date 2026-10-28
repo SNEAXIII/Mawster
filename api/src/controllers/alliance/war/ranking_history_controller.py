@@ -1,6 +1,7 @@
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from src.dto.alliance.war.dto_ranking_history import RankingHistoryResponse
 from src.services.alliance.RankingHistoryService import RankingHistoryService
@@ -23,5 +24,8 @@ async def get_ranking_history(
     session: SessionDep,
     current_user: CurrentUser,
     alliance_id: uuid.UUID,
+    season_id: Annotated[uuid.UUID | None, Query()] = None,
 ):
-    return await RankingHistoryService.get_ranking_history(session, current_user, alliance_id)
+    return await RankingHistoryService.get_ranking_history(
+        session, current_user, alliance_id, season_id
+    )

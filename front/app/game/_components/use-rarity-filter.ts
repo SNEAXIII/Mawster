@@ -1,75 +1,56 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { parseRarity } from '@/app/game/defense/_components/defense-utils'
 import { RARITIES } from '@/app/services/roster'
+import { useStoredValue } from '@/hooks/use-stored-value'
 
-/** Default when no stored preference: 7★ shown, 6★ hidden. */
-const DEFAULT_TIERS = RARITIES.filter((t) => t.startsWith('7'))
+/** Inclusive [lo, hi] indexes into RARITIES. */
+export type RankRange = [number, number]
 
+/** Default when no stored preference: 7r1 – 7r6, so 6★ is hidden. */
+const DEFAULT_RANGE: RankRange = [RARITIES.indexOf('7r1'), RARITIES.indexOf('7r6')]
 /** Sort weight for a rarity string: 7r6 (706) → 6r4 (604). */
 export function rarityWeight(rarity: string): number {
   const { stars, rank } = parseRarity(rarity)
   return stars * 100 + rank
 }
 
-function loadTiers(storageKey: string): Set<string> {
-  if (typeof window === 'undefined') return new Set(DEFAULT_TIERS)
-  try {
-    const raw = window.localStorage.getItem(storageKey)
-    if (!raw) return new Set(DEFAULT_TIERS)
-    const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed)) return new Set(parsed.filter((t) => typeof t === 'string'))
-  } catch {
-    // Corrupt / unavailable storage — fall back to default.
-  }
-  return new Set(DEFAULT_TIERS)
+const isIndex = (n: unknown): n is number =>
+  Number.isInteger(n) && (n as number) >= 0 && (n as number) < RARITIES.length
+
+function toRange(indexes: number[]): RankRange | null {
+  if (indexes.length === 0) return null
+  return [Math.min(...indexes), Math.max(...indexes)]
+}
+
+/** Current format is `[lo, hi]`; the legacy format is an array of tier strings. */
+export function parseRankRange(raw: unknown): RankRange {
+  if (!Array.isArray(raw)) return DEFAULT_RANGE
+  if (raw.length === 2 && raw.every(isIndex)) return toRange(raw) ?? DEFAULT_RANGE
+  const legacy = raw.flatMap((tier) => {
+    const index = RARITIES.findIndex((r) => r === tier)
+    return index === -1 ? [] : [index]
+  })
+  return toRange(legacy) ?? DEFAULT_RANGE
 }
 
 /**
- * Manages a persisted rarity-tier filter for a champion selector.
+ * Manages a persisted rarity-rank range for a champion selector.
  * State lives in localStorage under `storageKey`, is independent of dialog
- * open/close (loaded once on mount), and is meant to survive "Reset filters".
- *
- * With no stored preference, 6★ tiers are hidden by default.
+ * open/close, and is meant to survive "Reset filters".
  */
 export function useRarityFilter(storageKey: string) {
-  const [activeTiers, setActiveTiers] = useState<Set<string>>(() => new Set(DEFAULT_TIERS))
-
-  // Hydrate from storage on mount (avoids SSR mismatch).
-  useEffect(() => {
-    setActiveTiers(loadTiers(storageKey))
-  }, [storageKey])
-
-  const persist = useCallback(
-    (next: Set<string>) => {
-      setActiveTiers(next)
-      try {
-        window.localStorage.setItem(storageKey, JSON.stringify([...next]))
-      } catch {
-        // Ignore storage failures (private browsing).
-      }
-    },
-    [storageKey]
-  )
-
-  const toggleTier = useCallback(
-    (tier: string) => {
-      const next = new Set(activeTiers)
-      if (next.has(tier)) next.delete(tier)
-      else next.add(tier)
-      persist(next)
-    },
-    [activeTiers, persist]
-  )
+  const [range, setRange] = useStoredValue(storageKey, parseRankRange, DEFAULT_RANGE)
 
   const matches = useCallback(
     (rarity: string) => {
       const { stars, rank } = parseRarity(rarity)
-      return activeTiers.has(`${stars}r${rank}`)
+      const index = RARITIES.findIndex((r) => r === `${stars}r${rank}`)
+      return index >= range[0] && index <= range[1]
     },
-    [activeTiers]
+    [range]
   )
 
-  return useMemo(() => ({ activeTiers, toggleTier, matches }), [activeTiers, toggleTier, matches])
+  return useMemo(() => ({ range, setRange, matches }), [range, setRange, matches])
 }

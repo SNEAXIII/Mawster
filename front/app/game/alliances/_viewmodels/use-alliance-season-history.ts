@@ -30,17 +30,23 @@ export function useAllianceSeasonHistory(allianceId: string, seasonId: string | 
   useEffect(() => {
     if (!allianceId) return
     setSeasonWars([])
-    setRankingPoints([])
-    setRankingSeasonNumber(null)
-    setRankingSeasonStatus(null)
-    fetchAllianceRankingHistory(allianceId)
+  }, [allianceId])
+
+  useEffect(() => {
+    if (!allianceId) return
+    let cancelled = false
+    fetchAllianceRankingHistory(allianceId, seasonId ?? undefined)
       .then((data) => {
+        if (cancelled) return
         setRankingPoints(data.points)
         setRankingSeasonNumber(data.season_number)
         setRankingSeasonStatus(data.season_status)
       })
       .catch(() => {})
-  }, [allianceId])
+    return () => {
+      cancelled = true
+    }
+  }, [allianceId, seasonId])
 
   // Patch the row in place: refetching the season would collapse the edited cell
   // while the request is still in flight.

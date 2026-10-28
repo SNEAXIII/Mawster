@@ -676,6 +676,20 @@ const en = {
       rarity: 'Rarity',
       ascension: 'Ascension',
       ascensionNone: 'None',
+      quickEdit: {
+        button: 'Quick edit',
+        title: 'Quick edit — G{bg}',
+        rankRange: 'Rank',
+        nodes: 'Nodes',
+        empty: 'No defender',
+        remove: 'Remove defender',
+        states: {
+          pending: 'Saving in a second',
+          saving: 'Saving…',
+          saved: 'Saved',
+          error: 'Not saved',
+        },
+      },
       changeChampion: '← Change',
       placeOnNode: 'Place on node #{node}',
       // Attackers

@@ -1,4 +1,4 @@
-import { setupDefenseOwner, setupDefenseOwnerAndMember, openWarNode } from '../../support/e2e';
+import { setupDefenseOwner, setupDefenseOwnerAndMember, openWarNode, sliderThumb } from '../../support/e2e';
 
 interface Owner {
   tok: string;
@@ -51,6 +51,8 @@ function giveChampionAndPlace(
 function openSelectorOnNode1() {
   openWarNode(1);
 }
+
+const lowRankThumb = () => sliderThumb('defense-rarity');
 
 // What a filter left on screen and what it removed — the two assertions every
 // test here makes, before and after acting on a filter.
@@ -278,7 +280,7 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
   // 6★ champions are hidden by default but a toggle reveals them
   // =========================================================================
 
-  it('hides 6-star champions by default and reveals them via the 6-star toggle', () => {
+  it('hides 6-star champions by default and reveals them when the low end moves down', () => {
     openSelectorWithRoster('def-rar-def', 'RarDefPlyr', 'RarDefAll', 'RD', (admin, owner) => {
       giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
       giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '6r5' });
@@ -286,27 +288,26 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
       // 7★ Spider-Man visible, 6★ Wolverine hidden by default
       expectCards(['Spider-Man'], ['Wolverine']);
 
-      // The rarity filter exposes 6★ tiers too — enabling 6r5 reveals the champion.
-      cy.getByCy('defense-rarity-6r4').should('be.visible');
-      cy.getByCy('defense-rarity-7r3').should('be.visible');
-      cy.getByCy('defense-rarity-6r5').click();
+      // One step left puts the low end on 6r5 (index 1) and reveals the champion.
+      cy.getByCy('defense-rarity').should('be.visible');
+      lowRankThumb().type('{leftarrow}').should('have.attr', 'aria-valuenow', '1');
       expectCards(['Wolverine', 'Spider-Man']);
     });
   });
 
   // =========================================================================
-  // Toggling a 7★ tier off hides that tier
+  // Raising the low end hides the ranks below it
   // =========================================================================
 
-  it('deactivating a 7-star tier hides champions of that exact tier', () => {
+  it('raising the low end of the range hides the champions below it', () => {
     openSelectorWithRoster('def-rar-tier', 'RarTierPlyr', 'RarTierAll', 'RT', (admin, owner) => {
       giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
       giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '7r5' });
     }).then(() => {
       expectCards(['Spider-Man', 'Wolverine']);
 
-      // Turn 7r3 off → Spider-Man (7r3) hidden, Wolverine (7r5) stays
-      cy.getByCy('defense-rarity-7r3').click();
+      // Low end 7r1 → 7r4 hides Spider-Man (7r3), Wolverine (7r5) stays
+      lowRankThumb().type('{rightarrow}{rightarrow}{rightarrow}').should('have.attr', 'aria-valuenow', '5');
       expectCards(['Wolverine'], ['Spider-Man']);
     });
   });
@@ -321,8 +322,8 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
       giveChampion(admin, 'Spider-Man', 'Cosmic', owner);
       giveChampion(admin, 'Wolverine', 'Mutant', { ...owner, rarity: '7r5' }, true);
     }).then(() => {
-      // Turn 7r3 off → Spider-Man (7r3) hidden, Wolverine (7r5) stays
-      cy.getByCy('defense-rarity-7r3').click();
+      // Low end 7r1 → 7r4 hides Spider-Man (7r3), Wolverine (7r5) stays
+      lowRankThumb().type('{rightarrow}{rightarrow}{rightarrow}').should('have.attr', 'aria-valuenow', '5');
       expectCards(['Wolverine'], ['Spider-Man']);
 
       // Activate then Reset a normal filter — rarity must survive
@@ -334,6 +335,12 @@ describe('Defense – AllianceDefenseSelector rarity filter', () => {
       cy.get('body').type('{esc}');
       expectCards([], ['Wolverine']);
       openSelectorOnNode1();
+      expectCards(['Wolverine'], ['Spider-Man']);
+
+      // A page reload reads it back from storage
+      cy.reload();
+      openSelectorOnNode1();
+      lowRankThumb().should('have.attr', 'aria-valuenow', '5');
       expectCards(['Wolverine'], ['Spider-Man']);
     });
   });
