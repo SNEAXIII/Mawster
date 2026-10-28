@@ -59,7 +59,7 @@ export default function QuickEditRow({
       className='flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border py-2 disabled:opacity-50'
       data-cy={`war-quick-edit-row-${node}`}
     >
-      <span className='w-10 font-mono text-sm tabular-nums'>#{node}</span>
+      <span className='w-10 shrink-0 font-mono text-sm tabular-nums'>#{node}</span>
       {/* Fixed-size slot so rows stay aligned whether a champion is picked or not. */}
       <span
         className='size-10 shrink-0'
