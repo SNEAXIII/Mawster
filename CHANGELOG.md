@@ -3,6 +3,19 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.35.0](https://github.com/SNEAXIII/Mawster/compare/v1.34.0...v1.35.0) (2026-10-28)
+
+
+### Ajouté
+
+* filter an ally's roster in the alliance roster preview ([#772](https://github.com/SNEAXIII/Mawster/issues/772)) ([4aa3500](https://github.com/SNEAXIII/Mawster/commit/4aa350031f8ff49fe9c3ae91ad5d3d97e0e4b847))
+* quick edit a war battlegroup's defenders ([d7508fe](https://github.com/SNEAXIII/Mawster/commit/d7508fee5d5e6cc6a885ec9c53b0d472908e4bf0))
+
+
+### Corrigé
+
+* ranking history follows the selected season on alliance statistics ([#770](https://github.com/SNEAXIII/Mawster/issues/770)) ([acd6ab2](https://github.com/SNEAXIII/Mawster/commit/acd6ab28bb0b90b5d76f9aea41d08a8208a72182))
+
 ## [1.34.0](https://github.com/SNEAXIII/Mawster/compare/v1.33.0...v1.34.0) (2026-10-27)
 
 
