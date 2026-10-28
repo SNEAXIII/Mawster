@@ -56,7 +56,7 @@ export default function QuickEditRow({
   return (
     <fieldset
       disabled={locked}
-      className='flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border py-2 disabled:opacity-50'
+      className='flex w-fit flex-wrap items-center gap-x-2 gap-y-2 border-b border-border py-2 disabled:opacity-50'
       data-cy={`war-quick-edit-row-${node}`}
     >
       <span className='w-5 shrink-0 font-mono text-sm tabular-nums'>#{node}</span>
@@ -108,7 +108,7 @@ export default function QuickEditRow({
         format={(i) => RARITY_LABELS[RARITIES[i]]}
         cy={`war-quick-edit-rank-${node}`}
         disabled={locked || !value}
-        className='w-28'
+        className='w-20'
         title={t.game.war.rarity}
       />
       {/* Hidden, not removed, so the columns of every row stay aligned. */}
@@ -130,7 +130,7 @@ export default function QuickEditRow({
       >
         {saveState && STATE_ICONS[saveState]}
       </span>
-      <span className='size-8 shrink-0'>
+      <span className='h-8 w-4 shrink-0'>
         {value && !locked && (
           <Button
             variant='ghost'
