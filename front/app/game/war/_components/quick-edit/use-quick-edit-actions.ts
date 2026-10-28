@@ -21,16 +21,10 @@ interface QuickEditActionsInput {
   byNode: Map<number, WarPlacement>
   ascendable: Set<string>
   rankRange: Range
-  ascRange: Range
 }
 
 /** Writes of the quick edit: debounced placements, removals, and the attacker guard. */
-export function useQuickEditActions({
-  byNode,
-  ascendable,
-  rankRange,
-  ascRange,
-}: QuickEditActionsInput) {
+export function useQuickEditActions({ byNode, ascendable, rankRange }: QuickEditActionsInput) {
   const { t } = useI18n()
   const w = t.game.war
   const { selectedAllianceId, activeWarId, selectedBg, reloadWarSilently, write } = useWar()
@@ -95,9 +89,9 @@ export function useQuickEditActions({
     if (championId === current?.championId) return
     const base = current ?? {
       rankIndex: clamp(rarityIndex(`${last.stars}r${last.rank}`), rankRange),
-      ascension: clamp(last.ascension, ascRange),
+      ascension: last.ascension,
     }
-    // The disabled slider of a non-ascendable champion must show what is saved: A0.
+    // A non-ascendable champion is saved at A0.
     const ascension = ascendable.has(championId) ? base.ascension : 0
     const draft: Draft = { championId, rankIndex: base.rankIndex, ascension }
     const placed = byNode.get(node)?.champion_id

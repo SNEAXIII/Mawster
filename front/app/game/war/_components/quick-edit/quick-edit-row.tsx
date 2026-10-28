@@ -9,6 +9,8 @@ import LabeledSlider from '@/components/labeled-slider'
 import ChampionPortrait from '@/components/champion-portrait'
 import type { Champion } from '@/app/services/champions'
 import { RARITIES, RARITY_LABELS } from '@/app/services/roster'
+import { cn } from '@/app/lib/utils'
+import { rarityBadgeClass } from '@/app/game/defense/_components/defense-utils'
 import ChampionFilterSelect from '@/app/game/knowledge-base/_components/champion-filter-select'
 import { widen, type Draft, type Range } from './quick-edit-logic'
 import type { SaveState } from './use-quick-edit-saves'
@@ -28,7 +30,6 @@ interface QuickEditRowProps {
   locked: boolean
   saveState?: SaveState
   rankRange: Range
-  ascRange: Range
   onPickChampion: (championId: string | null) => void
   onEdit: (draft: Draft) => void
   onRemove: () => void
@@ -42,7 +43,6 @@ export default function QuickEditRow({
   locked,
   saveState,
   rankRange,
-  ascRange,
   onPickChampion,
   onEdit,
   onRemove,
@@ -50,7 +50,8 @@ export default function QuickEditRow({
   const { t } = useI18n()
   const q = t.game.war.quickEdit
   const rankBounds = widen(rankRange, value?.rankIndex ?? rankRange[0])
-  const ascBounds = widen(ascRange, value?.ascension ?? ascRange[0])
+  const rarity = value ? RARITIES[value.rankIndex] : null
+  const ascension = value && ascendable ? value.ascension : 0
 
   return (
     <fieldset
@@ -64,14 +65,31 @@ export default function QuickEditRow({
         className='size-10 shrink-0'
         data-cy={`war-quick-edit-portrait-${node}`}
       >
-        {value && champion && (
+        {rarity && champion && (
           <ChampionPortrait
             imageUrl={champion.image_url}
             name={champion.name}
-            rarity={RARITIES[value.rankIndex]}
-            ascension={ascendable ? value.ascension : 0}
+            rarity={rarity}
             size={40}
           />
+        )}
+      </span>
+      <span className='flex w-8 shrink-0 flex-col text-xs font-semibold leading-tight tabular-nums'>
+        {rarity && (
+          <span
+            className={rarityBadgeClass(rarity)}
+            data-cy={`war-quick-edit-rarity-${node}`}
+          >
+            {RARITY_LABELS[rarity]}
+          </span>
+        )}
+        {ascension > 0 && (
+          <span
+            className='text-purple-400'
+            data-cy={`war-quick-edit-ascension-${node}`}
+          >
+            A{ascension}
+          </span>
         )}
       </span>
       <ChampionFilterSelect
@@ -92,37 +110,39 @@ export default function QuickEditRow({
         className='w-28'
         title={t.game.war.rarity}
       />
+      {/* Hidden, not removed, so the columns of every row stay aligned. */}
       <LabeledSlider
-        min={ascBounds[0]}
-        max={ascBounds[1]}
-        value={[value?.ascension ?? ascRange[0]]}
-        onChange={([ascension]) => value && onEdit({ ...value, ascension })}
+        max={2}
+        value={[ascension]}
+        onChange={([next]) => value && onEdit({ ...value, ascension: next })}
         format={(a) => (a === 0 ? t.game.war.ascensionNone : `A${a}`)}
         cy={`war-quick-edit-asc-${node}`}
         disabled={locked || !value || !ascendable}
-        className='w-28'
+        className={cn('w-28', (!value || !ascendable) && 'invisible')}
         title={t.game.war.ascension}
       />
       <span
-        className='flex size-5 items-center justify-center'
+        className='flex size-5 shrink-0 items-center justify-center'
         title={saveState && q.states[saveState]}
         data-cy={`war-quick-edit-status-${node}`}
         data-state={saveState ?? ''}
       >
         {saveState && STATE_ICONS[saveState]}
       </span>
-      {value && !locked && (
-        <Button
-          variant='ghost'
-          size='icon'
-          onClick={onRemove}
-          aria-label={q.remove}
-          title={q.remove}
-          data-cy={`war-quick-edit-remove-${node}`}
-        >
-          <FiTrash2 />
-        </Button>
-      )}
+      <span className='size-8 shrink-0'>
+        {value && !locked && (
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={onRemove}
+            aria-label={q.remove}
+            title={q.remove}
+            data-cy={`war-quick-edit-remove-${node}`}
+          >
+            <FiTrash2 />
+          </Button>
+        )}
+      </span>
     </fieldset>
   )
 }

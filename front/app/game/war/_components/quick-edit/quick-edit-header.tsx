@@ -9,15 +9,13 @@ interface QuickEditHeaderProps {
   nodeCount: number
   rankRange: Range
   onRankRange: (next: Range) => void
-  ascRange: Range
-  onAscRange: (next: Range) => void
   slices: Range
   onSlices: (next: Range) => void
 }
 
 /** Filters that bound the rows; none of them writes to the war. */
 export default function QuickEditHeader(props: Readonly<QuickEditHeaderProps>) {
-  const { nodeCount, rankRange, onRankRange, ascRange, onAscRange, slices, onSlices } = props
+  const { nodeCount, rankRange, onRankRange, slices, onSlices } = props
   const { t } = useI18n()
   const q = t.game.war.quickEdit
   const shown = sliceNodes(nodeCount, slices)
@@ -29,14 +27,6 @@ export default function QuickEditHeader(props: Readonly<QuickEditHeaderProps>) {
         onChange={onRankRange}
         label={q.rankRange}
         cyPrefix='war-quick-edit-rank-range'
-      />
-      <LabeledSlider
-        max={2}
-        value={ascRange}
-        onChange={onAscRange}
-        format={(a) => (a === 0 ? t.game.war.ascensionNone : `A${a}`)}
-        cy='war-quick-edit-asc-range'
-        title={q.ascRange}
       />
       <LabeledSlider
         max={NODE_SLICES - 1}

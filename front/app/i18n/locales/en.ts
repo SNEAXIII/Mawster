@@ -680,7 +680,6 @@ const en = {
         button: 'Quick edit',
         title: 'Quick edit — G{bg}',
         rankRange: 'Rank',
-        ascRange: 'Ascension',
         nodes: 'Nodes',
         empty: 'No defender',
         remove: 'Remove defender',

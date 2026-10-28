@@ -9,7 +9,6 @@ import { useChampionCatalog } from '@/hooks/use-champion-catalog'
 import { useStoredValue } from '@/hooks/use-stored-value'
 import {
   NODE_SLICES,
-  FULL_ASC_RANGE,
   FULL_RANK_RANGE,
   parseRangeWithin,
   sliceNodes,
@@ -22,7 +21,6 @@ import QuickEditRow from './quick-edit-row'
 
 const ALL_SLICES: Range = [0, NODE_SLICES - 1]
 const parseRankRange = parseRangeWithin(FULL_RANK_RANGE)
-const parseAscRange = parseRangeWithin(FULL_ASC_RANGE)
 
 interface WarQuickEditProps {
   open: boolean
@@ -40,11 +38,6 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
     parseRankRange,
     FULL_RANK_RANGE
   )
-  const [ascRange, setAscRange] = useStoredValue(
-    'mawster:war-quick-edit-asc-range',
-    parseAscRange,
-    FULL_ASC_RANGE
-  )
   const [slices, setSlices] = useState<Range>(ALL_SLICES)
   const ascendable = useMemo(
     () => new Set(champions.filter((c) => c.is_ascendable).map((c) => c.id)),
@@ -53,7 +46,7 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
   const championsById = useMemo(() => new Map(champions.map((c) => [c.id, c])), [champions])
   const byNode = useMemo(() => new Map(placements.map((p) => [p.node_number, p])), [placements])
   const nodeCount = currentWar?.node_count ?? 50
-  const actions = useQuickEditActions({ byNode, ascendable, rankRange, ascRange })
+  const actions = useQuickEditActions({ byNode, ascendable, rankRange })
   const { saves, confirm, setConfirm } = actions
   const { reset, flush } = saves
 
@@ -84,8 +77,6 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
           nodeCount={nodeCount}
           rankRange={rankRange}
           onRankRange={setRankRange}
-          ascRange={ascRange}
-          onAscRange={setAscRange}
           slices={slices}
           onSlices={setSlices}
         />
@@ -104,7 +95,6 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
                 locked={!!placement?.is_attacker_locked || saves.states[node] === 'saving'}
                 saveState={saves.states[node]}
                 rankRange={rankRange}
-                ascRange={ascRange}
                 onPickChampion={(id) => actions.pick(node, value, id)}
                 onEdit={(draft) => saves.edit(node, draft)}
                 onRemove={() => actions.remove(node)}

@@ -687,7 +687,6 @@ const fr: Translations = {
         button: 'Édition rapide',
         title: 'Édition rapide — G{bg}',
         rankRange: 'Rang',
-        ascRange: 'Ascension',
         nodes: 'Nœuds',
         empty: 'Aucun défenseur',
         remove: 'Retirer le défenseur',

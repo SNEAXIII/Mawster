@@ -67,7 +67,6 @@ export function keepNodes<T>(record: Record<number, T>, keep: (node: number) => 
   return Object.fromEntries(Object.entries(record).filter(([node]) => keep(Number(node))))
 }
 
-export const FULL_ASC_RANGE: Range = [0, 2]
 export const FULL_RANK_RANGE: Range = [0, RARITIES.length - 1]
 
 /** Reads a stored `[lo, hi]` within `full`; anything else falls back to `full`. */
