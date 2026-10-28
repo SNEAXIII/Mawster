@@ -120,13 +120,12 @@ export default function WarOverview(props: Readonly<WarOverviewProps>) {
         <div className='ml-auto flex flex-wrap items-center justify-end gap-2'>
           <Button
             variant='outline'
-            size='icon'
+            size='sm'
             onClick={handleCopyShareLink}
-            aria-label={t.game.war.shareLink}
-            title={t.game.war.shareLink}
             data-cy='share-war-link-btn'
           >
             <Link2 />
+            {t.game.war.shareLink}
           </Button>
           <WarActions {...props} />
         </div>
