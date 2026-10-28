@@ -6,6 +6,8 @@ import { FiTrash2 } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import LabeledSlider from '@/components/labeled-slider'
+import ChampionPortrait from '@/components/champion-portrait'
+import type { Champion } from '@/app/services/champions'
 import { RARITIES, RARITY_LABELS } from '@/app/services/roster'
 import ChampionFilterSelect from '@/app/game/knowledge-base/_components/champion-filter-select'
 import { widen, type Draft, type Range } from './quick-edit-logic'
@@ -21,6 +23,7 @@ const STATE_ICONS: Record<SaveState, ReactNode> = {
 interface QuickEditRowProps {
   node: number
   value: Draft | null
+  champion?: Champion
   ascendable: boolean
   locked: boolean
   saveState?: SaveState
@@ -34,6 +37,7 @@ interface QuickEditRowProps {
 export default function QuickEditRow({
   node,
   value,
+  champion,
   ascendable,
   locked,
   saveState,
@@ -55,6 +59,21 @@ export default function QuickEditRow({
       data-cy={`war-quick-edit-row-${node}`}
     >
       <span className='w-10 font-mono text-sm tabular-nums'>#{node}</span>
+      {/* Fixed-size slot so rows stay aligned whether a champion is picked or not. */}
+      <span
+        className='size-10 shrink-0'
+        data-cy={`war-quick-edit-portrait-${node}`}
+      >
+        {value && champion && (
+          <ChampionPortrait
+            imageUrl={champion.image_url}
+            name={champion.name}
+            rarity={RARITIES[value.rankIndex]}
+            ascension={ascendable ? value.ascension : 0}
+            size={40}
+          />
+        )}
+      </span>
       <ChampionFilterSelect
         value={value?.championId ?? null}
         onChange={onPickChampion}

@@ -32,7 +32,9 @@ describe('War – quick edit', () => {
   it('records defenders on empty nodes and shows them on the map', () => {
     setupAttackerScenario('war-qe-add').then(({ ownerData }) => {
       openQuickEdit(ownerData.user_id);
+      cy.getByCy('war-quick-edit-portrait-11').find('img').should('not.exist');
       pickChampion(11, 'Wolverine');
+      cy.getByCy('war-quick-edit-portrait-11').find('img').should('exist');
       pickChampion(12, 'Iron Man');
       cy.getByCy('war-quick-edit-status-11').should('have.attr', 'data-state', 'saved');
       cy.getByCy('war-quick-edit-status-12').should('have.attr', 'data-state', 'saved');

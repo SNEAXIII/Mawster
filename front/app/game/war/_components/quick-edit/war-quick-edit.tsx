@@ -50,6 +50,7 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
     () => new Set(champions.filter((c) => c.is_ascendable).map((c) => c.id)),
     [champions]
   )
+  const championsById = useMemo(() => new Map(champions.map((c) => [c.id, c])), [champions])
   const byNode = useMemo(() => new Map(placements.map((p) => [p.node_number, p])), [placements])
   const nodeCount = currentWar?.node_count ?? 50
   const actions = useQuickEditActions({ byNode, ascendable, rankRange, ascRange })
@@ -98,6 +99,7 @@ export default function WarQuickEdit({ open, onClose }: Readonly<WarQuickEditPro
                 key={node}
                 node={node}
                 value={value}
+                champion={value ? championsById.get(value.championId) : undefined}
                 ascendable={!!value && ascendable.has(value.championId)}
                 locked={!!placement?.is_attacker_locked || saves.states[node] === 'saving'}
                 saveState={saves.states[node]}
