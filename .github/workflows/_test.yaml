@@ -1,12 +1,6 @@
 name: Test
 
 # Called by ci-cd.yaml, never triggered on its own.
-#
-# Lint and E2E stay in the same file on purpose: `needs:` cannot cross workflow
-# files, and the eight E2E runners gate on the two lint jobs so a failing lint
-# does not burn them. Split into two called workflows, that gate would have to
-# become a dependency between the workflows themselves, and the plan and build
-# jobs — which depend on no lint at all — would start a minute later for nothing.
 on:
   workflow_call:
     secrets:
@@ -227,7 +221,7 @@ jobs:
           NEXT_E2E_BUILD: 'true'
           API_PORT: '8000'
           API_SERVER_HOST: localhost
-          STATIC_SERVER_HOST: 127.0.0.1 # rewrites are baked at build; e2e_parallel.py serves static-assets there
+          STATIC_SERVER_HOST: 127.0.0.1 # rewrites are baked at build; scripts/e2e/servers.py serves static-assets there
           STATIC_PORT: '8009'
         run: pnpm build
       - name: Archive frontend build
@@ -260,13 +254,17 @@ jobs:
       # only environment left running whatever `latest` happened to be that day.
       MARIADB_IMAGE: mariadb:11.4
     # MariaDB is started by hand rather than declared under `services:`, whose
-    # image pull is paid before the first step of every job in the matrix — a
-    # variable 2 to 12s, on the critical path. Pulled in the background here and
-    # started at the end, it costs nothing: each backend waits for the server
-    # itself (api/app_testing.py), so nothing races it.
+    # image pull is paid before the first step of every job in the matrix. Pulled
+    # and booted in the background instead, during the setup steps: each backend
+    # waits for the server itself (api/app_testing.py), so nothing races it.
     steps:
-      - name: Prefetch the MariaDB image
-        run: nohup docker pull "$MARIADB_IMAGE" >/dev/null 2>&1 &
+      - name: Start MariaDB in the background
+        run: |
+          nohup docker run -d --name mariadb-test -p 3307:3306 \
+            -e "MARIADB_USER=$MARIADB_USER" \
+            -e "MARIADB_PASSWORD=$MARIADB_PASSWORD" \
+            -e "MARIADB_ROOT_PASSWORD=$MARIADB_ROOT_PASSWORD" \
+            "$MARIADB_IMAGE" >/dev/null 2>&1 &
 
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -281,6 +279,10 @@ jobs:
         working-directory: ./api
         # Same flags as the lint job above.
         run: uv sync --all-groups --locked --no-build --no-install-project
+      # They wait for MariaDB and migrate while the frontend is set up below.
+      - name: Start backends in the background
+        run: python3 scripts/e2e/e2e_parallel.py backends --spec "${{ matrix.specs }}"
+
       - name: Setup Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
@@ -301,6 +303,11 @@ jobs:
         run: |
           pnpm install --frozen-lockfile --ignore-scripts
           pnpm exec cypress install
+      # The cache never holds a verified binary, so each `cypress run` would smoke-test it at
+      # launch; verifying once here, behind the remaining steps, writes the flag both workers read.
+      - name: Verify Cypress in the background
+        working-directory: ./front
+        run: nohup pnpm exec cypress verify >/dev/null 2>&1 &
       - name: Download frontend build
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
@@ -309,18 +316,8 @@ jobs:
       - name: Extract frontend build
         run: tar -xzf /tmp/next-e2e-build.tar.gz -C front
 
-      # Docker de-duplicates a pull already in flight, so the worst case here is
-      # waiting for what the prefetch has not finished — never a second download.
-      - name: Start MariaDB
-        run: |
-          docker run -d --name mariadb-test -p 3307:3306 \
-            -e "MARIADB_USER=$MARIADB_USER" \
-            -e "MARIADB_PASSWORD=$MARIADB_PASSWORD" \
-            -e "MARIADB_ROOT_PASSWORD=$MARIADB_ROOT_PASSWORD" \
-            "$MARIADB_IMAGE"
-
       - name: Run Cypress E2E tests (runner ${{ matrix.runner }})
-        run: python3 scripts/e2e/e2e_parallel.py --spec "${{ matrix.specs }}"
+        run: python3 scripts/e2e/e2e_parallel.py tests --spec "${{ matrix.specs }}"
       - name: Upload Cypress results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
