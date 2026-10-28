@@ -7,7 +7,7 @@ import RosterGrid from '@/app/game/account/_components/roster-grid'
 import UpgradeRequestsSection from '@/app/game/account/_components/upgrade-requests-section'
 import MasteryMiniView from '@/app/game/account/_components/mastery-mini-view'
 import UpgradeRequestDialogs from '@/components/upgrade-request-dialogs'
-import { type RosterEntry, RARITIES } from '@/app/services/roster'
+import RosterFilterBar from '@/components/roster/roster-filter-bar'
 import { useMemberRoster } from '../_viewmodels/use-member-roster'
 import { useUpgradeRequests } from '@/hooks/use-upgrade-requests'
 
@@ -31,22 +31,13 @@ export default function AllianceRosterDialog({
   const upgrade = useUpgradeRequests()
   const { upgradeRequests, fetchUpgradeRequests, initiateUpgrade, initiateCancelRequest } = upgrade
 
-  const { roster, masteries, loading, error } = useMemberRoster(
+  const vm = useMemberRoster(
     open,
     gameAccountId,
     fetchUpgradeRequests,
     t.game.alliances.rosterError
   )
-
-  // Group roster by rarity descending
-  const groupedRoster = (() => {
-    const groups: Record<string, RosterEntry[]> = {}
-    for (const rarity of [...RARITIES].reverse()) {
-      const entries = roster.filter((r) => r.rarity === rarity)
-      if (entries.length > 0) groups[rarity] = entries
-    }
-    return Object.entries(groups) as [string, RosterEntry[]][]
-  })()
+  const { roster, masteries, loading, error } = vm
 
   return (
     <>
@@ -81,8 +72,17 @@ export default function AllianceRosterDialog({
                   onInitiateCancel={initiateCancelRequest}
                 />
               )}
+              <RosterFilterBar
+                filters={vm.filters}
+                onChange={vm.setFilterPatch}
+                onReset={vm.resetFilters}
+                availableClasses={vm.availableClasses}
+                filteredCount={vm.filteredCount}
+                totalCount={roster.length}
+              />
               <RosterGrid
-                groupedRoster={groupedRoster}
+                groupedRoster={vm.groupedRoster}
+                isFiltered={vm.hasActiveFilters}
                 readOnly={!canRequestUpgrade}
                 upgradeRequests={upgradeRequests}
                 onCancelRequest={canRequestUpgrade ? initiateCancelRequest : undefined}
