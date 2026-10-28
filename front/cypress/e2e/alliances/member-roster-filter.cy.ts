@@ -1,4 +1,11 @@
 import { setupAdmin, setupAllianceWithMember } from '../../support/e2e';
+import {
+  capRosterRankAt7r1,
+  expectNoResultsThenReset,
+  expectRosterCards,
+  filterRosterByName,
+  raiseRosterMinSigTo100,
+} from '../roster/roster-filter-helpers';
 
 /**
  * Owner opens the member's roster preview, seeded with:
@@ -30,40 +37,29 @@ describe('Alliance – Member roster preview filters', () => {
   });
 
   it('filters by name', () => {
-    cy.getByCy('roster-filter-name').type('Herc');
-    cy.getByCy('champion-card-Hercules').should('exist');
-    cy.getByCy('champion-card-Spider-Man').should('not.exist');
-    cy.getByCy('champion-card-Magik').should('not.exist');
+    filterRosterByName('Herc');
+    expectRosterCards(['Hercules'], ['Spider-Man', 'Magik']);
     cy.getByCy('roster-filter-count').should('contain', '1 / 3');
   });
 
   it('filters by rank (7r1)', () => {
-    cy.getByCy('roster-filter-rank').find('[role="slider"]').last().focus().type('{leftarrow}'.repeat(5));
-    cy.getByCy('champion-card-Spider-Man').should('exist');
-    cy.getByCy('champion-card-Hercules').should('not.exist');
-    cy.getByCy('champion-card-Magik').should('not.exist');
+    capRosterRankAt7r1();
+    expectRosterCards(['Spider-Man'], ['Hercules', 'Magik']);
   });
 
   it('filters by minimum signature (>= 100)', () => {
-    cy.getByCy('roster-filter-sig').find('[role="slider"]').first().focus().type('{pageup}'.repeat(10));
-    cy.getByCy('champion-card-Hercules').should('exist');
-    cy.getByCy('champion-card-Spider-Man').should('not.exist');
-    cy.getByCy('champion-card-Magik').should('not.exist');
+    raiseRosterMinSigTo100();
+    expectRosterCards(['Hercules'], ['Spider-Man', 'Magik']);
   });
 
   it('shows "no results" when a filter hides everything, and reset restores the roster', () => {
-    cy.getByCy('roster-filter-name').type('Zzz');
-    cy.getByCy('roster-no-results').should('be.visible');
-    cy.getByCy('roster-empty').should('not.exist');
-
-    cy.getByCy('roster-filter-reset').click();
-    cy.getByCy('champion-card-Hercules').should('exist');
-    cy.getByCy('roster-no-results').should('not.exist');
+    filterRosterByName('Zzz');
+    expectNoResultsThenReset('Hercules');
     cy.getByCy('roster-filter-count').should('contain', '3 / 3');
   });
 
   it('clears the filters when the roster is reopened', () => {
-    cy.getByCy('roster-filter-name').type('Herc');
+    filterRosterByName('Herc');
     cy.getByCy('roster-filter-count').should('contain', '1 / 3');
 
     cy.get('body').type('{esc}');

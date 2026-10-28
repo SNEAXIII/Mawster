@@ -1,4 +1,11 @@
 import { setupRosterUser } from '../../support/e2e';
+import {
+  capRosterRankAt7r1,
+  expectNoResultsThenReset,
+  expectRosterCards,
+  filterRosterByName,
+  raiseRosterMinSigTo100,
+} from './roster-filter-helpers';
 
 /**
  * Adds a champion to the roster via the Add/Update form.
@@ -42,60 +49,43 @@ describe('Roster – Filter bar', () => {
   });
 
   it('shows the whole roster and total count with no filter', () => {
-    cy.getByCy('champion-card-Hercules').should('exist');
-    cy.getByCy('champion-card-Hyperion').should('exist');
-    cy.getByCy('champion-card-Magik').should('exist');
+    expectRosterCards(['Hercules', 'Hyperion', 'Magik']);
     cy.getByCy('roster-filter-count').should('contain', '3 / 3');
   });
 
   it('filters by name', () => {
-    cy.getByCy('roster-filter-name').type('Herc');
-    cy.getByCy('champion-card-Hercules').should('exist');
-    cy.getByCy('champion-card-Hyperion').should('not.exist');
-    cy.getByCy('champion-card-Magik').should('not.exist');
+    filterRosterByName('Herc');
+    expectRosterCards(['Hercules'], ['Hyperion', 'Magik']);
     cy.getByCy('roster-filter-count').should('contain', '1 / 3');
   });
 
   it('filters by rank (7r1)', () => {
-    cy.getByCy('roster-filter-rank').find('[role="slider"]').last().focus().type('{leftarrow}'.repeat(5));
-    cy.getByCy('champion-card-Hyperion').should('exist');
-    cy.getByCy('champion-card-Hercules').should('not.exist');
-    cy.getByCy('champion-card-Magik').should('not.exist');
+    capRosterRankAt7r1();
+    expectRosterCards(['Hyperion'], ['Hercules', 'Magik']);
   });
 
   it('filters by class (Mystic)', () => {
     cy.getByCy('roster-filter-class').click();
     cy.contains('Mystic').click();
-    cy.getByCy('champion-card-Magik').should('exist');
-    cy.getByCy('champion-card-Hercules').should('not.exist');
-    cy.getByCy('champion-card-Hyperion').should('not.exist');
+    expectRosterCards(['Magik'], ['Hercules', 'Hyperion']);
   });
 
   it('filters by minimum signature (>= 100)', () => {
-    cy.getByCy('roster-filter-sig').find('[role="slider"]').first().focus().type('{pageup}'.repeat(10));
-    cy.getByCy('champion-card-Hercules').should('exist');
-    cy.getByCy('champion-card-Hyperion').should('not.exist');
-    cy.getByCy('champion-card-Magik').should('not.exist');
+    raiseRosterMinSigTo100();
+    expectRosterCards(['Hercules'], ['Hyperion', 'Magik']);
   });
 
   it('reset clears all active filters', () => {
-    cy.getByCy('roster-filter-name').type('Herc');
-    cy.getByCy('champion-card-Hyperion').should('not.exist');
+    filterRosterByName('Herc');
+    expectRosterCards([], ['Hyperion']);
 
     cy.getByCy('roster-filter-reset').click();
-    cy.getByCy('champion-card-Hercules').should('exist');
-    cy.getByCy('champion-card-Hyperion').should('exist');
-    cy.getByCy('champion-card-Magik').should('exist');
+    expectRosterCards(['Hercules', 'Hyperion', 'Magik']);
   });
 
   it('shows a "no results" message (not the empty-roster message) when a filter hides everything', () => {
-    cy.getByCy('roster-filter-name').type('Zzz');
-    cy.getByCy('champion-card-Hercules').should('not.exist');
-    cy.getByCy('roster-no-results').should('be.visible');
-    cy.getByCy('roster-empty').should('not.exist');
-
-    cy.getByCy('roster-filter-reset').click();
-    cy.getByCy('champion-card-Hercules').should('exist');
-    cy.getByCy('roster-no-results').should('not.exist');
+    filterRosterByName('Zzz');
+    expectRosterCards([], ['Hercules']);
+    expectNoResultsThenReset('Hercules');
   });
 });
