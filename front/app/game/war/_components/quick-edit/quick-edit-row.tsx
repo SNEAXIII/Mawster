@@ -56,7 +56,7 @@ export default function QuickEditRow({
   return (
     <fieldset
       disabled={locked}
-      className='flex break-inside-avoid flex-wrap items-center gap-x-4 gap-y-2 border-b border-border py-2 disabled:opacity-50'
+      className='flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border py-2 disabled:opacity-50'
       data-cy={`war-quick-edit-row-${node}`}
     >
       <span className='w-5 shrink-0 font-mono text-sm tabular-nums'>#{node}</span>
