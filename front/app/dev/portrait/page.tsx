@@ -61,8 +61,7 @@ export default function PortraitLabPage() {
   const resolution = (size: number) => {
     const windowPx = getFrameWindowRect(size, rarity, state.window).width
     const picked = pickThumbnailSize(windowPx)
-    const variant = picked ? `${picked}x${picked}` : 'full'
-    return `${Math.round(windowPx)}px → ${variant}`
+    return `${Math.round(windowPx)}px → ${picked}x${picked}`
   }
 
   const boxClass = state.outline ? 'outline outline-1 outline-dashed outline-red-500/60' : ''
