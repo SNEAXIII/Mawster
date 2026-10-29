@@ -660,7 +660,7 @@ async def _insert_fight_records(
     return len(placements)
 
 
-# scripts/e2e/e2e_parallel.py slices backend.log on these markers, so a newline in a title
+# scripts/e2e/report.py slices backend.log on these markers, so a newline in a title
 # would forge a second marker and mis-attribute every line after it.
 MAX_LOG_TITLE = 200
 # C0, DEL and C1 — everything a terminal treats as an instruction rather than text.
