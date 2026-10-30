@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.35.1](https://github.com/SNEAXIII/Mawster/compare/v1.35.0...v1.35.1) (2026-10-30)
+
+
+### Corrigé
+
+* refresh outdated champion portraits ([#775](https://github.com/SNEAXIII/Mawster/issues/775)) ([4a210fd](https://github.com/SNEAXIII/Mawster/commit/4a210fd72e1489d6557c356b532042b028a7bbc8))
+
 ## [1.35.0](https://github.com/SNEAXIII/Mawster/compare/v1.34.0...v1.35.0) (2026-10-28)
 
 

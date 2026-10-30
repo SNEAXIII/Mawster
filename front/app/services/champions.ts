@@ -170,22 +170,24 @@ export const setChampionSagaRole = async (
 }
 
 // 60 covers the ≤54 CSS px portraits, 110 the mid-size ones, 256 the large tool cards.
-// Keep in sync with resize_sizes (static-assets/pyproject.toml) and IMAGE_SIZES (static-assets/src/config.rs).
+// Keep in sync with IMAGE_SIZES (static-assets/src/config.rs).
 export const THUMBNAIL_SIZES = [60, 110, 256]
+/** The biggest image the static server has: build_assets publishes no full-resolution original. */
+export const MAX_THUMBNAIL_SIZE = THUMBNAIL_SIZES[THUMBNAIL_SIZES.length - 1]
 
 /**
  * Build a sized champion image URL.
  * Converts e.g. "/static/champions/cyclops_blue_team.webp"
  * into "/static/champions/cyclops_blue_team_60x60.webp" when size ≤ 60 (_110x110 up to 110, _256x256 up to 256).
- * No size, or one bigger than 256, gets the 256 variant: the original is not served.
+ * No size, or one bigger than MAX_THUMBNAIL_SIZE, gets the 256 variant.
  */
 export function getChampionImageUrl(
   imageUrl: string | null | undefined,
   requestedSize?: number
 ): string | null {
   if (!imageUrl) return null
-  const largest = THUMBNAIL_SIZES[THUMBNAIL_SIZES.length - 1]
-  const size = THUMBNAIL_SIZES.find((s) => s >= (requestedSize ?? largest)) ?? largest
+  const size =
+    THUMBNAIL_SIZES.find((s) => s >= (requestedSize ?? MAX_THUMBNAIL_SIZE)) ?? MAX_THUMBNAIL_SIZE
   // Insert _NxN before the file extension
   const dotIndex = imageUrl.lastIndexOf('.')
   if (dotIndex === -1) return `${imageUrl}_${size}x${size}.webp`

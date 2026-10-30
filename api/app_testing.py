@@ -10,12 +10,10 @@ import uvicorn
 from src.fixtures.reset_db import reset
 from src.security.secrets import SECRET
 
-# The E2E MariaDB has no readiness gate in front of it: the CI service container
-# declares no --health-cmd, so the job starts while the server is still booting,
-# and the runner no longer probes it either. Waiting is this script's job, with
-# the budget the removed --health-interval/--health-retries options used to hold.
+# The E2E MariaDB has no readiness gate in front of it: CI starts the backends
+# while its image is still being pulled (~25s), so waiting is this script's job.
 MARIADB_PROBE_INTERVAL = 2
-MARIADB_PROBE_TIMEOUT = 25
+MARIADB_PROBE_TIMEOUT = 60
 
 
 def _root_connect() -> pymysql.Connection:
