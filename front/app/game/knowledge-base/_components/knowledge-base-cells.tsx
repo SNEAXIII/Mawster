@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { FiFlag } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
-import { getChampionImageUrl } from '@/app/services/champions'
+import { getChampionImageUrl, MAX_THUMBNAIL_SIZE } from '@/app/services/champions'
 import { shortenChampionName } from '@/app/services/roster'
 import type { FightRecord, SynergyRecord, PrefightRecord } from '@/app/services/fight-records'
 import ChampionPortrait from '@/components/champion-portrait'
@@ -93,7 +93,7 @@ export function ChampionIconList({ champions, dataCy }: ChampionIconListProps) {
         {champions.map((c) => {
           // Full-resolution source while exporting: the capture is upscaled, a
           // 40px thumbnail would come out blurry (same trick as ChampionPortrait).
-          const src = getChampionImageUrl(c.image_url, exporting ? undefined : 40)
+          const src = getChampionImageUrl(c.image_url, exporting ? MAX_THUMBNAIL_SIZE : 40)
           return src ? (
             <img
               key={c.champion_id}

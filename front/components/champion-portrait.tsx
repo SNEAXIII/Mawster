@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { getChampionImageUrl, THUMBNAIL_SIZES } from '@/app/services/champions'
+import { getChampionImageUrl, MAX_THUMBNAIL_SIZE, THUMBNAIL_SIZES } from '@/app/services/champions'
 import { getStarFrameUrl } from '@/app/services/roster'
 import SynergyBadge from '@/components/synergy-badge'
 import PrefightBadge from '@/components/prefight-badge'
@@ -47,14 +47,13 @@ export const FRAME_WINDOWS: Record<string, FrameWindow> = {
 }
 
 /**
- * Smallest pre-resized thumbnail that covers `cssPx`, or `undefined` for the
- * full-resolution source when the portrait is bigger than every variant.
+ * Smallest pre-resized thumbnail that covers `cssPx`, capped at MAX_THUMBNAIL_SIZE.
  * Deliberately ignores devicePixelRatio: it is not known during SSR (hydration
- * mismatch) and pulling the 256px source for a whole roster costs far more than
+ * mismatch) and pulling the 256px variant for a whole roster costs far more than
  * the extra sharpness is worth.
  */
-export function pickThumbnailSize(cssPx: number): number | undefined {
-  return THUMBNAIL_SIZES.find((s) => s >= cssPx)
+export function pickThumbnailSize(cssPx: number): number {
+  return THUMBNAIL_SIZES.find((s) => s >= cssPx) ?? MAX_THUMBNAIL_SIZE
 }
 
 /**
@@ -141,9 +140,9 @@ export default function ChampionPortrait({
   const frameUrl = getStarFrameUrl(rarity)
   const windowRect = getFrameWindowRect(size, rarity, frameWindow, box)
   const focusY = (frameWindow ?? FRAME_WINDOWS[rarity.charAt(0)] ?? FRAME_WINDOWS['6']).focusY
-  // Pre-resized thumbnail on screen; full-resolution source while exporting, so
+  // Pre-resized thumbnail on screen; the largest variant while exporting, so
   // the upscaled PNG capture stays sharp.
-  const imgSize = exporting ? undefined : pickThumbnailSize(windowRect.width)
+  const imgSize = exporting ? MAX_THUMBNAIL_SIZE : pickThumbnailSize(windowRect.width)
   // Lazy off-screen images: a full roster mounts hundreds of portraits at once.
   // Never lazy while exporting — html2canvas snapshots the DOM synchronously and
   // would capture blanks for anything the browser hasn't decided to load yet.
