@@ -11,6 +11,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 from scrapling.fetchers import AsyncStealthySession
 
@@ -26,6 +27,8 @@ WIKI_API_URL = (
 )
 OUTPUT_DIR = _ROOT / "static-assets" / "static" / "champions"
 JSON_OUTPUT = _ROOT / "api" / "src" / "fixtures" / "champions.json"
+# Wiki revision of each portrait on disk; outside static/ so it is never served.
+REVISIONS_FILE = _ROOT / "static-assets" / "portrait_revisions.json"
 
 VALID_CLASSES = {c.value for c in ChampionClass}
 
@@ -46,10 +49,17 @@ def _fetch(url: str, timeout: int):
 
 
 def clean_image_url(url: str) -> str:
-    """Strip Fandom's thumbnail suffixes to get the original full-size image."""
+    """Strip Fandom's thumbnail suffixes to get the original full-size image, keeping its `cb`."""
     if REVISION_LATEST in url:
-        return f"{url.split(REVISION_LATEST, maxsplit=1)[0]}{REVISION_LATEST}"
+        cb = parse_qs(urlsplit(url).query).get("cb")
+        query = f"?cb={cb[0]}" if cb else ""
+        return f"{url.split(REVISION_LATEST, maxsplit=1)[0]}{REVISION_LATEST}{query}"
     return url
+
+
+def image_revision(url: str) -> str:
+    """Fandom's `cb` is the upload timestamp of the file's latest revision."""
+    return parse_qs(urlsplit(url).query).get("cb", [""])[0]
 
 
 def sanitize_filename(name: str) -> str:
@@ -73,33 +83,48 @@ def _save_clean_png(data: bytes, filepath: Path) -> None:
 CONCURRENCY = 50
 
 
-def _is_cached(path: Path, force: bool) -> bool:
-    """A portrait on disk is reused unless --force asks for a fresh download."""
-    return path.exists() and not force
+def _is_current(path: Path, revision: str, revisions: dict[str, str], force: bool) -> bool:
+    """A portrait on disk is reused while the wiki still serves the revision it was downloaded at."""
+    return path.exists() and not force and bool(revision) and revisions.get(path.stem) == revision
 
 
-async def download_images(jobs: list[tuple[str, str, Path]], force: bool) -> list[bool]:
-    """Download `(name, url, path)` jobs over one browser with CONCURRENCY tabs; True per success."""
+async def download_images(
+    jobs: list[tuple[str, str, Path]], revisions: dict[str, str], force: bool
+) -> list[bool]:
+    """Download `(name, url, path)` jobs over one browser with CONCURRENCY tabs; True per success.
+
+    `revisions` is updated in place for every portrait downloaded."""
 
     # A fetch waiting over 60 s for a free tab raises, so no more fetches than tabs are in flight.
     gate = asyncio.Semaphore(CONCURRENCY)
+    stale = {
+        path
+        for _, url, path in jobs
+        if not _is_current(path, image_revision(url), revisions, force)
+    }
+    print(
+        f"  {len(stale)} portrait(s) new or updated on the wiki, {len(jobs) - len(stale)} up to date"
+    )
+    if not stale:
+        return [True] * len(jobs)
     done = 0
 
     async def one(name: str, url: str, path: Path) -> bool:
         nonlocal done
-        if _is_cached(path, force):
+        if path not in stale:
             return True
         async with gate:
             try:
                 page = await session.fetch(url)
                 # A challenge page that slipped through is HTML: PIL refuses it and the old file stays.
                 _save_clean_png(page.body, path)
+                revisions[path.stem] = image_revision(url)
                 ok = True
             except Exception as e:
                 print(f"  [WARN] Failed to download {url}: {e}")
                 ok = False
         done += 1
-        print(f"  [{done}/{len(jobs)}] {name}")
+        print(f"  [{done}/{len(stale)}] {name}")
         return ok
 
     async with AsyncStealthySession(
@@ -268,7 +293,14 @@ def download_champion_images(champions: list[dict], force: bool = False):
         (champ["name"], champ["portrait_url"], OUTPUT_DIR / f"{name}.png")
         for champ, name in zip(champions, names, strict=True)
     ]
-    results = asyncio.run(download_images(jobs, force))
+    revisions = (
+        json.loads(REVISIONS_FILE.read_text(encoding="utf-8")) if REVISIONS_FILE.exists() else {}
+    )
+    results = asyncio.run(download_images(jobs, revisions, force))
+    # Saved before the checks below: the portraits downloaded are on disk whatever they decide.
+    REVISIONS_FILE.write_text(
+        json.dumps(revisions, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     # A failed --force re-download still leaves the previous portrait usable.
     failed = [
         name
