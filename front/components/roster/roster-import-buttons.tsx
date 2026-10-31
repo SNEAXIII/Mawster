@@ -1,6 +1,6 @@
 'use client'
 
-import { Download, HelpCircle, ScanLine, Upload } from 'lucide-react'
+import { Download, ScanLine, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useI18n } from '@/app/i18n'
 
@@ -8,7 +8,6 @@ interface RosterImportButtonsProps {
   visionLabel: string
   visionUploading: boolean
   onVisionClick: () => void
-  onVisionHelpClick: () => void
   onExport: () => void
   onImportJson: () => void
 }
@@ -18,7 +17,6 @@ export default function RosterImportButtons({
   visionLabel,
   visionUploading,
   onVisionClick,
-  onVisionHelpClick,
   onExport,
   onImportJson,
 }: Readonly<RosterImportButtonsProps>) {
@@ -35,15 +33,6 @@ export default function RosterImportButtons({
       >
         <ScanLine className='mr-1.5 h-3.5 w-3.5' />
         {visionLabel}
-      </Button>
-      <Button
-        variant='ghost'
-        size='icon'
-        onClick={onVisionHelpClick}
-        aria-label={t.roster.importExport.vision.howto.helpLabel}
-        data-cy='vision-howto-help'
-      >
-        <HelpCircle className='h-4 w-4' />
       </Button>
       <Button
         variant='outline'

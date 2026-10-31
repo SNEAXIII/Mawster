@@ -1,3 +1,4 @@
+rustfs-dump/*
 pytest-*/**
 **/.vscode/*
 docs/plans/*

@@ -12,6 +12,17 @@ updates:
         patterns:
           - '*'
 
+  # Dépendances Python du scraper de portraits
+  - package-ecosystem: uv
+    directory: /static-assets
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      static-assets-python:
+        patterns:
+          - '*'
+
   # Dépendances Rust du serveur d'assets statiques
   - package-ecosystem: cargo
     directory: /static-assets
