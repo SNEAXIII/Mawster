@@ -3,9 +3,6 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
-import { CollapsibleSection } from '@/components/collapsible-section'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
 import { useI18n } from '@/app/i18n'
 
 const EXAMPLE_SRC = '/static/vision/import-example.webp'
@@ -14,8 +11,6 @@ interface VisionImportHowtoDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: () => void
-  dontShow: boolean
-  onDontShowChange: (value: boolean) => void
 }
 
 // Shown between the "Import IA" button and the file picker. A screenshot of
@@ -25,8 +20,6 @@ export default function VisionImportHowtoDialog({
   open,
   onOpenChange,
   onConfirm,
-  dontShow,
-  onDontShowChange,
 }: Readonly<VisionImportHowtoDialogProps>) {
   const { t } = useI18n()
   const howto = t.roster.importExport.vision.howto
@@ -49,6 +42,7 @@ export default function VisionImportHowtoDialog({
           <li>{howto.step1}</li>
           <li>{howto.step2}</li>
           <li>{howto.step3}</li>
+          <li>{howto.step4}</li>
         </ol>
 
         {imageOk ? (
@@ -70,20 +64,6 @@ export default function VisionImportHowtoDialog({
         <div className='rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2'>
           <p className='font-semibold'>{howto.warningTitle}</p>
           <p className='text-muted-foreground'>{howto.warningBody}</p>
-        </div>
-
-        <CollapsibleSection title={howto.detailsLabel}>
-          <p className='text-muted-foreground'>{howto.detailsBody}</p>
-        </CollapsibleSection>
-
-        <div className='flex items-center gap-2 pt-1'>
-          <Checkbox
-            id='vision-howto-dont-show'
-            checked={dontShow}
-            onCheckedChange={(checked) => onDontShowChange(checked === true)}
-            data-cy='vision-howto-dont-show'
-          />
-          <Label htmlFor='vision-howto-dont-show'>{howto.dontShowAgain}</Label>
         </div>
       </div>
     </ConfirmationDialog>

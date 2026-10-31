@@ -68,8 +68,6 @@ export default function VisionImportSection({
         open={howto.open}
         onOpenChange={howto.setOpen}
         onConfirm={howto.confirm}
-        dontShow={howto.dontShow}
-        onDontShowChange={howto.setDontShow}
       />
     </>
   )

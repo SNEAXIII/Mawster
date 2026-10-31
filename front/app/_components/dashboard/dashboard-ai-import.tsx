@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { HelpCircle, ScanLine } from 'lucide-react'
-import { useI18n } from '@/app/i18n'
+import { ScanLine } from 'lucide-react'
 import { type RosterEntry, getRoster } from '@/app/services/roster'
 import VisionImportSection from '@/components/roster/vision-import-section'
 import { useVisionImportSection } from '@/components/use-vision-import-section'
@@ -10,7 +9,6 @@ import { Button } from '@/components/ui/button'
 
 // Mount with key={gameAccountId}: the vision hooks keep per-Player state.
 export function DashboardAiImport({ gameAccountId }: Readonly<{ gameAccountId: string }>) {
-  const { t } = useI18n()
   const [roster, setRoster] = useState<RosterEntry[]>([])
 
   useEffect(() => {
@@ -36,15 +34,6 @@ export function DashboardAiImport({ gameAccountId }: Readonly<{ gameAccountId: s
       >
         <ScanLine className='h-4 w-4' />
         {section.visionLabel}
-      </Button>
-      <Button
-        variant='ghost'
-        size='icon'
-        onClick={section.howto.reopen}
-        aria-label={t.roster.importExport.vision.howto.helpLabel}
-        data-cy='vision-howto-help'
-      >
-        <HelpCircle className='h-4 w-4' />
       </Button>
       <div className='basis-full empty:hidden'>
         <VisionImportSection
