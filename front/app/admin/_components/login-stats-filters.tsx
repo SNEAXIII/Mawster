@@ -11,24 +11,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ALL_TIME_DAYS } from '@/app/services/vision-stats'
-import type { LoginEventKind } from '@/app/services/login-stats'
 import { LOGIN_PERIOD_OPTIONS } from '../_viewmodels/use-login-stats-viewmodel'
-
-const ALL_KINDS = 'all'
 
 interface LoginStatsFiltersProps {
   days: number
-  kind: LoginEventKind | ''
   onPeriodChange: (value: string) => void
-  onKindChange: (value: string) => void
   onRefresh: () => void
 }
 
 export default function LoginStatsFilters({
   days,
-  kind,
   onPeriodChange,
-  onKindChange,
   onRefresh,
 }: Readonly<LoginStatsFiltersProps>) {
   const { t } = useI18n()
@@ -63,37 +56,6 @@ export default function LoginStatsFilters({
               {periodLabels[option]}
             </SelectItem>
           ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={kind || ALL_KINDS}
-        onValueChange={onKindChange}
-      >
-        <SelectTrigger
-          className='w-56'
-          data-cy='login-stats-kind'
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem
-            value={ALL_KINDS}
-            data-cy='login-stats-kind-all'
-          >
-            {s.kindAll}
-          </SelectItem>
-          <SelectItem
-            value='login'
-            data-cy='login-stats-kind-login'
-          >
-            {s.kindLogin}
-          </SelectItem>
-          <SelectItem
-            value='refresh'
-            data-cy='login-stats-kind-refresh'
-          >
-            {s.kindRefresh}
-          </SelectItem>
         </SelectContent>
       </Select>
       <Button

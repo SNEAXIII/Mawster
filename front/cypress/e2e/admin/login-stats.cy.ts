@@ -3,8 +3,8 @@ import { BACKEND, setupAdmin, setupUser } from '../../support/e2e';
 const CHARTS = ['login-stats-chart-month', 'login-stats-chart-weekday', 'login-stats-chart-hour'] as const;
 
 // Totals reload on every filter change: re-query instead of holding a detached node.
-function totalAccountsAtLeastOne() {
-  cy.get('[data-cy="login-stats-total-accounts"]').should(($els) => {
+function totalAtLeastOne(dataCy: string) {
+  cy.get(`[data-cy="${dataCy}"]`).should(($els) => {
     expect(Number($els.first().text())).to.be.gte(1);
   });
 }
@@ -36,35 +36,26 @@ describe('Admin — login activity', () => {
       cy.getByCy('tab-logins').click();
 
       chartsRendered();
-      totalAccountsAtLeastOne();
-      cy.get('[data-cy="login-stats-total-events"]').should(($els) => {
-        expect(Number($els.first().text())).to.be.gte(1);
-      });
+      totalAtLeastOne('login-stats-total-accounts');
+      totalAtLeastOne('login-stats-total-logins');
     });
   });
 
-  it('changing period and kind keeps the panel rendered', () => {
+  it('splits logins from refreshes and survives a period change', () => {
     setupAdmin('login-stats-filters').then((admin) => {
       cy.request('POST', `${BACKEND}/auth/refresh`, { refresh_token: admin.refresh_token });
       cy.apiLogin(admin.user_id, '/admin?tab=logins');
       chartsRendered();
+      totalAtLeastOne('login-stats-total-logins');
+      totalAtLeastOne('login-stats-total-refreshes');
 
       pick('login-stats-period', 'login-stats-period-30');
       chartsRendered();
-      totalAccountsAtLeastOne();
-
-      pick('login-stats-kind', 'login-stats-kind-refresh');
-      chartsRendered();
-      totalAccountsAtLeastOne();
-
-      pick('login-stats-kind', 'login-stats-kind-login');
-      chartsRendered();
-      totalAccountsAtLeastOne();
+      totalAtLeastOne('login-stats-total-accounts');
 
       pick('login-stats-period', 'login-stats-period-all');
-      pick('login-stats-kind', 'login-stats-kind-all');
       chartsRendered();
-      totalAccountsAtLeastOne();
+      totalAtLeastOne('login-stats-total-refreshes');
     });
   });
 

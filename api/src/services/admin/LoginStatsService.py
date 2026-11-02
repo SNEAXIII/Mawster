@@ -7,7 +7,8 @@ agree on what "last 30 days" means.
 """
 
 import uuid
-from collections import Counter, defaultdict
+from collections import defaultdict
+from collections.abc import Callable
 from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -26,7 +27,7 @@ from src.models.Base import utcnow
 from src.models.user.LoginLog import LoginLog
 from src.services.admin.VisionStatsService import VisionStatsService
 
-Tally = dict[object, tuple[int, int]]
+Event = tuple[uuid.UUID, datetime, LoginEventKind]
 
 
 def _local(at: datetime, zone: ZoneInfo) -> datetime:
@@ -36,14 +37,22 @@ def _local(at: datetime, zone: ZoneInfo) -> datetime:
     return at.astimezone(zone)
 
 
-def _tally(keyed: list[tuple[object, uuid.UUID]]) -> Tally:
-    """(distinct accounts, row count) per bucket key."""
-    users: dict[object, set[uuid.UUID]] = defaultdict(set)
-    events: Counter[object] = Counter()
-    for key, user_id in keyed:
-        users[key].add(user_id)
-        events[key] += 1
-    return {key: (len(users[key]), events[key]) for key in events}
+def _bucket(events: list[Event]) -> dict:
+    """The counters of one bucket, as keyword arguments for a `LoginBucket`."""
+    logins = sum(1 for _, _, kind in events if kind == LoginEventKind.LOGIN)
+    return {
+        "accounts": len({user_id for user_id, _, _ in events}),
+        "events": len(events),
+        "logins": logins,
+        "refreshes": len(events) - logins,
+    }
+
+
+def _tally(events: list[Event], key: Callable[[datetime], object]) -> dict[object, dict]:
+    grouped: dict[object, list[Event]] = defaultdict(list)
+    for event in events:
+        grouped[key(event[1])].append(event)
+    return {bucket_key: _bucket(group) for bucket_key, group in grouped.items()}
 
 
 class LoginStatsService:
@@ -82,42 +91,41 @@ class LoginStatsService:
 
         rows = (
             await session.exec(
-                select(col(LoginLog.user_id), col(LoginLog.date_connexion)).where(*filters)
+                select(
+                    col(LoginLog.user_id), col(LoginLog.date_connexion), col(LoginLog.kind)
+                ).where(*filters)
             )
         ).all()
-        events = [(user_id, _local(at, zone)) for user_id, at in rows]
+        events: list[Event] = [(user_id, _local(at, zone), kind) for user_id, at, kind in rows]
 
-        by_month = _tally([(f"{at:%Y-%m}", user_id) for user_id, at in events])
-        by_weekday = _tally([(at.weekday(), user_id) for user_id, at in events])
-        by_hour = _tally([(at.hour, user_id) for user_id, at in events])
+        by_month = _tally(events, lambda at: f"{at:%Y-%m}")
+        by_weekday = _tally(events, lambda at: at.weekday())
+        by_hour = _tally(events, lambda at: at.hour)
+        empty = _bucket([])
 
         if start is not None:
             first: datetime | None = start.astimezone(zone)
         elif events:
-            first = min(at for _, at in events)
+            first = min(at for _, at, _ in events)
         else:
             first = None
         months: list[LoginMonthStat] = []
         if first is not None:
-            last = max([utcnow().astimezone(zone), *(at for _, at in events)])
+            last = max([utcnow().astimezone(zone), *(at for _, at, _ in events)])
             months = [
-                LoginMonthStat(month=key, accounts=accounts, events=count)
+                LoginMonthStat(month=key, **by_month.get(key, empty))
                 for key in cls.month_keys(first, last)
-                for accounts, count in [by_month.get(key, (0, 0))]
             ]
 
+        totals = _bucket(events)
         return LoginStatsResponse(
-            total_accounts=len({user_id for user_id, _ in events}),
-            total_events=len(events),
+            total_accounts=totals["accounts"],
+            total_events=totals["events"],
+            total_logins=totals["logins"],
+            total_refreshes=totals["refreshes"],
             by_month=months,
             by_weekday=[
-                LoginWeekdayStat(weekday=day, accounts=accounts, events=count)
-                for day in range(7)
-                for accounts, count in [by_weekday.get(day, (0, 0))]
+                LoginWeekdayStat(weekday=day, **by_weekday.get(day, empty)) for day in range(7)
             ],
-            by_hour=[
-                LoginHourStat(hour=hour, accounts=accounts, events=count)
-                for hour in range(24)
-                for accounts, count in [by_hour.get(hour, (0, 0))]
-            ],
+            by_hour=[LoginHourStat(hour=hour, **by_hour.get(hour, empty)) for hour in range(24)],
         )

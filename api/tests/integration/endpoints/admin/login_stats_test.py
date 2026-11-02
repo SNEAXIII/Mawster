@@ -83,6 +83,29 @@ async def test_account_logging_twice_in_one_bucket_counts_once_in_accounts():
 
 
 @pytest.mark.asyncio
+async def test_events_are_split_into_logins_and_refreshes():
+    at = _utc(2026, 11, 2, 10, 0)
+    await _push_logins(
+        [
+            (USER_ID, at, LoginEventKind.LOGIN),
+            (USER_ID, at, LoginEventKind.REFRESH),
+            (USER2_ID, at, LoginEventKind.REFRESH),
+        ]
+    )
+
+    body = (await execute_get_request(ALL_TIME, headers=STANDALONE_ADMIN_HEADERS)).json()
+
+    assert (body["total_logins"], body["total_refreshes"]) == (1, 2)
+    for bucket in (
+        _bucket(body["by_hour"], "hour", 10),
+        _bucket(body["by_weekday"], "weekday", 0),
+        _bucket(body["by_month"], "month", "2026-11"),
+    ):
+        assert (bucket["logins"], bucket["refreshes"], bucket["events"]) == (1, 2, 3)
+    assert _bucket(body["by_hour"], "hour", 11)["logins"] == 0
+
+
+@pytest.mark.asyncio
 async def test_kind_filter_keeps_only_the_requested_events():
     at = _utc(2026, 11, 2, 10, 0)
     await _push_logins(
@@ -166,7 +189,13 @@ async def test_weekday_and_hour_are_always_full_and_month_list_is_zero_filled():
     assert [hour["hour"] for hour in body["by_hour"]] == list(range(24))
     months = {month["month"]: month for month in body["by_month"]}
     assert list(months)[:3] == ["2026-01", "2026-02", "2026-03"]
-    assert months["2026-02"] == {"month": "2026-02", "accounts": 0, "events": 0}
+    assert months["2026-02"] == {
+        "month": "2026-02",
+        "accounts": 0,
+        "events": 0,
+        "logins": 0,
+        "refreshes": 0,
+    }
     assert list(months)[-1] == utcnow().strftime("%Y-%m")
 
 

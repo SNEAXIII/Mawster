@@ -46,7 +46,12 @@ export default function LoginStatsPanel() {
       value: vm.stats?.total_accounts,
       dataCy: 'login-stats-total-accounts',
     },
-    { label: s.totalEvents, value: vm.stats?.total_events, dataCy: 'login-stats-total-events' },
+    { label: s.totalLogins, value: vm.stats?.total_logins, dataCy: 'login-stats-total-logins' },
+    {
+      label: s.totalRefreshes,
+      value: vm.stats?.total_refreshes,
+      dataCy: 'login-stats-total-refreshes',
+    },
   ]
 
   return (
@@ -61,9 +66,7 @@ export default function LoginStatsPanel() {
         </div>
         <LoginStatsFilters
           days={vm.days}
-          kind={vm.kind}
           onPeriodChange={vm.changePeriod}
-          onKindChange={vm.changeKind}
           onRefresh={vm.reload}
         />
       </div>
@@ -85,7 +88,7 @@ export default function LoginStatsPanel() {
           aria-busy={vm.refreshing}
           data-cy='login-stats-charts'
         >
-          <div className='grid gap-4 sm:grid-cols-2'>
+          <div className='grid gap-4 sm:grid-cols-3'>
             {totals.map((total) => (
               <Card key={total.dataCy}>
                 <CardContent className='flex flex-col gap-1 pt-6'>
@@ -105,6 +108,7 @@ export default function LoginStatsPanel() {
             title={s.chartMonth}
             points={charts.month}
             dataCy='login-stats-chart-month'
+            maxTicks={13}
           />
           <div className='grid gap-4 lg:grid-cols-2'>
             <LoginStatsChart

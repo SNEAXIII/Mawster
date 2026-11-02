@@ -21,23 +21,31 @@ interface LoginStatsChartProps {
   title: string
   points: LoginChartPoint[]
   dataCy: string
+  /** Above this many points, axis labels are thinned out. */
+  maxTicks?: number
 }
 
-// Same validated categorical pair as vision-stats-chart: it has to hold in both themes at once.
+// Blue/amber is vision-stats-chart's pair; the two ambers share a stack, so they only need to part from each other.
 const ACCOUNTS_COLOR = '#3b82f6'
-const EVENTS_COLOR = '#d97706'
-const MAX_TICK_LABELS = 12
+const LOGINS_COLOR = '#d97706'
+const REFRESHES_COLOR = '#fcd34d'
 
-export default function LoginStatsChart({ title, points, dataCy }: Readonly<LoginStatsChartProps>) {
+export default function LoginStatsChart({
+  title,
+  points,
+  dataCy,
+  maxTicks = 12,
+}: Readonly<LoginStatsChartProps>) {
   const { t } = useI18n()
   const s = t.admin.loginStats
 
   const config = {
     accounts: { label: s.seriesAccounts, color: ACCOUNTS_COLOR },
-    events: { label: s.seriesEvents, color: EVENTS_COLOR },
+    logins: { label: s.seriesLogins, color: LOGINS_COLOR },
+    refreshes: { label: s.seriesRefreshes, color: REFRESHES_COLOR },
   } satisfies ChartConfig
 
-  const tickInterval = Math.max(Math.ceil(points.length / MAX_TICK_LABELS) - 1, 0)
+  const tickInterval = Math.max(Math.ceil(points.length / maxTicks) - 1, 0)
   const hasData = points.some((point) => point.events > 0)
 
   return (
@@ -81,8 +89,15 @@ export default function LoginStatsChart({ title, points, dataCy }: Readonly<Logi
                 isAnimationActive={false}
               />
               <Bar
-                dataKey='events'
-                fill='var(--color-events)'
+                dataKey='logins'
+                stackId='events'
+                fill='var(--color-logins)'
+                isAnimationActive={false}
+              />
+              <Bar
+                dataKey='refreshes'
+                stackId='events'
+                fill='var(--color-refreshes)'
                 radius={[4, 4, 0, 0]}
                 isAnimationActive={false}
               />
