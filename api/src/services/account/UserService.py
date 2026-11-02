@@ -2,6 +2,7 @@ import uuid
 
 from sqlmodel import select
 
+from src.enums.LoginEventKind import LoginEventKind
 from src.Messages.user_messages import (
     LOGIN_ALREADY_TAKEN,
     TARGET_USER_IS_ALREADY_DELETED,
@@ -9,7 +10,7 @@ from src.Messages.user_messages import (
     USER_IS_DELETED,
     USER_IS_DISABLED,
 )
-from src.models import User
+from src.models import LoginLog, User
 from src.models.Base import utcnow
 from src.utils.db import SessionDep
 
@@ -44,6 +45,11 @@ class UserService:
         except ValueError, AttributeError, TypeError:
             raise USER_DOESNT_EXISTS from None
         return _assert_usable(await cls.get_user(session, uid))
+
+    @classmethod
+    async def record_refresh(cls, session: SessionDep, user: User) -> None:
+        session.add(LoginLog(user_id=user.id, kind=LoginEventKind.REFRESH))
+        await session.commit()
 
     @classmethod
     async def update_login(cls, session: SessionDep, user: User, new_login: str) -> User:
