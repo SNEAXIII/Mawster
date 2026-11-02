@@ -8,6 +8,7 @@ from src.controllers.account.tierlist_controller import tierlist_controller
 from src.controllers.account.user_controller import user_controller
 from src.controllers.admin.champion_controller import champion_controller, champion_read_controller
 from src.controllers.admin.fight_record_controller import fight_record_controller
+from src.controllers.admin.login_stats_controller import login_stats_controller
 from src.controllers.admin.moderation_controller import moderation_controller
 from src.controllers.admin.season_controller import (
     season_admin_controller,
@@ -83,6 +84,7 @@ routers = [
     ranking_history_controller,
     stats_controller,
     vision_stats_controller,
+    login_stats_controller,
     catalog_controller,
     tierlist_controller,
 ]
