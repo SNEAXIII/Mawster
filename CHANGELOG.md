@@ -3,6 +3,14 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.35.2](https://github.com/SNEAXIII/Mawster/compare/v1.35.1...v1.35.2) (2026-10-31)
+
+
+### Corrigé
+
+* clarify the AI import how-to and show it on every import ([d97ef2b](https://github.com/SNEAXIII/Mawster/commit/d97ef2babf76c6d34eddf9bcc6e7bed8c33d9d44))
+* update .gitignore to include rustfs-dump directory ([30ce8b8](https://github.com/SNEAXIII/Mawster/commit/30ce8b8f5e3dfeb18b98b2697be0285c98b9480d))
+
 ## [1.35.1](https://github.com/SNEAXIII/Mawster/compare/v1.35.0...v1.35.1) (2026-10-30)
 
 

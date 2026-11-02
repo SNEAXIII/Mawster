@@ -62,17 +62,20 @@ Toujours `git fetch origin --tags --prune` d'abord.
    - Aucune PR ouverte **et** des commits après le dernier tag : s'arrêter — release-please n'a
      rien produit pour ces commits.
    - Aucune PR ouverte et rien après le tag : cas nominal du rattrapage. Le dire (« rien à
-     publier, promotion de vX.Y.Z déjà taggée ») et continuer.
+     publier, promotion de vX.Y.Z déjà taggée ») et continuer — sauf si
+     `git rev-list --count origin/release..origin/main` vaut 0 : `release` a déjà tout, s'arrêter
+     en donnant la version en prod et l'URL du dernier run `CI/CD Pipeline` sur `release`.
 
 3. **Heads Alembic** (prod et staging)
 
    ```bash
-   cd api/migrations/versions && comm -23 \
-     <(grep -h '^revision: str = ' *.py | cut -d'"' -f2 | sort) \
-     <(grep -h '^down_revision' *.py | cut -d'"' -f2 | sort)
+   comm -23 \
+     <(git grep -h '^revision: str = ' origin/main -- api/migrations/versions | cut -d'"' -f2 | sort) \
+     <(git grep -h '^down_revision' origin/main -- api/migrations/versions | cut -d'"' -f2 | sort)
    ```
 
    Plus d'une ligne = deux heads : s'arrêter. Ça passe la CI et casse le job `migrate` en prod.
+   Lu sur `origin/main`, pas sur le checkout : un `main` local en retard masquerait un head.
 
 ### Avertissements — prévenir, demander, ne rien faire d'autre
 

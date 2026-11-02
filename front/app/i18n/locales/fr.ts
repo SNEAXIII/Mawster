@@ -1358,19 +1358,16 @@ const fr: Translations = {
         blockedDiscard: 'Abandonner et repartir',
         howto: {
           title: 'Préparer ta capture d’écran',
-          intro: 'Trois étapes, et l’IA lit ton roster.',
-          step1: 'Ouvre le jeu et va en mode Battleground.',
-          step2: 'Vide ton deck pour que ton roster s’affiche en entier.',
-          step3: 'Prends une capture d’écran de la grille.',
-          warningTitle: 'Seules les 2 premières rangées sont lues.',
+          intro: 'Quatre étapes, et l’IA lit ton roster.',
+          step1: 'Ouvre le jeu en mode Battleground.',
+          step2: 'Vide ton deck : tout ton roster s’affiche.',
+          step3: 'Fais une capture d’écran telle quelle, sans zoom ni recadrage.',
+          step4:
+            'Fais défiler de 2 rangées, recapture, et ainsi de suite. Envoie toutes les captures d’un coup.',
+          warningTitle: 'Seules les 2 premières rangées de chaque capture sont lues.',
           warningBody:
-            'Sur petit écran, le bas des cartes de la 3e rangée est coupé. Sans lui, l’IA ne peut lire ni le rang ni la signature : ces champions sont ignorés. Fais une capture par paire de rangées.',
-          detailsLabel: 'Pourquoi ?',
-          detailsBody:
-            'Pas de zoom, pas de recadrage : l’IA repère les cartes elle-même. Tu peux envoyer plusieurs captures d’un coup, elles sont lues ensemble.',
+            'La 3e est souvent coupée en bas : sans rang ni signature visibles, ces champions seraient ignorés.',
           confirm: 'Choisir mes captures',
-          dontShowAgain: 'Ne plus afficher ce message',
-          helpLabel: 'Comment préparer sa capture ?',
           exampleAlt: 'Exemple de capture Battleground, les deux premières rangées encadrées',
         },
       },
