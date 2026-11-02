@@ -10,6 +10,7 @@ export enum AdminTab {
   Seasons = 'seasons',
   KnowledgeBase = 'knowledge-base',
   VisionImports = 'vision-imports',
+  Logins = 'logins',
   Moderation = 'moderation',
 }
 
