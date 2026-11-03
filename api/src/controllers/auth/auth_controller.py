@@ -89,6 +89,7 @@ async def refresh_access_token(
     data = JWTService.decode_refresh_token(body.refresh_token)
     user_id = data.get("user_id")
     user = await UserService.get_user_by_id_with_validity_check(session, user_id)
+    await UserService.record_refresh(session, user)
     new_access_token = JWTService.create_access_token(user)
     new_refresh_token = JWTService.create_refresh_token(user)
     audit_log("auth.refresh", user_id=str(user.id), detail="method=refresh_token")

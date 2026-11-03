@@ -13,6 +13,12 @@ role and is the subject of moderation (mute, warn). Has no in-game meaning.
 _Table_: `user`.
 _Avoid_: user (in game-domain prose), profile.
 
+**Login event**:
+One moment an Account obtained a fresh backend token: an OAuth sign-in or a token refresh.
+Counted per Account, never per Player.
+_Table_: `login_log`.
+_Avoid_: connexion, session, visit.
+
 **Player**:
 One in-game MCOC identity bound to an Account. Everything in the game domain —
 alliance membership, roster, war actions, authorship — refers to a Player, never to
