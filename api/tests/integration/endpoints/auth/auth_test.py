@@ -15,6 +15,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from main import app
+from src.enums.LoginEventKind import LoginEventKind
 from src.enums.Roles import Roles
 from src.models import LoginLog, User
 from src.models.Base import utcnow
@@ -57,6 +58,11 @@ def _create_jwt(
 ) -> str:
     """Create a valid JWT token for testing."""
     return JWTService.create_token({"user_id": user_id, "role": role, "type": "access"})
+
+
+async def _login_log_kinds() -> list[LoginEventKind]:
+    async with AsyncSession(sqlite_async_engine, expire_on_commit=False) as session:
+        return [log.kind for log in (await session.exec(select(LoginLog))).all()]
 
 
 # =========================================================================
@@ -212,6 +218,14 @@ class TestDiscordLogin:
         assert body["token_type"] == TOKEN_TYPE
         assert REGEX_BEARER.match(body["access_token"])
         assert REGEX_BEARER.match(body["refresh_token"])
+
+    @pytest.mark.asyncio
+    async def test_login_records_one_login_event(self):
+        response = await execute_post_request(
+            ENDPOINT_DISCORD, payload={"access_token": "valid-discord-token"}
+        )
+        assert response.status_code == 200
+        assert await _login_log_kinds() == [LoginEventKind.LOGIN]
 
     @pytest.mark.asyncio
     async def test_login_rehashes_email_when_pepper_version_outdated(self):
@@ -416,6 +430,19 @@ class TestDiscordLogin:
 
 class TestGoogleLogin:
     @pytest.mark.asyncio
+    async def test_login_records_one_login_event(self, monkeypatch):
+        async def _fake_verify(cls, access_token):
+            return {"sub": "google_login_event", "email": "event@example.com"}
+
+        monkeypatch.setattr(GoogleAuthService, "verify_token", classmethod(_fake_verify))
+
+        response = await execute_post_request(
+            ENDPOINT_GOOGLE, payload={"access_token": "any-google-token"}
+        )
+        assert response.status_code == 200
+        assert await _login_log_kinds() == [LoginEventKind.LOGIN]
+
+    @pytest.mark.asyncio
     async def test_login_rehashes_email_when_pepper_version_outdated(self, monkeypatch):
 
         async def _fake_verify(cls, access_token):
@@ -518,6 +545,7 @@ class TestRefreshToken:
         assert body["token_type"] == TOKEN_TYPE
         assert REGEX_BEARER.match(body["access_token"])
         assert REGEX_BEARER.match(body["refresh_token"])
+        assert await _login_log_kinds() == [LoginEventKind.REFRESH]
 
     @pytest.mark.asyncio
     async def test_access_token_as_refresh_returns_error(self):
@@ -529,6 +557,7 @@ class TestRefreshToken:
             ENDPOINT_REFRESH, payload={"refresh_token": access_token}
         )
         assert response.status_code == 401
+        assert await _login_log_kinds() == []
 
     @pytest.mark.asyncio
     async def test_garbage_refresh_returns_error(self):
@@ -536,6 +565,7 @@ class TestRefreshToken:
             ENDPOINT_REFRESH, payload={"refresh_token": "not.a.token"}
         )
         assert response.status_code == 401
+        assert await _login_log_kinds() == []
 
     @pytest.mark.asyncio
     async def test_expired_refresh_returns_error(self):
@@ -545,14 +575,16 @@ class TestRefreshToken:
         assert response.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_refresh_for_deleted_user_returns_error(self):
-        user = get_generic_user(is_base_id=True, deleted_at=utcnow())
+    @pytest.mark.parametrize("flag", ["deleted_at", "disabled_at"])
+    async def test_refresh_for_unavailable_user_returns_error(self, flag):
+        user = get_generic_user(is_base_id=True, **{flag: utcnow()})
         await load_objects([user])
         refresh_token = JWTService.create_refresh_token(user)
         response = await execute_post_request(
             ENDPOINT_REFRESH, payload={"refresh_token": refresh_token}
         )
         assert response.status_code == 401
+        assert await _login_log_kinds() == []
 
     @pytest.mark.asyncio
     async def test_missing_refresh_field_returns_error(self):
