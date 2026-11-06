@@ -19,8 +19,8 @@ url_object: URL = URL.create(
 )
 
 # The defaults (5 + 10) size a pool for a thread per request; one event loop holds
-# far more requests in flight than that. 25 per process, two replicas, against a
-# server that allows 151.
+# far more requests in flight than that. 25 per process, plus 5 for the audit engine
+# below: 30, so 60 across two replicas, against a server that allows 151.
 async_engine = AsyncEngine(
     create_engine(
         url=url_object,
@@ -31,11 +31,29 @@ async_engine = AsyncEngine(
     )
 )
 
+# Its own pool: the request session still holds a connection while the audit writes, so a
+# shared pool lets parallel refusals starve the whole API.
+audit_engine = AsyncEngine(
+    create_engine(
+        url=url_object,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        pool_size=2,
+        max_overflow=3,
+        pool_timeout=2,
+    )
+)
+
 SessionFactory = async_sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cover
     async with SessionFactory() as session:
+        yield session
+
+
+async def get_audit_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cover
+    async with AsyncSession(audit_engine, expire_on_commit=False) as session:
         yield session
 
 

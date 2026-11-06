@@ -23,6 +23,7 @@ from src.Messages.champion_messages import (
 )
 from src.services.admin.ChampionService import ChampionService
 from src.services.auth.AuthService import AuthService
+from src.utils.audited_route import AuditedRoute
 from src.utils.db import SessionDep
 
 # ── User-accessible read endpoints (/champions) ──────────
@@ -38,6 +39,7 @@ champion_read_controller = APIRouter(
 champion_controller = APIRouter(
     prefix="/admin/champions",
     tags=["Champions (Admin)"],
+    route_class=AuditedRoute,
     dependencies=[
         Depends(AuthService.require_admin),
         Depends(AuthService.get_current_user_in_jwt),

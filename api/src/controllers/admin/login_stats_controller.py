@@ -8,11 +8,13 @@ from src.dto.admin.dto_login_stats import LoginStatsResponse
 from src.enums.LoginEventKind import LoginEventKind
 from src.services.admin.LoginStatsService import LoginStatsService
 from src.services.auth.AuthService import AuthService
+from src.utils.audited_route import AuditedRoute
 from src.utils.db import SessionDep
 
 login_stats_controller = APIRouter(
     prefix="/admin/logins",
     tags=["Login Stats"],
+    route_class=AuditedRoute,
     dependencies=[Depends(AuthService.require_admin)],
 )
 

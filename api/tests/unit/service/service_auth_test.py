@@ -1,3 +1,6 @@
+from functools import partial
+from unittest.mock import MagicMock
+
 import pytest
 
 from src.enums.Roles import Roles
@@ -84,12 +87,15 @@ def guard_mocks(mocker, db_role: Roles):
     return session_mock(mocker)
 
 
+_REQUIRE_ADMIN = partial(AuthService.require_admin, MagicMock())
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("method_to_test", "db_role"),
     [
-        (AuthService.require_admin, Roles.ADMIN),
-        (AuthService.require_admin, Roles.SUPER_ADMIN),
+        (_REQUIRE_ADMIN, Roles.ADMIN),
+        (_REQUIRE_ADMIN, Roles.SUPER_ADMIN),
         (AuthService.require_super_admin, Roles.SUPER_ADMIN),
     ],
     ids=["admin-admin", "admin-super_admin", "super_admin-super_admin"],
@@ -106,7 +112,7 @@ async def test_require_role_success(mocker, method_to_test, db_role):
 @pytest.mark.parametrize(
     ("method_to_test", "db_role"),
     [
-        (AuthService.require_admin, Roles.USER),
+        (_REQUIRE_ADMIN, Roles.USER),
         (AuthService.require_super_admin, Roles.ADMIN),
         (AuthService.require_super_admin, Roles.USER),
     ],
