@@ -1,13 +1,26 @@
 import asyncio
 import json
 import logging
+import math
+import uuid
 from contextlib import aclosing
+from datetime import datetime
 from typing import Any
 
 from fastapi import Request, Response
 from fastapi.routing import APIRoute
+from sqlmodel import and_, col, delete, func, or_, select
 from starlette.requests import ClientDisconnect
 
+from src.dto.admin.dto_admin_audit import (
+    AuditAccountFilter,
+    AuditEntryResponse,
+    AuditResult,
+    PaginatedAuditEntries,
+    PurgeScope,
+)
+from src.enums.Roles import Roles
+from src.models import User
 from src.models.user.AdminAuditEntry import AdminAuditEntry
 from src.utils.db import get_audit_session, get_session
 
@@ -16,6 +29,22 @@ logger = logging.getLogger(__name__)
 MAX_DETAILS_BYTES = 8 * 1024
 MAX_BODY_RAW_BYTES = 2048
 BODY_READ_TIMEOUT_SECONDS = 1
+REFUSED_STATUSES = (401, 403)
+
+
+def result_of(status_code: int) -> AuditResult:
+    if status_code < 400:
+        return "success"
+    return "refused" if status_code in REFUSED_STATUSES else "error"
+
+
+def _result_clause(result: AuditResult):
+    status = col(AdminAuditEntry.status_code)
+    if result == "success":
+        return status < 400
+    if result == "refused":
+        return status.in_(REFUSED_STATUSES)
+    return and_(status >= 400, status.not_in(REFUSED_STATUSES))
 
 
 class AdminAuditService:
@@ -126,3 +155,98 @@ class AdminAuditService:
         except AttributeError, TypeError, ValueError:
             return None  # No response, a streamed one, or not JSON.
         return payload.get("id") if isinstance(payload, dict) else None
+
+    @classmethod
+    async def list_entries(
+        cls,
+        session,
+        *,
+        routes: list[str] | None,
+        method: str | None,
+        result: AuditResult | None,
+        user_id: uuid.UUID | None,
+        date_from: datetime | None,
+        date_to: datetime | None,
+        page: int,
+        size: int,
+    ) -> PaginatedAuditEntries:
+        conds = []
+        if routes is not None:
+            conds.append(col(AdminAuditEntry.route).in_(routes))
+        if method is not None:
+            conds.append(col(AdminAuditEntry.method) == method)
+        if result is not None:
+            conds.append(_result_clause(result))
+        if user_id is not None:
+            conds.append(col(AdminAuditEntry.user_id) == user_id)
+        if date_from is not None:
+            conds.append(col(AdminAuditEntry.created_at) >= date_from)
+        if date_to is not None:
+            conds.append(col(AdminAuditEntry.created_at) <= date_to)
+
+        base = (
+            select(AdminAuditEntry, User.login)
+            .outerjoin(User, col(AdminAuditEntry.user_id) == User.id)
+            .where(*conds)
+        )
+        count = select(func.count()).select_from(AdminAuditEntry).where(*conds)
+        total = (await session.exec(count)).one()
+        rows = (
+            await session.exec(
+                base.order_by(
+                    col(AdminAuditEntry.created_at).desc(), col(AdminAuditEntry.id).desc()
+                )
+                .offset((page - 1) * size)
+                .limit(size)
+            )
+        ).all()
+
+        items = [
+            AuditEntryResponse(
+                id=entry.id,
+                created_at=entry.created_at,
+                user_id=entry.user_id,
+                user_login=login,
+                role=entry.role,
+                method=entry.method,
+                route=entry.route,
+                status_code=entry.status_code,
+                result=result_of(entry.status_code),
+                details=entry.details,
+            )
+            for entry, login in rows
+        ]
+        return PaginatedAuditEntries(
+            items=items,
+            total=total,
+            page=page,
+            size=size,
+            pages=max(1, math.ceil(total / size)),
+        )
+
+    @classmethod
+    async def list_accounts(cls, session) -> list[AuditAccountFilter]:
+        rows = (
+            await session.exec(
+                select(User.id, User.login)
+                .join(AdminAuditEntry, col(AdminAuditEntry.user_id) == User.id)
+                .distinct()
+                .order_by(User.login)
+            )
+        ).all()
+        return [AuditAccountFilter(id=user_id, login=login) for user_id, login in rows]
+
+    # ponytail: manual purge, one unbounded DELETE per scope; a scheduled retention job
+    # replaces it once the table grows.
+    @classmethod
+    async def purge(cls, session, *, before: datetime, scope: PurgeScope) -> int:
+        role = col(AdminAuditEntry.role)
+        if scope == "anonymous":
+            scoped = or_(role.is_(None), role == Roles.USER)
+        else:
+            scoped = role.in_([Roles.ADMIN, Roles.SUPER_ADMIN])
+        deleted = await session.exec(
+            delete(AdminAuditEntry).where(col(AdminAuditEntry.created_at) < before, scoped)
+        )
+        await session.commit()
+        return deleted.rowcount

@@ -6,6 +6,7 @@ from src.controllers.account.me_dashboard_controller import me_dashboard_control
 from src.controllers.account.me_moderation_controller import me_moderation_controller
 from src.controllers.account.tierlist_controller import tierlist_controller
 from src.controllers.account.user_controller import user_controller
+from src.controllers.admin.admin_audit_controller import admin_audit_controller
 from src.controllers.admin.champion_controller import champion_controller, champion_read_controller
 from src.controllers.admin.fight_record_controller import fight_record_controller
 from src.controllers.admin.login_stats_controller import login_stats_controller
@@ -85,6 +86,7 @@ routers = [
     stats_controller,
     vision_stats_controller,
     login_stats_controller,
+    admin_audit_controller,
     catalog_controller,
     tierlist_controller,
 ]
