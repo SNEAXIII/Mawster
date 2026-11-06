@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
+import { formatDate } from '@/app/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -40,7 +41,7 @@ function AuditRow({ entry }: Readonly<{ entry: AuditEntry }>) {
             data-cy='audit-row'
           >
             <TableCell className='whitespace-nowrap'>
-              {new Date(entry.created_at).toLocaleString(locale)}
+              {formatDate(entry.created_at, locale, 'long')}
             </TableCell>
             <TableCell>{entry.user_login ?? s.anonymous}</TableCell>
             <TableCell className='font-mono text-xs'>
