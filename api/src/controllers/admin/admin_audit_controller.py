@@ -43,8 +43,7 @@ async def list_audit_entries(
     request: Request,
     session: SessionDep,
     router: str | None = None,
-    route: Annotated[str | None, Query()] = None,
-    method: str | None = None,
+    route: str | None = None,
     result: AuditResult | None = None,
     user_id: uuid.UUID | None = None,
     date_from: AwareDatetime | None = None,
@@ -60,7 +59,6 @@ async def list_audit_entries(
     return await AdminAuditService.list_entries(
         session,
         routes=routes,
-        method=method,
         result=result,
         user_id=user_id,
         date_from=date_from,

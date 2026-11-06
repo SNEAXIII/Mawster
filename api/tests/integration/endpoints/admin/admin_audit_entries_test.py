@@ -95,14 +95,13 @@ async def _delete(params: dict):
     [
         ({"router": "Login Stats"}, [(LOGINS_ROUTE, 403)]),
         ({"route": MUTE_ROUTE}, [(MUTE_ROUTE, 200), (MUTE_ROUTE, 422)]),
-        ({"method": "PATCH"}, [(ALIAS_ROUTE, 404), (ALIAS_ROUTE, 500)]),
         ({"result": "success"}, [(MUTE_ROUTE, 200)]),
         ({"result": "refused"}, [(LOGINS_ROUTE, 403)]),
         ({"result": "error"}, [(MUTE_ROUTE, 422), (ALIAS_ROUTE, 404), (ALIAS_ROUTE, 500)]),
         ({"user_id": str(STANDALONE_ADMIN_ID)}, [(MUTE_ROUTE, 200), (MUTE_ROUTE, 422)]),
         ({"route": ALIAS_ROUTE, "result": "refused"}, []),
     ],
-    ids=["router", "route", "method", "success", "refused", "error", "user", "combined"],
+    ids=["router", "route", "success", "refused", "error", "user", "combined"],
 )
 async def test_list_filters_narrow_the_entries(session, params, expected):
     await _seed_mixed()

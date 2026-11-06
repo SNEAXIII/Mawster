@@ -140,7 +140,7 @@ class AdminAuditService:
         try:
             # ensure_ascii stays on: it escapes a lone surrogate, which .encode() would refuse.
             text = json.dumps(kept)
-        except ValueError, TypeError, RecursionError:
+        except RecursionError:
             text = data.decode(errors="replace")
         return cls._cut(text)
 
@@ -162,7 +162,6 @@ class AdminAuditService:
         session,
         *,
         routes: list[str] | None,
-        method: str | None,
         result: AuditResult | None,
         user_id: uuid.UUID | None,
         date_from: datetime | None,
@@ -173,8 +172,6 @@ class AdminAuditService:
         conds = []
         if routes is not None:
             conds.append(col(AdminAuditEntry.route).in_(routes))
-        if method is not None:
-            conds.append(col(AdminAuditEntry.method) == method)
         if result is not None:
             conds.append(_result_clause(result))
         if user_id is not None:
@@ -184,18 +181,14 @@ class AdminAuditService:
         if date_to is not None:
             conds.append(col(AdminAuditEntry.created_at) <= date_to)
 
-        base = (
-            select(AdminAuditEntry, User.login)
-            .outerjoin(User, col(AdminAuditEntry.user_id) == User.id)
-            .where(*conds)
-        )
         count = select(func.count()).select_from(AdminAuditEntry).where(*conds)
         total = (await session.exec(count)).one()
         rows = (
             await session.exec(
-                base.order_by(
-                    col(AdminAuditEntry.created_at).desc(), col(AdminAuditEntry.id).desc()
-                )
+                select(AdminAuditEntry, User.login)
+                .outerjoin(User, col(AdminAuditEntry.user_id) == User.id)
+                .where(*conds)
+                .order_by(col(AdminAuditEntry.created_at).desc(), col(AdminAuditEntry.id).desc())
                 .offset((page - 1) * size)
                 .limit(size)
             )
@@ -203,16 +196,7 @@ class AdminAuditService:
 
         items = [
             AuditEntryResponse(
-                id=entry.id,
-                created_at=entry.created_at,
-                user_id=entry.user_id,
-                user_login=login,
-                role=entry.role,
-                method=entry.method,
-                route=entry.route,
-                status_code=entry.status_code,
-                result=result_of(entry.status_code),
-                details=entry.details,
+                **entry.model_dump(), user_login=login, result=result_of(entry.status_code)
             )
             for entry, login in rows
         ]

@@ -45,9 +45,6 @@ audit_engine = AsyncEngine(
 )
 
 SessionFactory = async_sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
-AuditSessionFactory = async_sessionmaker(
-    bind=audit_engine, class_=AsyncSession, expire_on_commit=False
-)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cover
@@ -56,7 +53,7 @@ async def get_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cover
 
 
 async def get_audit_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cover
-    async with AuditSessionFactory() as session:
+    async with AsyncSession(audit_engine, expire_on_commit=False) as session:
         yield session
 
 
