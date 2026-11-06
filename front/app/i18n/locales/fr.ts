@@ -1108,11 +1108,11 @@ const fr: Translations = {
         button: 'Supprimer des entrées',
         title: "Supprimer des entrées d'audit",
         description:
-          'Supprime définitivement les entrées du groupe choisi antérieures au jour choisi. Le jour choisi est conservé.',
+          'Supprime définitivement les entrées du groupe choisi, jusqu’au jour choisi inclus.',
         scopeLabel: 'Entrées à supprimer',
         scopes: { anonymous: 'Anonymes', users: 'Utilisateurs', admins: 'Admins' },
       },
-      purgeBefore: 'Antérieures au',
+      purgeBefore: 'Jusqu’au (inclus)',
       purgeSuccess: 'Entrées supprimées : {count}',
       purgeError: 'Impossible de purger les entrées.',
     },

@@ -5,7 +5,7 @@ const AUDIT_ROUTE = '/admin/audit-entries';
 const SEASON_CALL = 'POST /admin/seasons';
 const REFUSED_CALL = `GET ${AUDIT_ROUTE}`;
 const PURGE_CALL = `DELETE ${AUDIT_ROUTE}`;
-// Later than every entry: a purge dated in the past deletes nothing.
+// Later than every entry, so a run crossing midnight still purges them.
 const FUTURE_DAY = '2099-01-01';
 
 function setupSuperAdmin() {
@@ -35,7 +35,7 @@ function purge(scope: 'anonymous' | 'users' | 'admins') {
   cy.getByCy('audit-purge').click();
   cy.getByCy('audit-purge-dialog').should('be.visible');
   cy.getByCy('confirmation-dialog-confirm').should('be.disabled');
-  cy.getByCy('audit-purge-before').type(FUTURE_DAY);
+  cy.getByCy('audit-purge-before').should('not.have.value', '').clear().type(FUTURE_DAY);
   cy.getByCy('confirmation-dialog-confirm').should('be.disabled');
   pick('audit-purge-scope', `audit-purge-scope-${scope}`);
   cy.getByCy('confirmation-dialog-confirm').click();

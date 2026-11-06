@@ -19,19 +19,20 @@ interface AuditPurgeDialogProps {
   onPurge: (scope: AuditPurgeScope, beforeDay: string) => Promise<void>
 }
 
+// en-CA formats as YYYY-MM-DD, in the viewer's time zone, as a date input expects.
+const localToday = () => new Date().toLocaleDateString('en-CA')
+
 export default function AuditPurgeDialog({ onPurge }: Readonly<AuditPurgeDialogProps>) {
   const { t } = useI18n()
   const s = t.admin.audit
   const [open, setOpen] = useState(false)
   const [scope, setScope] = useState<AuditPurgeScope | ''>('')
-  const [day, setDay] = useState('')
+  const [day, setDay] = useState(localToday)
 
   const changeOpen = (next: boolean) => {
     setOpen(next)
-    if (!next) {
-      setScope('')
-      setDay('')
-    }
+    setScope('')
+    setDay(localToday())
   }
 
   return (

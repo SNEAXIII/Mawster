@@ -1099,11 +1099,11 @@ const en = {
         button: 'Delete entries',
         title: 'Delete audit entries',
         description:
-          'Permanently deletes the entries of the chosen group older than the chosen day. The chosen day is kept.',
+          'Permanently deletes the entries of the chosen group up to and including the chosen day.',
         scopeLabel: 'Entries to delete',
         scopes: { anonymous: 'Anonymous', users: 'Users', admins: 'Admins' },
       },
-      purgeBefore: 'Older than',
+      purgeBefore: 'Up to and including',
       purgeSuccess: 'Entries deleted: {count}',
       purgeError: 'Could not purge the entries.',
     },

@@ -73,9 +73,9 @@ export async function getAuditFilterOptions(): Promise<AuditFilterOptions> {
 
 export async function purgeAuditEntries(
   scope: AuditPurgeScope,
-  beforeDay: string
+  lastDay: string
 ): Promise<{ deleted: number }> {
-  const query = new URLSearchParams({ before: dayStart(beforeDay), scope })
+  const query = new URLSearchParams({ before: dayEnd(lastDay), scope })
   return api(`/admin/audit-entries?${query}`, 'Failed to purge audit entries', {
     method: 'DELETE',
   })
