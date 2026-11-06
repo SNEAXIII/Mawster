@@ -4,7 +4,7 @@ import { api } from '@/app/services/utils'
 export const AUDIT_RESULTS = ['success', 'refused', 'error'] as const
 export type AuditResult = (typeof AUDIT_RESULTS)[number]
 
-export const AUDIT_PURGE_SCOPES = ['anonymous', 'admins'] as const
+export const AUDIT_PURGE_SCOPES = ['anonymous', 'users', 'admins'] as const
 export type AuditPurgeScope = (typeof AUDIT_PURGE_SCOPES)[number]
 
 export interface AuditEntry {

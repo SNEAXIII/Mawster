@@ -1096,16 +1096,12 @@ const en = {
       loadError: 'Could not load the audit entries.',
       retry: 'Retry',
       purge: {
-        anonymous: {
-          label: 'Purge non-admin entries',
-          description:
-            'Permanently deletes anonymous and non-admin account entries older than the chosen day. The chosen day is kept.',
-        },
-        admins: {
-          label: 'Purge admin entries',
-          description:
-            'Permanently deletes admin entries older than the chosen day. The chosen day is kept.',
-        },
+        button: 'Delete entries',
+        title: 'Delete audit entries',
+        description:
+          'Permanently deletes the entries of the chosen group older than the chosen day. The chosen day is kept.',
+        scopeLabel: 'Entries to delete',
+        scopes: { anonymous: 'Anonymous', users: 'Users', admins: 'Admins' },
       },
       purgeBefore: 'Older than',
       purgeSuccess: 'Entries deleted: {count}',

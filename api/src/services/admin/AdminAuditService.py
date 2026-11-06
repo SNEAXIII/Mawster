@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import Request, Response
 from fastapi.routing import APIRoute
-from sqlmodel import and_, col, delete, func, or_, select
+from sqlmodel import and_, col, delete, func, select
 from starlette.requests import ClientDisconnect
 
 from src.dto.admin.dto_admin_audit import (
@@ -228,10 +228,11 @@ class AdminAuditService:
     @classmethod
     async def purge(cls, session, *, before: datetime, scope: PurgeScope) -> int:
         role = col(AdminAuditEntry.role)
-        if scope == "anonymous":
-            scoped = or_(role.is_(None), role == Roles.USER)
-        else:
-            scoped = role.in_([Roles.ADMIN, Roles.SUPER_ADMIN])
+        scoped = {
+            "anonymous": role.is_(None),
+            "users": role == Roles.USER,
+            "admins": role.in_([Roles.ADMIN, Roles.SUPER_ADMIN]),
+        }[scope]
         deleted = await session.exec(
             delete(AdminAuditEntry).where(col(AdminAuditEntry.created_at) < before, scoped)
         )

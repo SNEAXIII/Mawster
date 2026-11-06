@@ -4,7 +4,6 @@ import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import PaginationControls from '@/components/dashboard/pagination/pagination-controls'
 import { Button } from '@/components/ui/button'
-import { AUDIT_PURGE_SCOPES } from '@/app/services/admin-audit'
 import { useAuditViewModel } from '../_viewmodels/use-audit-viewmodel'
 import AuditFiltersBar from './audit-filters'
 import AuditPurgeDialog from './audit-purge-dialog'
@@ -31,15 +30,7 @@ export default function AuditPanel() {
           <h2 className='text-lg font-semibold'>{s.title}</h2>
           <p className='text-muted-foreground text-sm'>{s.subtitle}</p>
         </div>
-        <div className='flex flex-wrap gap-2'>
-          {AUDIT_PURGE_SCOPES.map((scope) => (
-            <AuditPurgeDialog
-              key={scope}
-              scope={scope}
-              onPurge={vm.purge}
-            />
-          ))}
-        </div>
+        <AuditPurgeDialog onPurge={vm.purge} />
       </div>
 
       <AuditFiltersBar

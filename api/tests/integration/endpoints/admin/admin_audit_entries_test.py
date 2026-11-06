@@ -261,11 +261,26 @@ async def test_purge_anonymous_keeps_recent_rows_and_adds_its_own_entry(session)
     )
 
     assert response.status_code == 200
-    assert response.json() == {"deleted": 2}
+    assert response.json() == {"deleted": 1}
     rows = await _entries(session)
-    assert len(rows) == 3
+    assert len(rows) == 4
     [own] = [row for row in rows if row.method == "DELETE"]
     assert (own.role, own.status_code, own.user_id) == (Roles.SUPER_ADMIN, 200, SUPER_ID)
+
+
+async def test_purge_users_keeps_anonymous_and_admin_rows(session):
+    await load_objects(
+        [
+            _entry(days_ago=40, status_code=401),
+            _entry(days_ago=40, status_code=403, user_id=USER_ID, role=Roles.USER),
+            _entry(days_ago=40, user_id=STANDALONE_ADMIN_ID, role=Roles.ADMIN),
+        ]
+    )
+
+    response = await _delete({"before": (NOW - timedelta(days=30)).isoformat(), "scope": "users"})
+
+    assert response.json() == {"deleted": 1}
+    assert Roles.USER not in {row.role for row in await _entries(session)}
 
 
 async def test_purge_admins_leaves_anonymous_rows_untouched(session):

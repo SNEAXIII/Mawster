@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from src.enums.Roles import Roles
 
 AuditResult = Literal["success", "refused", "error"]
-PurgeScope = Literal["anonymous", "admins"]
+PurgeScope = Literal["anonymous", "users", "admins"]
 
 
 class AuditEntryResponse(BaseModel):

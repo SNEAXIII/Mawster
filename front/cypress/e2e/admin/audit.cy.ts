@@ -31,16 +31,18 @@ function pick(trigger: string, option: string) {
   cy.getByCy(option).should('be.visible').click();
 }
 
-function purge(scope: 'anonymous' | 'admins') {
-  cy.getByCy(`audit-purge-${scope}`).click();
+function purge(scope: 'anonymous' | 'users' | 'admins') {
+  cy.getByCy('audit-purge').click();
   cy.getByCy('audit-purge-dialog').should('be.visible');
   cy.getByCy('confirmation-dialog-confirm').should('be.disabled');
   cy.getByCy('audit-purge-before').type(FUTURE_DAY);
+  cy.getByCy('confirmation-dialog-confirm').should('be.disabled');
+  pick('audit-purge-scope', `audit-purge-scope-${scope}`);
   cy.getByCy('confirmation-dialog-confirm').click();
 }
 
-/** One entry in the admins scope, two in the anonymous one: a player's and a tokenless call. */
-function setupBothScopes() {
+/** One entry per scope: a super admin's call, a player's refused one and a tokenless one. */
+function setupEveryScope() {
   return setupSuperAdmin().then((superAdmin) => {
     cy.apiCreateSeason(superAdmin.access_token, 1);
     setupUser('audit-player').then((player) => refusedCall(player.access_token));
@@ -96,14 +98,20 @@ describe('Admin — audit', () => {
     });
   });
 
-  it('the anonymous purge keeps the admin entries, its own included', () => {
-    setupBothScopes();
+  it('the anonymous purge keeps the other scopes, its own entry included', () => {
+    setupEveryScope();
     purge('anonymous');
-    rowsShown(SEASON_CALL, PURGE_CALL);
+    rowsShown(SEASON_CALL, REFUSED_CALL, PURGE_CALL);
   });
 
-  it('the admins purge keeps the anonymous entries and leaves its own', () => {
-    setupBothScopes();
+  it('the users purge keeps the other scopes, its own entry included', () => {
+    setupEveryScope();
+    purge('users');
+    rowsShown(SEASON_CALL, REFUSED_CALL, PURGE_CALL);
+  });
+
+  it('the admins purge keeps the other scopes and leaves its own', () => {
+    setupEveryScope();
     purge('admins');
     rowsShown(REFUSED_CALL, REFUSED_CALL, PURGE_CALL);
 

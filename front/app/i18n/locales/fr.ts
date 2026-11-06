@@ -1105,16 +1105,12 @@ const fr: Translations = {
       loadError: "Impossible de charger les entrées d'audit.",
       retry: 'Réessayer',
       purge: {
-        anonymous: {
-          label: 'Purger les entrées non-admin',
-          description:
-            'Supprime définitivement les entrées anonymes et des comptes non-admin antérieures au jour choisi. Le jour choisi est conservé.',
-        },
-        admins: {
-          label: 'Purger les entrées admin',
-          description:
-            'Supprime définitivement les entrées admin antérieures au jour choisi. Le jour choisi est conservé.',
-        },
+        button: 'Supprimer des entrées',
+        title: "Supprimer des entrées d'audit",
+        description:
+          'Supprime définitivement les entrées du groupe choisi antérieures au jour choisi. Le jour choisi est conservé.',
+        scopeLabel: 'Entrées à supprimer',
+        scopes: { anonymous: 'Anonymes', users: 'Utilisateurs', admins: 'Admins' },
       },
       purgeBefore: 'Antérieures au',
       purgeSuccess: 'Entrées supprimées : {count}',
