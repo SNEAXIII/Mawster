@@ -298,7 +298,8 @@ def download_champion_images(champions: list[dict], force: bool = False):
     )
     results = asyncio.run(download_images(jobs, revisions, force))
     # Saved before the checks below: the portraits downloaded are on disk whatever they decide.
-    REVISIONS_FILE.write_text(
+    # Sonar S2083 is a false positive: the path is a constant, only the content comes from the file.
+    REVISIONS_FILE.write_text(  # NOSONAR S2083
         json.dumps(revisions, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     # A failed --force re-download still leaves the previous portrait usable.
