@@ -29,14 +29,15 @@ export interface PaginatedAuditEntries {
 }
 
 export interface AuditFilterOptions {
-  routers: { name: string; routes: string[] }[]
+  routers: { name: string; endpoints: { method: string; route: string }[] }[]
   accounts: { id: string; login: string }[]
 }
 
 /** Every value is empty when unset; dates are `YYYY-MM-DD` local days. */
 export interface AuditFilters {
   router: string
-  route: string
+  /** `METHOD /route`, the one key an endpoint has: a route alone spans several methods. */
+  endpoint: string
   result: string
   userId: string
   dateFrom: string
@@ -54,7 +55,11 @@ export async function listAuditEntries(
 ): Promise<PaginatedAuditEntries> {
   const query = new URLSearchParams({ page: String(page), size: String(size) })
   if (filters.router) query.set('router', filters.router)
-  if (filters.route) query.set('route', filters.route)
+  if (filters.endpoint) {
+    const [method, route] = filters.endpoint.split(' ')
+    query.set('method', method)
+    query.set('route', route)
+  }
   if (filters.result) query.set('result', filters.result)
   if (filters.userId) query.set('user_id', filters.userId)
   if (filters.dateFrom) query.set('date_from', dayStart(filters.dateFrom))

@@ -162,6 +162,7 @@ class AdminAuditService:
         session,
         *,
         routes: list[str] | None,
+        method: str | None,
         result: AuditResult | None,
         user_id: uuid.UUID | None,
         date_from: datetime | None,
@@ -172,6 +173,8 @@ class AdminAuditService:
         conds = []
         if routes is not None:
             conds.append(col(AdminAuditEntry.route).in_(routes))
+        if method is not None:
+            conds.append(col(AdminAuditEntry.method) == method)
         if result is not None:
             conds.append(_result_clause(result))
         if user_id is not None:

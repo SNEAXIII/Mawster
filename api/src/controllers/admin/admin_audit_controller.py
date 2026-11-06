@@ -8,6 +8,7 @@ from fastapi.routing import iter_route_contexts
 from pydantic import AwareDatetime
 
 from src.dto.admin.dto_admin_audit import (
+    AuditEndpointFilter,
     AuditFiltersResponse,
     AuditResult,
     AuditRouterFilter,
@@ -28,14 +29,16 @@ admin_audit_controller = APIRouter(
 )
 
 
-def _audited_routes(request: Request) -> dict[str, list[str]]:
-    """Router name (its first tag) to the route templates it serves, audited routes only."""
-    routers: dict[str, set[str]] = {}
+def _audited_endpoints(request: Request) -> dict[str, list[tuple[str, str]]]:
+    """Router name (its first tag) to the (method, route template) pairs it serves."""
+    routers: dict[str, set[tuple[str, str]]] = {}
     for context in iter_route_contexts(request.app.routes):
         route = context.original_route
         if isinstance(route, AuditedRoute) and route.tags:
-            routers.setdefault(route.tags[0], set()).add(route.path)
-    return {name: sorted(paths) for name, paths in routers.items()}
+            routers.setdefault(route.tags[0], set()).update(
+                (method, route.path) for method in route.methods
+            )
+    return {name: sorted(endpoints) for name, endpoints in routers.items()}
 
 
 @admin_audit_controller.get("", response_model=PaginatedAuditEntries)
@@ -44,6 +47,7 @@ async def list_audit_entries(
     session: SessionDep,
     router: str | None = None,
     route: str | None = None,
+    method: str | None = None,
     result: AuditResult | None = None,
     user_id: uuid.UUID | None = None,
     date_from: AwareDatetime | None = None,
@@ -53,12 +57,13 @@ async def list_audit_entries(
 ):
     routes = None
     if router is not None:
-        routes = _audited_routes(request).get(router, [])
+        routes = sorted({path for _, path in _audited_endpoints(request).get(router, [])})
     if route is not None:
         routes = [route] if routes is None or route in routes else []
     return await AdminAuditService.list_entries(
         session,
         routes=routes,
+        method=method,
         result=result,
         user_id=user_id,
         date_from=date_from,
@@ -71,8 +76,11 @@ async def list_audit_entries(
 @admin_audit_controller.get("/filters", response_model=AuditFiltersResponse)
 async def get_audit_filters(request: Request, session: SessionDep):
     routers = [
-        AuditRouterFilter(name=name, routes=paths)
-        for name, paths in sorted(_audited_routes(request).items())
+        AuditRouterFilter(
+            name=name,
+            endpoints=[AuditEndpointFilter(method=method, route=path) for method, path in pairs],
+        )
+        for name, pairs in sorted(_audited_endpoints(request).items())
     ]
     accounts = await AdminAuditService.list_accounts(session)
     return AuditFiltersResponse(routers=routers, accounts=accounts)

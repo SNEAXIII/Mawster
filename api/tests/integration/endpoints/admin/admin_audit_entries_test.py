@@ -95,13 +95,14 @@ async def _delete(params: dict):
     [
         ({"router": "Login Stats"}, [(LOGINS_ROUTE, 403)]),
         ({"route": MUTE_ROUTE}, [(MUTE_ROUTE, 200), (MUTE_ROUTE, 422)]),
+        ({"method": "PATCH"}, [(ALIAS_ROUTE, 404), (ALIAS_ROUTE, 500)]),
         ({"result": "success"}, [(MUTE_ROUTE, 200)]),
         ({"result": "refused"}, [(LOGINS_ROUTE, 403)]),
         ({"result": "error"}, [(MUTE_ROUTE, 422), (ALIAS_ROUTE, 404), (ALIAS_ROUTE, 500)]),
         ({"user_id": str(STANDALONE_ADMIN_ID)}, [(MUTE_ROUTE, 200), (MUTE_ROUTE, 422)]),
         ({"route": ALIAS_ROUTE, "result": "refused"}, []),
     ],
-    ids=["router", "route", "success", "refused", "error", "user", "combined"],
+    ids=["router", "route", "method", "success", "refused", "error", "user", "combined"],
 )
 async def test_list_filters_narrow_the_entries(session, params, expected):
     await _seed_mixed()
@@ -112,6 +113,14 @@ async def test_list_filters_narrow_the_entries(session, params, expected):
     body = response.json()
     assert body["total"] == len(expected)
     assert _pairs(body) == sorted(expected)
+
+
+async def test_list_separates_the_methods_of_one_route(session):
+    await load_objects([_entry(days_ago=1), _entry(days_ago=2, method="DELETE")])
+
+    response = await _get(URL, {"route": MUTE_ROUTE, "method": "DELETE"})
+
+    assert [item["method"] for item in response.json()["items"]] == ["DELETE"]
 
 
 async def test_list_filters_by_period(session):
@@ -200,10 +209,14 @@ async def test_filters_list_audited_routers_and_entry_accounts(session):
 
     body = (await _get(FILTERS_URL)).json()
 
-    routers = {router["name"]: router["routes"] for router in body["routers"]}
-    assert LOGINS_ROUTE in routers["Login Stats"]
-    assert MUTE_ROUTE in routers["Moderation"]
-    assert all(route.startswith("/admin") for paths in routers.values() for route in paths)
+    routers = {
+        router["name"]: [(e["method"], e["route"]) for e in router["endpoints"]]
+        for router in body["routers"]
+    }
+    assert ("GET", LOGINS_ROUTE) in routers["Login Stats"]
+    # One route, two endpoints: the filter must tell a mute from its lifting.
+    assert {("POST", MUTE_ROUTE), ("DELETE", MUTE_ROUTE)} <= set(routers["Moderation"])
+    assert all(route.startswith("/admin") for pairs in routers.values() for _, route in pairs)
     accounts = {account["id"] for account in body["accounts"]}
     assert accounts == {str(STANDALONE_ADMIN_ID), str(USER_ID)}
 

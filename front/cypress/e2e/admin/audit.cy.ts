@@ -106,6 +106,10 @@ describe('Admin — audit', () => {
     setupBothScopes();
     purge('admins');
     rowsShown(REFUSED_CALL, REFUSED_CALL, PURGE_CALL);
+
+    // GET and DELETE share this route: only the method tells them apart.
+    pick('audit-filter-route', `audit-filter-route-${PURGE_CALL}`);
+    rowsShown(PURGE_CALL);
   });
 
   it('a plain admin reaches neither the tab nor the endpoint', () => {

@@ -31,9 +31,14 @@ class PaginatedAuditEntries(BaseModel):
     pages: int
 
 
+class AuditEndpointFilter(BaseModel):
+    method: str
+    route: str
+
+
 class AuditRouterFilter(BaseModel):
     name: str
-    routes: list[str]
+    endpoints: list[AuditEndpointFilter]
 
 
 class AuditAccountFilter(BaseModel):

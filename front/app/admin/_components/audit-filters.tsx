@@ -67,7 +67,7 @@ function FilterSelect({
 type AuditFiltersBarProps = Readonly<
   Pick<
     ReturnType<typeof useAuditViewModel>,
-    'filters' | 'changeFilters' | 'options' | 'routeOptions'
+    'filters' | 'changeFilters' | 'options' | 'endpointOptions'
   >
 >
 
@@ -75,7 +75,7 @@ export default function AuditFiltersBar({
   filters,
   changeFilters,
   options,
-  routeOptions,
+  endpointOptions,
 }: AuditFiltersBarProps) {
   const { t } = useI18n()
   const s = t.admin.audit
@@ -98,17 +98,17 @@ export default function AuditFiltersBar({
       <FilterSelect
         label={s.router}
         value={filters.router}
-        onChange={(router) => changeFilters({ router, route: '' })}
+        onChange={(router) => changeFilters({ router, endpoint: '' })}
         allLabel={s.allRouters}
         options={options.routers.map(({ name }) => ({ value: name, label: name }))}
         dataCy='audit-filter-router'
       />
       <FilterSelect
         label={s.endpoint}
-        value={filters.route}
-        onChange={(route) => changeFilters({ route })}
+        value={filters.endpoint}
+        onChange={(endpoint) => changeFilters({ endpoint })}
         allLabel={s.allRoutes}
-        options={routeOptions.map((route) => ({ value: route, label: route }))}
+        options={endpointOptions.map((endpoint) => ({ value: endpoint, label: endpoint }))}
         dataCy='audit-filter-route'
       />
       <FilterSelect

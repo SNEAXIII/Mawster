@@ -15,7 +15,7 @@ import {
 
 const EMPTY_FILTERS: AuditFilters = {
   router: '',
-  route: '',
+  endpoint: '',
   result: '',
   userId: '',
   dateFrom: '',
@@ -101,9 +101,10 @@ export function useAuditViewModel() {
     }
   }
 
-  const routeOptions = filters.router
-    ? (options.routers.find((router) => router.name === filters.router)?.routes ?? [])
-    : [...new Set(options.routers.flatMap((router) => router.routes))].sort()
+  const endpointOptions = options.routers
+    .filter((router) => !filters.router || router.name === filters.router)
+    .flatMap((router) => router.endpoints.map(({ method, route }) => `${method} ${route}`))
+    .sort()
 
   return {
     filters,
@@ -111,7 +112,7 @@ export function useAuditViewModel() {
     resetFilters: () => changeFilters(EMPTY_FILTERS),
     hasFilters: Object.values(filters).some(Boolean),
     options,
-    routeOptions,
+    endpointOptions,
     entries,
     page,
     setPage,

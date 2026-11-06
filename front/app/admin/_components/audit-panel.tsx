@@ -46,7 +46,7 @@ export default function AuditPanel() {
         filters={vm.filters}
         changeFilters={vm.changeFilters}
         options={vm.options}
-        routeOptions={vm.routeOptions}
+        endpointOptions={vm.endpointOptions}
       />
 
       {vm.error || !vm.entries ? (
