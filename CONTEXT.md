@@ -76,6 +76,12 @@ handles reported Fight Notes. Unrelated to any Alliance rank — and with no way
 Alliance's interior at all: a reported Fight Note is the only bridge, and a Player opens
 it (see `docs/adr/0006-admins-cannot-read-alliance-interiors.md`).
 
+**Admin Audit Entry**:
+One call to an admin endpoint, accepted or refused, whoever made it — an Admin, an
+Account without the role, or an unknown caller. Every error is one, a successful read is not.
+_Table_: `admin_audit_entry`.
+_Avoid_: admin action, admin log, event.
+
 **Battlegroup**:
 One of the three squads of ten Players an Alliance splits into for war. Names both a
 Player's squad membership and a coordinate on the war map. Membership is strict: a

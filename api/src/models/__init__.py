@@ -21,6 +21,7 @@ from src.models.tierlist.TierList import TierList  # noqa: F401
 from src.models.tierlist.TierListChampionTag import TierListChampionTag  # noqa: F401
 from src.models.tierlist.TierListRanking import TierListRanking  # noqa: F401
 from src.models.tierlist.TierListTier import TierListTier  # noqa: F401
+from src.models.user.AdminAuditEntry import AdminAuditEntry  # noqa: F401
 from src.models.user.GameAccount import GameAccount  # noqa: F401
 from src.models.user.GameAccountMastery import GameAccountMastery  # noqa: F401
 from src.models.user.LoginLog import LoginLog  # noqa: F401

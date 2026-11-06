@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 
 from src.enums.Roles import Roles
 from src.Messages.jwt_messages import INSUFFISANT_ROLE_EXCEPTION
@@ -27,12 +27,16 @@ class AuthService:
     @classmethod
     async def require_admin(
         cls,
+        request: Request,
         session: SessionDep,
         token: Annotated[str, Depends(oauth2_scheme)],
     ) -> bool:
         user = await cls.get_current_user_in_jwt(session, token)
+        # Plain values: a failed flush expires the ORM instance before the audit entry reads it.
+        request.state.audit_user = (user.id, user.role)
         if user.role not in (Roles.ADMIN, Roles.SUPER_ADMIN):
             raise INSUFFISANT_ROLE_EXCEPTION
+        request.state.audit_is_admin = True
         return True
 
     @classmethod
