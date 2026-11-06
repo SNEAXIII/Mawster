@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select'
 import { AUDIT_RESULTS, type AuditFilters } from '@/app/services/admin-audit'
 import type { useAuditViewModel } from '../_viewmodels/use-audit-viewmodel'
+import AuditSearchSelect from './audit-search-select'
 
 const ALL = 'all'
 
@@ -103,7 +104,7 @@ export default function AuditFiltersBar({
         options={options.routers.map(({ name }) => ({ value: name, label: name }))}
         dataCy='audit-filter-router'
       />
-      <FilterSelect
+      <AuditSearchSelect
         label={s.endpoint}
         value={filters.endpoint}
         onChange={(endpoint) => changeFilters({ endpoint })}
@@ -119,7 +120,7 @@ export default function AuditFiltersBar({
         options={AUDIT_RESULTS.map((result) => ({ value: result, label: s.results[result] }))}
         dataCy='audit-filter-result'
       />
-      <FilterSelect
+      <AuditSearchSelect
         label={s.account}
         value={filters.userId}
         onChange={(userId) => changeFilters({ userId })}
