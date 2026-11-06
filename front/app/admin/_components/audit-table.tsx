@@ -5,7 +5,6 @@ import { ChevronRight } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { formatDate } from '@/app/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   Table,
@@ -40,35 +39,49 @@ function AuditRow({ entry }: Readonly<{ entry: AuditEntry }>) {
             className='group cursor-pointer'
             data-cy='audit-row'
           >
-            <TableCell className='whitespace-nowrap'>
+            <TableCell className='py-1 text-xs whitespace-nowrap'>
               {formatDate(entry.created_at, locale, 'long')}
             </TableCell>
-            <TableCell>{entry.user_login ?? s.anonymous}</TableCell>
-            <TableCell className='font-mono text-xs'>
+            <TableCell className='py-1 text-xs whitespace-nowrap'>
+              {entry.user_login ?? s.anonymous}
+            </TableCell>
+            <TableCell className='py-1 font-mono text-xs whitespace-nowrap'>
               {entry.method} {entry.route}
             </TableCell>
-            <TableCell className='tabular-nums'>{entry.status_code}</TableCell>
-            <TableCell>
-              <Badge variant={RESULT_VARIANTS[entry.result]}>{s.results[entry.result]}</Badge>
+            <TableCell className='py-1 text-xs tabular-nums'>{entry.status_code}</TableCell>
+            <TableCell className='py-1'>
+              <Badge
+                variant={RESULT_VARIANTS[entry.result]}
+                className='px-1.5 py-0 text-[10px]'
+              >
+                {s.results[entry.result]}
+              </Badge>
             </TableCell>
-            <TableCell className='text-right'>
+            {/* max-w-0 with w-full: this column takes what is left and truncates there. */}
+            <TableCell
+              className='text-muted-foreground w-full max-w-0 min-w-40 truncate py-1 font-mono text-[11px]'
+              data-cy='audit-details-preview'
+            >
+              {entry.details && JSON.stringify(entry.details)}
+            </TableCell>
+            <TableCell className='py-1 text-right'>
               {/* No handler: the click bubbles to the row, the keyboard reaches it through here. */}
-              <Button
-                variant='ghost'
-                size='icon'
+              <button
+                type='button'
+                className='hover:bg-muted rounded-sm p-0.5 align-middle'
                 aria-label={s.toggleDetails}
                 aria-expanded={open}
                 data-cy='audit-toggle'
               >
                 <ChevronRight className='h-4 w-4 transition-transform group-data-[state=open]:rotate-90' />
-              </Button>
+              </button>
             </TableCell>
           </TableRow>
         </CollapsibleTrigger>
         <CollapsibleContent asChild>
           <TableRow className='hover:bg-transparent'>
             <TableCell
-              colSpan={6}
+              colSpan={7}
               className='bg-muted/30'
               data-cy='audit-details'
             >
@@ -106,12 +119,13 @@ export default function AuditTable({ entries }: Readonly<{ entries: AuditEntry[]
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>{s.columnDate}</TableHead>
-          <TableHead>{s.columnAuthor}</TableHead>
-          <TableHead>{s.columnEndpoint}</TableHead>
-          <TableHead>{s.columnStatus}</TableHead>
-          <TableHead>{s.columnResult}</TableHead>
-          <TableHead>
+          <TableHead className='h-8 text-xs'>{s.columnDate}</TableHead>
+          <TableHead className='h-8 text-xs'>{s.columnAuthor}</TableHead>
+          <TableHead className='h-8 text-xs'>{s.columnEndpoint}</TableHead>
+          <TableHead className='h-8 text-xs'>{s.columnStatus}</TableHead>
+          <TableHead className='h-8 text-xs'>{s.columnResult}</TableHead>
+          <TableHead className='h-8 text-xs'>{s.columnDetails}</TableHead>
+          <TableHead className='h-8'>
             <span className='sr-only'>{s.toggleDetails}</span>
           </TableHead>
         </TableRow>

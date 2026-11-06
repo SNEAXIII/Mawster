@@ -1088,6 +1088,7 @@ const en = {
       columnEndpoint: 'Endpoint',
       columnStatus: 'Status',
       columnResult: 'Result',
+      columnDetails: 'Details',
       results: { success: 'Success', refused: 'Refused', error: 'Error' },
       anonymous: 'Anonymous',
       noDetails: 'No details recorded.',

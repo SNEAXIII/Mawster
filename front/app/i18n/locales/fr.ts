@@ -1097,6 +1097,7 @@ const fr: Translations = {
       columnEndpoint: 'Endpoint',
       columnStatus: 'Statut',
       columnResult: 'Résultat',
+      columnDetails: 'Détails',
       results: { success: 'Réussi', refused: 'Refusé', error: 'Erreur' },
       anonymous: 'Anonyme',
       noDetails: 'Aucun détail enregistré.',

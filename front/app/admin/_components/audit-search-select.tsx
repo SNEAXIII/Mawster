@@ -49,11 +49,12 @@ export default function AuditSearchSelect({
       <PopoverTrigger asChild>
         <Button
           variant='outline'
+          size='sm'
           role='combobox'
           aria-expanded={open}
           aria-controls={contentId}
           aria-label={label}
-          className='w-full justify-between font-normal sm:w-52'
+          className='w-full justify-between font-normal sm:w-44'
           data-cy={dataCy}
         >
           <span className='truncate'>

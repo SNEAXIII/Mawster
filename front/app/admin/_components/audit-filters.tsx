@@ -38,7 +38,7 @@ function FilterSelect({
       onValueChange={(next) => onChange(next === ALL ? '' : next)}
     >
       <SelectTrigger
-        className='w-full sm:w-52'
+        className='h-8 w-full text-xs sm:w-44'
         aria-label={label}
         data-cy={dataCy}
       >
@@ -82,11 +82,11 @@ export default function AuditFiltersBar({
   const s = t.admin.audit
 
   const dateInput = (key: keyof AuditFilters, label: string, dataCy: string) => (
-    <label className='text-muted-foreground flex items-center gap-2 text-sm'>
+    <label className='text-muted-foreground flex items-center gap-2 text-xs'>
       {label}
       <Input
         type='date'
-        className='w-40'
+        className='h-8 w-36 text-xs md:text-xs'
         value={filters[key]}
         onChange={(e) => changeFilters({ [key]: e.target.value })}
         data-cy={dataCy}
