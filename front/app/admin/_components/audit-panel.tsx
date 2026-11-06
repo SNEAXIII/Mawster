@@ -33,6 +33,21 @@ export default function AuditPanel() {
         <AuditPurgeDialog onPurge={vm.purge} />
       </div>
 
+      {vm.entries && (
+        <PaginationControls
+          currentPage={vm.page}
+          totalPage={totalPage}
+          usersPerPage={vm.size}
+          canReset={vm.hasFilters}
+          onUserPerPageChange={vm.changeSize}
+          onFirstPage={() => vm.setPage(1)}
+          onPreviousPage={() => vm.setPage(vm.page - 1)}
+          onNextPage={() => vm.setPage(vm.page + 1)}
+          onLastPage={() => vm.setPage(totalPage)}
+          onResetPagination={vm.resetFilters}
+        />
+      )}
+
       <AuditFiltersBar
         filters={vm.filters}
         changeFilters={vm.changeFilters}
@@ -57,18 +72,6 @@ export default function AuditPanel() {
           aria-busy={vm.refreshing}
         >
           <AuditTable entries={vm.entries.items} />
-          <PaginationControls
-            currentPage={vm.page}
-            totalPage={totalPage}
-            usersPerPage={vm.size}
-            canReset={vm.hasFilters}
-            onUserPerPageChange={vm.changeSize}
-            onFirstPage={() => vm.setPage(1)}
-            onPreviousPage={() => vm.setPage(vm.page - 1)}
-            onNextPage={() => vm.setPage(vm.page + 1)}
-            onLastPage={() => vm.setPage(totalPage)}
-            onResetPagination={vm.resetFilters}
-          />
         </div>
       )}
     </div>
