@@ -3,6 +3,13 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [1.37.0](https://github.com/SNEAXIII/Mawster/compare/v1.36.0...v1.37.0) (2026-11-06)
+
+
+### Ajouté
+
+* show every admin endpoint call on a filtered admin audit page ([06f4b47](https://github.com/SNEAXIII/Mawster/commit/06f4b474d3c81fd985b5b8887aeb47b5d6975ca8))
+
 ## [1.36.0](https://github.com/SNEAXIII/Mawster/compare/v1.35.2...v1.36.0) (2026-11-03)
 
 
