@@ -3,11 +3,13 @@ from fastapi import APIRouter, Depends
 from src.dto.admin.dto_fight_record import AllianceSnapshotStatResponse, ForceSnapshotResponse
 from src.services.admin.FightRecordAdminService import FightRecordAdminService
 from src.services.auth.AuthService import AuthService
+from src.utils.audited_route import AuditedRoute
 from src.utils.db import SessionDep
 
 war_admin_controller = APIRouter(
     prefix="/admin",
     tags=["Admin"],
+    route_class=AuditedRoute,
     dependencies=[
         Depends(AuthService.require_admin),
         Depends(AuthService.get_current_user_in_jwt),

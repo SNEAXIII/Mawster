@@ -15,11 +15,13 @@ from src.enums.VisionImportStatus import VisionImportStatus
 from src.enums.VisionUserSortField import VisionUserSortField
 from src.services.admin.VisionStatsService import VisionStatsService
 from src.services.auth.AuthService import AuthService
+from src.utils.audited_route import AuditedRoute
 from src.utils.db import SessionDep
 
 vision_stats_controller = APIRouter(
     prefix="/admin/vision",
     tags=["Vision Stats"],
+    route_class=AuditedRoute,
     dependencies=[Depends(AuthService.require_admin)],
 )
 

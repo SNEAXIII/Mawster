@@ -9,12 +9,14 @@ from src.services.admin.SagaService import SagaService
 from src.services.admin.SeasonService import SeasonService
 from src.services.auth.AuthService import AuthService
 from src.services.knowledge.FightRecordService import FightRecordService
+from src.utils.audited_route import AuditedRoute
 from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 season_admin_controller = APIRouter(
     prefix="/admin/seasons",
     tags=["Season"],
+    route_class=AuditedRoute,
     dependencies=[
         Depends(AuthService.require_admin),
     ],

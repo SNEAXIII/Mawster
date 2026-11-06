@@ -16,12 +16,14 @@ from src.dto.admin.dto_moderation import (
 from src.enums.NoteReportStatus import NoteReportStatus
 from src.services.admin.ModerationService import ModerationService
 from src.services.auth.AuthService import AuthService
+from src.utils.audited_route import AuditedRoute
 from src.utils.auth_deps import CurrentUser
 from src.utils.db import SessionDep
 
 moderation_controller = APIRouter(
     prefix="/admin",
     tags=["Moderation"],
+    route_class=AuditedRoute,
     dependencies=[Depends(AuthService.require_admin)],
 )
 

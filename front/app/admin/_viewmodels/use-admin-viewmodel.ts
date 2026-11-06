@@ -12,6 +12,7 @@ export enum AdminTab {
   VisionImports = 'vision-imports',
   Logins = 'logins',
   Moderation = 'moderation',
+  Audit = 'audit',
 }
 
 const ADMIN_TABS = Object.values(AdminTab)
