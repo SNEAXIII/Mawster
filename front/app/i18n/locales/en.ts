@@ -1069,6 +1069,48 @@ const en = {
       chartEmpty: 'No login activity over this period.',
       weekdays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
     },
+    audit: {
+      tab: 'Audit',
+      title: 'Admin audit',
+      subtitle: 'Every call to an admin endpoint, accepted or refused.',
+      router: 'Router',
+      endpoint: 'Endpoint',
+      result: 'Result',
+      account: 'Account',
+      allRouters: 'All routers',
+      allRoutes: 'All endpoints',
+      allResults: 'All results',
+      allAccounts: 'All accounts',
+      from: 'From',
+      to: 'To',
+      columnDate: 'Date',
+      columnAuthor: 'Author',
+      columnEndpoint: 'Endpoint',
+      columnStatus: 'Status',
+      columnResult: 'Result',
+      results: { success: 'Success', refused: 'Refused', error: 'Error' },
+      anonymous: 'Anonymous',
+      noDetails: 'No details recorded.',
+      toggleDetails: 'Show or hide details',
+      empty: 'No entries match these filters.',
+      loadError: 'Could not load the audit entries.',
+      retry: 'Retry',
+      purge: {
+        anonymous: {
+          label: 'Purge non-admin entries',
+          description:
+            'Permanently deletes anonymous and non-admin account entries older than the chosen day. The chosen day is kept.',
+        },
+        admins: {
+          label: 'Purge admin entries',
+          description:
+            'Permanently deletes admin entries older than the chosen day. The chosen day is kept.',
+        },
+      },
+      purgeBefore: 'Older than',
+      purgeSuccess: 'Entries deleted: {count}',
+      purgeError: 'Could not purge the entries.',
+    },
   },
 
   moderation: {

@@ -1078,6 +1078,48 @@ const fr: Translations = {
       chartEmpty: 'Aucune activité de connexion sur cette période.',
       weekdays: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
     },
+    audit: {
+      tab: 'Audit',
+      title: 'Audit admin',
+      subtitle: 'Chaque appel à un endpoint admin, accepté ou refusé.',
+      router: 'Routeur',
+      endpoint: 'Endpoint',
+      result: 'Résultat',
+      account: 'Compte',
+      allRouters: 'Tous les routeurs',
+      allRoutes: 'Tous les endpoints',
+      allResults: 'Tous les résultats',
+      allAccounts: 'Tous les comptes',
+      from: 'Du',
+      to: 'Au',
+      columnDate: 'Date',
+      columnAuthor: 'Auteur',
+      columnEndpoint: 'Endpoint',
+      columnStatus: 'Statut',
+      columnResult: 'Résultat',
+      results: { success: 'Réussi', refused: 'Refusé', error: 'Erreur' },
+      anonymous: 'Anonyme',
+      noDetails: 'Aucun détail enregistré.',
+      toggleDetails: 'Afficher ou masquer les détails',
+      empty: 'Aucune entrée ne correspond à ces filtres.',
+      loadError: "Impossible de charger les entrées d'audit.",
+      retry: 'Réessayer',
+      purge: {
+        anonymous: {
+          label: 'Purger les entrées non-admin',
+          description:
+            'Supprime définitivement les entrées anonymes et des comptes non-admin antérieures au jour choisi. Le jour choisi est conservé.',
+        },
+        admins: {
+          label: 'Purger les entrées admin',
+          description:
+            'Supprime définitivement les entrées admin antérieures au jour choisi. Le jour choisi est conservé.',
+        },
+      },
+      purgeBefore: 'Antérieures au',
+      purgeSuccess: 'Entrées supprimées : {count}',
+      purgeError: 'Impossible de purger les entrées.',
+    },
   },
 
   moderation: {

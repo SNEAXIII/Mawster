@@ -10,6 +10,7 @@ import KnowledgeBasePanel from './knowledge-base-panel'
 import ModerationPanel from './moderation-panel'
 import VisionStatsPanel from './vision-stats-panel'
 import LoginStatsPanel from './login-stats-panel'
+import AuditPanel from './audit-panel'
 import { useAdminViewModel, AdminTab } from '../_viewmodels/use-admin-viewmodel'
 
 interface AdminContentProps {
@@ -19,6 +20,7 @@ interface AdminContentProps {
 export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<AdminContentProps>) {
   const vm = useAdminViewModel({ defaultTab })
   const { t } = useI18n()
+  const isSuperAdmin = vm.session?.user?.role === 'super_admin'
 
   const tabs: TabItem<AdminTab>[] = [
     { value: AdminTab.Users, label: t.nav.users },
@@ -28,6 +30,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
     { value: AdminTab.VisionImports, label: t.admin.visionStats.tab },
     { value: AdminTab.Logins, label: t.admin.loginStats.tab },
     { value: AdminTab.Moderation, label: t.moderation.tab },
+    ...(isSuperAdmin ? [{ value: AdminTab.Audit, label: t.admin.audit.tab }] : []),
   ]
 
   if (vm.status === 'loading') {
@@ -52,6 +55,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
       {vm.activeTab === AdminTab.VisionImports && <VisionStatsPanel />}
       {vm.activeTab === AdminTab.Logins && <LoginStatsPanel />}
       {vm.activeTab === AdminTab.Moderation && <ModerationPanel />}
+      {isSuperAdmin && vm.activeTab === AdminTab.Audit && <AuditPanel />}
     </PageContainer>
   )
 }

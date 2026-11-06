@@ -1,0 +1,134 @@
+'use client'
+
+import { useI18n } from '@/app/i18n'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { AUDIT_RESULTS, type AuditFilters } from '@/app/services/admin-audit'
+import type { useAuditViewModel } from '../_viewmodels/use-audit-viewmodel'
+
+const ALL = 'all'
+
+interface FilterSelectProps {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  allLabel: string
+  options: { value: string; label: string }[]
+  dataCy: string
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  allLabel,
+  options,
+  dataCy,
+}: Readonly<FilterSelectProps>) {
+  return (
+    <Select
+      value={value || ALL}
+      onValueChange={(next) => onChange(next === ALL ? '' : next)}
+    >
+      <SelectTrigger
+        className='w-full sm:w-52'
+        aria-label={label}
+        data-cy={dataCy}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem
+          value={ALL}
+          data-cy={`${dataCy}-all`}
+        >
+          {allLabel}
+        </SelectItem>
+        {options.map((option) => (
+          <SelectItem
+            key={option.value}
+            value={option.value}
+            data-cy={`${dataCy}-${option.value}`}
+          >
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+}
+
+type AuditFiltersBarProps = Readonly<
+  Pick<
+    ReturnType<typeof useAuditViewModel>,
+    'filters' | 'changeFilters' | 'options' | 'routeOptions'
+  >
+>
+
+export default function AuditFiltersBar({
+  filters,
+  changeFilters,
+  options,
+  routeOptions,
+}: AuditFiltersBarProps) {
+  const { t } = useI18n()
+  const s = t.admin.audit
+
+  const dateInput = (key: keyof AuditFilters, label: string, dataCy: string) => (
+    <label className='text-muted-foreground flex items-center gap-2 text-sm'>
+      {label}
+      <Input
+        type='date'
+        className='w-40'
+        value={filters[key]}
+        onChange={(e) => changeFilters({ [key]: e.target.value })}
+        data-cy={dataCy}
+      />
+    </label>
+  )
+
+  return (
+    <div className='flex flex-wrap items-center gap-2'>
+      <FilterSelect
+        label={s.router}
+        value={filters.router}
+        onChange={(router) => changeFilters({ router, route: '' })}
+        allLabel={s.allRouters}
+        options={options.routers.map(({ name }) => ({ value: name, label: name }))}
+        dataCy='audit-filter-router'
+      />
+      <FilterSelect
+        label={s.endpoint}
+        value={filters.route}
+        onChange={(route) => changeFilters({ route })}
+        allLabel={s.allRoutes}
+        options={routeOptions.map((route) => ({ value: route, label: route }))}
+        dataCy='audit-filter-route'
+      />
+      <FilterSelect
+        label={s.result}
+        value={filters.result}
+        onChange={(result) => changeFilters({ result })}
+        allLabel={s.allResults}
+        options={AUDIT_RESULTS.map((result) => ({ value: result, label: s.results[result] }))}
+        dataCy='audit-filter-result'
+      />
+      <FilterSelect
+        label={s.account}
+        value={filters.userId}
+        onChange={(userId) => changeFilters({ userId })}
+        allLabel={s.allAccounts}
+        options={options.accounts.map(({ id, login }) => ({ value: id, label: login }))}
+        dataCy='audit-filter-account'
+      />
+      {dateInput('dateFrom', s.from, 'audit-filter-from')}
+      {dateInput('dateTo', s.to, 'audit-filter-to')}
+    </div>
+  )
+}
