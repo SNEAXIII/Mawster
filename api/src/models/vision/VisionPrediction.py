@@ -36,7 +36,7 @@ class VisionPrediction(UUIDBase, table=True):
     # than derived: the margin alone cannot tell "corrected" from "unsure", and
     # once the candidates are persisted the reason for their order is gone.
     reranked: bool = Field(default=False)
-    # All four or none, as fractions of the image width (see VisionPreview).
+    # All four or none, in screenshot pixels (see VisionPreview).
     preview_left: float | None = Field(default=None)
     preview_right: float | None = Field(default=None)
     preview_top: float | None = Field(default=None)

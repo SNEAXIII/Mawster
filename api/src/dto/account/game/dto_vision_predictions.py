@@ -10,8 +10,7 @@ if TYPE_CHECKING:
 class VisionPreview(BaseModel):
     """Where a card sits in its screenshot, the area the review row cuts out.
 
-    All four are fractions of the image **width**, top and bottom included:
-    percentage margins resolve against the width.
+    All four are in screenshot pixels, as the detector gives them.
     """
 
     left: float

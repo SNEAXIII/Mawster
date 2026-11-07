@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react'
 import ChampionPortrait from '@/components/champion-portrait'
 import { RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
+import type { VisionPreview } from '@/app/services/vision'
 import ImportPreviewRowEdit from './import-preview-row-edit'
 
 export interface PreviewRow {
@@ -24,10 +25,9 @@ export interface PreviewRow {
   // because JSON-import rows never populated it before this field existed.
   oldAscension?: number | null
   confidence?: number
-  // The screenshot's thumbnail sheet, and this card's cell in it. Both null on
-  // a JSON import and on a card whose detection box was degenerate.
-  spriteUrl?: string | null
-  cropIndex?: number | null
+  // `preview` is null when the worker sent none; `screenUrl` when the job has no screenshot.
+  screenUrl?: string | null
+  preview?: VisionPreview | null
   prediction_id?: string | null
   editable?: boolean
   // CLIP alternatives, best first, top-1 included. Absent on JSON imports.

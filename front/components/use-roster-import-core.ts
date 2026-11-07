@@ -154,8 +154,8 @@ export function rediffRow(
   return {
     ...rebuilt,
     confidence: row.confidence,
-    spriteUrl: row.spriteUrl,
-    cropIndex: row.cropIndex,
+    screenUrl: row.screenUrl,
+    preview: row.preview,
     prediction_id: row.prediction_id,
     editable: row.editable,
     candidates: row.candidates,
