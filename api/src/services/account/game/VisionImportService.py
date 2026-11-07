@@ -61,6 +61,7 @@ ALLOWED_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
 # committed, which is what makes it safe for `get_current` to stop counting it
 # as blocking.
 UPLOAD_URL_TTL_SECONDS = 15 * 60
+SCREEN_URL_TTL_SECONDS = 60 * 60
 
 # Enough to cover the longest signature checked by `_sniff_image_type`: WebP
 # needs bytes 8..11.
@@ -216,8 +217,7 @@ class VisionImportService:
 
         The object keys are derived server-side from ids the caller does not
         choose. A client-supplied key would be a write primitive into any other
-        user's import — the same reasoning that keeps `get_crop_sprite` from
-        accepting one.
+        user's import.
         """
         cls._validate_declarations(screens)
 
@@ -509,7 +509,7 @@ class VisionImportService:
         """The single import that still needs attention for this game account.
 
         CONFIRMED and CANCELLED are done with. Imports older than the retention
-        window have lost their screenshots and crops to the bucket lifecycle, so
+        window have lost their screenshots to the bucket lifecycle, so
         validating them would mean approving data whose evidence is gone.
 
         An import with a screenshot still awaiting its upload counts as blocking
@@ -641,6 +641,23 @@ class VisionImportService:
             )
             for pred in sorted(preds, key=lambda p: (job_index[p.job_id], p.id))
         ]
+
+    @classmethod
+    async def screen_urls(
+        cls, storage: Storage, vision_import: VisionImport
+    ) -> dict[uuid.UUID, str]:
+        """A presigned GET URL per screenshot, keyed by job id, for the review screen.
+
+        Only DONE jobs: an AWAITING_UPLOAD object has not passed `_verify_uploaded`,
+        so it may hold anything the browser sent.
+        """
+        return {
+            job.id: await storage.presigned_get_url(
+                SECRET.RUSTFS_BUCKET_VISION, job.object_key, SCREEN_URL_TTL_SECONDS
+            )
+            for job in vision_import.jobs
+            if job.status == VisionJobStatus.DONE
+        }
 
     @staticmethod
     def _margin(candidates: list[VisionPredictionCandidate]) -> float | None:

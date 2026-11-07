@@ -13,16 +13,6 @@ def result_key(import_id: uuid.UUID, job_id: uuid.UUID) -> str:
     return f"imports/{import_id}/{job_id}/result.json"
 
 
-def sprite_key(import_id: uuid.UUID, job_id: uuid.UUID) -> str:
-    """Object key of the sheet holding every thumbnail of one screenshot.
-
-    Cross-repo contract with the vision worker (mcoc-vision/worker/crops.py):
-    do not change this layout on one side only. Versioned so that changing the
-    cell geometry ships as a new key instead of a stale cached image.
-    """
-    return f"imports/{import_id}/{job_id}/crops/sprite_v1.webp"
-
-
 def import_prefix(import_id: uuid.UUID) -> str:
     """Prefix covering every object of an import, across all its jobs.
 
@@ -50,8 +40,6 @@ class Storage(Protocol):
 
     async def put_bytes(self, bucket: str, key: str, data: bytes, content_type: str) -> None: ...
 
-    async def get_bytes(self, bucket: str, key: str) -> bytes: ...
-
     async def delete_prefix(self, bucket: str, prefix: str) -> None: ...
 
     async def presigned_put_url(
@@ -65,6 +53,13 @@ class Storage(Protocol):
         """
         ...
 
+    async def presigned_get_url(self, bucket: str, key: str, expires_in: int) -> str:
+        """A URL the browser can GET one object from, for `<img>` with no credential.
+
+        Public endpoint for the same reason as `presigned_put_url`.
+        """
+        ...
+
     async def stat_object(self, bucket: str, key: str) -> ObjectStat | None:
         """Size and declared type of one object, or None if it does not exist."""
         ...
@@ -73,8 +68,8 @@ class Storage(Protocol):
         """The first `length` bytes of an object.
 
         Ranged on purpose: the commit step sniffs magic bytes on up to 40
-        screenshots, and doing that with `get_bytes` would pull 320 MB through
-        the API to read 12 bytes per file — exactly the traffic presigned upload
+        screenshots, and a full GET of each would pull 320 MB through the API
+        to read 12 bytes per file — exactly the traffic presigned upload
         exists to avoid.
         """
         ...

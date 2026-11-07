@@ -72,3 +72,5 @@ class VisionPredictionResponse(BaseModel):
 class VisionPredictionsResponse(BaseModel):
     import_id: uuid.UUID
     predictions: list[VisionPredictionResponse] = []
+    # Presigned screenshot URL per DONE job, the source each preview is cut from.
+    screens: dict[uuid.UUID, str] = {}

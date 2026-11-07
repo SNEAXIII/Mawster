@@ -51,6 +51,9 @@ class FakeStorage:
         self.signed.append((key, content_type))
         return f"https://s3.test/{bucket}/{key}?sig=stub&exp={expires_in}"
 
+    async def presigned_get_url(self, bucket: str, key: str, expires_in: int) -> str:
+        return f"https://s3.test/get/{bucket}/{key}?sig=stub&exp={expires_in}"
+
     async def stat_object(self, bucket: str, key: str) -> ObjectStat | None:
         if key not in self.objects:
             return None

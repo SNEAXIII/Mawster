@@ -64,11 +64,6 @@ class S3Storage(Storage):
         async with self._client() as client:
             await client.put_object(Bucket=bucket, Key=key, Body=data, ContentType=content_type)
 
-    async def get_bytes(self, bucket: str, key: str) -> bytes:
-        async with self._client() as client:
-            response = await client.get_object(Bucket=bucket, Key=key)
-            return await response["Body"].read()
-
     async def presigned_put_url(
         self, bucket: str, key: str, content_type: str, expires_in: int
     ) -> str:
@@ -81,6 +76,14 @@ class S3Storage(Storage):
             return await client.generate_presigned_url(
                 "put_object",
                 Params={"Bucket": bucket, "Key": key, "ContentType": content_type},
+                ExpiresIn=expires_in,
+            )
+
+    async def presigned_get_url(self, bucket: str, key: str, expires_in: int) -> str:
+        async with self._public_client() as client:
+            return await client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": bucket, "Key": key},
                 ExpiresIn=expires_in,
             )
 
