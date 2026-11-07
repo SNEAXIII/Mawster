@@ -1,4 +1,5 @@
 import { PROXY, api, jsonBody } from '@/app/services/utils'
+import { cacheScreen, clearScreens } from '@/app/services/vision-screens'
 
 // ─── Types ───────────────────────────────────────────────
 export const VISION_JOB_STATUSES = [
@@ -192,6 +193,7 @@ export const createVisionImport = async (
   shareDataset: boolean,
   onProgress?: (uploaded: number, total: number) => void
 ): Promise<VisionImport> => {
+  await clearScreens()
   const { import_id, uploads } = await initVisionImport(gameAccountId, files, shareDataset)
 
   let done = 0
@@ -203,6 +205,7 @@ export const createVisionImport = async (
       const index = next++
       try {
         await putScreenshot(uploads[index], files[index])
+        void cacheScreen(uploads[index].job_id, files[index])
         await commitScreen(import_id, uploads[index].job_id)
         queued += 1
       } catch (error) {
@@ -266,11 +269,13 @@ export const confirmVisionImport = async (
   rows: ConfirmedRow[],
   shareDataset: boolean
 ): Promise<{ samples_archived: number }> => {
-  return api(
+  const result = await api<{ samples_archived: number }>(
     `/vision/imports/${importId}/confirm`,
     "Erreur lors de la confirmation de l'import",
     jsonBody('POST', { rows, share_dataset: shareDataset })
   )
+  await clearScreens()
+  return result
 }
 
 export const getCurrentVisionImport = async (
@@ -287,6 +292,7 @@ export const cancelVisionImport = async (importId: string): Promise<void> => {
   await api(`/vision/imports/${importId}`, "Erreur lors de l'annulation de l'import", {
     method: 'DELETE',
   })
+  await clearScreens()
 }
 
 // Relaunches one screenshot the pipeline could not read. There is no
