@@ -1,6 +1,6 @@
 # RustFS — Télécharger des objets
 
-Récupère les objets récents d'un bucket (`vision` : screenshots + crops d'import) sans jamais afficher les
+Récupère les objets récents d'un bucket (`vision` : screenshots d'import) sans jamais afficher les
 clés : elles restent dans l'environnement du shell distant, et `-e NOM` sans valeur les passe à rclone.
 
 ## Sur le serveur

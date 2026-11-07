@@ -19,7 +19,6 @@ interface ImportPreviewChampionPickerProps {
   index: number
   championName: string
   championImageUrl: string | null
-  candidates: { name: string; score: number }[]
   onPick: (name: string) => void
 }
 
@@ -27,7 +26,6 @@ export default function ImportPreviewChampionPicker({
   index,
   championName,
   championImageUrl,
-  candidates,
   onPick,
 }: Readonly<ImportPreviewChampionPickerProps>) {
   const { t } = useI18n()
@@ -35,13 +33,6 @@ export default function ImportPreviewChampionPicker({
   // Loaded on first open only: the catalogue is large and most rows are never
   // corrected, so paying for it upfront on 48 rows would be waste.
   const { champions } = useChampionCatalog(open)
-
-  // Candidates carry only a name; resolve their portrait from the catalogue.
-  const imageByName = new Map(champions.map((c) => [c.name.toLowerCase(), c.image_url]))
-  const imageFor = (name: string) => imageByName.get(name.toLowerCase()) ?? null
-
-  // Drop top-1: it is the current value, not an alternative.
-  const runnersUp = candidates.slice(1)
 
   const pick = (name: string) => {
     onPick(name)
@@ -77,29 +68,10 @@ export default function ImportPreviewChampionPicker({
           <CommandInput placeholder={t.roster.importExport.vision.pickChampionSearch} />
           <CommandList>
             <CommandEmpty>{t.roster.importExport.vision.pickChampionEmpty}</CommandEmpty>
-            {runnersUp.length > 0 && (
-              <CommandGroup heading={t.roster.importExport.vision.pickChampionTitle}>
-                {runnersUp.map((c) => (
-                  <CommandItem
-                    key={`candidate-${c.name}`}
-                    value={c.name}
-                    onSelect={() => pick(c.name)}
-                    data-cy={`preview-row-candidate-${index}-${c.name}`}
-                  >
-                    <ChampionThumbnail
-                      imageUrl={imageFor(c.name)}
-                      className='mr-2'
-                      name={c.name}
-                    />
-                    <span className='flex-1 truncate'>{c.name}</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
             <CommandGroup>
               {champions.map((c) => (
                 <CommandItem
-                  key={`catalog-${c.name}`}
+                  key={c.name}
                   value={c.name}
                   onSelect={() => pick(c.name)}
                   data-cy={`preview-row-catalog-${index}-${c.name}`}

@@ -42,9 +42,6 @@ class FakeStorage:
         self._record("put_bytes")
         self.puts.append((bucket, key, data))
 
-    async def get_bytes(self, bucket: str, key: str) -> bytes:  # pragma: no cover
-        raise NotImplementedError
-
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         self._record("delete_prefix")
         if self.fail_delete:

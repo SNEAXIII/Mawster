@@ -1,4 +1,5 @@
-import { PROXY, api, jsonBody } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
+import { cacheScreen, clearScreens } from '@/app/services/vision-screens'
 
 // ─── Types ───────────────────────────────────────────────
 export const VISION_JOB_STATUSES = [
@@ -39,6 +40,14 @@ export interface VisionImportProgress {
   jobs?: VisionJobDetail[]
 }
 
+// Card box in screenshot pixels.
+export interface VisionPreview {
+  left: number
+  right: number
+  top: number
+  bottom: number
+}
+
 export interface VisionPrediction {
   id: string
   job_id: string
@@ -49,21 +58,35 @@ export interface VisionPrediction {
   signature: number
   ascension: number
   confidence: number
-  crop_index: number | null
+  preview: VisionPreview | null
   job_index: number
-  // CLIP alternatives, best first, top-1 included.
-  candidates: { name: string; score: number }[]
-  // score[0] - score[1]. null when the model gave fewer than two candidates.
-  // Signed: negative when `reranked` is true, because the winning candidate
-  // keeps its own lower CLIP score. Read the two together.
-  margin: number | null
-  // The pixel second pass overrode CLIP's ranking on this card.
+  // The pixel second pass overrode the first naming pass on this card.
   reranked: boolean
+}
+
+// Overlapping screenshots read a champion several times. Stars stay in the key: a 6* and
+// a 7* are two roster entries. An unread name has nothing to match on, so it stays visible.
+export const keepHighestRank = (predictions: VisionPrediction[]): VisionPrediction[] => {
+  const best = new Map<string, VisionPrediction>()
+  for (const prediction of predictions) {
+    const { champion_name: name, stars } = prediction
+    const key = name ? `${name.toLowerCase()}_${stars}` : prediction.id
+    const kept = best.get(key)
+    const margin = kept
+      ? prediction.rank - kept.rank ||
+        prediction.signature - kept.signature ||
+        prediction.confidence - kept.confidence
+      : 1
+    if (margin > 0) best.set(key, prediction)
+  }
+  return [...best.values()]
 }
 
 export interface VisionPredictionsResponse {
   import_id: string
   predictions: VisionPrediction[]
+  // Presigned screenshot URL per DONE job id.
+  screens: Record<string, string>
 }
 
 export interface ConfirmedRow {
@@ -192,6 +215,7 @@ export const createVisionImport = async (
   shareDataset: boolean,
   onProgress?: (uploaded: number, total: number) => void
 ): Promise<VisionImport> => {
+  await clearScreens()
   const { import_id, uploads } = await initVisionImport(gameAccountId, files, shareDataset)
 
   let done = 0
@@ -203,6 +227,7 @@ export const createVisionImport = async (
       const index = next++
       try {
         await putScreenshot(uploads[index], files[index])
+        void cacheScreen(uploads[index].job_id, files[index])
         await commitScreen(import_id, uploads[index].job_id)
         queued += 1
       } catch (error) {
@@ -241,36 +266,18 @@ export const getVisionPredictions = async (
   )
 }
 
-// Every thumbnail of a screenshot lives in one sheet, so this is one request for
-// the whole review screen instead of one per card. Plain URL builder — no
-// request, no round-trip. See front/app/api/back/[...path]/route.ts, which
-// forwards binary responses unchanged, and
-// api/src/controllers/account/game/vision_controller.py.
-export const getSpriteUrl = (importId: string, jobId: string): string =>
-  `${PROXY}/vision/imports/${importId}/jobs/${jobId}/crops/sprite`
-
-// Cell geometry, mirrored from mcoc-vision/worker/sprite.py (CELL = 192, COLS = 8).
-// The sheet is always SPRITE_COLS cells wide, so scaling it to SPRITE_COLS box
-// widths makes one cell exactly one box — these two numbers are all the slicing
-// arithmetic needs. Changing either here without changing the worker puts the
-// wrong champion's art beside a row.
-export const SPRITE_COLS = 8
-// The card's rank line ("Rang 4") is printed small inside the crop, and at 96
-// it was unreadable on a phone — the one thing a reviewer needs to check the
-// detected rarity against. 128 stays below the 192px source cell, so the
-// thumbnail is still downscaled and never blurred.
-export const SPRITE_DISPLAY = 128
-
 export const confirmVisionImport = async (
   importId: string,
   rows: ConfirmedRow[],
   shareDataset: boolean
 ): Promise<{ samples_archived: number }> => {
-  return api(
+  const result = await api<{ samples_archived: number }>(
     `/vision/imports/${importId}/confirm`,
     "Erreur lors de la confirmation de l'import",
     jsonBody('POST', { rows, share_dataset: shareDataset })
   )
+  await clearScreens()
+  return result
 }
 
 export const getCurrentVisionImport = async (
@@ -287,6 +294,7 @@ export const cancelVisionImport = async (importId: string): Promise<void> => {
   await api(`/vision/imports/${importId}`, "Erreur lors de l'annulation de l'import", {
     method: 'DELETE',
   })
+  await clearScreens()
 }
 
 // Relaunches one screenshot the pipeline could not read. There is no

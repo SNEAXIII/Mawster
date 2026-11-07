@@ -85,25 +85,15 @@ async function proxy(req: NextRequest, { params }: { params: Promise<{ path: str
 
     // Read the response as raw bytes, never as text: res.text() decodes as UTF-8,
     // which replaces every byte that isn't valid UTF-8 with U+FFFD. That would
-    // destroy a binary response (e.g. a PNG crop) the same way it did on the
-    // request side (see the comment above on req.arrayBuffer()).
+    // destroy a binary response the same way it did on the request side (see the
+    // comment above on req.arrayBuffer()).
     const data = await res.arrayBuffer()
-
-    const responseHeaders: HeadersInit = {
-      'Content-Type': res.headers.get('content-type') ?? 'application/json',
-    }
-    // Forwarded, not invented: only routes serving immutable objects set it (the
-    // vision sprite sheet today). Dropping it here made the backend's caching
-    // directive dead code — every re-render refetched bytes the browser was
-    // told it could keep.
-    const cacheControl = res.headers.get('cache-control')
-    if (cacheControl) {
-      responseHeaders['Cache-Control'] = cacheControl
-    }
 
     return new NextResponse(data.byteLength > 0 ? data : null, {
       status: res.status,
-      headers: responseHeaders,
+      headers: {
+        'Content-Type': res.headers.get('content-type') ?? 'application/json',
+      },
     })
   } catch (error) {
     console.error(`[proxy] ${req.method} ${backendUrl} →`, error)
