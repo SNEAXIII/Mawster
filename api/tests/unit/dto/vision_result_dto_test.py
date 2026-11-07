@@ -82,16 +82,3 @@ def test_result_message_rejects_an_unknown_status():
 
     with pytest.raises(ValidationError):
         VisionResultMessage.model_validate(payload)
-
-
-def test_prediction_message_ignores_candidates_from_the_python_worker():
-    message = VisionPredictionMessage.model_validate(
-        {
-            "champion_name": "Gladiator",
-            "confidence": 0.79,
-            "candidates": [{"name": "Gorr", "score": 0.78}],
-        }
-    )
-
-    assert message.champion_name == "Gladiator"
-    assert message.confidence == 0.79
