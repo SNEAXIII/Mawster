@@ -337,9 +337,10 @@ services:
     # uploads screenshots straight here with a presigned URL. Being reachable is
     # not being open: no bucket policy grants anonymous access, so an unsigned
     # request gets AccessDenied and a signed one can only touch the single key
-    # the API chose, for fifteen minutes. api/worker keep using the internal
-    # http://rustfs:9000 — server-side traffic has no reason to leave the
-    # overlay, and RUSTFS_PUBLIC_ENDPOINT exists precisely to keep the two apart.
+    # the API chose: fifteen minutes to upload, one hour to read. api/worker keep
+    # using the internal http://rustfs:9000 — server-side traffic has no reason
+    # to leave the overlay, and RUSTFS_PUBLIC_ENDPOINT exists precisely to keep
+    # the two apart.
     ports:
       - target: 9001
         published: 9001
