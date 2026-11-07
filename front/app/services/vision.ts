@@ -64,6 +64,24 @@ export interface VisionPrediction {
   reranked: boolean
 }
 
+// Overlapping screenshots read a champion several times. Stars stay in the key: a 6* and
+// a 7* are two roster entries. An unread name has nothing to match on, so it stays visible.
+export const keepHighestRank = (predictions: VisionPrediction[]): VisionPrediction[] => {
+  const best = new Map<string, VisionPrediction>()
+  for (const prediction of predictions) {
+    const { champion_name: name, stars } = prediction
+    const key = name ? `${name.toLowerCase()}_${stars}` : prediction.id
+    const kept = best.get(key)
+    const margin = kept
+      ? prediction.rank - kept.rank ||
+        prediction.signature - kept.signature ||
+        prediction.confidence - kept.confidence
+      : 1
+    if (margin > 0) best.set(key, prediction)
+  }
+  return [...best.values()]
+}
+
 export interface VisionPredictionsResponse {
   import_id: string
   predictions: VisionPrediction[]

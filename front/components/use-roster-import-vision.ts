@@ -7,6 +7,7 @@ import {
   getVisionImport,
   getVisionPredictions,
   confirmVisionImport,
+  keepHighestRank,
   type VisionPrediction,
   type VisionPredictionsResponse,
   type ConfirmedRow,
@@ -104,7 +105,8 @@ export function useRosterImportVision({
   // ── Predictions → PreviewRow[] ──────────────────────────
   const buildRowsFromPredictions = useCallback(
     async ({ predictions, screens }: VisionPredictionsResponse): Promise<PreviewRow[]> => {
-      const built = predictions.map(predictionToEntry)
+      const kept = keepHighestRank(predictions)
+      const built = kept.map(predictionToEntry)
       const lookup = await fetchChampionLookup(
         built.map((b) => b.entry),
         roster
@@ -113,7 +115,7 @@ export function useRosterImportVision({
       const screenUrls = await resolveScreenUrls(screens)
       await preloadScreens(Object.values(screenUrls))
 
-      return predictions.map((prediction, idx) => {
+      return kept.map((prediction, idx) => {
         const { entry, rarityValid } = built[idx]
         const row = buildPreviewRow(entry, roster, lookup)
 
