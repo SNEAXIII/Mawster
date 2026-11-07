@@ -1,7 +1,7 @@
 """replace_crop_key_with_preview
 
 Revision ID: cdf0e5c81b9d
-Revises: b5b4d6ea2de1
+Revises: 1a2258c7e744
 Create Date: 2026-11-07 02:02:18.859315
 
 """
@@ -15,7 +15,7 @@ from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
 revision: str = "cdf0e5c81b9d"
-down_revision: str | None = "b5b4d6ea2de1"
+down_revision: str | None = "1a2258c7e744"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
