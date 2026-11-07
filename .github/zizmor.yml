@@ -11,13 +11,11 @@ rules:
       - sonar.yaml
 
   artipacked:
-    # The other 13 checkouts now set persist-credentials: false. These three still need
-    # the credential after checkout: two push or open pull requests, and vision-gate
-    # reads a private repo with BOT_TOKEN.
+    # The other 13 checkouts now set persist-credentials: false. These two still need
+    # the credential after checkout: they push or open pull requests.
     ignore:
       - assets-refresh.yaml
       - release-please.yaml
-      - vision-gate.yaml
 
   unpinned-images:
     # Test database, pinned by tag. Never reaches a release artifact.
