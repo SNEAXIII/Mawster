@@ -439,8 +439,7 @@ services:
       - mawster_rabbitmq_pass
       - mawster_rustfs_access_key
       - mawster_rustfs_secret_key
-    # The image's worker/entrypoint.sh reads these secrets from /run/secrets and
-    # exports RABBITMQ_URL / RUSTFS_* before starting the worker.
+    # The worker reads these from /run/secrets when RABBITMQ_URL / RUSTFS_* are unset.
     deploy:
       replicas: 1
       restart_policy:
