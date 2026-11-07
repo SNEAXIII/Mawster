@@ -133,7 +133,7 @@ services:
       - ./db/rustfs:/data
   vision-worker:
     build:
-      context: ./mcoc-vision
+      context: ./rust-vision
       additional_contexts:
         portraits: ./static-assets/static/champions
         api-fixtures: ./api/src/fixtures

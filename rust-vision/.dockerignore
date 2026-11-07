@@ -1,0 +1,18 @@
+# Patterns are anchored at the context root: the private repo's own paths are spelled out.
+.git/
+.venv/
+.env
+target/
+out/
+docs/
+scripts/
+**/__pycache__/
+**/*.pt
+artifacts/
+artifacts-vision/.git
+artifacts-vision/out/
+artifacts-vision/data/synth*/
+artifacts-vision/data/crops/
+artifacts-vision/yolo/
+artifacts-vision/scripts/
+artifacts-vision/layout_extracted/

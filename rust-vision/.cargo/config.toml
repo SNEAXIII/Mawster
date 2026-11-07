@@ -1,0 +1,5 @@
+[alias]
+detect = "run --release --bin mcoc-vision --"
+gallery = "run --release --bin build_gallery"
+mosaic = "run --release --bin mosaic_bench"
+worker = "run --release --bin worker --features worker"

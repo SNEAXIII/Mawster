@@ -425,8 +425,7 @@ services:
         max-size: 5m
         max-file: '3'
 
-  # The private, torch-free ONNX worker. Image lives in a PRIVATE registry repo
-  # (built + pushed by mcoc-vision's own CI), so the worker source never leaks.
+  # Built by _images.yaml from rust-vision/. The image carries the private models: its registry repo is private.
   vision-worker:
     image: sneaxiii/mawster-vision-worker:latest
     networks:

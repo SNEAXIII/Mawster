@@ -1,0 +1,64 @@
+[project]
+name = "mcoc-vision"
+version = "0.1.0"
+description = "Extract champion data (name/rank/sig/stars/ascension) from MCOC roster screenshots."
+requires-python = ">=3.12"
+
+# Inference runs in Rust; Python only makes the synthetic data and trains the two
+# YOLO models (detector, digit reader) the Rust side loads as ONNX.
+dependencies = [
+    # synthetic data
+    "pillow>=10.0",
+    "numpy>=1.26",
+    "opencv-python-headless>=4.9",
+    "pyyaml>=6.0",
+    # worker — broker + object store clients
+    "aio-pika",
+    "aioboto3",
+]
+
+[dependency-groups]
+# Training + ONNX export: the whole torch stack (onnx, onnxslim and onnxscript are
+# what ultralytics' export pulls in).
+train = [
+    "ultralytics>=8.2",
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "onnx>=1.16",
+    "onnxslim>=0.1.82",
+    # torch>=2.7's torch.onnx.export imports onnxscript unconditionally (the CPU
+    # Linux wheel used in the Docker exporter stage), so it must be explicit —
+    # the Windows cu124 wheel used locally does not need it.
+    "onnxscript>=0.1",
+]
+# reads templates/parts/sample.pdn (scripts/export_pdn_layers.py)
+dev = ["pypdn>=1.0.6"]
+
+# --- torch/torchvision wheel index selected by platform --------------------
+# prod is Linux (CPU-only); the GPU training box is this Windows laptop. Pick
+# the CUDA (cu124) wheels on Windows and the CPU wheels everywhere else, so a
+# plain `uv sync` / `uv run` installs and *keeps* the right build — no manual
+# `uv pip install` (which corrupts the env by leaving torch without a RECORD).
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu124", marker = "sys_platform == 'win32'" },
+    { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+]
+torchvision = [
+    { index = "pytorch-cu124", marker = "sys_platform == 'win32'" },
+    { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv]
+package = false
+default-groups = ["dev", "train"]
