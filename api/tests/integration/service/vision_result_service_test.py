@@ -111,7 +111,7 @@ def _done_message(job: VisionJob, vision_import: VisionImport) -> VisionResultMe
                 signature=200,
                 ascension=1,
                 confidence=0.9,
-                crop_key="imports/a/b/crops/0.png",
+                preview={"left": 0.0, "right": 0.2, "top": 0.05, "bottom": 0.4},
             )
         ],
     )
@@ -132,6 +132,10 @@ async def test_done_writes_predictions_and_advances_progress(session):
     assert len(predictions) == 1
     assert predictions[0].champion_name == "Hulk"
     assert predictions[0].signature == 200
+    assert predictions[0].preview_left == 0.0
+    assert predictions[0].preview_right == 0.2
+    assert predictions[0].preview_top == 0.05
+    assert predictions[0].preview_bottom == 0.4
 
 
 @pytest.mark.asyncio

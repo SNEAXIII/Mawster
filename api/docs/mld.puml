@@ -420,7 +420,10 @@ entity "vision_prediction" as vision_prediction {
   * ascension : INTEGER
   * confidence : FLOAT
   * reranked : BOOL
-  crop_key : VARCHAR(255)
+  preview_left : FLOAT
+  preview_right : FLOAT
+  preview_top : FLOAT
+  preview_bottom : FLOAT
 }
 
 entity "war_fight_record" as war_fight_record {

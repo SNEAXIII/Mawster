@@ -453,7 +453,7 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
                         signature=200,
                         ascension=1,
                         confidence=0.9,
-                        crop_key="imports/a/b/crops/sprite_v1.webp#0",
+                        preview={"left": 0.0, "right": 0.2, "top": 0.05, "bottom": 0.4},
                         candidates=[
                             {"name": "Hulk", "score": 0.90},
                             {"name": "Red Hulk", "score": 0.62},
@@ -471,7 +471,6 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
                         ascension=0,
                         confidence=0.8528,
                         reranked=True,
-                        crop_key="imports/a/b/crops/sprite_v1.webp#1",
                         candidates=[
                             {"name": "Spider-Man (Stark Enhanced)", "score": 0.8528},
                             {"name": "Spider-Man (Classic)", "score": 0.8561},
@@ -490,7 +489,7 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
     assert len(body["predictions"]) == 2
     # Rows come back ordered by a uuid4 primary key, so index by name, not position.
     by_name = {p["champion_name"]: p for p in body["predictions"]}
-    assert by_name["Hulk"]["crop_index"] == 0
+    assert by_name["Hulk"]["preview"] == {"left": 0.0, "right": 0.2, "top": 0.05, "bottom": 0.4}
 
     # The candidates survive the whole round trip — worker message, child table,
     # eager load, response — and come back best first. The unit test for _margin
@@ -507,7 +506,7 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
     # produced, so the margin is negative and the flag says why.
     fixed = by_name["Spider-Man (Stark Enhanced)"]
     assert fixed["reranked"] is True
-    assert fixed["crop_index"] == 1
+    assert fixed["preview"] is None
     assert [c["name"] for c in fixed["candidates"]] == [
         "Spider-Man (Stark Enhanced)",
         "Spider-Man (Classic)",
@@ -622,7 +621,6 @@ async def _drive_job_done_with_prediction(job_id: str) -> None:
                         signature=200,
                         ascension=1,
                         confidence=0.9,
-                        crop_key="imports/a/b/crops/sprite_v1.webp#0",
                     )
                 ],
             ),
