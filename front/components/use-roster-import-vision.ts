@@ -6,11 +6,12 @@ import {
   createVisionImport,
   getVisionImport,
   getVisionPredictions,
-  getSpriteUrl,
   confirmVisionImport,
   type VisionPrediction,
+  type VisionPredictionsResponse,
   type ConfirmedRow,
 } from '@/app/services/vision'
+import { resolveScreenUrls } from '@/app/services/vision-screens'
 import type { PreviewRow, PreviewRowPatch } from '@/components/roster/import-preview-row'
 import { isValidRarity } from '@/components/roster/import-row-validation'
 import {
@@ -101,22 +102,18 @@ export function useRosterImportVision({
 
   // ── Predictions → PreviewRow[] ──────────────────────────
   const buildRowsFromPredictions = useCallback(
-    async (currentImportId: string, predictions: VisionPrediction[]): Promise<PreviewRow[]> => {
+    async ({ predictions, screens }: VisionPredictionsResponse): Promise<PreviewRow[]> => {
       const built = predictions.map(predictionToEntry)
       const lookup = await fetchChampionLookup(
         built.map((b) => b.entry),
         roster
       )
       championLookupRef.current = lookup
+      const screenUrls = await resolveScreenUrls(screens)
 
       return predictions.map((prediction, idx) => {
         const { entry, rarityValid } = built[idx]
         const row = buildPreviewRow(entry, roster, lookup)
-
-        // getSpriteUrl is a plain URL builder (no request). One sheet serves the
-        // whole screenshot; the row picks its cell by index.
-        const spriteUrl =
-          prediction.crop_index != null ? getSpriteUrl(currentImportId, prediction.job_id) : null
 
         return {
           ...row,
@@ -127,8 +124,8 @@ export function useRosterImportVision({
           // margin badges red. Without this a confidently-named champion at an
           // impossible rarity would look like a clean read.
           margin: rarityValid ? prediction.margin : null,
-          spriteUrl,
-          cropIndex: prediction.crop_index,
+          screenUrl: screenUrls[prediction.job_id] ?? null,
+          preview: prediction.preview,
           prediction_id: prediction.id,
           // Vision predictions always go through the editable review row —
           // unlike JSON rows, which are trusted as-is.
@@ -146,7 +143,7 @@ export function useRosterImportVision({
     async (currentImportId: string) => {
       setImportId(currentImportId)
       const predictionsRes = await getVisionPredictions(currentImportId)
-      const rows = await buildRowsFromPredictions(currentImportId, predictionsRes.predictions)
+      const rows = await buildRowsFromPredictions(predictionsRes)
       setUploading(false)
       if (rows.length === 0) {
         toast.error(t.roster.importExport.visionNoChampions)

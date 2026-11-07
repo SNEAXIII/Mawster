@@ -8,7 +8,7 @@ import {
 } from '@/app/services/roster'
 import { api, jsonBody, jsonHeaders } from '@/app/services/utils'
 import { getChampionImageUrl } from '@/app/services/champions'
-import { getSpriteUrl } from '@/app/services/vision'
+import { previewAspectRatio, previewImageStyle } from '@/app/services/vision-screens'
 
 describe('rarity helpers', () => {
   it.each([
@@ -67,8 +67,23 @@ describe('getChampionImageUrl', () => {
   })
 })
 
-it('sprite URL goes through the proxy', () => {
-  expect(getSpriteUrl('imp', 'job')).toBe('/api/back/vision/imports/imp/jobs/job/crops/sprite')
+describe('vision preview', () => {
+  it('scales the card to the box from the top-left corner', () => {
+    expect(previewImageStyle({ left: 100, right: 300, top: 50, bottom: 350 }, 100)).toEqual({
+      transformOrigin: '0 0',
+      transform: 'scale(0.5) translate(-100px, -50px)',
+    })
+  })
+
+  it('handles a preview touching the right edge', () => {
+    const preview = { left: 780, right: 1080, top: 40, bottom: 440 }
+    expect(previewImageStyle(preview, 150).transform).toBe('scale(0.5) translate(-780px, -40px)')
+    expect(previewAspectRatio(preview)).toBe(0.75)
+  })
+
+  it('aspect ratio is width over height', () => {
+    expect(previewAspectRatio({ left: 0, right: 200, top: 0, bottom: 100 })).toBe(2)
+  })
 })
 
 describe('api', () => {

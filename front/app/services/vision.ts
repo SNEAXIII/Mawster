@@ -1,4 +1,4 @@
-import { PROXY, api, jsonBody } from '@/app/services/utils'
+import { api, jsonBody } from '@/app/services/utils'
 import { cacheScreen, clearScreens } from '@/app/services/vision-screens'
 
 // ─── Types ───────────────────────────────────────────────
@@ -40,6 +40,14 @@ export interface VisionImportProgress {
   jobs?: VisionJobDetail[]
 }
 
+// Card box in screenshot pixels.
+export interface VisionPreview {
+  left: number
+  right: number
+  top: number
+  bottom: number
+}
+
 export interface VisionPrediction {
   id: string
   job_id: string
@@ -50,7 +58,7 @@ export interface VisionPrediction {
   signature: number
   ascension: number
   confidence: number
-  crop_index: number | null
+  preview: VisionPreview | null
   job_index: number
   // CLIP alternatives, best first, top-1 included.
   candidates: { name: string; score: number }[]
@@ -65,6 +73,8 @@ export interface VisionPrediction {
 export interface VisionPredictionsResponse {
   import_id: string
   predictions: VisionPrediction[]
+  // Presigned screenshot URL per DONE job id.
+  screens: Record<string, string>
 }
 
 export interface ConfirmedRow {
@@ -243,26 +253,6 @@ export const getVisionPredictions = async (
     'Erreur lors de la récupération des prédictions'
   )
 }
-
-// Every thumbnail of a screenshot lives in one sheet, so this is one request for
-// the whole review screen instead of one per card. Plain URL builder — no
-// request, no round-trip. See front/app/api/back/[...path]/route.ts, which
-// forwards binary responses unchanged, and
-// api/src/controllers/account/game/vision_controller.py.
-export const getSpriteUrl = (importId: string, jobId: string): string =>
-  `${PROXY}/vision/imports/${importId}/jobs/${jobId}/crops/sprite`
-
-// Cell geometry, mirrored from mcoc-vision/worker/sprite.py (CELL = 192, COLS = 8).
-// The sheet is always SPRITE_COLS cells wide, so scaling it to SPRITE_COLS box
-// widths makes one cell exactly one box — these two numbers are all the slicing
-// arithmetic needs. Changing either here without changing the worker puts the
-// wrong champion's art beside a row.
-export const SPRITE_COLS = 8
-// The card's rank line ("Rang 4") is printed small inside the crop, and at 96
-// it was unreadable on a phone — the one thing a reviewer needs to check the
-// detected rarity against. 128 stays below the 192px source cell, so the
-// thumbnail is still downscaled and never blurred.
-export const SPRITE_DISPLAY = 128
 
 export const confirmVisionImport = async (
   importId: string,
