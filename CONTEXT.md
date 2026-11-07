@@ -342,8 +342,8 @@ _Table_: `vision_prediction`.
 _Avoid_: prediction (internal), detection.
 
 **Score**:
-How sure the AI is of a Reading's champion, surfaced to the Player as a percentage and
-as Clear / Uncertain / Ambiguous. Low score means the AI hesitated, not that it erred.
+How sure the AI is of a Reading's champion, surfaced to the Player as
+Clear / Uncertain / Ambiguous. Low score means the AI hesitated, not that it erred.
 A wrong Reading is corrected by hand from the Champion catalog.
 _Field_: `confidence`.
 

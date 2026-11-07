@@ -179,7 +179,6 @@ export default function ImportPreviewRowEdit({
               data-level={level}
             >
               {scoreLabels[level]}
-              {row.confidence != null && ` · ${Math.round(row.confidence * 100)} %`}
             </Badge>
           )}
           <Badge
