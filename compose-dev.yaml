@@ -134,6 +134,9 @@ services:
   vision-worker:
     build:
       context: ./mcoc-vision
+      additional_contexts:
+        portraits: ./static-assets/static/champions
+        api-fixtures: ./api/src/fixtures
     image: mawster-vision-worker:local
     container_name: vision-worker
     networks:
@@ -142,7 +145,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
-      - RABBITMQ_URL=amqp://mawster:mawster@rabbitmq:5672/
+      - RABBITMQ_URL=amqp://mawster:mawster@rabbitmq:5672/%2f
       - RUSTFS_ENDPOINT=http://rustfs:9000
       - RUSTFS_ACCESS_KEY=mawster
       - RUSTFS_SECRET_KEY=mawsterpassword
