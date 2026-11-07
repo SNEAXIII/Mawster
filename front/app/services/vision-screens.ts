@@ -5,6 +5,9 @@ const CACHE_NAME = 'vision-screens'
 
 const screenKey = (jobId: string): string => `/vision-screens/${jobId}`
 
+// One URL per job: a new one on each reopened review would make the browser reload the image.
+const objectUrls = new Map<string, string>()
+
 // `new Response(file)` takes its Content-Type from the File, so the type is kept as declared.
 export const cacheScreen = async (jobId: string, file: File): Promise<void> => {
   try {
@@ -16,16 +19,23 @@ export const cacheScreen = async (jobId: string, file: File): Promise<void> => {
 }
 
 export const getCachedScreenUrl = async (jobId: string): Promise<string | null> => {
+  const known = objectUrls.get(jobId)
+  if (known) return known
   try {
     const cache = await caches.open(CACHE_NAME)
     const hit = await cache.match(screenKey(jobId))
-    return hit ? URL.createObjectURL(await hit.blob()) : null
+    if (!hit) return null
+    const url = URL.createObjectURL(await hit.blob())
+    objectUrls.set(jobId, url)
+    return url
   } catch {
     return null
   }
 }
 
 export const clearScreens = async (): Promise<void> => {
+  objectUrls.forEach((url) => URL.revokeObjectURL(url))
+  objectUrls.clear()
   try {
     await caches.delete(CACHE_NAME)
   } catch {
@@ -44,6 +54,21 @@ export const resolveScreenUrls = async (
     ])
   )
   return Object.fromEntries(entries)
+}
+
+const PRELOAD_TIMEOUT_MS = 5000
+
+// Bounded: a slow bucket may delay the review, never block it. A dead URL is the row's onError.
+export const preloadScreens = async (urls: string[]): Promise<void> => {
+  const decoded = urls.map((url) => {
+    const image = new Image()
+    image.src = url
+    return image.decode().catch(() => {})
+  })
+  await Promise.race([
+    Promise.all(decoded),
+    new Promise((resolve) => setTimeout(resolve, PRELOAD_TIMEOUT_MS)),
+  ])
 }
 
 // At natural size one CSS px is one screenshot px, so no image dimension is needed.
