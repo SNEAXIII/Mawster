@@ -12,6 +12,7 @@ ever queue a screenshot the other already queued.
 """
 
 import uuid
+from contextlib import nullcontext
 
 import pytest
 from fastapi import HTTPException
@@ -77,6 +78,8 @@ class FakeResult:
 
 class FakeSession:
     """Async session stub: records adds, and returns pre-seeded rows from exec."""
+
+    no_autoflush = nullcontext()
 
     def __init__(self, jobs: list[VisionJob] | None = None):
         self.added: list[object] = []
