@@ -414,7 +414,7 @@ services:
         # page replay a leaked URL from its own origin.
         aws --endpoint-url http://rustfs:9000 s3api put-bucket-cors \
           --bucket vision \
-          --cors-configuration '{"CORSRules":[{"AllowedOrigins":["https://www.mawster.app"],"AllowedMethods":["PUT"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}'
+          --cors-configuration '{"CORSRules":[{"AllowedOrigins":["https://www.mawster.app"],"AllowedMethods":["GET","PUT"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}'
     deploy:
       replicas: 1
       restart_policy:

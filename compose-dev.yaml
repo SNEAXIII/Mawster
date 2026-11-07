@@ -126,7 +126,7 @@ services:
         # failing on a preflight, from a config file no one thinks to look at.
         aws --endpoint-url http://rustfs:9000 s3api put-bucket-cors \
           --bucket vision \
-          --cors-configuration '{"CORSRules":[{"AllowedOrigins":["http://localhost:3000","http://localhost:3001"],"AllowedMethods":["PUT"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}'
+          --cors-configuration '{"CORSRules":[{"AllowedOrigins":["http://localhost:3000","http://localhost:3001"],"AllowedMethods":["GET","PUT"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}'
         aws --endpoint-url http://rustfs:9000 s3 ls
     restart: 'no'
     volumes:
