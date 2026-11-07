@@ -1340,6 +1340,9 @@ const en = {
       vision: {
         noImagesSelected: 'Please select at least one image.',
         uploadError: 'Failed to upload the screenshots.',
+        uploadQuotaExceeded:
+          'Hourly screenshot limit reached. Wait a while, or send fewer screenshots.',
+        uploadProgress: 'Uploading {done}/{total} screenshots — do not leave this page.',
         pollFailed: 'The import failed. Please try again.',
         pollTimeout: 'The import is taking too long. Please try again.',
         datasetArchiveFailed: 'Roster imported. Your dataset contribution could not be saved.',

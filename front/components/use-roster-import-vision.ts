@@ -11,7 +11,7 @@ import {
   type VisionPredictionsResponse,
   type ConfirmedRow,
 } from '@/app/services/vision'
-import { resolveScreenUrls } from '@/app/services/vision-screens'
+import { preloadScreens, resolveScreenUrls } from '@/app/services/vision-screens'
 import type { PreviewRow, PreviewRowPatch } from '@/components/roster/import-preview-row'
 import { isValidRarity } from '@/components/roster/import-row-validation'
 import {
@@ -68,6 +68,7 @@ export function useRosterImportVision({
 
   const visionInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
   const [importId, setImportId] = useState<string | null>(null)
 
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -110,6 +111,7 @@ export function useRosterImportVision({
       )
       championLookupRef.current = lookup
       const screenUrls = await resolveScreenUrls(screens)
+      await preloadScreens(Object.values(screenUrls))
 
       return predictions.map((prediction, idx) => {
         const { entry, rarityValid } = built[idx]
@@ -208,12 +210,22 @@ export function useRosterImportVision({
       }
 
       setUploading(true)
+      setUploadProgress({ done: 0, total: files.length })
       try {
-        const created = await createVisionImport(selectedAccountId, files, shareDataset)
+        const created = await createVisionImport(
+          selectedAccountId,
+          files,
+          shareDataset,
+          (done, total) => setUploadProgress({ done, total })
+        )
         setImportId(created.id)
         pollImport(created.id)
-      } catch {
-        finishWithError(t.roster.importExport.vision.uploadError)
+      } catch (error) {
+        const { uploadError, uploadQuotaExceeded } = t.roster.importExport.vision
+        const quotaHit = (error as { status?: number }).status === 429
+        finishWithError(quotaHit ? uploadQuotaExceeded : uploadError)
+      } finally {
+        setUploadProgress(null)
       }
     },
     [selectedAccountId, shareDataset, pollImport, finishWithError, t]
@@ -282,6 +294,7 @@ export function useRosterImportVision({
     visionInputRef,
     handleVisionFilesSelected,
     uploading,
+    uploadProgress,
     importId,
     resume,
     previewOpen: core.previewOpen,
