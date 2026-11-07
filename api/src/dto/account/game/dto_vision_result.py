@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from src.dto.account.game.dto_vision_predictions import VisionPreview
 from src.enums.VisionJobStatus import VisionJobStatus
 
 
@@ -33,7 +34,7 @@ class VisionPredictionMessage(BaseModel):
     signature: int = 0
     ascension: int = 0
     confidence: float = 0.0
-    crop_key: str | None = None
+    preview: VisionPreview | None = None
     # True when CLIP's top two were near-tied and a pixel second pass reordered
     # them. Those cards arrive with a *negative* margin — the winner keeps its
     # own, lower, CLIP cosine — so without this flag they are indistinguishable

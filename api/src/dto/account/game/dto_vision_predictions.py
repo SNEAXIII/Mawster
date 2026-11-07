@@ -1,6 +1,35 @@
 import uuid
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from src.models.vision.VisionPrediction import VisionPrediction
+
+
+class VisionPreview(BaseModel):
+    """Where a card sits in its screenshot, the area the review row cuts out.
+
+    All four are fractions of the image **width**, top and bottom included:
+    percentage margins resolve against the width.
+    """
+
+    left: float
+    right: float
+    top: float
+    bottom: float
+
+    @classmethod
+    def from_prediction(cls, prediction: VisionPrediction) -> VisionPreview | None:
+        # `is None`: 0.0 is a real left, a card touching the screenshot's edge.
+        if prediction.preview_left is None:
+            return None
+        return cls(
+            left=prediction.preview_left,
+            right=prediction.preview_right,
+            top=prediction.preview_top,
+            bottom=prediction.preview_bottom,
+        )
 
 
 class VisionCandidateResponse(BaseModel):
@@ -22,10 +51,8 @@ class VisionPredictionResponse(BaseModel):
     signature: int = 0
     ascension: int = 0
     confidence: float = 0.0
-    # Cell of this card in its job's sprite sheet (.../crops/sprite_v1.webp#{cell}).
-    # None when there is no cell to point at: a degenerate box the detector
-    # produced no thumbnail for, or a prediction written before the sprite sheet.
-    crop_index: int | None = None
+    # None from a worker that sends no preview: the front shows the portrait.
+    preview: VisionPreview | None = None
     # Index of the job (screenshot) within the import, for grouping in the UI.
     job_index: int
     # Best first, top-1 included. Empty when the worker sent none.

@@ -12,6 +12,7 @@ from starlette import status
 from src.dto.account.game.dto_vision_predictions import (
     VisionCandidateResponse,
     VisionPredictionResponse,
+    VisionPreview,
 )
 from src.dto.account.game.dto_vision_upload import (
     VisionInitResponse,
@@ -600,8 +601,8 @@ class VisionImportService:
     async def list_predictions(
         cls, session: SessionDep, import_id: uuid.UUID
     ) -> list[VisionPredictionResponse]:
-        """All predictions of an import, ordered by job then id, carrying the crop
-        index parsed out of the stored crop_key and a stable per-import job index."""
+        """All predictions of an import, ordered by job then id, carrying the card's
+        preview, None when the worker sent none, and a stable per-import job index."""
 
         jobs = (
             await session.exec(
@@ -630,7 +631,7 @@ class VisionImportService:
                 signature=pred.signature,
                 ascension=pred.ascension,
                 confidence=pred.confidence,
-                crop_index=cls._crop_index(pred.crop_key),
+                preview=VisionPreview.from_prediction(pred),
                 job_index=job_index[pred.job_id],
                 candidates=[
                     VisionCandidateResponse(name=c.name, score=c.score) for c in pred.candidates
@@ -662,27 +663,6 @@ class VisionImportService:
         if len(candidates) < 2:
             return None
         return candidates[0].score - candidates[1].score
-
-    @staticmethod
-    def _crop_index(crop_key: str | None) -> int | None:
-        """Parse the sprite cell index out of a stored crop key.
-
-        One shape only: `.../crops/sprite_v1.webp#{cell}`, written by the current
-        worker. The index is not a column and never was — it rides along in the
-        key string, which is why the sprite sheet needed no migration.
-
-        A key without a `#` is a per-crop key from the pre-sprite worker. It
-        yields `None` because the object it names no longer has a route to fetch
-        it: `None` is exactly the signal the front already renders as the
-        champion portrait, so such a row degrades to the fallback instead of
-        pointing at bytes nothing can serve.
-        """
-        if not crop_key or "#" not in crop_key:
-            return None
-        try:
-            return int(crop_key.rsplit("#", 1)[-1])
-        except ValueError:
-            return None
 
     @classmethod
     async def cancel_import(
