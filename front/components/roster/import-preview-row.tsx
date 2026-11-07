@@ -24,17 +24,14 @@ export interface PreviewRow {
   // Original ascension, so manual edits can be diffed against it — optional
   // because JSON-import rows never populated it before this field existed.
   oldAscension?: number | null
-  confidence?: number
+  // The model's score; null when the row must not look trusted, whatever the score.
+  confidence?: number | null
   // `preview` is null when the worker sent none; `screenUrl` when the job has no screenshot.
   screenUrl?: string | null
   preview?: VisionPreview | null
   prediction_id?: string | null
   editable?: boolean
-  // CLIP alternatives, best first, top-1 included. Absent on JSON imports.
-  candidates?: { name: string; score: number }[]
-  // score[0] - score[1]. null when the model gave fewer than two candidates.
-  margin?: number | null
-  // Set once the user picks a champion by hand. The model's margin no longer
+  // Set once the user picks a champion by hand. The model's score no longer
   // describes this row, so the badge stops showing it.
   corrected?: boolean
   // Excluded from the import by the user. The only way out for a row the model

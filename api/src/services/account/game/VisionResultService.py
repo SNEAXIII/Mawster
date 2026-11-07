@@ -11,7 +11,6 @@ from src.Messages.vision_messages import BROKER_UNAVAILABLE, JOB_NEVER_QUEUED
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
-from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.security.secrets import SECRET
 from src.services.account.game.VisionProgressService import VisionProgressService
 from src.utils.db import SessionDep
@@ -137,15 +136,6 @@ class VisionResultService:
                 preview_top=preview.top if preview else None,
                 preview_bottom=preview.bottom if preview else None,
             )
-            prediction.candidates = [
-                VisionPredictionCandidate(
-                    prediction_id=prediction.id,
-                    name=candidate.name,
-                    score=candidate.score,
-                    position=position,
-                )
-                for position, candidate in enumerate(predicted.candidates)
-            ]
             session.add(prediction)
         job.status = VisionJobStatus.DONE
         job.result_key = message.result_key

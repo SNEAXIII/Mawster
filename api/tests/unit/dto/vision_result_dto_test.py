@@ -84,27 +84,14 @@ def test_result_message_rejects_an_unknown_status():
         VisionResultMessage.model_validate(payload)
 
 
-def test_prediction_message_parses_candidates():
-
+def test_prediction_message_ignores_candidates_from_the_python_worker():
     message = VisionPredictionMessage.model_validate(
         {
             "champion_name": "Gladiator",
             "confidence": 0.79,
-            "candidates": [
-                {"name": "Gladiator", "score": 0.79},
-                {"name": "Gorr", "score": 0.78},
-            ],
+            "candidates": [{"name": "Gorr", "score": 0.78}],
         }
     )
 
-    assert len(message.candidates) == 2
-    assert message.candidates[1].name == "Gorr"
-    assert message.candidates[1].score == 0.78
-
-
-def test_prediction_message_without_candidates_stays_valid():
-    """An older worker sends no candidates at all. It must keep working."""
-
-    message = VisionPredictionMessage.model_validate({"champion_name": "Hulk", "confidence": 0.91})
-
-    assert message.candidates == []
+    assert message.champion_name == "Gladiator"
+    assert message.confidence == 0.79

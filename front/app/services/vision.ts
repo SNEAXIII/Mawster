@@ -60,13 +60,7 @@ export interface VisionPrediction {
   confidence: number
   preview: VisionPreview | null
   job_index: number
-  // CLIP alternatives, best first, top-1 included.
-  candidates: { name: string; score: number }[]
-  // score[0] - score[1]. null when the model gave fewer than two candidates.
-  // Signed: negative when `reranked` is true, because the winning candidate
-  // keeps its own lower CLIP score. Read the two together.
-  margin: number | null
-  // The pixel second pass overrode CLIP's ranking on this card.
+  // The pixel second pass overrode the first naming pass on this card.
   reranked: boolean
 }
 

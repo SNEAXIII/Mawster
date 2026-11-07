@@ -27,28 +27,24 @@ interface ImportPreviewRowEditProps {
   onRowChange?: (index: number, patch: PreviewRowPatch) => void
 }
 
-// Unmeasured estimates, deliberately named so they are cheap to tune. Ground
-// truth: mean margin 0.067, and both observed misreads sat at 0.01.
-const MARGIN_AMBIGUOUS = 0.008
-const MARGIN_UNCERTAIN = 0.02
+// Unmeasured estimates, deliberately named so they are cheap to tune: first import
+// on the Rust worker, 176 scores from 0.11 to 0.80, 22 of them below 0.3.
+const SCORE_AMBIGUOUS = 0.2
+const SCORE_UNCERTAIN = 0.3
 
 const PREVIEW_WIDTH = 98
 
-// The gap to the runner-up, not the absolute score. Both real misreads scored
-// 0.79 — high enough for a score-based threshold to paint them green — while
-// sitting 0.01 ahead of the right answer. No margin at all means fewer than two
-// candidates, which usually means the portrait crop failed and the row has no
-// name: the case needing the most attention, so it takes the loudest badge.
-export type MarginLevel = 'low' | 'medium' | 'high'
+// No score at all is a row the model must not vouch for: it takes the loudest badge.
+export type ScoreLevel = 'low' | 'medium' | 'high'
 
-export function marginLevel(margin: number | null | undefined): MarginLevel {
-  if (margin == null) return 'low'
-  if (margin < MARGIN_AMBIGUOUS) return 'low'
-  if (margin < MARGIN_UNCERTAIN) return 'medium'
+export function scoreLevel(score: number | null | undefined): ScoreLevel {
+  if (score == null) return 'low'
+  if (score < SCORE_AMBIGUOUS) return 'low'
+  if (score < SCORE_UNCERTAIN) return 'medium'
   return 'high'
 }
 
-const MARGIN_CLASSES: Record<MarginLevel, string> = {
+const SCORE_CLASSES: Record<ScoreLevel, string> = {
   low: 'bg-red-600 text-white border-transparent',
   medium: 'bg-orange-500 text-white border-transparent',
   high: 'bg-green-600 text-white border-transparent',
@@ -99,11 +95,11 @@ export default function ImportPreviewRowEdit({
   // Only an <img> reports that: a failed background-image would leave an empty box.
   const [previewFailed, setPreviewFailed] = React.useState(false)
 
-  const level = marginLevel(row.margin)
-  const marginLabels: Record<MarginLevel, string> = {
-    low: t.roster.importExport.vision.marginAmbiguous,
-    medium: t.roster.importExport.vision.marginUncertain,
-    high: t.roster.importExport.vision.marginClear,
+  const level = scoreLevel(row.confidence)
+  const scoreLabels: Record<ScoreLevel, string> = {
+    low: t.roster.importExport.vision.scoreAmbiguous,
+    medium: t.roster.importExport.vision.scoreUncertain,
+    high: t.roster.importExport.vision.scoreClear,
   }
 
   const status = rowStatus(row)
@@ -163,7 +159,6 @@ export default function ImportPreviewRowEdit({
             index={index}
             championName={shortenChampionName(row.champion_name)}
             championImageUrl={row.image_url}
-            candidates={row.candidates ?? []}
             onPick={(name) => emit({ champion_name: name })}
           />
           <span className={`text-xs ${getClassColors(row.champion_class ?? 'Unknown').label}`}>
@@ -172,18 +167,19 @@ export default function ImportPreviewRowEdit({
           {row.corrected ? (
             <Badge
               className='text-[10px] px-1.5 py-0 bg-sky-600 text-white border-transparent'
-              data-cy={`preview-row-margin-badge-${index}`}
+              data-cy={`preview-row-score-badge-${index}`}
               data-level='corrected'
             >
-              {t.roster.importExport.vision.marginCorrected}
+              {t.roster.importExport.vision.scoreCorrected}
             </Badge>
           ) : (
             <Badge
-              className={`text-[10px] px-1.5 py-0 ${MARGIN_CLASSES[level]}`}
-              data-cy={`preview-row-margin-badge-${index}`}
+              className={`text-[10px] px-1.5 py-0 ${SCORE_CLASSES[level]}`}
+              data-cy={`preview-row-score-badge-${index}`}
               data-level={level}
             >
-              {marginLabels[level]}
+              {scoreLabels[level]}
+              {row.confidence != null && ` · ${Math.round(row.confidence * 100)} %`}
             </Badge>
           )}
           <Badge
