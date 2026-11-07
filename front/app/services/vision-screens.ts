@@ -2,6 +2,7 @@ import type { VisionPreview } from '@/app/services/vision'
 
 // Best-effort: a cache failure only costs the presigned-URL fallback, never an upload.
 const CACHE_NAME = 'vision-screens'
+const PRELOAD_TIMEOUT_MS = 5000
 
 const screenKey = (jobId: string): string => `/vision-screens/${jobId}`
 
@@ -43,6 +44,19 @@ export const clearScreens = async (): Promise<void> => {
   }
 }
 
+// A browser that did not upload the screen keeps it too, so it downloads each one once.
+const downloadScreen = async (jobId: string, presigned: string): Promise<string> => {
+  try {
+    const cache = await caches.open(CACHE_NAME)
+    const response = await fetch(presigned, { signal: AbortSignal.timeout(PRELOAD_TIMEOUT_MS) })
+    if (!response.ok) return presigned
+    await cache.put(screenKey(jobId), response)
+    return (await getCachedScreenUrl(jobId)) ?? presigned
+  } catch {
+    return presigned
+  }
+}
+
 // The cached blob wins: it is the same bytes without a round-trip to the bucket.
 export const resolveScreenUrls = async (
   screens: Record<string, string>
@@ -50,13 +64,11 @@ export const resolveScreenUrls = async (
   const entries = await Promise.all(
     Object.entries(screens).map(async ([jobId, presigned]): Promise<[string, string]> => [
       jobId,
-      (await getCachedScreenUrl(jobId)) ?? presigned,
+      (await getCachedScreenUrl(jobId)) ?? (await downloadScreen(jobId, presigned)),
     ])
   )
   return Object.fromEntries(entries)
 }
-
-const PRELOAD_TIMEOUT_MS = 5000
 
 // Bounded: a slow bucket may delay the review, never block it. A dead URL is the row's onError.
 export const preloadScreens = async (urls: string[]): Promise<void> => {

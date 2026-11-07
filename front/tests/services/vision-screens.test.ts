@@ -4,6 +4,7 @@ import {
   clearScreens,
   getCachedScreenUrl,
   preloadScreens,
+  resolveScreenUrls,
 } from '@/app/services/vision-screens'
 
 const stubCaches = () => {
@@ -87,6 +88,45 @@ describe('vision screens cache', () => {
     await clearScreens()
 
     expect(storage.delete).toHaveBeenCalledWith('vision-screens')
+  })
+})
+
+describe('resolveScreenUrls', () => {
+  const presigned = 'https://s3/job-1?sig=a'
+
+  it('downloads a missing screenshot once, then serves it from the cache', async () => {
+    const { cache } = stubCaches()
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:screen')
+    const download = vi.fn(async () => new Response('png-bytes'))
+    vi.stubGlobal('fetch', download)
+
+    const first = await resolveScreenUrls({ 'job-1': presigned })
+    const second = await resolveScreenUrls({ 'job-1': 'https://s3/job-1?sig=b' })
+
+    expect(first).toEqual({ 'job-1': 'blob:screen' })
+    expect(second).toEqual({ 'job-1': 'blob:screen' })
+    expect(download).toHaveBeenCalledTimes(1)
+    expect(cache.put).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([
+    ['a blocked download', () => Promise.reject(new TypeError('CORS'))],
+    ['a failed download', () => Promise.resolve(new Response('denied', { status: 403 }))],
+  ])('keeps the presigned URL on %s', async (_, download) => {
+    const { cache } = stubCaches()
+    vi.stubGlobal('fetch', vi.fn(download))
+
+    expect(await resolveScreenUrls({ 'job-1': presigned })).toEqual({ 'job-1': presigned })
+    expect(cache.put).not.toHaveBeenCalled()
+  })
+
+  it('does not download without the Cache API', async () => {
+    vi.stubGlobal('caches', undefined)
+    const download = vi.fn()
+    vi.stubGlobal('fetch', download)
+
+    expect(await resolveScreenUrls({ 'job-1': presigned })).toEqual({ 'job-1': presigned })
+    expect(download).not.toHaveBeenCalled()
   })
 })
 
