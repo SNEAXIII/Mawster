@@ -158,8 +158,6 @@ export function rediffRow(
     preview: row.preview,
     prediction_id: row.prediction_id,
     editable: row.editable,
-    candidates: row.candidates,
-    margin: row.margin,
     corrected: row.corrected,
   }
 }

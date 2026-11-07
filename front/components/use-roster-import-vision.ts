@@ -119,13 +119,11 @@ export function useRosterImportVision({
 
         return {
           ...row,
-          confidence: prediction.confidence,
-          candidates: prediction.candidates ?? [],
-          // Drop the margin on an out-of-range rarity so the review screen
+          // Drop the score on an out-of-range rarity so the review screen
           // flags the row instead of silently trusting a bad guess: a null
-          // margin badges red. Without this a confidently-named champion at an
+          // score badges red. Without this a confidently-named champion at an
           // impossible rarity would look like a clean read.
-          margin: rarityValid ? prediction.margin : null,
+          confidence: rarityValid ? prediction.confidence : null,
           screenUrl: screenUrls[prediction.job_id] ?? null,
           preview: prediction.preview,
           prediction_id: prediction.id,

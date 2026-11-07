@@ -9,6 +9,7 @@ import {
 import { api, jsonBody, jsonHeaders } from '@/app/services/utils'
 import { getChampionImageUrl } from '@/app/services/champions'
 import { previewAspectRatio, previewImageStyle } from '@/app/services/vision-screens'
+import { scoreLevel } from '@/components/roster/import-preview-row-edit'
 
 describe('rarity helpers', () => {
   it.each([
@@ -83,6 +84,20 @@ describe('vision preview', () => {
 
   it('aspect ratio is width over height', () => {
     expect(previewAspectRatio({ left: 0, right: 200, top: 0, bottom: 100 })).toBe(2)
+  })
+})
+
+describe('vision score level', () => {
+  it.each([
+    [null, 'low'],
+    [undefined, 'low'],
+    [0, 'low'],
+    [0.2, 'medium'],
+    [0.29, 'medium'],
+    [0.3, 'high'],
+    [0.8, 'high'],
+  ])('reads %s as %s', (score, level) => {
+    expect(scoreLevel(score)).toBe(level)
   })
 })
 

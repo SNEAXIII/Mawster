@@ -1,52 +1,11 @@
 import uuid
 
-import pytest
-
 from src.dto.account.game.dto_vision_predictions import (
     VisionPredictionResponse,
     VisionPredictionsResponse,
     VisionPreview,
 )
 from src.models.vision.VisionPrediction import VisionPrediction
-from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
-from src.services.account.game.VisionImportService import VisionImportService
-
-
-def _candidates(*pairs):
-    """Build candidate rows the way the ordered relationship hands them over."""
-    return [
-        VisionPredictionCandidate(
-            prediction_id=uuid.uuid4(), name=name, score=score, position=position
-        )
-        for position, (name, score) in enumerate(pairs)
-    ]
-
-
-@pytest.mark.parametrize(
-    ("pairs", "expected"),
-    [
-        # The motivating case: a high absolute score the old badge painted green,
-        # with the runner-up 0.01 behind. Both real misreads looked like this.
-        ((("Gladiator", 0.79), ("Gorr", 0.78)), 0.01),
-        ((("Hulk", 0.91), ("Thor", 0.40)), 0.51),
-        # Fewer than two candidates: there is no gap to speak of, so None rather
-        # than a made-up number the UI would have to guess the meaning of.
-        ((("Solo", 0.62),), None),
-        ((), None),
-        # A dead heat is maximum ambiguity, and 0.0 says exactly that.
-        ((("A", 0.5), ("B", 0.5)), 0.0),
-        # A reranked card: the pixel second pass put the lower CLIP cosine first,
-        # so the margin is negative. It must come back signed, not absolute —
-        # collapsing it would erase the difference from a genuine near-tie.
-        ((("Spider-Man (Stark Enhanced)", 0.8528), ("Spider-Man (Classic)", 0.8561)), -0.0033),
-    ],
-)
-def test_margin_from_candidates(pairs, expected):
-    result = VisionImportService._margin(_candidates(*pairs))
-    if expected is None:
-        assert result is None
-    else:
-        assert result == pytest.approx(expected)
 
 
 def test_predictions_response_shape():

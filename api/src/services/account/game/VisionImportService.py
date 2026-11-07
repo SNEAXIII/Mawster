@@ -1,7 +1,6 @@
 import logging
 import uuid
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import or_
@@ -10,7 +9,6 @@ from sqlmodel import col, func, select
 from starlette import status
 
 from src.dto.account.game.dto_vision_predictions import (
-    VisionCandidateResponse,
     VisionPredictionResponse,
     VisionPreview,
 )
@@ -43,9 +41,6 @@ from src.services.account.game.VisionDatasetService import ConfirmedRow, VisionD
 from src.services.account.game.VisionProgressService import VisionProgressService
 from src.storage.base import Storage, import_prefix, screen_key
 from src.utils.db import SessionDep
-
-if TYPE_CHECKING:
-    from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 
 # A full roster fits in about 20 screenshots, so this leaves headroom without
 # letting one batch monopolise the CPU: every screenshot is an inference, and
@@ -614,10 +609,7 @@ class VisionImportService:
         job_index = {job.id: i for i, job in enumerate(jobs)}
         preds = (
             await session.exec(
-                select(VisionPrediction)
-                .where(col(VisionPrediction.job_id).in_(job_index))
-                # AsyncSession raises on lazy loading: candidates must come eagerly.
-                .options(selectinload(VisionPrediction.candidates))
+                select(VisionPrediction).where(col(VisionPrediction.job_id).in_(job_index))
             )
         ).all()
         return [
@@ -633,10 +625,6 @@ class VisionImportService:
                 confidence=pred.confidence,
                 preview=VisionPreview.from_prediction(pred),
                 job_index=job_index[pred.job_id],
-                candidates=[
-                    VisionCandidateResponse(name=c.name, score=c.score) for c in pred.candidates
-                ],
-                margin=cls._margin(pred.candidates),
                 reranked=pred.reranked,
             )
             for pred in sorted(preds, key=lambda p: (job_index[p.job_id], p.id))
@@ -658,28 +646,6 @@ class VisionImportService:
             for job in vision_import.jobs
             if job.status == VisionJobStatus.DONE
         }
-
-    @staticmethod
-    def _margin(candidates: list[VisionPredictionCandidate]) -> float | None:
-        """Signed gap between the winner and the runner-up, None below two rows.
-
-        This is the real confidence signal. Measured on ground truth, both
-        misreads scored 0.79 — high enough for a score-based threshold to paint
-        them green — while sitting 0.01 ahead of the right answer. The absolute
-        score says almost nothing; this gap says whether the model actually knew.
-
-        It goes **negative** when the pixel second pass reordered the shortlist:
-        the scores stay CLIP cosines, so the card's winner is no longer the
-        highest of them. That is not a bug and not an ambiguity either — pair it
-        with `reranked` to tell "the model was corrected" from "the model was
-        unsure".
-
-        Assumes `candidates` is ordered by `position`. The relationship declares
-        that ordering, and every query that loads it must preserve it.
-        """
-        if len(candidates) < 2:
-            return None
-        return candidates[0].score - candidates[1].score
 
     @classmethod
     async def cancel_import(
