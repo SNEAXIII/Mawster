@@ -3,6 +3,17 @@
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le versionnage suit
 [Semantic Versioning](https://semver.org/lang/fr/).
 
+## [2.0.0](https://github.com/SNEAXIII/Mawster/compare/v1.37.0...v2.0.0) (2026-11-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* replace the vision worker with a Rust one
+
+### Ajouté
+
+* replace the vision worker with a Rust one ([0ef5979](https://github.com/SNEAXIII/Mawster/commit/0ef597978a530936f2283db4efd75c79aa75f588))
+
 ## [1.37.0](https://github.com/SNEAXIII/Mawster/compare/v1.36.0...v1.37.0) (2026-11-06)
 
 
