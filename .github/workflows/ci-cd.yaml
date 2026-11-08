@@ -83,8 +83,7 @@ jobs:
           echo "Resolved version: $VERSION (released content: $RELEASED)"
 
   # Builds the same six images with push disabled, alongside `test` rather than after it,
-  # so the gated `images` job below only has layers to push. Nothing depends on it: a warm
-  # miss must cost time, never the deploy.
+  # so the gated `images` job below only has layers to push.
   images-warm:
     name: Images (warm cache)
     permissions:
@@ -105,8 +104,9 @@ jobs:
     name: Images
     permissions:
       contents: read
-    # `test` keeps an untested image off Docker Hub.
-    needs: [changes, test]
+    # `test` keeps an untested image off Docker Hub. Waiting for the warm build stops a push racing
+    # it on a cold cache; a failed warm build still reports success (its `continue-on-error`).
+    needs: [changes, test, images-warm]
     uses: $/.github/workflows/_images.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
