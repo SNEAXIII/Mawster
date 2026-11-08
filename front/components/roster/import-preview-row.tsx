@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react'
 import ChampionPortrait from '@/components/champion-portrait'
 import { RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
+import type { VisionPreview } from '@/app/services/vision'
 import ImportPreviewRowEdit from './import-preview-row-edit'
 
 export interface PreviewRow {
@@ -23,18 +24,14 @@ export interface PreviewRow {
   // Original ascension, so manual edits can be diffed against it — optional
   // because JSON-import rows never populated it before this field existed.
   oldAscension?: number | null
-  confidence?: number
-  // The screenshot's thumbnail sheet, and this card's cell in it. Both null on
-  // a JSON import and on a card whose detection box was degenerate.
-  spriteUrl?: string | null
-  cropIndex?: number | null
+  // The model's score; null when the row must not look trusted, whatever the score.
+  confidence?: number | null
+  // `preview` is null when the worker sent none; `screenUrl` when the job has no screenshot.
+  screenUrl?: string | null
+  preview?: VisionPreview | null
   prediction_id?: string | null
   editable?: boolean
-  // CLIP alternatives, best first, top-1 included. Absent on JSON imports.
-  candidates?: { name: string; score: number }[]
-  // score[0] - score[1]. null when the model gave fewer than two candidates.
-  margin?: number | null
-  // Set once the user picks a champion by hand. The model's margin no longer
+  // Set once the user picks a champion by hand. The model's score no longer
   // describes this row, so the badge stops showing it.
   corrected?: boolean
   // Excluded from the import by the user. The only way out for a row the model

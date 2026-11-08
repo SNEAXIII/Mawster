@@ -1,6 +1,6 @@
 name: Images
 
-# Called by ci-cd.yaml, which resolves the tags once so all five images match.
+# Called by ci-cd.yaml, which resolves the tags once so all six images match.
 on:
   workflow_call:
     inputs:
@@ -23,6 +23,8 @@ on:
     secrets:
       DOCKERHUB_TOKEN:
         required: true
+      BOT_TOKEN:
+        required: true
 
 jobs:
   docker:
@@ -34,7 +36,7 @@ jobs:
     # A cache-only run is best effort: it must not paint the pipeline red.
     continue-on-error: ${{ !inputs.push }}
     strategy:
-      # One broken image must not cancel the four that would otherwise be pushed:
+      # One broken image must not cancel the five that would otherwise be pushed:
       # the deploy is gated on all of them anyway, and a full set of logs is worth
       # more than a fast failure here.
       fail-fast: false
@@ -62,10 +64,33 @@ jobs:
             image: mawster-static
             context: ./static-assets
             file: ./static-assets/static.Dockerfile
+          - name: Vision Worker
+            image: mawster-vision-worker
+            context: ./rust-vision
+            file: ./rust-vision/Dockerfile
+            # Models and screenshots live in a private submodule: the image is pushed to a private repo.
+            private_submodule: true
+            build_contexts: |
+              portraits=./static-assets/static/champions
+              api-fixtures=./api/src/fixtures
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          persist-credentials: false
+      # Only this submodule: `submodules: true` would also pull the private notes.
+      - name: Resolve the private submodule commit
+        if: matrix.private_submodule
+        id: private
+        run: echo "sha=$(git rev-parse HEAD:rust-vision/artifacts-vision)" >> "$GITHUB_OUTPUT"
+      - name: Checkout the private models and screenshots
+        if: matrix.private_submodule
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: SNEAXIII/artifacts-vision
+          ref: ${{ steps.private.outputs.sha }}
+          path: rust-vision/artifacts-vision
+          token: ${{ secrets.BOT_TOKEN }}
           persist-credentials: false
       - name: Log in to Docker Hub
         uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
@@ -83,6 +108,7 @@ jobs:
           # Empty for every image but the front, which is what an absent matrix key
           # yields — the action treats that as no build argument at all.
           build-args: ${{ matrix.build_args }}
+          build-contexts: ${{ matrix.build_contexts }}
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ inputs.moving_tag }}
             ${{ vars.DOCKERHUB_USERNAME }}/${{ matrix.image }}:${{ inputs.tag_prefix }}${{ inputs.version }}

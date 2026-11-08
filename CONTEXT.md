@@ -341,13 +341,11 @@ accepts it and it turns into a Roster Entry.
 _Table_: `vision_prediction`.
 _Avoid_: prediction (internal), detection.
 
-**Candidate**:
-One of the other champions the AI considered for a Reading, with its score. Shown to
-the Player so a wrong Reading can be corrected by hand.
-
-**Margin**:
-The gap between the best Candidate and the runner-up, surfaced to the Player as
-Clear / Uncertain / Ambiguous. Low margin means the AI hesitated, not that it erred.
+**Score**:
+How sure the AI is of a Reading's champion, surfaced to the Player as
+Clear / Uncertain / Ambiguous. Low score means the AI hesitated, not that it erred.
+A wrong Reading is corrected by hand from the Champion catalog.
+_Field_: `confidence`.
 
 **Dataset Sample**:
 A screenshot kept for training after the Player opted in. Stored apart from the rest

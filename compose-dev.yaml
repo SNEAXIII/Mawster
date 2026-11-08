@@ -126,14 +126,17 @@ services:
         # failing on a preflight, from a config file no one thinks to look at.
         aws --endpoint-url http://rustfs:9000 s3api put-bucket-cors \
           --bucket vision \
-          --cors-configuration '{"CORSRules":[{"AllowedOrigins":["http://localhost:3000","http://localhost:3001"],"AllowedMethods":["PUT"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}'
+          --cors-configuration '{"CORSRules":[{"AllowedOrigins":["http://localhost:3000","http://localhost:3001"],"AllowedMethods":["GET","PUT"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}'
         aws --endpoint-url http://rustfs:9000 s3 ls
     restart: 'no'
     volumes:
       - ./db/rustfs:/data
   vision-worker:
     build:
-      context: ./mcoc-vision
+      context: ./rust-vision
+      additional_contexts:
+        portraits: ./static-assets/static/champions
+        api-fixtures: ./api/src/fixtures
     image: mawster-vision-worker:local
     container_name: vision-worker
     networks:
@@ -142,7 +145,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
-      - RABBITMQ_URL=amqp://mawster:mawster@rabbitmq:5672/
+      - RABBITMQ_URL=amqp://mawster:mawster@rabbitmq:5672/%2f
       - RUSTFS_ENDPOINT=http://rustfs:9000
       - RUSTFS_ACCESS_KEY=mawster
       - RUSTFS_SECRET_KEY=mawsterpassword

@@ -1,7 +1,6 @@
 import logging
 import uuid
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import or_
@@ -10,8 +9,8 @@ from sqlmodel import col, func, select
 from starlette import status
 
 from src.dto.account.game.dto_vision_predictions import (
-    VisionCandidateResponse,
     VisionPredictionResponse,
+    VisionPreview,
 )
 from src.dto.account.game.dto_vision_upload import (
     VisionInitResponse,
@@ -43,9 +42,6 @@ from src.services.account.game.VisionProgressService import VisionProgressServic
 from src.storage.base import Storage, import_prefix, screen_key
 from src.utils.db import SessionDep
 
-if TYPE_CHECKING:
-    from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
-
 # A full roster fits in about 20 screenshots, so this leaves headroom without
 # letting one batch monopolise the CPU: every screenshot is an inference, and
 # inference is the only thing the vision pipeline is short of.
@@ -60,6 +56,7 @@ ALLOWED_CONTENT_TYPES = {"image/png", "image/jpeg", "image/webp"}
 # committed, which is what makes it safe for `get_current` to stop counting it
 # as blocking.
 UPLOAD_URL_TTL_SECONDS = 15 * 60
+SCREEN_URL_TTL_SECONDS = 60 * 60
 
 # Enough to cover the longest signature checked by `_sniff_image_type`: WebP
 # needs bytes 8..11.
@@ -215,8 +212,7 @@ class VisionImportService:
 
         The object keys are derived server-side from ids the caller does not
         choose. A client-supplied key would be a write primitive into any other
-        user's import — the same reasoning that keeps `get_crop_sprite` from
-        accepting one.
+        user's import.
         """
         cls._validate_declarations(screens)
 
@@ -508,7 +504,7 @@ class VisionImportService:
         """The single import that still needs attention for this game account.
 
         CONFIRMED and CANCELLED are done with. Imports older than the retention
-        window have lost their screenshots and crops to the bucket lifecycle, so
+        window have lost their screenshots to the bucket lifecycle, so
         validating them would mean approving data whose evidence is gone.
 
         An import with a screenshot still awaiting its upload counts as blocking
@@ -600,8 +596,8 @@ class VisionImportService:
     async def list_predictions(
         cls, session: SessionDep, import_id: uuid.UUID
     ) -> list[VisionPredictionResponse]:
-        """All predictions of an import, ordered by job then id, carrying the crop
-        index parsed out of the stored crop_key and a stable per-import job index."""
+        """All predictions of an import, ordered by job then id, carrying the card's
+        preview, None when the worker sent none, and a stable per-import job index."""
 
         jobs = (
             await session.exec(
@@ -613,10 +609,7 @@ class VisionImportService:
         job_index = {job.id: i for i, job in enumerate(jobs)}
         preds = (
             await session.exec(
-                select(VisionPrediction)
-                .where(col(VisionPrediction.job_id).in_(job_index))
-                # AsyncSession raises on lazy loading: candidates must come eagerly.
-                .options(selectinload(VisionPrediction.candidates))
+                select(VisionPrediction).where(col(VisionPrediction.job_id).in_(job_index))
             )
         ).all()
         return [
@@ -630,59 +623,29 @@ class VisionImportService:
                 signature=pred.signature,
                 ascension=pred.ascension,
                 confidence=pred.confidence,
-                crop_index=cls._crop_index(pred.crop_key),
+                preview=VisionPreview.from_prediction(pred),
                 job_index=job_index[pred.job_id],
-                candidates=[
-                    VisionCandidateResponse(name=c.name, score=c.score) for c in pred.candidates
-                ],
-                margin=cls._margin(pred.candidates),
                 reranked=pred.reranked,
             )
             for pred in sorted(preds, key=lambda p: (job_index[p.job_id], p.id))
         ]
 
-    @staticmethod
-    def _margin(candidates: list[VisionPredictionCandidate]) -> float | None:
-        """Signed gap between the winner and the runner-up, None below two rows.
+    @classmethod
+    async def screen_urls(
+        cls, storage: Storage, vision_import: VisionImport
+    ) -> dict[uuid.UUID, str]:
+        """A presigned GET URL per screenshot, keyed by job id, for the review screen.
 
-        This is the real confidence signal. Measured on ground truth, both
-        misreads scored 0.79 — high enough for a score-based threshold to paint
-        them green — while sitting 0.01 ahead of the right answer. The absolute
-        score says almost nothing; this gap says whether the model actually knew.
-
-        It goes **negative** when the pixel second pass reordered the shortlist:
-        the scores stay CLIP cosines, so the card's winner is no longer the
-        highest of them. That is not a bug and not an ambiguity either — pair it
-        with `reranked` to tell "the model was corrected" from "the model was
-        unsure".
-
-        Assumes `candidates` is ordered by `position`. The relationship declares
-        that ordering, and every query that loads it must preserve it.
+        Only DONE jobs: an AWAITING_UPLOAD object has not passed `_verify_uploaded`,
+        so it may hold anything the browser sent.
         """
-        if len(candidates) < 2:
-            return None
-        return candidates[0].score - candidates[1].score
-
-    @staticmethod
-    def _crop_index(crop_key: str | None) -> int | None:
-        """Parse the sprite cell index out of a stored crop key.
-
-        One shape only: `.../crops/sprite_v1.webp#{cell}`, written by the current
-        worker. The index is not a column and never was — it rides along in the
-        key string, which is why the sprite sheet needed no migration.
-
-        A key without a `#` is a per-crop key from the pre-sprite worker. It
-        yields `None` because the object it names no longer has a route to fetch
-        it: `None` is exactly the signal the front already renders as the
-        champion portrait, so such a row degrades to the fallback instead of
-        pointing at bytes nothing can serve.
-        """
-        if not crop_key or "#" not in crop_key:
-            return None
-        try:
-            return int(crop_key.rsplit("#", 1)[-1])
-        except ValueError:
-            return None
+        return {
+            job.id: await storage.presigned_get_url(
+                SECRET.RUSTFS_BUCKET_VISION, job.object_key, SCREEN_URL_TTL_SECONDS
+            )
+            for job in vision_import.jobs
+            if job.status == VisionJobStatus.DONE
+        }
 
     @classmethod
     async def cancel_import(

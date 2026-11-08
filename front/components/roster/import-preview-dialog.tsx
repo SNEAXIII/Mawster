@@ -16,14 +16,14 @@ import {
 import { AlertTriangle, ChevronDown } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import ImportPreviewRow, { type PreviewRow, type PreviewRowPatch } from './import-preview-row'
-import { marginLevel, type MarginLevel } from './import-preview-row-edit'
+import { scoreLevel, type ScoreLevel } from './import-preview-row-edit'
 import { blockingRows } from './import-row-validation'
 
 // Most ambiguous first: the rows most likely misread lead, the clean matches
 // sink to the bottom. Ambiguous and uncertain open by default; clear matches
 // collapse — they rarely need a look, and hiding them shortens the scroll.
-const LEVEL_ORDER: readonly MarginLevel[] = ['low', 'medium', 'high']
-const LEVEL_OPEN_BY_DEFAULT: Record<MarginLevel, boolean> = {
+const LEVEL_ORDER: readonly ScoreLevel[] = ['low', 'medium', 'high']
+const LEVEL_OPEN_BY_DEFAULT: Record<ScoreLevel, boolean> = {
   low: true,
   medium: true,
   high: false,
@@ -123,7 +123,7 @@ export default function ImportPreviewDialog({
         {/* Scrollable list */}
         <div className='flex-1 overflow-y-auto px-1 sm:px-2'>
           {editable ? (
-            <MarginGroupedRows
+            <ScoreGroupedRows
               previewRows={previewRows}
               onRowChange={onRowChange}
             />
@@ -184,31 +184,31 @@ export default function ImportPreviewDialog({
   )
 }
 
-interface MarginGroupedRowsProps {
+interface ScoreGroupedRowsProps {
   previewRows: PreviewRow[]
   onRowChange?: (index: number, patch: PreviewRowPatch) => void
 }
 
-// Groups the review rows by margin level, most ambiguous first. The row's
+// Groups the review rows by score level, most ambiguous first. The row's
 // ORIGINAL index in previewRows is carried through untouched: onRowChange finds
 // the row by that index, so re-indexing the grouped list would make a
 // correction mutate the wrong row and write a wrong rarity to the roster.
-function MarginGroupedRows({ previewRows, onRowChange }: Readonly<MarginGroupedRowsProps>) {
+function ScoreGroupedRows({ previewRows, onRowChange }: Readonly<ScoreGroupedRowsProps>) {
   const { t } = useI18n()
 
-  const groups: Record<MarginLevel, { row: PreviewRow; index: number }[]> = {
+  const groups: Record<ScoreLevel, { row: PreviewRow; index: number }[]> = {
     low: [],
     medium: [],
     high: [],
   }
   previewRows.forEach((row, index) => {
-    groups[marginLevel(row.margin)].push({ row, index })
+    groups[scoreLevel(row.confidence)].push({ row, index })
   })
 
-  const labels: Record<MarginLevel, string> = {
-    low: t.roster.importExport.vision.marginAmbiguous,
-    medium: t.roster.importExport.vision.marginUncertain,
-    high: t.roster.importExport.vision.marginClear,
+  const labels: Record<ScoreLevel, string> = {
+    low: t.roster.importExport.vision.scoreAmbiguous,
+    medium: t.roster.importExport.vision.scoreUncertain,
+    high: t.roster.importExport.vision.scoreClear,
   }
 
   return (

@@ -58,7 +58,10 @@ async def test_archive_writes_a_sample_per_row_when_opted_in():
         signature=150,
         ascension=0,
         confidence=0.8,
-        crop_key="imports/x/y/crops/0.png",
+        preview_left=0.1,
+        preview_right=0.3,
+        preview_top=0.05,
+        preview_bottom=0.4,
     )
     session.seed(job)
     session.seed(prediction)
@@ -87,7 +90,12 @@ async def test_archive_writes_a_sample_per_row_when_opted_in():
     assert payload["screen_key"] == job.object_key
     assert payload["prediction"]["champion_name"] == "Hulk"
     assert payload["prediction"]["confidence"] == 0.8
-    assert payload["prediction"]["crop_key"] == "imports/x/y/crops/0.png"
+    assert payload["prediction"]["preview"] == {
+        "left": 0.1,
+        "right": 0.3,
+        "top": 0.05,
+        "bottom": 0.4,
+    }
     assert payload["truth"] == {
         "champion_name": "Hulk",
         "rarity": "7r3",
@@ -95,6 +103,12 @@ async def test_archive_writes_a_sample_per_row_when_opted_in():
         "ascension": 1,
         "is_preferred_attacker": False,
     }
+
+
+def test_payload_has_a_null_preview_for_a_prediction_without_one():
+    prediction = VisionPrediction(job_id=uuid.uuid4())
+
+    assert VisionDatasetService._prediction_payload(prediction)["preview"] is None
 
 
 @pytest.mark.asyncio

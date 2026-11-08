@@ -1,6 +1,8 @@
 'use client'
 
+import { Loader2 } from 'lucide-react'
 import VisionImportBanner from '@/app/game/account/_components/vision-import-banner'
+import { useI18n } from '@/app/i18n'
 import ImportPreviewDialog from '@/components/roster/import-preview-dialog'
 import ImportReportDialog from '@/components/roster/import-report-dialog'
 import VisionImportBlockedDialog from '@/components/roster/vision-import-blocked-dialog'
@@ -19,10 +21,26 @@ export default function VisionImportSection({
   gameAccountId,
   state,
 }: Readonly<VisionImportSectionProps>) {
+  const { t } = useI18n()
   const { vision, guard, howto } = state
 
   return (
     <>
+      {vision.uploadProgress && (
+        <div
+          role='status'
+          className='mb-4 flex items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm'
+          data-cy='vision-upload-progress'
+        >
+          <Loader2 className='h-4 w-4 shrink-0 animate-spin text-muted-foreground' />
+          <span>
+            {t.roster.importExport.vision.uploadProgress
+              .replace('{done}', String(vision.uploadProgress.done))
+              .replace('{total}', String(vision.uploadProgress.total))}
+          </span>
+        </div>
+      )}
+
       <VisionImportBanner
         gameAccountId={gameAccountId}
         onResume={vision.resume}

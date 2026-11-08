@@ -5,6 +5,8 @@ from pydantic import ValidationError
 
 from src.dto.account.game.dto_vision_result import VisionPredictionMessage, VisionResultMessage
 
+PREVIEW = {"left": 0.1, "right": 0.3, "top": 0.05, "bottom": 0.4}
+
 
 def _payload(**overrides) -> dict:
     payload = {
@@ -22,7 +24,7 @@ def _payload(**overrides) -> dict:
                 "signature": 200,
                 "ascension": 1,
                 "confidence": 0.87,
-                "crop_key": "imports/a/b/crops/0.png",
+                "preview": PREVIEW,
             }
         ],
     }
@@ -36,6 +38,15 @@ def test_result_message_parses_the_worker_contract():
     assert len(message.predictions) == 1
     assert message.predictions[0].champion_name == "Hulk"
     assert message.predictions[0].confidence == 0.87
+    assert message.predictions[0].preview.model_dump() == PREVIEW
+
+
+def test_prediction_message_from_a_worker_still_sending_crop_key_stays_valid():
+    message = VisionPredictionMessage.model_validate(
+        {"champion_name": "Hulk", "crop_key": "imports/a/b/crops/sprite_v1.webp#0"}
+    )
+
+    assert message.preview is None
 
 
 def test_result_message_accepts_an_unknown_champion():
@@ -54,7 +65,7 @@ def test_result_message_accepts_an_unknown_champion():
         )
     )
     assert message.predictions[0].champion_name is None
-    assert message.predictions[0].crop_key is None
+    assert message.predictions[0].preview is None
 
 
 def test_result_message_accepts_a_failure_with_no_predictions():
@@ -71,29 +82,3 @@ def test_result_message_rejects_an_unknown_status():
 
     with pytest.raises(ValidationError):
         VisionResultMessage.model_validate(payload)
-
-
-def test_prediction_message_parses_candidates():
-
-    message = VisionPredictionMessage.model_validate(
-        {
-            "champion_name": "Gladiator",
-            "confidence": 0.79,
-            "candidates": [
-                {"name": "Gladiator", "score": 0.79},
-                {"name": "Gorr", "score": 0.78},
-            ],
-        }
-    )
-
-    assert len(message.candidates) == 2
-    assert message.candidates[1].name == "Gorr"
-    assert message.candidates[1].score == 0.78
-
-
-def test_prediction_message_without_candidates_stays_valid():
-    """An older worker sends no candidates at all. It must keep working."""
-
-    message = VisionPredictionMessage.model_validate({"champion_name": "Hulk", "confidence": 0.91})
-
-    assert message.candidates == []

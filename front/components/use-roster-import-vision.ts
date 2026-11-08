@@ -6,11 +6,13 @@ import {
   createVisionImport,
   getVisionImport,
   getVisionPredictions,
-  getSpriteUrl,
   confirmVisionImport,
+  keepHighestRank,
   type VisionPrediction,
+  type VisionPredictionsResponse,
   type ConfirmedRow,
 } from '@/app/services/vision'
+import { preloadScreens, resolveScreenUrls } from '@/app/services/vision-screens'
 import type { PreviewRow, PreviewRowPatch } from '@/components/roster/import-preview-row'
 import { isValidRarity } from '@/components/roster/import-row-validation'
 import {
@@ -67,6 +69,7 @@ export function useRosterImportVision({
 
   const visionInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
   const [importId, setImportId] = useState<string | null>(null)
 
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -101,34 +104,30 @@ export function useRosterImportVision({
 
   // ── Predictions → PreviewRow[] ──────────────────────────
   const buildRowsFromPredictions = useCallback(
-    async (currentImportId: string, predictions: VisionPrediction[]): Promise<PreviewRow[]> => {
-      const built = predictions.map(predictionToEntry)
+    async ({ predictions, screens }: VisionPredictionsResponse): Promise<PreviewRow[]> => {
+      const kept = keepHighestRank(predictions)
+      const built = kept.map(predictionToEntry)
       const lookup = await fetchChampionLookup(
         built.map((b) => b.entry),
         roster
       )
       championLookupRef.current = lookup
+      const screenUrls = await resolveScreenUrls(screens)
+      await preloadScreens(Object.values(screenUrls))
 
-      return predictions.map((prediction, idx) => {
+      return kept.map((prediction, idx) => {
         const { entry, rarityValid } = built[idx]
         const row = buildPreviewRow(entry, roster, lookup)
 
-        // getSpriteUrl is a plain URL builder (no request). One sheet serves the
-        // whole screenshot; the row picks its cell by index.
-        const spriteUrl =
-          prediction.crop_index != null ? getSpriteUrl(currentImportId, prediction.job_id) : null
-
         return {
           ...row,
-          confidence: prediction.confidence,
-          candidates: prediction.candidates ?? [],
-          // Drop the margin on an out-of-range rarity so the review screen
+          // Drop the score on an out-of-range rarity so the review screen
           // flags the row instead of silently trusting a bad guess: a null
-          // margin badges red. Without this a confidently-named champion at an
+          // score badges red. Without this a confidently-named champion at an
           // impossible rarity would look like a clean read.
-          margin: rarityValid ? prediction.margin : null,
-          spriteUrl,
-          cropIndex: prediction.crop_index,
+          confidence: rarityValid ? prediction.confidence : null,
+          screenUrl: screenUrls[prediction.job_id] ?? null,
+          preview: prediction.preview,
           prediction_id: prediction.id,
           // Vision predictions always go through the editable review row —
           // unlike JSON rows, which are trusted as-is.
@@ -146,7 +145,7 @@ export function useRosterImportVision({
     async (currentImportId: string) => {
       setImportId(currentImportId)
       const predictionsRes = await getVisionPredictions(currentImportId)
-      const rows = await buildRowsFromPredictions(currentImportId, predictionsRes.predictions)
+      const rows = await buildRowsFromPredictions(predictionsRes)
       setUploading(false)
       if (rows.length === 0) {
         toast.error(t.roster.importExport.visionNoChampions)
@@ -211,12 +210,22 @@ export function useRosterImportVision({
       }
 
       setUploading(true)
+      setUploadProgress({ done: 0, total: files.length })
       try {
-        const created = await createVisionImport(selectedAccountId, files, shareDataset)
+        const created = await createVisionImport(
+          selectedAccountId,
+          files,
+          shareDataset,
+          (done, total) => setUploadProgress({ done, total })
+        )
         setImportId(created.id)
         pollImport(created.id)
-      } catch {
-        finishWithError(t.roster.importExport.vision.uploadError)
+      } catch (error) {
+        const { uploadError, uploadQuotaExceeded } = t.roster.importExport.vision
+        const quotaHit = (error as { status?: number }).status === 429
+        finishWithError(quotaHit ? uploadQuotaExceeded : uploadError)
+      } finally {
+        setUploadProgress(null)
       }
     },
     [selectedAccountId, shareDataset, pollImport, finishWithError, t]
@@ -285,6 +294,7 @@ export function useRosterImportVision({
     visionInputRef,
     handleVisionFilesSelected,
     uploading,
+    uploadProgress,
     importId,
     resume,
     previewOpen: core.previewOpen,

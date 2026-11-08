@@ -9,7 +9,6 @@ VISION_DISABLED = "The AI roster import is not available on this environment"
 JOB_NEVER_QUEUED = "This job was never queued: publishing failed for the batch"
 VISION_JOB_NOT_FOUND = "Vision job not found"
 JOB_NOT_RETRYABLE = "Only a failed screenshot can be relaunched"
-VISION_CROP_NOT_FOUND = "Crop not found"
 IMPORT_ALREADY_PENDING = "An import is already awaiting your attention on this game account"
 SCREEN_QUOTA_EXCEEDED = (
     "Too many screenshots in the last hour: {requested} requested, {remaining} left"
