@@ -120,8 +120,8 @@ jobs:
             --arg url "$RELEASE_URL" \
             '{
               embeds: [{
-                title: "Mawster \($version) est en ligne",
-                description: "Les nouveautés de cette version : [notes de release](\($url))",
+                title: "Mawster \($version) is live",
+                description: "See what changed in the [release notes](\($url))",
                 url: $url,
                 color: 5793266
               }]
