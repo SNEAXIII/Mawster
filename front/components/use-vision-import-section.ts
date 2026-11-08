@@ -4,6 +4,7 @@ import { useI18n } from '@/app/i18n'
 import { useRosterImportVision } from './use-roster-import-vision'
 import { useVisionImportGuard } from './use-vision-import-guard'
 import { useVisionImportHowto } from './use-vision-import-howto'
+import { useVisionSingleScreenWarning } from './use-vision-single-screen-warning'
 
 export interface UseVisionImportSectionProps {
   roster: RosterEntry[]
@@ -22,7 +23,16 @@ export function useVisionImportSection({
   const [shareDataset, setShareDataset] = useState(false)
   const [bannerRefreshKey, setBannerRefreshKey] = useState(0)
 
-  const vision = useRosterImportVision({ roster, selectedAccountId, shareDataset, onRosterUpdated })
+  const singleScreen = useVisionSingleScreenWarning({
+    onAddMore: () => vision.visionInputRef.current?.click(),
+  })
+  const vision = useRosterImportVision({
+    roster,
+    selectedAccountId,
+    shareDataset,
+    onRosterUpdated,
+    gateUpload: singleScreen.gate,
+  })
   const howto = useVisionImportHowto()
 
   // Order matters: the 409 guard runs first, so a user who is about to be
@@ -71,6 +81,7 @@ export function useVisionImportSection({
     vision,
     guard,
     howto,
+    singleScreen,
     shareDataset,
     setShareDataset,
     bannerRefreshKey,

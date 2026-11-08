@@ -7,6 +7,7 @@ import ImportPreviewDialog from '@/components/roster/import-preview-dialog'
 import ImportReportDialog from '@/components/roster/import-report-dialog'
 import VisionImportBlockedDialog from '@/components/roster/vision-import-blocked-dialog'
 import VisionImportHowtoDialog from '@/components/roster/vision-import-howto-dialog'
+import VisionSingleScreenDialog from '@/components/roster/vision-single-screen-dialog'
 import type { useVisionImportSection } from '@/components/use-vision-import-section'
 
 interface VisionImportSectionProps {
@@ -87,6 +88,8 @@ export default function VisionImportSection({
         onOpenChange={howto.setOpen}
         onConfirm={howto.confirm}
       />
+
+      <VisionSingleScreenDialog warning={state.singleScreen} />
     </>
   )
 }

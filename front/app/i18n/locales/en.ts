@@ -1405,6 +1405,13 @@ const en = {
           'You already have a screenshot import waiting to be reviewed. Resume it, or discard it and start over.',
         blockedResume: 'Resume it',
         blockedDiscard: 'Discard and start over',
+        singleScreen: {
+          title: 'Only one screenshot?',
+          body: 'You can select several screenshots at once to import your whole roster in one go.',
+          confirm: 'Import this one',
+          addMore: 'Add more screenshots',
+          dontShowAgain: "Don't show this again",
+        },
         howto: {
           title: 'Prepare your screenshot',
           intro: 'Four steps, and the AI reads your roster.',

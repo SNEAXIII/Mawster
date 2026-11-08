@@ -3,6 +3,8 @@ import { setupRosterUser, confirmAction } from '../../support/e2e';
 // The how-to dialog is pure frontend behaviour, and this project has no
 // frontend unit tests by design — this spec is the only thing keeping the
 // dialog wired between the button and the file picker.
+// ponytail: the single-screenshot warning (and its "don't show again" in localStorage)
+// has no spec — a *vision* spec runs nowhere, so one here would be dead weight.
 describe('Roster – Vision import how-to dialog', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -53,6 +55,9 @@ describe('Roster – Vision import how-to dialog', () => {
       cy.get('[data-cy="vision-input"]').selectFile('cypress/fixtures/vision/sample-roster.png', {
         force: true,
       });
+
+      cy.getByCy('vision-single-screen-dialog').should('be.visible');
+      cy.getByCy('confirmation-dialog-confirm').click();
 
       cy.get('[data-cy^="preview-row-signature-input-"]', { timeout: 30000 }).should('have.length', 2);
     });

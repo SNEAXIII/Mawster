@@ -1419,6 +1419,13 @@ const fr: Translations = {
           'Vous avez déjà un import de captures en attente de validation. Reprenez-le, ou abandonnez-le pour repartir de zéro.',
         blockedResume: 'Le reprendre',
         blockedDiscard: 'Abandonner et repartir',
+        singleScreen: {
+          title: 'Une seule capture ?',
+          body: 'Tu peux sélectionner plusieurs captures d’un coup pour importer tout ton roster en une fois.',
+          confirm: 'Importer celle-ci',
+          addMore: 'Ajouter des captures',
+          dontShowAgain: 'Ne plus afficher',
+        },
         howto: {
           title: 'Préparer ta capture d’écran',
           intro: 'Quatre étapes, et l’IA lit ton roster.',
