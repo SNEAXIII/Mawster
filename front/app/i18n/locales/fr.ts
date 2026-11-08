@@ -1392,15 +1392,17 @@ const fr: Translations = {
       vision: {
         noImagesSelected: 'Veuillez sélectionner au moins une image.',
         uploadError: "Échec de l'envoi des captures d'écran.",
+        uploadQuotaExceeded:
+          'Limite de captures par heure atteinte. Patientez un moment ou envoyez moins de captures.',
+        uploadProgress: 'Envoi de {done}/{total} captures — ne quittez pas cette page.',
         pollFailed: "L'import a échoué. Veuillez réessayer.",
         pollTimeout: "L'import prend trop de temps. Veuillez réessayer.",
         datasetArchiveFailed:
           "Roster importé. La contribution au dataset n'a pas pu être enregistrée.",
-        marginAmbiguous: 'Ambigu',
-        marginUncertain: 'Incertain',
-        marginClear: 'Net',
-        marginCorrected: 'Corrigé',
-        pickChampionTitle: 'Autres candidats',
+        scoreAmbiguous: 'Ambigu',
+        scoreUncertain: 'Incertain',
+        scoreClear: 'Net',
+        scoreCorrected: 'Corrigé',
         pickChampionSearch: 'Rechercher un champion…',
         pickChampionEmpty: 'Aucun champion trouvé.',
         shareDataset: "Contribuer au dataset d'entraînement",

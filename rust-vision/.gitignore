@@ -1,0 +1,6 @@
+/target
+out/
+# Built by `build_gallery` (and by the Docker image): derived from Mawster's portraits.
+/artifacts/
+.env
+__pycache__/

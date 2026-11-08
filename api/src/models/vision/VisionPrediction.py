@@ -36,7 +36,11 @@ class VisionPrediction(UUIDBase, table=True):
     # than derived: the margin alone cannot tell "corrected" from "unsure", and
     # once the candidates are persisted the reason for their order is gone.
     reranked: bool = Field(default=False)
-    crop_key: str | None = Field(default=None, max_length=255)
+    # All four or none, in screenshot pixels (see VisionPreview).
+    preview_left: float | None = Field(default=None)
+    preview_right: float | None = Field(default=None)
+    preview_top: float | None = Field(default=None)
+    preview_bottom: float | None = Field(default=None)
 
     job: "VisionJob" = Relationship(back_populates="predictions")
     candidates: list["VisionPredictionCandidate"] = Relationship(

@@ -82,7 +82,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Resolved version: $VERSION (released content: $RELEASED)"
 
-  # Builds the same five images with push disabled, alongside `test` rather than after it,
+  # Builds the same six images with push disabled, alongside `test` rather than after it,
   # so the gated `images` job below only has layers to push. Nothing depends on it: a warm
   # miss must cost time, never the deploy.
   images-warm:
@@ -93,6 +93,7 @@ jobs:
     uses: $/.github/workflows/_images.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
     with:
       moving_tag: ${{ needs.changes.outputs.moving_tag }}
       tag_prefix: ${{ needs.changes.outputs.tag_prefix }}
@@ -109,6 +110,7 @@ jobs:
     uses: $/.github/workflows/_images.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
     with:
       moving_tag: ${{ needs.changes.outputs.moving_tag }}
       tag_prefix: ${{ needs.changes.outputs.tag_prefix }}

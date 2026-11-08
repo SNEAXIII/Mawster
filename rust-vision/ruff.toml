@@ -1,0 +1,70 @@
+# Self-contained ruff configuration (this repo is a git submodule of Mawster but is
+# cloned and linted on its own, so it cannot extend the parent's ruff.toml).
+#
+# `select` is pinned explicitly: ruff's implicit default rule set widens with every
+# release, which silently changes what a commit is allowed to contain.
+
+line-length = 88
+indent-width = 4
+target-version = "py312"
+
+extend-exclude = [
+    "out",
+    "artifacts",
+    "data",
+]
+
+[lint]
+select = [
+    "F", # pyflakes
+    "E4", # pycodestyle: imports
+    "E7", # pycodestyle: statements
+    "E9", # pycodestyle: runtime errors
+    "W", # pycodestyle warnings
+    "I", # isort
+    "N", # pep8-naming
+    "UP", # pyupgrade
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "G", # flake8-logging-format
+    "ISC", # implicit string concatenation
+    "PIE", # flake8-pie
+    "SIM", # flake8-simplify
+    "PERF", # perflint
+    "FURB", # refurb
+    "PLC", # pylint conventions
+    "PLE", # pylint errors
+    "PLW", # pylint warnings
+    "RUF", # ruff-specific
+    "BLE001", # blind `except Exception`
+    "TRY004", # raise TypeError for type checks
+    "S110", # try/except/pass swallowing errors
+]
+
+ignore = [
+    # Function-level imports are deliberate: torch/ultralytics/onnxruntime are heavy and some
+    # of them must not be imported before torch (see CLAUDE.md gotchas).
+    "PLC0415",
+    # `class X(str, Enum)` is kept over `StrEnum` — it changes what `str(X.A)` returns.
+    "UP042",
+    # Local aliases of classes and in-function constants are a readability device.
+    "N806",
+    "N814",
+    "N817",
+    # En dashes and `×` in comments/docstrings are intentional typography, not typos.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[lint.per-file-ignores]
+# These scripts run as plain files: they must push the repo root onto sys.path (and
+# import torch first — see CLAUDE.md) *before* importing anything local.
+"scripts/*.py" = ["E402"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

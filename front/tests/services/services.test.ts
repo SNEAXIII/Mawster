@@ -8,7 +8,9 @@ import {
 } from '@/app/services/roster'
 import { api, jsonBody, jsonHeaders } from '@/app/services/utils'
 import { getChampionImageUrl } from '@/app/services/champions'
-import { getSpriteUrl } from '@/app/services/vision'
+import { keepHighestRank, type VisionPrediction } from '@/app/services/vision'
+import { previewAspectRatio, previewImageStyle } from '@/app/services/vision-screens'
+import { scoreLevel } from '@/components/roster/import-preview-row-edit'
 
 describe('rarity helpers', () => {
   it.each([
@@ -67,8 +69,76 @@ describe('getChampionImageUrl', () => {
   })
 })
 
-it('sprite URL goes through the proxy', () => {
-  expect(getSpriteUrl('imp', 'job')).toBe('/api/back/vision/imports/imp/jobs/job/crops/sprite')
+describe('vision preview', () => {
+  it('scales the card to the box from the top-left corner', () => {
+    expect(previewImageStyle({ left: 100, right: 300, top: 50, bottom: 350 }, 100)).toEqual({
+      transformOrigin: '0 0',
+      transform: 'scale(0.5) translate(-100px, -50px)',
+    })
+  })
+
+  it('handles a preview touching the right edge', () => {
+    const preview = { left: 780, right: 1080, top: 40, bottom: 440 }
+    expect(previewImageStyle(preview, 150).transform).toBe('scale(0.5) translate(-780px, -40px)')
+    expect(previewAspectRatio(preview)).toBe(0.75)
+  })
+
+  it('aspect ratio is width over height', () => {
+    expect(previewAspectRatio({ left: 0, right: 200, top: 0, bottom: 100 })).toBe(2)
+  })
+})
+
+describe('keepHighestRank', () => {
+  const read = (id: string, overrides: Partial<VisionPrediction> = {}): VisionPrediction =>
+    ({
+      id,
+      champion_name: 'Hulk',
+      stars: 7,
+      rank: 4,
+      signature: 200,
+      confidence: 0.5,
+      ...overrides,
+    }) as VisionPrediction
+  const keptIds = (reads: VisionPrediction[]) => keepHighestRank(reads).map((r) => r.id)
+
+  it('keeps the highest rank, even at a lower signature or score', () => {
+    expect(
+      keptIds([read('a', { rank: 3 }), read('b', { rank: 5, signature: 0, confidence: 0.1 })])
+    ).toEqual(['b'])
+  })
+
+  it('breaks a rank tie on signature, then on score', () => {
+    expect(keptIds([read('a', { signature: 20 }), read('b')])).toEqual(['b'])
+    expect(keptIds([read('a', { confidence: 0.9 }), read('b')])).toEqual(['a'])
+  })
+
+  it('matches names case-insensitively', () => {
+    expect(keptIds([read('a'), read('b', { champion_name: 'HULK', rank: 5 })])).toEqual(['b'])
+  })
+
+  it('keeps a 6* and a 7* of the same champion', () => {
+    expect(keptIds([read('a'), read('b', { stars: 6 })])).toEqual(['a', 'b'])
+  })
+
+  it('never merges unread names', () => {
+    const unread = { champion_name: null }
+    expect(keptIds([read('a', unread), read('b', unread)])).toEqual(['a', 'b'])
+  })
+})
+
+describe('vision score level', () => {
+  it.each([
+    [null, 'low'],
+    [undefined, 'low'],
+    [0, 'low'],
+    [0.11, 'low'],
+    [0.12, 'medium'],
+    [0.19, 'medium'],
+    [0.2, 'high'],
+    [0.8, 'high'],
+  ])('reads %s as %s', (score, level) => {
+    expect(scoreLevel(score)).toBe(level)
+  })
 })
 
 describe('api', () => {

@@ -12,6 +12,7 @@ ever queue a screenshot the other already queued.
 """
 
 import uuid
+from contextlib import nullcontext
 
 import pytest
 from fastapi import HTTPException
@@ -51,6 +52,9 @@ class FakeStorage:
         self.signed.append((key, content_type))
         return f"https://s3.test/{bucket}/{key}?sig=stub&exp={expires_in}"
 
+    async def presigned_get_url(self, bucket: str, key: str, expires_in: int) -> str:
+        return f"https://s3.test/get/{bucket}/{key}?sig=stub&exp={expires_in}"
+
     async def stat_object(self, bucket: str, key: str) -> ObjectStat | None:
         if key not in self.objects:
             return None
@@ -74,6 +78,8 @@ class FakeResult:
 
 class FakeSession:
     """Async session stub: records adds, and returns pre-seeded rows from exec."""
+
+    no_autoflush = nullcontext()
 
     def __init__(self, jobs: list[VisionJob] | None = None):
         self.added: list[object] = []

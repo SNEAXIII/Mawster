@@ -1,0 +1,371 @@
+//! Recall of the mosaic embedding on the Rust detector's portrait boxes, against the verified GT.
+//! Grades the shots `cargo run` left a report for (`out/debug/<stem>/rust_cards.json`, see `RUST_CARDS`).
+use anyhow::{Context, Result};
+use image::{DynamicImage, RgbImage, imageops};
+use mcoc_vision::{
+    config::{GalleryConfig, REAL_DIR},
+    gallery::{self, Gallery},
+    mosaic,
+};
+use serde_json::Value;
+use std::{fs, path::Path, time::Instant};
+
+/// Box offsets tried per query, as a fraction of its width and height; the best score wins.
+const SHIFTS: [(&str, &[f32]); 2] = [("no shift", &[0.0]), ("±2 %", &[-0.02, 0.0, 0.02])];
+
+/// Written by the detector binary per screenshot: `[{"cell": "r0c3", "portrait": [x1, y1, x2, y2]}, …]`.
+const RUST_CARDS: &str = "rust_cards.json";
+
+fn read_json(path: &Path) -> Result<Value> {
+    let text = fs::read_to_string(path).with_context(|| path.display().to_string())?;
+    Ok(serde_json::from_str(&text)?)
+}
+
+/// The setting whose misses get a debug sheet in `DEBUG_DIR`.
+const DEBUG_SETTING: &str = "no shift";
+const DEBUG_DIR: &str = "out/debug/mosaic";
+const TILE_WIDTH: u32 = 240;
+const TILE_HEIGHT: u32 = 140;
+const GAP: u32 = 8;
+
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss
+)]
+fn query_features(img: &RgbImage, portrait: [f32; 4], shifts: &[f32]) -> Vec<Vec<f32>> {
+    let (w, h) = (portrait[2] - portrait[0], portrait[3] - portrait[1]);
+    let mut out = Vec::new();
+    for dx in shifts {
+        for dy in shifts {
+            let x = (portrait[0] + dx * w).max(0.0) as u32;
+            let y = (portrait[1] + dy * h).max(0.0) as u32;
+            out.push(mosaic::embed(
+                &imageops::crop_imm(img, x, y, w as u32, h as u32).to_image(),
+            ));
+        }
+    }
+    out
+}
+
+/// A champion's score is its best match over the shifted crops.
+fn best_score(queries: &[Vec<f32>], embedding: &[f32]) -> f32 {
+    queries
+        .iter()
+        .map(|query| mosaic::compare(query, embedding))
+        .fold(f32::MIN, f32::max)
+}
+
+/// Gallery indices by descending score.
+fn rank(gallery: &Gallery, queries: &[Vec<f32>]) -> Vec<(usize, f32)> {
+    rank_among(gallery, queries, 0..gallery.len())
+}
+
+fn rank_among(
+    gallery: &Gallery,
+    queries: &[Vec<f32>],
+    candidates: impl Iterator<Item = usize>,
+) -> Vec<(usize, f32)> {
+    let mut scores: Vec<(usize, f32)> = candidates
+        .map(|index| (index, best_score(queries, &gallery[index].2)))
+        .collect();
+    scores.sort_by(|a, b| b.1.total_cmp(&a.1));
+    scores
+}
+
+/// Cards whose plain-mosaic margin falls under one of these get the shift search.
+const CASCADE_MARGINS: [f32; 3] = [0.02, 0.05, 0.10];
+const SHORTLIST: usize = 5;
+
+/// One plain mosaic for every card; only a close call pays for the ±2 % shift
+/// search, and only over the first pass's shortlist. Says whether it reranked.
+fn rank_cascade(
+    gallery: &Gallery,
+    screenshot: &RgbImage,
+    portrait: [f32; 4],
+    min_margin: f32,
+) -> (Vec<(usize, f32)>, bool) {
+    let first = rank(gallery, &query_features(screenshot, portrait, SHIFTS[0].1));
+    if first[0].1 - first[1].1 >= min_margin {
+        return (first, false);
+    }
+    let queries = query_features(screenshot, portrait, SHIFTS[1].1);
+    let shortlist = first[..SHORTLIST].iter().map(|&(index, _)| index);
+    (rank_among(gallery, &queries, shortlist), true)
+}
+
+struct CascadeTally {
+    hits: usize,
+    reranked: usize,
+    secs: f64,
+}
+
+fn tally_cascades(
+    cascades: &mut [CascadeTally],
+    gallery: &Gallery,
+    screenshot: &RgbImage,
+    portrait: [f32; 4],
+    truth: &str,
+) {
+    for (min_margin, tally) in CASCADE_MARGINS.iter().zip(cascades) {
+        let started = Instant::now();
+        let (ranked, reranked) = rank_cascade(gallery, screenshot, portrait, *min_margin);
+        tally.secs += started.elapsed().as_secs_f64();
+        tally.reranked += usize::from(reranked);
+        tally.hits += usize::from(gallery[ranked[0].0].0.eq_ignore_ascii_case(truth));
+    }
+}
+
+/// Paints a normalised embedding back as an image: grey is the channel's mean,
+/// brighter and darker are what the comparison actually sees.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+fn render_embedding(values: &[f32]) -> RgbImage {
+    let height = u32::try_from(values.len() / (3 * mosaic::KEPT_WIDTH as usize)).unwrap_or(0);
+    let largest = values
+        .iter()
+        .fold(0.0_f32, |acc, value| acc.max(value.abs()))
+        + 1e-6;
+    let pixels = values
+        .iter()
+        .map(|value| (128.0 + 127.0 * value / largest) as u8)
+        .collect();
+    RgbImage::from_raw(mosaic::KEPT_WIDTH, height, pixels).unwrap_or_default()
+}
+
+/// One sheet row: the image, the raw mosaic rows it covers, and their normalised inner cells.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+fn debug_row(image: &RgbImage) -> [RgbImage; 3] {
+    let fit = |small: &RgbImage, filter| {
+        DynamicImage::ImageRgb8(small.clone())
+            .resize(TILE_WIDTH, TILE_HEIGHT, filter)
+            .to_rgb8()
+    };
+    let enlarge = |small: &RgbImage| fit(small, imageops::FilterType::Nearest);
+    let (rows, values) = mosaic::shrink_to_mosaic(image);
+    let raw_pixels = values.iter().map(|&value| value as u8).collect();
+    let raw_mosaic = RgbImage::from_raw(mosaic::MOSAIC_WIDTH, rows, raw_pixels).unwrap_or_default();
+    [
+        fit(image, imageops::FilterType::Triangle),
+        enlarge(&raw_mosaic),
+        enlarge(&render_embedding(&mosaic::embed(image))),
+    ]
+}
+
+/// Rows top to bottom: the card's crop, the champion picked, the right champion.
+fn write_debug_sheet(path: &Path, images: &[&RgbImage]) -> Result<()> {
+    let row_count = u32::try_from(images.len())?;
+    let mut sheet = RgbImage::new(
+        3 * TILE_WIDTH + 2 * GAP,
+        row_count * TILE_HEIGHT + (row_count - 1) * GAP,
+    );
+    for (row, image) in (0..).zip(images) {
+        for (column, tile) in (0..).zip(debug_row(image)) {
+            let x = i64::from(column * (TILE_WIDTH + GAP));
+            let y = i64::from(row * (TILE_HEIGHT + GAP));
+            imageops::replace(&mut sheet, &tile, x, y);
+        }
+    }
+    sheet.save(path)?;
+    Ok(())
+}
+
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+fn write_miss(
+    gallery: &Gallery,
+    ranked: &[(usize, f32)],
+    screenshot: &RgbImage,
+    portrait: [f32; 4],
+    truth: &str,
+    card_id: &str,
+) -> Result<()> {
+    let (x, y) = (portrait[0] as u32, portrait[1] as u32);
+    let (width, height) = (
+        (portrait[2] - portrait[0]) as u32,
+        (portrait[3] - portrait[1]) as u32,
+    );
+    let crop = imageops::crop_imm(screenshot, x, y, width, height).to_image();
+    let (picked, picked_score) = ranked[0];
+    let Some(&(right, right_score)) = ranked
+        .iter()
+        .find(|(index, _)| gallery[*index].0.eq_ignore_ascii_case(truth))
+    else {
+        return Ok(());
+    };
+    fs::create_dir_all(DEBUG_DIR)?;
+    let path = Path::new(DEBUG_DIR).join(format!("{card_id}.png"));
+    write_debug_sheet(&path, &[&crop, &gallery[picked].1, &gallery[right].1])?;
+    println!(
+        "  {}: picked {} {picked_score:.3}, right {truth} {right_score:.3}",
+        path.display(),
+        gallery[picked].0
+    );
+    Ok(())
+}
+
+struct Tally {
+    hits: usize,
+    hits5: usize,
+    margin: f32,
+    /// The smallest top1 − top2 gap seen, and on which card.
+    closest: (f32, String),
+    secs: f64,
+    errors: Vec<String>,
+}
+
+impl Tally {
+    /// Counts one card's ranking; says whether the first pick was right.
+    fn record(
+        &mut self,
+        gallery: &Gallery,
+        ranked: &[(usize, f32)],
+        card: &str,
+        truth: &str,
+    ) -> bool {
+        let pred = &gallery[ranked[0].0].0;
+        let margin = ranked[0].1 - ranked[1].1;
+        self.margin += margin;
+        if margin < self.closest.0 {
+            let runner_up = &gallery[ranked[1].0].0;
+            self.closest = (margin, format!("{card}: {pred} over {runner_up}"));
+        }
+        self.hits5 += usize::from(
+            ranked[..5]
+                .iter()
+                .any(|(i, _)| gallery[*i].0.eq_ignore_ascii_case(truth)),
+        );
+        let hit = pred.eq_ignore_ascii_case(truth);
+        if hit {
+            self.hits += 1;
+        } else {
+            self.errors.push(format!("{card}: {truth} -> {pred}"));
+        }
+        hit
+    }
+}
+
+#[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
+fn main() -> Result<()> {
+    let start = Instant::now();
+    let gallery = gallery::build(&GalleryConfig::default())?;
+    println!(
+        "gallery: {} portraits in {:.2?}",
+        gallery.len(),
+        start.elapsed()
+    );
+
+    let mut tallies: Vec<Tally> = SHIFTS
+        .iter()
+        .map(|_| Tally {
+            hits: 0,
+            hits5: 0,
+            margin: 0.0,
+            closest: (f32::MAX, String::new()),
+            secs: 0.0,
+            errors: Vec::new(),
+        })
+        .collect();
+    let mut cascades: Vec<CascadeTally> = CASCADE_MARGINS
+        .iter()
+        .map(|_| CascadeTally {
+            hits: 0,
+            reranked: 0,
+            secs: 0.0,
+        })
+        .collect();
+    let mut cards = 0_u32;
+    let mut gt_paths: Vec<_> = fs::read_dir(REAL_DIR)?
+        .filter_map(|e| Some(e.ok()?.path()))
+        .filter(|p| p.to_string_lossy().ends_with(".gt.json"))
+        .collect();
+    gt_paths.sort();
+    for gt_path in gt_paths {
+        let gt = read_json(&gt_path)?;
+        if gt["_verified"] != Value::Bool(true) {
+            continue;
+        }
+        let file_name = gt_path
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or_default();
+        let stem = file_name.trim_end_matches(".gt.json");
+        let report = Path::new("out/debug").join(stem).join(RUST_CARDS);
+        if !report.exists() {
+            continue;
+        }
+        let rust_cards = read_json(&report)?;
+        let img_path = ["png", "jpg"]
+            .iter()
+            .map(|ext| Path::new(REAL_DIR).join(format!("{stem}.{ext}")))
+            .find(|p| p.exists())
+            .context("screenshot missing")?;
+        let img = image::open(img_path)?.to_rgb8();
+        for card in rust_cards.as_array().context("no cards")? {
+            let cell = card["cell"].as_str().unwrap_or_default();
+            let Some(truth) = gt["cells"][cell]["name"].as_str() else {
+                continue;
+            };
+            let Some(b) = card["portrait"].as_array() else {
+                continue;
+            };
+            let b: Vec<f32> = b
+                .iter()
+                .filter_map(|v| v.as_f64().map(|x| x as f32))
+                .collect();
+            let b = [b[0], b[1], b[2], b[3]];
+            cards += 1;
+            tally_cascades(&mut cascades, &gallery, &img, b, truth);
+            for ((label, shifts), t) in SHIFTS.iter().zip(&mut tallies) {
+                let t0 = Instant::now();
+                let ranked = rank(&gallery, &query_features(&img, b, shifts));
+                t.secs += t0.elapsed().as_secs_f64();
+                if !t.record(&gallery, &ranked, &format!("{stem} {cell}"), truth)
+                    && *label == DEBUG_SETTING
+                {
+                    write_miss(&gallery, &ranked, &img, b, truth, &format!("{stem}_{cell}"))?;
+                }
+            }
+        }
+    }
+
+    print_summary(cards, &tallies, &cascades);
+    Ok(())
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn print_summary(cards: u32, tallies: &[Tally], cascades: &[CascadeTally]) {
+    println!(
+        "mosaic {}*{}, border {}",
+        mosaic::MOSAIC_WIDTH,
+        mosaic::MOSAIC_HEIGHT,
+        mosaic::BORDER_CELLS
+    );
+
+    let pct = |n: usize| 100.0 * n as f32 / cards as f32;
+    println!("{cards} cards vs GT");
+    for ((label, shifts), t) in SHIFTS.iter().zip(tallies) {
+        println!(
+            "mosaic {label:<10} ({} crops): top1 {}/{cards} ({:.1} %) · top5 {:.1} % · margin {:.3} · {:.2} ms/card",
+            shifts.len().pow(2),
+            t.hits,
+            pct(t.hits),
+            pct(t.hits5),
+            t.margin / cards as f32,
+            1000.0 * t.secs / f64::from(cards),
+        );
+        println!("    closest call {:.3} · {}", t.closest.0, t.closest.1);
+    }
+    for (min_margin, tally) in CASCADE_MARGINS.iter().zip(cascades) {
+        println!(
+            "cascade margin < {min_margin:.2}: top1 {}/{cards} ({:.1} %) · reranked {} ({:.1} %) · {:.2} ms/card",
+            tally.hits,
+            pct(tally.hits),
+            tally.reranked,
+            pct(tally.reranked),
+            1000.0 * tally.secs / f64::from(cards),
+        );
+    }
+    if let Some(best) = tallies.iter().max_by_key(|t| t.hits) {
+        println!("\nerrors of the best setting:");
+        best.errors.iter().for_each(|e| println!("  {e}"));
+    }
+}

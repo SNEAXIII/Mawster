@@ -3,18 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from src.dto.account.game.dto_vision_predictions import VisionPreview
 from src.enums.VisionJobStatus import VisionJobStatus
-
-
-class VisionCandidate(BaseModel):
-    """One CLIP guess and its cosine similarity.
-
-    The list of these is what makes the top1-top2 margin computable. The margin
-    is the real confidence signal: the absolute score says almost nothing.
-    """
-
-    name: str
-    score: float = 0.0
 
 
 class VisionPredictionMessage(BaseModel):
@@ -22,7 +12,7 @@ class VisionPredictionMessage(BaseModel):
 
     Cross-repo contract: produced by mcoc-vision's worker, consumed here. The
     field names are the mapping of mcoc-vision's CardResult — `sig` becomes
-    `signature`, `name_score` becomes `confidence`, and `awakened` is dropped
+    `signature`, the naming score becomes `confidence`, and `awakened` is dropped
     (the roster has no such column; it is implied by signature > 0).
     """
 
@@ -33,16 +23,9 @@ class VisionPredictionMessage(BaseModel):
     signature: int = 0
     ascension: int = 0
     confidence: float = 0.0
-    crop_key: str | None = None
-    # True when CLIP's top two were near-tied and a pixel second pass reordered
-    # them. Those cards arrive with a *negative* margin — the winner keeps its
-    # own, lower, CLIP cosine — so without this flag they are indistinguishable
-    # from a card the model was simply unsure about. False from a worker that
-    # predates the second pass.
+    preview: VisionPreview | None = None
+    # True when a pixel second pass overrode the first naming pass.
     reranked: bool = False
-    # Best first. Empty from a worker that predates this field, or when the
-    # portrait crop failed and no naming ran — both are valid, not errors.
-    candidates: list[VisionCandidate] = []
 
 
 class VisionResultMessage(BaseModel):

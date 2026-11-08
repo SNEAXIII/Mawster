@@ -32,6 +32,12 @@ REVISIONS_FILE = _ROOT / "static-assets" / "portrait_revisions.json"
 
 VALID_CLASSES = {c.value for c in ChampionClass}
 
+# Per-class variants, one champion each, and enemies nobody plays: they stay out of the catalog.
+EXCLUDED_PREFIXES = ("Anti-Venomoid (", "Doombot (")
+EXCLUDED_NAMES = {"Symbioid"}
+# Replaced on the wiki by those variants, but rosters own it.
+KEPT_WITHOUT_WIKI_ROW = {"Anti-Venomoid"}
+
 REVISION_LATEST = "/revision/latest"
 
 # Columns of a List_of_Champions row: portrait, name, release date, class.
@@ -214,6 +220,10 @@ def _parse_champion_row(cells, seen_names, champions, row_idx):
     if not name or name in seen_names:
         return
 
+    if name in EXCLUDED_NAMES or name.startswith(EXCLUDED_PREFIXES):
+        print(f"  [SKIP] {name}: excluded")
+        return
+
     if len(champions) < 3:
         print(f"  [DEBUG] Row {row_idx}: name='{name}', cells={len(cells)}")
         for ci, c in enumerate(cells):
@@ -298,7 +308,8 @@ def download_champion_images(champions: list[dict], force: bool = False):
     )
     results = asyncio.run(download_images(jobs, revisions, force))
     # Saved before the checks below: the portraits downloaded are on disk whatever they decide.
-    REVISIONS_FILE.write_text(
+    # Sonar S2083 is a false positive: the path is a constant, only the content comes from the file.
+    REVISIONS_FILE.write_text(  # NOSONAR S2083
         json.dumps(revisions, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     # A failed --force re-download still leaves the previous portrait usable.
@@ -324,6 +335,8 @@ def download_champion_images(champions: list[dict], force: bool = False):
 
     # A wiki page that parses to fewer rows (layout change, challenge page) must not erase champions.
     previous = json.loads(JSON_OUTPUT.read_text(encoding="utf-8")) if JSON_OUTPUT.exists() else []
+    on_wiki = {c["name"] for c in final_data}
+    final_data += [c for c in previous if c["name"] in KEPT_WITHOUT_WIKI_ROW - on_wiki]
     dropped = sorted({c["name"] for c in previous} - {c["name"] for c in final_data})
     if dropped:
         sys.exit(

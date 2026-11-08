@@ -30,6 +30,14 @@ class VisionProgressService:
         The flush is load-bearing: callers change a job's status right before,
         and the subquery counts rows, not ORM state.
         """
+        # Import row first, jobs after, for every caller: the subquery's shared locks on the
+        # jobs deadlock against a result holding its job. The lock must precede the flush.
+        with session.no_autoflush:
+            await session.exec(
+                select(VisionImport.id)
+                .where(col(VisionImport.id) == vision_import.id)
+                .with_for_update()
+            )
         await session.flush()
 
         finished = (

@@ -4,6 +4,7 @@ import uuid
 
 from pydantic import BaseModel
 
+from src.dto.account.game.dto_vision_predictions import VisionPreview
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
@@ -107,6 +108,7 @@ class VisionDatasetService:
     def _prediction_payload(prediction: VisionPrediction | None) -> dict | None:
         if prediction is None:
             return None
+        preview = VisionPreview.from_prediction(prediction)
         return {
             "champion_name": prediction.champion_name,
             "champion_class": prediction.champion_class,
@@ -115,5 +117,5 @@ class VisionDatasetService:
             "signature": prediction.signature,
             "ascension": prediction.ascension,
             "confidence": prediction.confidence,
-            "crop_key": prediction.crop_key,
+            "preview": preview.model_dump() if preview else None,
         }

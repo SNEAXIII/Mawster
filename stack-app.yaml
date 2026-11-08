@@ -337,9 +337,10 @@ services:
     # uploads screenshots straight here with a presigned URL. Being reachable is
     # not being open: no bucket policy grants anonymous access, so an unsigned
     # request gets AccessDenied and a signed one can only touch the single key
-    # the API chose, for fifteen minutes. api/worker keep using the internal
-    # http://rustfs:9000 — server-side traffic has no reason to leave the
-    # overlay, and RUSTFS_PUBLIC_ENDPOINT exists precisely to keep the two apart.
+    # the API chose: fifteen minutes to upload, one hour to read. api/worker keep
+    # using the internal http://rustfs:9000 — server-side traffic has no reason
+    # to leave the overlay, and RUSTFS_PUBLIC_ENDPOINT exists precisely to keep
+    # the two apart.
     ports:
       - target: 9001
         published: 9001
@@ -413,7 +414,7 @@ services:
         # page replay a leaked URL from its own origin.
         aws --endpoint-url http://rustfs:9000 s3api put-bucket-cors \
           --bucket vision \
-          --cors-configuration '{"CORSRules":[{"AllowedOrigins":["https://www.mawster.app"],"AllowedMethods":["PUT"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}'
+          --cors-configuration '{"CORSRules":[{"AllowedOrigins":["https://www.mawster.app"],"AllowedMethods":["GET","PUT"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3000}]}'
     deploy:
       replicas: 1
       restart_policy:
@@ -424,8 +425,7 @@ services:
         max-size: 5m
         max-file: '3'
 
-  # The private, torch-free ONNX worker. Image lives in a PRIVATE registry repo
-  # (built + pushed by mcoc-vision's own CI), so the worker source never leaks.
+  # Built by _images.yaml from rust-vision/. The image carries the private models: its registry repo is private.
   vision-worker:
     image: sneaxiii/mawster-vision-worker:latest
     networks:
@@ -438,8 +438,7 @@ services:
       - mawster_rabbitmq_pass
       - mawster_rustfs_access_key
       - mawster_rustfs_secret_key
-    # The image's worker/entrypoint.sh reads these secrets from /run/secrets and
-    # exports RABBITMQ_URL / RUSTFS_* before starting the worker.
+    # The worker reads these from /run/secrets when RABBITMQ_URL / RUSTFS_* are unset.
     deploy:
       replicas: 1
       restart_policy:

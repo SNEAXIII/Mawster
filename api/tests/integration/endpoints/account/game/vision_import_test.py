@@ -5,7 +5,6 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from botocore.exceptions import ClientError
 from sqlmodel import select
 
 from main import app
@@ -22,11 +21,12 @@ from src.models.vision.VisionJob import VisionJob
 from src.security.secrets import SECRET
 from src.services.account.game.VisionImportService import (
     MAX_SCREENS_PER_IMPORT,
+    SCREEN_URL_TTL_SECONDS,
     UPLOAD_URL_TTL_SECONDS,
 )
 from src.services.account.game.VisionResultService import VisionResultService
 from src.storage import get_storage
-from src.storage.base import ObjectStat, screen_key, sprite_key
+from src.storage.base import ObjectStat, screen_key
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import push_game_account
 from tests.integration.endpoints.setup.user_setup import push_one_user, push_user2
@@ -56,6 +56,9 @@ class FakeStorage:
     ) -> str:
         return f"https://s3.test/{bucket}/{key}?exp={expires_in}"
 
+    async def presigned_get_url(self, bucket: str, key: str, expires_in: int) -> str:
+        return f"https://s3.test/get/{bucket}/{key}?exp={expires_in}"
+
     async def stat_object(self, bucket: str, key: str):
 
         if key not in self.objects:
@@ -70,17 +73,6 @@ class FakeStorage:
         bucket without the API seeing them, which is the whole point of the flow."""
         self.objects[key] = data
         self.content_types[key] = content_type
-
-    async def get_bytes(self, bucket: str, key: str) -> bytes:
-        if key not in self.objects:
-            # Real shape of a missing-object error from aioboto3/botocore, so the
-            # controller's `except ClientError` branch sees the same thing it
-            # would against real RustFS.
-            raise ClientError(
-                {"Error": {"Code": "NoSuchKey"}, "ResponseMetadata": {"HTTPStatusCode": 404}},
-                "GetObject",
-            )
-        return self.objects[key]
 
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         for key in [key for key in self.objects if key.startswith(prefix)]:
@@ -453,15 +445,8 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
                         signature=200,
                         ascension=1,
                         confidence=0.9,
-                        crop_key="imports/a/b/crops/sprite_v1.webp#0",
-                        candidates=[
-                            {"name": "Hulk", "score": 0.90},
-                            {"name": "Red Hulk", "score": 0.62},
-                        ],
+                        preview={"left": 0.0, "right": 0.2, "top": 0.05, "bottom": 0.4},
                     ),
-                    # A card the pixel second pass corrected: the winner keeps its
-                    # own lower CLIP cosine, so the stored order is inverted and
-                    # the derived margin comes out negative.
                     VisionPredictionMessage(
                         champion_name="Spider-Man (Stark Enhanced)",
                         champion_class="Science",
@@ -471,11 +456,6 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
                         ascension=0,
                         confidence=0.8528,
                         reranked=True,
-                        crop_key="imports/a/b/crops/sprite_v1.webp#1",
-                        candidates=[
-                            {"name": "Spider-Man (Stark Enhanced)", "score": 0.8528},
-                            {"name": "Spider-Man (Classic)", "score": 0.8561},
-                        ],
                     ),
                 ],
             ),
@@ -490,29 +470,17 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
     assert len(body["predictions"]) == 2
     # Rows come back ordered by a uuid4 primary key, so index by name, not position.
     by_name = {p["champion_name"]: p for p in body["predictions"]}
-    assert by_name["Hulk"]["crop_index"] == 0
+    assert by_name["Hulk"]["preview"] == {"left": 0.0, "right": 0.2, "top": 0.05, "bottom": 0.4}
 
-    # The candidates survive the whole round trip — worker message, child table,
-    # eager load, response — and come back best first. The unit test for _margin
-    # proves the arithmetic; only this proves the wiring under it.
     row = by_name["Hulk"]
-    assert [(c["name"], c["score"]) for c in row["candidates"]] == [
-        ("Hulk", 0.90),
-        ("Red Hulk", 0.62),
-    ]
-    assert row["margin"] == pytest.approx(0.28)
+    assert row["confidence"] == pytest.approx(0.9)
     assert row["reranked"] is False
+    assert "candidates" not in row
+    assert "margin" not in row
 
-    # The corrected card: `position` preserved the inverted order the second pass
-    # produced, so the margin is negative and the flag says why.
     fixed = by_name["Spider-Man (Stark Enhanced)"]
     assert fixed["reranked"] is True
-    assert fixed["crop_index"] == 1
-    assert [c["name"] for c in fixed["candidates"]] == [
-        "Spider-Man (Stark Enhanced)",
-        "Spider-Man (Classic)",
-    ]
-    assert fixed["margin"] == pytest.approx(-0.0033)
+    assert fixed["preview"] is None
 
 
 @pytest.mark.asyncio
@@ -537,67 +505,22 @@ async def test_predictions_endpoint_of_another_user_is_forbidden(fake_infra):
 
 
 @pytest.mark.asyncio
-async def test_sprite_bytes_for_owner(fake_infra):
-    storage, _ = fake_infra
+async def test_predictions_screens_hold_a_url_for_done_jobs_only(fake_infra):
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
     headers = create_auth_headers(str(USER_ID))
-    created = await _post_import(headers, account.id, [_png("a.png")])
+    created = await _post_import(headers, account.id, [_png("a.png"), _png("b.png")])
     import_id = created.json()["id"]
-    detail = await _get_import(headers, import_id)
-    job_id = detail["jobs"][0]["id"]
-
-    sheet = b"RIFF____WEBPVP8 sheet-bytes"
-    storage.objects[sprite_key(uuid.UUID(import_id), uuid.UUID(job_id))] = sheet
+    done_id = (await _get_import(headers, import_id))["jobs"][0]["id"]
+    await _drive_job_done_with_prediction(done_id)
 
     async with get_test_client() as client:
-        response = await client.get(
-            f"/vision/imports/{import_id}/jobs/{job_id}/crops/sprite", headers=headers
-        )
+        response = await client.get(f"/vision/imports/{import_id}/predictions", headers=headers)
 
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "image/webp"
-    assert response.content == sheet
-
-
-@pytest.mark.asyncio
-async def test_sprite_bytes_forbidden_for_non_owner(fake_infra):
-    await push_one_user()
-    await push_user2()
-    owner_account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-    await push_game_account(user_id=USER2_ID, game_pseudo=GAME_PSEUDO_2)
-    created = await _post_import(
-        create_auth_headers(str(USER_ID)), owner_account.id, [_png("a.png")]
-    )
-    import_id = created.json()["id"]
-    detail = await _get_import(create_auth_headers(str(USER_ID)), import_id)
-    job_id = detail["jobs"][0]["id"]
-
-    async with get_test_client() as client:
-        response = await client.get(
-            f"/vision/imports/{import_id}/jobs/{job_id}/crops/sprite",
-            headers=create_auth_headers(str(USER2_ID)),
-        )
-
-    assert response.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_sprite_missing_object_is_404(fake_infra):
-    await push_one_user()
-    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
-    headers = create_auth_headers(str(USER_ID))
-    created = await _post_import(headers, account.id, [_png("a.png")])
-    import_id = created.json()["id"]
-    detail = await _get_import(headers, import_id)
-    job_id = detail["jobs"][0]["id"]
-
-    async with get_test_client() as client:
-        response = await client.get(
-            f"/vision/imports/{import_id}/jobs/{job_id}/crops/sprite", headers=headers
-        )
-
-    assert response.status_code == 404
+    screens = response.json()["screens"]
+    assert list(screens) == [done_id]
+    assert screens[done_id].endswith(f"?exp={SCREEN_URL_TTL_SECONDS}")
+    assert screen_key(uuid.UUID(import_id), uuid.UUID(done_id)) in screens[done_id]
 
 
 async def _drive_job_done_with_prediction(job_id: str) -> None:
@@ -622,7 +545,6 @@ async def _drive_job_done_with_prediction(job_id: str) -> None:
                         signature=200,
                         ascension=1,
                         confidence=0.9,
-                        crop_key="imports/a/b/crops/sprite_v1.webp#0",
                     )
                 ],
             ),

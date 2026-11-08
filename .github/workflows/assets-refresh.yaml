@@ -42,9 +42,6 @@ jobs:
           body: |
             Automated scrape of the champion wiki.
 
-            The vision gate posts a naming-regression report on this PR once it
-            finishes. It is informational and never blocks the merge.
-
             Merging lands the assets on `main`, but production does not gain the
             champion until this is promoted to `release`, which rebuilds and
             pushes the api and static images - only then does `make deploy`
