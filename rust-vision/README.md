@@ -31,7 +31,7 @@ screenshot
 
 - `src/fixtures/champions.json` — champions (name + class + url)
 - `Mawster/static-assets/static/champions/<slug>.png` — full-size portraits
-- `data/real/shot_01.png` — reference screenshot (background source, geometry)
+- `data/real/shot_0001.png` — reference screenshot (background source, geometry)
 
 Override the Mawster location with `MAWSTER_REPO=/path/to/Mawster` if needed.
 

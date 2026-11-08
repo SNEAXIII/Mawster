@@ -114,7 +114,7 @@ fn shot_range(elem: &str) -> Result<RangeInclusive<u32>, ParseIntError> {
     Ok(start.trim().parse()?..=end.trim().parse()?)
 }
 
-/// `data/real/shot_07.jpg` → 7.
+/// `data/real/shot_0007.jpg` → 7.
 fn shot_number(path: &str) -> Option<u32> {
     Path::new(path)
         .file_stem()?
