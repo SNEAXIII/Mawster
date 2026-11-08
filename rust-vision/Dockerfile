@@ -24,7 +24,12 @@ COPY --from=prepare-deps /app/recipe.json recipe.json
 RUN cargo chef cook --release --locked --bin mcoc-vision
 COPY Cargo.toml Cargo.lock ./
 COPY src src
-RUN --mount=type=bind,source=artifacts-vision/data/real,target=/app/artifacts-vision/data/real \n    ./target/release/mcoc-vision
+RUN cargo build --release --locked --bin mcoc-vision
+COPY artifacts-vision/artifacts/yolo/best.onnx artifacts-vision/artifacts/yolo/
+COPY artifacts-vision/artifacts/ocr/digits.onnx artifacts-vision/artifacts/ocr/
+COPY --from=gallery /app/gallery.bin artifacts/gallery/mosaic.bin
+RUN --mount=type=bind,source=artifacts-vision/data/real,target=/app/artifacts-vision/data/real \
+    ./target/release/mcoc-vision --no-save && touch /gt-passed
 
 FROM base-rust AS worker-build
 COPY --from=prepare-deps /app/recipe.json recipe.json
@@ -41,5 +46,7 @@ COPY --from=worker-build /runtime /
 COPY artifacts-vision/artifacts/yolo/best.onnx artifacts-vision/artifacts/ocr/digits.onnx ./
 COPY --from=gallery /app/gallery.bin .
 COPY --from=worker-build /app/target/release/worker .
+# BuildKit only builds what the target needs: this makes the ground-truth gate one of them.
+COPY --from=ground-truth /gt-passed /
 ENV DETECTOR_MODEL=best.onnx DIGITS_MODEL=digits.onnx GALLERY_FILE=gallery.bin
 ENTRYPOINT ["/app/worker"]
