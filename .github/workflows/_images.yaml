@@ -78,7 +78,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      # Only this submodule: `submodules: true` would also pull the private notes.
       - name: Resolve the private submodule commit
         if: matrix.private_submodule
         id: private

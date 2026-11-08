@@ -223,3 +223,6 @@ backups*/
 
 # founder-skill business planning workspace
 /founder/
+
+# Obsidian vault: its own repository, kept next to the code
+/mawster-notes/
