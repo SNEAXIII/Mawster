@@ -12,7 +12,6 @@ from src.models.Base import utcnow
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
-from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import push_game_account
 from tests.integration.endpoints.setup.user_setup import (
@@ -65,7 +64,6 @@ async def _push_job(
     predictions: int = 0,
     created_at: datetime | None = None,
     confidences: list[float] | None = None,
-    margin: float | None = None,
 ) -> VisionJob:
     job = VisionJob(
         id=uuid.uuid4(),
@@ -90,19 +88,6 @@ async def _push_job(
     ]
     if rows:
         await load_objects(rows)
-    if margin is not None:
-        await load_objects(
-            [
-                VisionPredictionCandidate(
-                    prediction_id=row.id,
-                    name=row.champion_name or "",
-                    score=row.confidence - position * margin,
-                    position=position,
-                )
-                for row in rows
-                for position in (0, 1)
-            ]
-        )
     return job
 
 
@@ -118,7 +103,7 @@ async def _two_users_with_imports():
     await _push_import(account1.id, VisionImportStatus.CANCELLED, screens=2)
     second = await _push_import(account2.id, VisionImportStatus.CONFIRMED, screens=4)
 
-    await _push_job(first, predictions=3, confidences=[0.9, 0.6, 0.3], margin=0.2)
+    await _push_job(first, predictions=3, confidences=[0.9, 0.6, 0.3])
     await _push_job(first, status=VisionJobStatus.FAILED, error="unreadable screenshot")
     await _push_job(second, predictions=2)
     return account1, account2
@@ -179,8 +164,6 @@ async def test_stats_overview_reports_model_quality():
     assert overview["min_confidence"] == 0.3
     # Lowest card per import: 0.3 for the first, 0.5 for the second.
     assert overview["avg_import_min_confidence"] == 0.4
-    # Only the first import's cards carry candidates.
-    assert overview["avg_margin"] == 0.2
 
 
 @pytest.mark.asyncio
@@ -219,7 +202,6 @@ async def test_stats_overview_is_zeroed_without_imports():
     assert body["overview"]["imports_total"] == 0
     assert body["overview"]["avg_confidence"] is None
     assert body["overview"]["low_confidence_threshold"] is None
-    assert body["overview"]["avg_margin"] is None
     assert body["top_errors"] == []
 
 

@@ -48,8 +48,8 @@ pub async fn publish(
 }
 
 /// Stores the JSON and returns the message for the API; a failed upload is a failed job.
-// ponytail: predictions lack champion_class and reranked: the API defaults them.
-// Add them to CardDetectedPrediction.
+// ponytail: predictions lack champion_class: the API defaults it.
+// Add it to CardDetectedPrediction.
 async fn build_result(job: &VisionJob, outcome: Result<MatrixPrediction>, s3: &S3) -> Value {
     let result_key = format!("imports/{}/{}/result.json", job.import_id, job.job_id);
     let stored = async {

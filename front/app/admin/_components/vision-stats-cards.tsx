@@ -20,7 +20,7 @@ export default function VisionStatsCards({ overview }: Readonly<VisionStatsCards
   const { t } = useI18n()
   const s = t.admin.visionStats
 
-  // Hero numbers, not a chart: seven single values with no shared scale have
+  // Hero numbers, not a chart: six single values with no shared scale have
   // nothing to compare against each other.
   const tiles = [
     {
@@ -59,12 +59,6 @@ export default function VisionStatsCards({ overview }: Readonly<VisionStatsCards
       label: s.kpiLowThreshold,
       value: score(overview.low_confidence_threshold),
       hint: fill(s.kpiLowThresholdHint, { count: overview.low_confidence_predictions }),
-    },
-    {
-      cy: 'margin',
-      label: s.kpiMargin,
-      value: score(overview.avg_margin),
-      hint: s.kpiMarginHint,
     },
   ]
 

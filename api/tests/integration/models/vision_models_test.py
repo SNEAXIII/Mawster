@@ -1,14 +1,10 @@
 import uuid
 
-import pytest
-from sqlmodel import col, select
-
 from src.enums.VisionImportStatus import VisionImportStatus
 from src.enums.VisionJobStatus import VisionJobStatus
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
-from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 from src.models.vision.VisionSample import VisionSample
 
 
@@ -79,76 +75,3 @@ def test_vision_import_has_confirmed_status():
 def test_vision_import_has_cancelled_status():
 
     assert VisionImportStatus.CANCELLED.value == "cancelled"
-
-
-def test_candidate_carries_its_rank():
-
-    candidate = VisionPredictionCandidate(
-        prediction_id=uuid.uuid4(), name="Gorr", score=0.78, position=1
-    )
-
-    assert candidate.name == "Gorr"
-    assert candidate.score == 0.78
-    assert candidate.position == 1
-
-
-def test_vision_prediction_candidates_default_to_empty():
-
-    pred = VisionPrediction(job_id=uuid.uuid4())
-    assert pred.candidates == []
-
-
-@pytest.mark.asyncio
-async def test_candidates_come_back_best_first(session):
-
-    pred = VisionPrediction(job_id=uuid.uuid4(), champion_name="Gladiator")
-    session.add(pred)
-    await session.commit()
-
-    # Inserted worst-first on purpose: if the ordering were left to the
-    # database, this is the case that would come back wrong.
-    session.add(
-        VisionPredictionCandidate(prediction_id=pred.id, name="Gorr", score=0.78, position=1)
-    )
-    session.add(
-        VisionPredictionCandidate(prediction_id=pred.id, name="Gladiator", score=0.79, position=0)
-    )
-    await session.commit()
-
-    stored = (
-        await session.exec(
-            select(VisionPredictionCandidate)
-            .where(VisionPredictionCandidate.prediction_id == pred.id)
-            .order_by(col(VisionPredictionCandidate.position))
-        )
-    ).all()
-
-    assert [c.name for c in stored] == ["Gladiator", "Gorr"]
-
-
-@pytest.mark.asyncio
-async def test_candidates_relationship_returns_best_first(session):
-    """Exercises `prediction.candidates` itself, not a manually ordered query.
-
-    A typo in the relationship's `order_by` kwarg would still pass
-    `test_candidates_come_back_best_first` above, since that test orders the
-    query explicitly. This one loads through the relationship attribute so a
-    broken `order_by` actually fails a test."""
-
-    pred = VisionPrediction(job_id=uuid.uuid4(), champion_name="Gladiator")
-    session.add(pred)
-    await session.commit()
-
-    # Inserted worst-first on purpose: if the relationship's order_by isn't
-    # applied, this is the case that comes back wrong.
-    session.add(
-        VisionPredictionCandidate(prediction_id=pred.id, name="Gorr", score=0.78, position=1)
-    )
-    session.add(
-        VisionPredictionCandidate(prediction_id=pred.id, name="Gladiator", score=0.79, position=0)
-    )
-    await session.commit()
-
-    await session.refresh(pred, ["candidates"])
-
-    assert [c.name for c in pred.candidates] == ["Gladiator", "Gorr"]

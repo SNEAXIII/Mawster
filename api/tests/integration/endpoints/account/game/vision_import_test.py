@@ -457,7 +457,6 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
                         signature=200,
                         ascension=0,
                         confidence=0.8528,
-                        reranked=True,
                     ),
                 ],
             ),
@@ -476,12 +475,11 @@ async def test_predictions_endpoint_returns_staged_rows(fake_infra):
 
     row = by_name["Hulk"]
     assert row["confidence"] == pytest.approx(0.9)
-    assert row["reranked"] is False
+    assert "reranked" not in row
     assert "candidates" not in row
     assert "margin" not in row
 
     fixed = by_name["Spider-Man (Stark Enhanced)"]
-    assert fixed["reranked"] is True
     assert fixed["preview"] is None
 
 

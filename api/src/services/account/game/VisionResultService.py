@@ -130,7 +130,6 @@ class VisionResultService:
                 signature=predicted.signature,
                 ascension=predicted.ascension,
                 confidence=predicted.confidence,
-                reranked=predicted.reranked,
                 preview_left=preview.left if preview else None,
                 preview_right=preview.right if preview else None,
                 preview_top=preview.top if preview else None,

@@ -25,7 +25,6 @@ export interface VisionStatsOverview {
   // Over the whole base, whatever the window: the worst 1 % of every card read.
   low_confidence_threshold: number | null
   low_confidence_predictions: number
-  avg_margin: number | null
   avg_screens_per_import: number
 }
 

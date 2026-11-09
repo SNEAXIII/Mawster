@@ -34,15 +34,14 @@ class VisionStatsOverview(BaseModel):
     distinct_users: int = 0
     distinct_game_accounts: int = 0
 
-    # Confidence is the best candidate's naming score; the margin its lead over
-    # the second best — a low margin is a card the model could have named either way.
+    # Confidence is the naming margin (top-1 lead over top-2): a low one is a card
+    # the model could have named either way.
     avg_confidence: float | None = None
     min_confidence: float | None = None
     avg_import_min_confidence: float | None = None
     # Over the whole base, whatever the window: see low_confidence_threshold().
     low_confidence_threshold: float | None = None
     low_confidence_predictions: int = 0
-    avg_margin: float | None = None
 
     avg_screens_per_import: float = 0.0
 

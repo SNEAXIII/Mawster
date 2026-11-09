@@ -16,7 +16,6 @@ import uuid
 from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import Integer, cast, desc, func
-from sqlalchemy.orm import aliased
 from sqlmodel import case, col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -40,7 +39,6 @@ from src.models.user.User import User
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
-from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 
 TOP_ERRORS_LIMIT = 5
 # Share of the whole base whose confidence marks a card as among the worst read.
@@ -196,27 +194,6 @@ class VisionStatsService:
         return _rounded((await session.exec(select(func.avg(per_import.c.lowest)))).one())
 
     @classmethod
-    async def _avg_margin(cls, session: AsyncSession, days: int) -> float | None:
-        """Mean gap between the best and the second-best candidate of each card."""
-        first = aliased(VisionPredictionCandidate)
-        second = aliased(VisionPredictionCandidate)
-        value = (
-            await session.exec(
-                select(func.avg(col(first.score) - col(second.score)))
-                .select_from(first)
-                .join(
-                    second,
-                    (col(second.prediction_id) == col(first.prediction_id))
-                    & (col(second.position) == 1),
-                )
-                .join(VisionPrediction, col(VisionPrediction.id) == col(first.prediction_id))
-                .join(VisionJob, col(VisionJob.id) == col(VisionPrediction.job_id))
-                .where(col(first.position) == 0, cls._since(col(VisionJob.created_at), days))
-            )
-        ).one()
-        return _rounded(value)
-
-    @classmethod
     async def _distinct_actors(cls, session: AsyncSession, days: int) -> tuple[int, int]:
         row = (
             await session.exec(
@@ -316,7 +293,6 @@ class VisionStatsService:
             **predictions,
             avg_import_min_confidence=await cls._avg_import_min_confidence(session, days),
             low_confidence_threshold=threshold,
-            avg_margin=await cls._avg_margin(session, days),
             avg_screens_per_import=round(counters["screens_total"] / imports_total, 2)
             if imports_total
             else 0.0,

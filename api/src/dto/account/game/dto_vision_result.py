@@ -24,8 +24,6 @@ class VisionPredictionMessage(BaseModel):
     ascension: int = 0
     confidence: float = 0.0
     preview: VisionPreview | None = None
-    # True when a pixel second pass overrode the first naming pass.
-    reranked: bool = False
 
 
 class VisionResultMessage(BaseModel):

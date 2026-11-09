@@ -626,7 +626,6 @@ class VisionImportService:
                 confidence=pred.confidence,
                 preview=VisionPreview.from_prediction(pred),
                 job_index=job_index[pred.job_id],
-                reranked=pred.reranked,
             )
             for pred in sorted(preds, key=lambda p: (job_index[p.job_id], p.id))
         ]

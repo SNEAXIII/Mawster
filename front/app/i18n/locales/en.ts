@@ -1003,8 +1003,6 @@ const en = {
       kpiAvgConfidenceHint: 'over {{count}} card(s) read',
       kpiLowThreshold: 'Worst 1% line',
       kpiLowThresholdHint: '{{count}} card(s) at or below it in this period',
-      kpiMargin: 'Top-1 − top-2 gap',
-      kpiMarginHint: 'average lead of the best candidate',
       chartTitle: 'Imports per day',
       chartConfirmed: 'Confirmed',
       chartOther: 'Not confirmed',

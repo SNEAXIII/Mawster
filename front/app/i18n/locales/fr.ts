@@ -1012,8 +1012,6 @@ const fr: Translations = {
       kpiAvgConfidenceHint: 'sur {{count}} carte(s) lue(s)',
       kpiLowThreshold: 'Seuil des 1 % les plus bas',
       kpiLowThresholdHint: '{{count}} carte(s) sous ce seuil sur la période',
-      kpiMargin: 'Écart top-1 − top-2',
-      kpiMarginHint: 'avance moyenne du meilleur candidat',
       chartTitle: 'Imports par jour',
       chartConfirmed: 'Validés',
       chartOther: 'Non validés',
