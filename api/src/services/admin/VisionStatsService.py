@@ -121,17 +121,28 @@ class VisionStatsService:
         }
 
     @classmethod
-    async def _job_counters(cls, session: AsyncSession, days: int) -> tuple[int, int]:
+    async def _job_counters(cls, session: AsyncSession, days: int) -> dict:
+        missing = col(VisionJob.missing_cells)
         rows = (
             await session.exec(
-                select(col(VisionJob.status), func.count(col(VisionJob.id)))
+                select(
+                    col(VisionJob.status),
+                    func.count(col(VisionJob.id)),
+                    _count_if(missing > 0),
+                    func.coalesce(func.sum(missing), 0),
+                )
                 .where(cls._since(col(VisionJob.created_at), days))
                 .group_by(col(VisionJob.status))
             )
         ).all()
-        total = sum(count for _, count in rows)
-        failed = sum(count for status, count in rows if status == VisionJobStatus.FAILED)
-        return total, failed
+        return {
+            "jobs_total": sum(int(count) for _, count, _, _ in rows),
+            "jobs_failed": sum(
+                int(count) for status, count, _, _ in rows if status == VisionJobStatus.FAILED
+            ),
+            "jobs_with_missing_cells": sum(int(holed) for _, _, holed, _ in rows),
+            "missing_cells_total": sum(int(cells) for *_, cells in rows),
+        }
 
     @classmethod
     async def low_confidence_threshold(cls, session: AsyncSession) -> float | None:
@@ -267,7 +278,7 @@ class VisionStatsService:
         per_status = counters["per_status"]
         imports_total = counters["imports_total"]
 
-        jobs_total, jobs_failed = await cls._job_counters(session, days)
+        jobs = await cls._job_counters(session, days)
         threshold = await cls.low_confidence_threshold(session)
         predictions = await cls._prediction_counters(session, days, threshold)
         distinct_users, distinct_accounts = await cls._distinct_actors(session, days)
@@ -286,8 +297,7 @@ class VisionStatsService:
             imports_in_progress=imports_total - finished,
             imports_all_time=int(imports_all_time),
             screens_total=counters["screens_total"],
-            jobs_total=jobs_total,
-            jobs_failed=jobs_failed,
+            **jobs,
             distinct_users=distinct_users,
             distinct_game_accounts=distinct_accounts,
             **predictions,
@@ -443,16 +453,17 @@ class VisionStatsService:
     async def _job_rollup(
         cls, session: AsyncSession, import_ids: list[uuid.UUID], threshold: float | None
     ) -> dict[uuid.UUID, dict]:
-        """Failed jobs and confidence figures per import, for the page being rendered."""
+        """Failed jobs, missing cells and confidence figures per import, for the page."""
         if not import_ids:
             return {}
-        failed_rows = (
+        job_rows = (
             await session.exec(
-                select(col(VisionJob.import_id), func.count(col(VisionJob.id)))
-                .where(
-                    col(VisionJob.import_id).in_(import_ids),
-                    col(VisionJob.status) == VisionJobStatus.FAILED,
+                select(
+                    col(VisionJob.import_id),
+                    _count_if(col(VisionJob.status) == VisionJobStatus.FAILED),
+                    func.coalesce(func.sum(col(VisionJob.missing_cells)), 0),
                 )
+                .where(col(VisionJob.import_id).in_(import_ids))
                 .group_by(col(VisionJob.import_id))
             )
         ).all()
@@ -473,7 +484,10 @@ class VisionStatsService:
                 .group_by(col(VisionJob.import_id))
             )
         ).all()
-        failed = {import_id: int(count) for import_id, count in failed_rows}
+        by_jobs = {
+            import_id: {"jobs_failed": int(failed), "missing_cells": int(missing)}
+            for import_id, failed, missing in job_rows
+        }
         rollup = {
             import_id: {
                 "predictions_total": int(count),
@@ -484,7 +498,7 @@ class VisionStatsService:
             for import_id, count, lowest, mean, low_count in prediction_rows
         }
         return {
-            import_id: {"jobs_failed": failed.get(import_id, 0), **rollup.get(import_id, {})}
+            import_id: {**by_jobs.get(import_id, {}), **rollup.get(import_id, {})}
             for import_id in import_ids
         }
 

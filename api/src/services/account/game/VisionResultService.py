@@ -138,6 +138,7 @@ class VisionResultService:
             session.add(prediction)
         job.status = VisionJobStatus.DONE
         job.result_key = message.result_key
+        job.missing_cells = message.missing_cells
         job.error = None
 
     @classmethod

@@ -1,8 +1,8 @@
-"""add_vision_correction_drop_candidates_and_reranked
+"""vision_correction_missing_cells_drop_candidates
 
-Revision ID: b7fbf20579f1
+Revision ID: cb29724f81f4
 Revises: 6c85107eaf0b
-Create Date: 2026-11-09 20:49:53.285866
+Create Date: 2026-11-09 21:01:02.299947
 
 """
 
@@ -14,7 +14,7 @@ from alembic import op
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision: str = "b7fbf20579f1"
+revision: str = "cb29724f81f4"
 down_revision: str | None = "6c85107eaf0b"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -45,9 +45,12 @@ def upgrade() -> None:
     op.create_index(
         op.f("ix_vision_correction_import_id"), "vision_correction", ["import_id"], unique=False
     )
-    # Dropping the table takes its index along: MariaDB refuses to drop it first,
-    # the foreign key still needs it.
+    # Dropping a table takes its index along: MariaDB refuses to drop an index a
+    # foreign key still needs.
     op.drop_table("vision_prediction_candidate")
+    op.add_column(
+        "vision_job", sa.Column("missing_cells", sa.Integer(), server_default="0", nullable=False)
+    )
     op.drop_column("vision_prediction", "reranked")
     # ### end Alembic commands ###
 
@@ -65,6 +68,7 @@ def downgrade() -> None:
             nullable=False,
         ),
     )
+    op.drop_column("vision_job", "missing_cells")
     op.create_table(
         "vision_prediction_candidate",
         sa.Column("id", mysql.CHAR(length=32), nullable=False),

@@ -64,6 +64,7 @@ async def _push_job(
     predictions: int = 0,
     created_at: datetime | None = None,
     confidences: list[float] | None = None,
+    missing_cells: int = 0,
 ) -> VisionJob:
     job = VisionJob(
         id=uuid.uuid4(),
@@ -71,6 +72,7 @@ async def _push_job(
         status=status,
         object_key=f"screens/{uuid.uuid4()}.png",
         error=error,
+        missing_cells=missing_cells,
     )
     if created_at is not None:
         job.created_at = created_at
@@ -105,7 +107,7 @@ async def _two_users_with_imports():
 
     await _push_job(first, predictions=3, confidences=[0.9, 0.6, 0.3])
     await _push_job(first, status=VisionJobStatus.FAILED, error="unreadable screenshot")
-    await _push_job(second, predictions=2)
+    await _push_job(second, predictions=2, missing_cells=2)
     return account1, account2
 
 
@@ -159,6 +161,8 @@ async def test_stats_overview_reports_model_quality():
 
     assert overview["jobs_total"] == 3
     assert overview["jobs_failed"] == 1
+    assert overview["jobs_with_missing_cells"] == 1
+    assert overview["missing_cells_total"] == 2
     assert overview["predictions_total"] == 5
     assert overview["avg_confidence"] == 0.56
     assert overview["min_confidence"] == 0.3
@@ -364,13 +368,14 @@ async def test_imports_log_rolls_up_failed_jobs_and_predictions():
     await push_one_user()
     account = await push_game_account(user_id=USER_ID)
     vision_import = await _push_import(account.id, VisionImportStatus.DONE)
-    await _push_job(vision_import, predictions=4, confidences=[0.2, 0.6, 0.7, 0.9])
+    await _push_job(vision_import, predictions=4, confidences=[0.2, 0.6, 0.7, 0.9], missing_cells=1)
     await _push_job(vision_import, status=VisionJobStatus.FAILED, error="blurry")
 
     body = (await execute_get_request(IMPORTS_URL, headers=STANDALONE_ADMIN_HEADERS)).json()
 
     row = body["items"][0]
     assert row["jobs_failed"] == 1
+    assert row["missing_cells"] == 1
     assert row["predictions_total"] == 4
     assert row["min_confidence"] == 0.2
     assert row["avg_confidence"] == 0.6

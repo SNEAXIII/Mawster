@@ -70,6 +70,7 @@ async fn build_result(job: &VisionJob, outcome: Result<MatrixPrediction>, s3: &S
                 "status": "done",
                 "error": null,
                 "result_key": result_key,
+                "missing_cells": prediction.missing_cells,
                 "predictions": predictions,
             })
         }

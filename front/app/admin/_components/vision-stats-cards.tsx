@@ -20,7 +20,7 @@ export default function VisionStatsCards({ overview }: Readonly<VisionStatsCards
   const { t } = useI18n()
   const s = t.admin.visionStats
 
-  // Hero numbers, not a chart: six single values with no shared scale have
+  // Hero numbers, not a chart: seven single values with no shared scale have
   // nothing to compare against each other.
   const tiles = [
     {
@@ -40,6 +40,13 @@ export default function VisionStatsCards({ overview }: Readonly<VisionStatsCards
       label: s.kpiScreens,
       value: overview.screens_total,
       hint: fill(s.kpiScreensHint, { count: overview.avg_screens_per_import }),
+    },
+    {
+      cy: 'missing-cells',
+      label: s.kpiMissingCells,
+      value: overview.jobs_with_missing_cells,
+      hint: fill(s.kpiMissingCellsHint, { count: overview.missing_cells_total }),
+      alert: overview.jobs_with_missing_cells > 0,
     },
     {
       cy: 'min-confidence',

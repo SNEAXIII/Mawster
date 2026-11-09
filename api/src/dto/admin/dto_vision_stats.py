@@ -29,6 +29,9 @@ class VisionStatsOverview(BaseModel):
     screens_total: int = 0
     jobs_total: int = 0
     jobs_failed: int = 0
+    # Screenshots the worker found a hole in: a card the detector missed.
+    jobs_with_missing_cells: int = 0
+    missing_cells_total: int = 0
     predictions_total: int = 0
 
     distinct_users: int = 0
@@ -101,6 +104,7 @@ class VisionImportRow(PlayerIdentity):
     screens_total: int = 0
     screens_done: int = 0
     jobs_failed: int = 0
+    missing_cells: int = 0
     predictions_total: int = 0
     min_confidence: float | None = None
     avg_confidence: float | None = None

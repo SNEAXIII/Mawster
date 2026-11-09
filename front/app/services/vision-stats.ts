@@ -16,6 +16,8 @@ export interface VisionStatsOverview {
   screens_total: number
   jobs_total: number
   jobs_failed: number
+  jobs_with_missing_cells: number
+  missing_cells_total: number
   predictions_total: number
   distinct_users: number
   distinct_game_accounts: number
@@ -75,6 +77,7 @@ export interface VisionImportRow {
   screens_total: number
   screens_done: number
   jobs_failed: number
+  missing_cells: number
   predictions_total: number
   min_confidence: number | null
   avg_confidence: number | null
