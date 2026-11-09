@@ -1,6 +1,3 @@
 [submodule "artifacts-vision"]
 	path = rust-vision/artifacts-vision
 	url = https://github.com/SNEAXIII/artifacts-vision.git
-[submodule "mawster-notes"]
-	path = mawster-notes
-	url = https://github.com/SNEAXIII/mawster-notes.git

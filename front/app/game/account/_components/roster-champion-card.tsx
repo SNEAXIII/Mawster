@@ -3,6 +3,7 @@
 import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import ChampionPortrait from '@/components/champion-portrait'
+import AscensionRequestButton from '@/components/ascension-request-button'
 import { type RosterEntry, shortenChampionName, getNextRarity } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
 import { Trash2, Pencil, ArrowUp, X, Star } from 'lucide-react'
@@ -142,6 +143,12 @@ function RosterChampionCard({
             >
               <Star className='size-3.5' />
             </CardAction>
+          )}
+          {!entry.is_ascendable && (
+            <AscensionRequestButton
+              championId={entry.champion_id}
+              variant='bar'
+            />
           )}
           {pendingRequestId && onCancelRequest && (
             <CardAction

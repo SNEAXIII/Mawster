@@ -53,6 +53,8 @@ export interface UseRosterImportVisionProps {
   selectedAccountId: string
   shareDataset: boolean
   onRosterUpdated: (roster: RosterEntry[]) => void
+  // Lets the caller hold the upload (e.g. to warn about a single screenshot).
+  gateUpload?: (files: File[], upload: () => void) => void
 }
 
 export function useRosterImportVision({
@@ -60,6 +62,7 @@ export function useRosterImportVision({
   selectedAccountId,
   shareDataset,
   onRosterUpdated,
+  gateUpload,
 }: UseRosterImportVisionProps) {
   const { t } = useI18n()
   const core = useRosterImportCore({ roster, selectedAccountId, onRosterUpdated })
@@ -198,17 +201,8 @@ export function useRosterImportVision({
   )
 
   // ── Upload ───────────────────────────────────────────────
-  const handleVisionFilesSelected = useCallback(
-    async (e: ChangeEvent<HTMLInputElement>) => {
-      const fileList = e.target.files
-      const files = fileList ? Array.from(fileList).filter((f) => f.type.startsWith('image/')) : []
-      e.target.value = ''
-
-      if (files.length === 0) {
-        toast.error(t.roster.importExport.vision.noImagesSelected)
-        return
-      }
-
+  const uploadVisionFiles = useCallback(
+    async (files: File[]) => {
       setUploading(true)
       setUploadProgress({ done: 0, total: files.length })
       try {
@@ -229,6 +223,24 @@ export function useRosterImportVision({
       }
     },
     [selectedAccountId, shareDataset, pollImport, finishWithError, t]
+  )
+
+  const handleVisionFilesSelected = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const fileList = e.target.files
+      const files = fileList ? Array.from(fileList).filter((f) => f.type.startsWith('image/')) : []
+      e.target.value = ''
+
+      if (files.length === 0) {
+        toast.error(t.roster.importExport.vision.noImagesSelected)
+        return
+      }
+
+      const upload = () => void uploadVisionFiles(files)
+      if (gateUpload) gateUpload(files, upload)
+      else upload()
+    },
+    [uploadVisionFiles, gateUpload, t]
   )
 
   // ── Manual corrections from the editable review row ─────

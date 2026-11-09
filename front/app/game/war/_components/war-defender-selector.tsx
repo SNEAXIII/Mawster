@@ -16,6 +16,7 @@ import type { WarPlacement } from '@/app/services/war'
 import { Separator } from '@/components/ui/separator'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import LabeledSlider from '@/components/labeled-slider'
+import AscensionRequestButton from '@/components/ascension-request-button'
 import AttackerEntryRow from './attacker-entry-row'
 import { useLastDefenderRarity } from './use-last-defender-rarity'
 
@@ -262,17 +263,24 @@ export default function WarDefenderSelector({
                 className='w-full'
                 title={<span className='text-sm font-medium'>{t.game.war.rarity}</span>}
               />
-              {selected.is_ascendable && (
-                <LabeledSlider
-                  max={2}
-                  value={[ascension]}
-                  onChange={([a]) => setAscension(a)}
-                  format={(a) => (a === 0 ? t.game.war.ascensionNone : `A${a}`)}
-                  cy='war-defender-ascension'
-                  className='w-full'
-                  title={<span className='text-sm font-medium'>{t.game.war.ascension}</span>}
-                />
-              )}
+              <LabeledSlider
+                max={2}
+                value={[placedAscension]}
+                onChange={([a]) => setAscension(a)}
+                format={(a) => (a === 0 ? t.game.war.ascensionNone : `A${a}`)}
+                cy='war-defender-ascension'
+                className='w-full'
+                title={<span className='text-sm font-medium'>{t.game.war.ascension}</span>}
+                disabled={!selected.is_ascendable}
+                valueSlot={
+                  selected.is_ascendable ? undefined : (
+                    <AscensionRequestButton
+                      championId={selected.id}
+                      variant='text'
+                    />
+                  )
+                }
+              />
 
               <div className='mt-auto pt-4 border-t flex justify-end gap-2'>
                 <Button

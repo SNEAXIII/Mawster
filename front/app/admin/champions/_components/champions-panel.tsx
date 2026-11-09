@@ -7,12 +7,18 @@ import { ErrorBanner } from '@/components/error-banner'
 import { useI18n } from '@/app/i18n'
 import type { Champion } from '@/app/services/champions'
 import { useChampionsViewModel } from '@/app/admin/_viewmodels/use-champions-viewmodel'
+import type { AdminAscensionRequests } from '@/app/admin/_viewmodels/use-admin-ascension-requests'
+import type { ChampionAttribute } from '@/app/admin/_viewmodels/champion-attributes'
+import type { ChampionImportEntry } from '@/app/admin/_viewmodels/use-champion-actions'
+import AscensionRequestsSection from './ascension-requests-section'
 import ChampionsFilterBar from './champions-filter-bar'
 import ChampionsActiveFilters from './champions-active-filters'
 import ChampionsIoButtons from './champions-io-buttons'
 import ChampionsTable from './champions-table'
 
-export default function ChampionsPanel() {
+export default function ChampionsPanel({
+  requests,
+}: Readonly<{ requests: AdminAscensionRequests }>) {
   const { t } = useI18n()
   const vm = useChampionsViewModel()
   const [deleteTarget, setDeleteTarget] = useState<Champion | null>(null)
@@ -20,11 +26,33 @@ export default function ChampionsPanel() {
   async function confirmDelete() {
     if (!deleteTarget) return
     await vm.removeChampion(deleteTarget)
+    await requests.reload()
     setDeleteTarget(null)
+  }
+
+  async function acceptRequest(id: string) {
+    await requests.accept(id)
+    await vm.reload()
+  }
+
+  async function toggleAttribute(champion: Champion, attribute: ChampionAttribute) {
+    await vm.toggleAttribute(champion, attribute)
+    if (attribute === 'is_ascendable') await requests.reload()
+  }
+
+  async function importChampions(entries: ChampionImportEntry[]) {
+    await vm.importChampions(entries)
+    await requests.reload()
   }
 
   return (
     <div className='flex flex-col gap-4'>
+      <AscensionRequestsSection
+        requests={requests.requests}
+        onAccept={acceptRequest}
+        onRefuse={requests.refuse}
+      />
+
       <PaginationControls
         currentPage={vm.currentPage}
         totalPage={vm.totalPage}
@@ -43,7 +71,7 @@ export default function ChampionsPanel() {
 
       <ChampionsIoButtons
         onExport={vm.exportChampions}
-        onImport={vm.importChampions}
+        onImport={importChampions}
         onError={vm.setError}
       />
 
@@ -80,7 +108,7 @@ export default function ChampionsPanel() {
         orderDir={vm.orderDir}
         onSort={vm.toggleSort}
         sagaDisabled={vm.sagaDisabled}
-        onToggleAttribute={vm.toggleAttribute}
+        onToggleAttribute={toggleAttribute}
         onSaveAlias={vm.saveAlias}
         onDelete={setDeleteTarget}
       />

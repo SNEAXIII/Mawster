@@ -45,6 +45,7 @@ export interface AvailableChampion {
   champion_alias: string | null
   champion_class: string
   image_url: string | null
+  is_ascendable: boolean
   is_saga_attacker: boolean
   is_saga_defender: boolean
   owners: ChampionOwner[]

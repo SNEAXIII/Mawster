@@ -71,12 +71,10 @@ describe('Roster – Ascension', () => {
       cy.getByCy('champion-search').type('NoAscChamp');
       cy.getByCy('champion-submit').should('not.be.disabled');
 
-      // Ascension slider should be locked on None
+      // Ascension slider is locked and offers the request instead of a value
       cy.getByCy('ascension').find('[role="slider"]').should('have.attr', 'data-disabled');
-      cy.getByCy('ascension-value').should('have.text', 'None');
-
-      // Message "This champion cannot be ascended." should appear
-      cy.contains('This champion cannot be ascended.').should('be.visible');
+      cy.getByCy('ascension-value').should('not.exist');
+      cy.getByCy('ascension-request-button').should('be.visible');
     });
   });
 

@@ -200,6 +200,17 @@ class TestSelectorData:
         assert "Wolverine" not in names
 
     @pytest.mark.asyncio
+    async def test_available_champions_expose_is_ascendable(self):
+        bg = await setup_defense_bg()
+        bg.spider.is_ascendable = True
+        await load_objects([bg.spider])
+        plan = await push_plan(bg.alliance.id)
+        route = _plan(bg.alliance.id, plan.id, "/available-champions?node_number=1")
+        rows = (await execute_get_request(route, headers=OWNER)).json()
+        flags = {c["champion_name"]: c["is_ascendable"] for c in rows}
+        assert flags == {"Iron Man": False, "Spider-Man": True, "Wolverine": False}
+
+    @pytest.mark.asyncio
     async def test_battlegroup_members_count_the_active_plan(self):
         bg = await setup_defense_bg()
         plan = await push_plan(bg.alliance.id, active=True)

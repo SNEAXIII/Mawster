@@ -1247,6 +1247,18 @@ const fr: Translations = {
   // Gestion des champions
   champions: {
     title: 'Gestion des Champions',
+    ascensionRequest: {
+      request: "Demander l'ascension",
+      requested: 'Ascension demandée',
+      sent: "Demande d'ascension envoyée",
+      error: "Impossible d'envoyer la demande d'ascension",
+      listTitle: "Demandes d'ascension",
+      requestedBy: 'Demandé par {login}',
+      accept: 'Accepter',
+      refuse: 'Refuser',
+      acceptError: "Impossible d'accepter la demande d'ascension",
+      refuseError: "Impossible de refuser la demande d'ascension",
+    },
     classFilter: 'Classe',
     searchPlaceholder: 'Rechercher par nom ou alias...',
     ascendableFilter: 'Ascentionnable',
@@ -1419,6 +1431,13 @@ const fr: Translations = {
           'Vous avez déjà un import de captures en attente de validation. Reprenez-le, ou abandonnez-le pour repartir de zéro.',
         blockedResume: 'Le reprendre',
         blockedDiscard: 'Abandonner et repartir',
+        singleScreen: {
+          title: 'Une seule capture ?',
+          body: 'Tu peux sélectionner plusieurs captures d’un coup pour importer tout ton roster en une fois.',
+          confirm: 'Importer celle-ci',
+          addMore: 'Ajouter des captures',
+          dontShowAgain: 'Ne plus afficher',
+        },
         howto: {
           title: 'Préparer ta capture d’écran',
           intro: 'Quatre étapes, et l’IA lit ton roster.',

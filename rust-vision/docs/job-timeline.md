@@ -11,7 +11,7 @@ stage limits the throughput?** For the design of the pipeline itself, see
 Stop the worker first, so the queue fills up before it starts:
 
 ```
-make publish-job COPIES=30    # IMG=data/real/shot_02.png to change the screenshot
+make publish-job COPIES=30    # IMG=data/real/shot_0002.png to change the screenshot
 make worker                   # writes out/worker.log, overwritten on each run
 make timeline                 # in another terminal, once the queue is empty
 ```

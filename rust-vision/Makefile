@@ -9,7 +9,7 @@ ND ?= 8000
 VALND ?= 800
 PARTS_LANG ?= fr
 SHOTS ?=
-IMG ?= artifacts-vision/data/real/shot_01.png
+IMG ?= artifacts-vision/data/real/shot_0001.png
 # The training code lives in the private repo and runs from its root, on this crate's uv project.
 TRAIN = uv run --directory artifacts-vision python
 COPIES ?= 1
@@ -79,7 +79,7 @@ worker:
 	cargo run --release --bin worker --features worker 2>&1 | uv run python scripts/tee_log.py out/worker.log
 
 publish-job:
-	uv run publish_job.py $(IMG) $(COPIES)
+	uv run scripts/publish_job.py $(IMG) $(COPIES)
 
 timeline:
 	uv run python scripts/job_timeline.py

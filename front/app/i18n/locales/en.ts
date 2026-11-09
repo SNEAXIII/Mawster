@@ -1235,6 +1235,18 @@ const en = {
   // Champions management
   champions: {
     title: 'Champions Management',
+    ascensionRequest: {
+      request: 'Request ascension',
+      requested: 'Ascension requested',
+      sent: 'Ascension request sent',
+      error: 'Could not send the ascension request',
+      listTitle: 'Ascension requests',
+      requestedBy: 'Requested by {login}',
+      accept: 'Accept',
+      refuse: 'Refuse',
+      acceptError: 'Could not accept the ascension request',
+      refuseError: 'Could not refuse the ascension request',
+    },
     classFilter: 'Class',
     searchPlaceholder: 'Search by name or alias...',
     ascendableFilter: 'Ascendable',
@@ -1405,6 +1417,13 @@ const en = {
           'You already have a screenshot import waiting to be reviewed. Resume it, or discard it and start over.',
         blockedResume: 'Resume it',
         blockedDiscard: 'Discard and start over',
+        singleScreen: {
+          title: 'Only one screenshot?',
+          body: 'You can select several screenshots at once to import your whole roster in one go.',
+          confirm: 'Import this one',
+          addMore: 'Add more screenshots',
+          dontShowAgain: "Don't show this again",
+        },
         howto: {
           title: 'Prepare your screenshot',
           intro: 'Four steps, and the AI reads your roster.',
