@@ -3,6 +3,18 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.2.0](https://github.com/SNEAXIII/Mawster/compare/v2.1.0...v2.2.0) (2026-11-09)
+
+
+### Added
+
+* help improve the AI reading by default, with a clear notice ([#812](https://github.com/SNEAXIII/Mawster/issues/812)) ([8f4a8a4](https://github.com/SNEAXIII/Mawster/commit/8f4a8a4357e3f0049424e8084965014276863a4b))
+
+
+### Fixed
+
+* show the strategist role on profile game-account badges ([#811](https://github.com/SNEAXIII/Mawster/issues/811)) ([56bc4fc](https://github.com/SNEAXIII/Mawster/commit/56bc4fc8f1e4ced6fc93aa688a3e8372685b03a8))
+
 ## [2.1.0](https://github.com/SNEAXIII/Mawster/compare/v2.0.0...v2.1.0) (2026-11-09)
 
 
