@@ -37,6 +37,7 @@ from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
 from src.security.secrets import SECRET
+from src.services.account.game.VisionCorrectionService import VisionCorrectionService
 from src.services.account.game.VisionDatasetService import ConfirmedRow, VisionDatasetService
 from src.services.account.game.VisionProgressService import VisionProgressService
 from src.storage.base import Storage, import_prefix, screen_key
@@ -682,7 +683,8 @@ class VisionImportService:
         rows: list[ConfirmedRow],
         share_dataset: bool,
     ) -> int:
-        """Archive the dataset (if opted in) and mark the import confirmed.
+        """Log the manual corrections, archive the dataset (if opted in) and mark
+        the import confirmed.
 
         The roster itself is written by the frontend via bulkUpdateRoster —
         this does NOT touch ChampionUser, to keep a single writer of roster
@@ -699,6 +701,7 @@ class VisionImportService:
         # The review-screen opt-in is authoritative: it overrides whatever was
         # (never) set at upload, so archive() reads the user's actual choice.
         vision_import.share_dataset = share_dataset
+        await VisionCorrectionService.record(session, vision_import, rows)
         archived = await VisionDatasetService.archive(session, storage, vision_import, rows)
         vision_import.status = VisionImportStatus.CONFIRMED
         session.add(vision_import)

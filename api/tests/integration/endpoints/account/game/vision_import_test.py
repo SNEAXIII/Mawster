@@ -13,9 +13,11 @@ from src.dto.account.game.dto_vision_result import (
     VisionPredictionMessage,
     VisionResultMessage,
 )
+from src.enums.VisionCorrectionKind import VisionCorrectionKind
 from src.enums.VisionImportStatus import VisionImportStatus
 from src.enums.VisionJobStatus import VisionJobStatus
 from src.messaging import get_publisher
+from src.models.vision.VisionCorrection import VisionCorrection
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.security.secrets import SECRET
@@ -694,6 +696,74 @@ async def test_confirm_archives_nothing_without_opt_in(fake_infra):
 
     after = await _get_import(headers, import_id)
     assert after["status"] == "confirmed"
+
+
+async def _confirm_and_list_corrections(rows: list[dict]) -> list[VisionCorrection]:
+    """Read one Hulk 7r3 card, confirm `rows` and return the logged corrections."""
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
+    headers = create_auth_headers(str(USER_ID))
+    created = await _post_import(headers, account.id, [_png("a.png")])
+    import_id = created.json()["id"]
+    detail = await _get_import(headers, import_id)
+    await _drive_job_done_with_prediction(detail["jobs"][0]["id"])
+
+    async with get_test_client() as client:
+        predictions = await client.get(f"/vision/imports/{import_id}/predictions", headers=headers)
+        prediction_id = predictions.json()["predictions"][0]["id"]
+        response = await client.post(
+            f"/vision/imports/{import_id}/confirm",
+            headers=headers,
+            json={
+                "share_dataset": False,
+                "rows": [
+                    {**row, "prediction_id": prediction_id if row.get("prediction_id") else None}
+                    for row in rows
+                ],
+            },
+        )
+    assert response.status_code == 200
+
+    async for session in get_test_session():
+        return list((await session.exec(select(VisionCorrection))).all())
+    return []
+
+
+def _row(name: str, rarity: str, *, read: bool) -> dict:
+    return {
+        "champion_name": name,
+        "rarity": rarity,
+        "signature": 200,
+        "ascension": 1,
+        "is_preferred_attacker": False,
+        "prediction_id": read,
+    }
+
+
+@pytest.mark.asyncio
+async def test_confirm_logs_edited_fields_and_added_cards_even_without_opt_in(fake_infra):
+    corrections = await _confirm_and_list_corrections(
+        [_row("Hulk", "7r4", read=True), _row("Thor", "7r2", read=False)]
+    )
+
+    by_kind = {c.kind: c for c in corrections}
+    assert len(corrections) == 2
+    edited = by_kind[VisionCorrectionKind.EDITED]
+    assert (edited.field, edited.predicted, edited.corrected) == ("rarity", "7r3", "7r4")
+    added = by_kind[VisionCorrectionKind.ADDED]
+    assert (added.prediction_id, added.corrected) == (None, "Thor")
+
+
+@pytest.mark.asyncio
+async def test_confirm_logs_a_dropped_card_as_removed(fake_infra):
+    corrections = await _confirm_and_list_corrections([])
+
+    assert [(c.kind, c.predicted) for c in corrections] == [(VisionCorrectionKind.REMOVED, "Hulk")]
+
+
+@pytest.mark.asyncio
+async def test_confirm_logs_nothing_for_an_untouched_card(fake_infra):
+    assert await _confirm_and_list_corrections([_row("Hulk", "7r3", read=True)]) == []
 
 
 @pytest.mark.asyncio
