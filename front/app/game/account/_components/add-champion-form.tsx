@@ -238,13 +238,15 @@ export default function AddChampionForm({
                 format={(level) => (level === 0 ? 'None' : `A${level}`)}
                 disabled={!selectedChampion?.is_ascendable}
                 cy='ascension'
+                valueSlot={
+                  selectedChampion && !selectedChampion.is_ascendable ? (
+                    <AscensionRequestButton
+                      championId={selectedChampion.id}
+                      variant='text'
+                    />
+                  ) : undefined
+                }
               />
-              {selectedChampion && !selectedChampion.is_ascendable && (
-                <AscensionRequestButton
-                  championId={selectedChampion.id}
-                  variant='text'
-                />
-              )}
             </div>
           </div>
         </div>

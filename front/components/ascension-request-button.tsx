@@ -4,6 +4,7 @@ import { useRef, type MouseEvent } from 'react'
 import { toast } from 'sonner'
 import { FiFlag } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
+import { cn } from '@/app/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useRequestedAscensions } from '@/hooks/use-requested-ascensions'
 
@@ -46,28 +47,32 @@ export default function AscensionRequestButton({
     'data-requested': requested ? 'true' : 'false',
   }
 
-  if (variant === 'bar') {
+  if (variant === 'icon') {
     return (
-      <button
+      <Button
         type='button'
-        className='rounded p-0.5 text-white/50 transition-colors enabled:hover:text-amber-300 disabled:opacity-50'
+        variant='ghost'
+        size='icon'
+        className='disabled:pointer-events-auto disabled:hover:bg-transparent'
         {...shared}
       >
-        <FiFlag className='size-3.5' />
-      </button>
+        <FiFlag />
+      </Button>
     )
   }
 
-  const isIcon = variant === 'icon'
+  const isBar = variant === 'bar'
   return (
-    <Button
+    <button
       type='button'
-      variant={isIcon ? 'ghost' : 'outline'}
-      size={isIcon ? 'icon' : 'sm'}
-      className={isIcon ? 'disabled:pointer-events-auto disabled:hover:bg-transparent' : undefined}
+      className={cn(
+        'inline-flex items-center gap-1 rounded p-0.5 transition-colors enabled:hover:text-amber-300 disabled:opacity-50',
+        isBar ? 'text-white/50' : 'text-xs text-muted-foreground'
+      )}
       {...shared}
     >
-      {isIcon ? <FiFlag /> : label}
-    </Button>
+      <FiFlag className='size-3.5' />
+      {!isBar && label}
+    </button>
   )
 }
