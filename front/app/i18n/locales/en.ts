@@ -1404,7 +1404,9 @@ const en = {
         scoreCorrected: 'Corrected',
         pickChampionSearch: 'Search a champion…',
         pickChampionEmpty: 'No champion found.',
-        shareDataset: 'Contribute to the training dataset',
+        shareDataset: 'Help improve automatic reading',
+        shareDatasetInfo:
+          'Your screenshots are pseudonymised and only the creator of Mawster can see them. They are deleted after 7 days; the ones kept to train the reading are anonymised and no longer linked to your account, so they can no longer be removed. Untick to opt out.',
         bannerPendingTitle: 'Reading queued — {done}/{total} screenshots',
         bannerRunningTitle: 'Reading in progress — {done}/{total} screenshots',
         bannerDoneTitle: '{count} champions read — awaiting review',

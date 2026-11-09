@@ -1418,7 +1418,9 @@ const fr: Translations = {
         scoreCorrected: 'Corrigé',
         pickChampionSearch: 'Rechercher un champion…',
         pickChampionEmpty: 'Aucun champion trouvé.',
-        shareDataset: "Contribuer au dataset d'entraînement",
+        shareDataset: 'Aider à améliorer la lecture automatique',
+        shareDatasetInfo:
+          'Vos captures sont pseudonymisées et seul le créateur de Mawster peut les voir. Elles sont effacées au bout de 7 jours ; celles conservées pour entraîner la lecture sont anonymisées et ne sont plus rattachées à votre compte, elles ne peuvent donc plus être retirées. Décochez pour refuser.',
         bannerPendingTitle: 'Lecture en attente — {done}/{total} captures',
         bannerRunningTitle: 'Lecture en cours — {done}/{total} captures',
         bannerDoneTitle: '{count} champions lus — à valider',

@@ -145,16 +145,26 @@ export default function ImportPreviewDialog({
         </div>
 
         {editable && (
-          <div className='flex items-center gap-2 pt-2'>
+          <div className='flex items-start gap-2 pt-2'>
             <Checkbox
               id='import-preview-share-dataset'
               checked={shareDataset}
               onCheckedChange={(checked) => onShareDatasetChange?.(checked === true)}
+              aria-describedby='import-preview-share-dataset-info'
               data-cy='import-share-dataset-checkbox'
             />
-            <Label htmlFor='import-preview-share-dataset'>
-              {t.roster.importExport.vision.shareDataset}
-            </Label>
+            <div className='grid gap-1'>
+              <Label htmlFor='import-preview-share-dataset'>
+                {t.roster.importExport.vision.shareDataset}
+              </Label>
+              <p
+                id='import-preview-share-dataset-info'
+                className='text-muted-foreground text-xs'
+                data-cy='import-share-dataset-info'
+              >
+                {t.roster.importExport.vision.shareDatasetInfo}
+              </p>
+            </div>
           </div>
         )}
 
