@@ -1,4 +1,4 @@
-FROM rust:1.99.1-slim-trixie AS base-rust
+FROM rust:1.99.1-slim-trixie@sha256:f6c4a35d21dbb3c89d7a8d056c193e94fc09037f2b58dd858b09c39a47dd02d7 AS base-rust
 RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 RUN cargo install --locked cargo-chef --version 0.1.78
