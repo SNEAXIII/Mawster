@@ -427,6 +427,7 @@ const fr: Translations = {
       leaveVisitSuccess: 'Vous ne visitez plus cette alliance',
       leaveVisitError: "Erreur lors du départ de l'alliance visitée",
       memberBadge: 'Membre',
+      strategistBadge: 'Stratège',
       invitationTypeVisitor: 'Invitation visiteur',
       statistics: {
         tabLabel: 'Statistiques',
