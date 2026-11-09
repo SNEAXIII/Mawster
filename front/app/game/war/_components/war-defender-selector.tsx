@@ -16,6 +16,7 @@ import type { WarPlacement } from '@/app/services/war'
 import { Separator } from '@/components/ui/separator'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import LabeledSlider from '@/components/labeled-slider'
+import AscensionRequestButton from '@/components/ascension-request-button'
 import AttackerEntryRow from './attacker-entry-row'
 import { useLastDefenderRarity } from './use-last-defender-rarity'
 
@@ -262,7 +263,7 @@ export default function WarDefenderSelector({
                 className='w-full'
                 title={<span className='text-sm font-medium'>{t.game.war.rarity}</span>}
               />
-              {selected.is_ascendable && (
+              {selected.is_ascendable ? (
                 <LabeledSlider
                   max={2}
                   value={[ascension]}
@@ -271,6 +272,11 @@ export default function WarDefenderSelector({
                   cy='war-defender-ascension'
                   className='w-full'
                   title={<span className='text-sm font-medium'>{t.game.war.ascension}</span>}
+                />
+              ) : (
+                <AscensionRequestButton
+                  championId={selected.id}
+                  variant='text'
                 />
               )}
 

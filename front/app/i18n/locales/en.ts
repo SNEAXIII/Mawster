@@ -1235,6 +1235,12 @@ const en = {
   // Champions management
   champions: {
     title: 'Champions Management',
+    ascensionRequest: {
+      request: 'Request ascension',
+      requested: 'Ascension requested',
+      sent: 'Ascension request sent',
+      error: 'Could not send the ascension request',
+    },
     classFilter: 'Class',
     searchPlaceholder: 'Search by name or alias...',
     ascendableFilter: 'Ascendable',

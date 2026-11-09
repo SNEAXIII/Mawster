@@ -9,9 +9,9 @@ import LabeledSlider from '@/components/labeled-slider'
 import ChampionPortrait from '@/components/champion-portrait'
 import type { Champion } from '@/app/services/champions'
 import { RARITIES, RARITY_LABELS } from '@/app/services/roster'
-import { cn } from '@/app/lib/utils'
 import { rarityBadgeClass } from '@/app/game/defense/_components/defense-utils'
 import ChampionFilterSelect from '@/app/game/knowledge-base/_components/champion-filter-select'
+import QuickEditAscension from './quick-edit-ascension'
 import { widen, type Draft, type Range } from './quick-edit-logic'
 import type { SaveState } from './use-quick-edit-saves'
 
@@ -111,16 +111,14 @@ export default function QuickEditRow({
         className='w-20'
         title={t.game.war.rarity}
       />
-      {/* Hidden, not removed, so the columns of every row stay aligned. */}
-      <LabeledSlider
-        max={2}
-        value={[ascension]}
-        onChange={([next]) => value && onEdit({ ...value, ascension: next })}
-        format={(a) => (a === 0 ? t.game.war.ascensionNone : `A${a}`)}
-        cy={`war-quick-edit-asc-${node}`}
-        disabled={locked || !value || !ascendable}
-        className={cn('w-20', (!value || !ascendable) && 'invisible')}
-        title={t.game.war.ascension}
+      <QuickEditAscension
+        node={node}
+        value={value}
+        champion={champion}
+        ascendable={ascendable}
+        ascension={ascension}
+        locked={locked}
+        onEdit={onEdit}
       />
       <span
         className='flex size-5 shrink-0 items-center justify-center'

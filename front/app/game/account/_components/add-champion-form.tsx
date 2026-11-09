@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
+import AscensionRequestButton from '@/components/ascension-request-button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import LabeledSlider from '@/components/labeled-slider'
 import { SearchInput } from '@/components/search-input'
@@ -239,9 +240,10 @@ export default function AddChampionForm({
                 cy='ascension'
               />
               {selectedChampion && !selectedChampion.is_ascendable && (
-                <p className='text-xs text-muted-foreground mt-1'>
-                  This champion cannot be ascended.
-                </p>
+                <AscensionRequestButton
+                  championId={selectedChampion.id}
+                  variant='text'
+                />
               )}
             </div>
           </div>
