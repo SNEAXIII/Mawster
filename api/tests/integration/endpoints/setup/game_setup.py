@@ -1,13 +1,18 @@
 """Setup helpers to create game accounts, alliances, officers and members for integration tests."""
 
 import uuid
+from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
+
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.models.alliance.Alliance import Alliance
 from src.models.alliance.AllianceOfficer import AllianceOfficer
 from src.models.alliance.AllianceStrategist import AllianceStrategist
 from src.models.alliance.AllianceVisitor import AllianceVisitor
+from src.models.champion.AscensionRequest import AscensionRequest
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
@@ -215,6 +220,23 @@ async def push_champion(
     champ = get_champion(name=name, champion_class=champion_class, **kwargs)
     await load_objects([champ])
     return champ
+
+
+async def push_ascension_request(
+    champion: Champion,
+    requester_user_id: uuid.UUID = USER_ID,
+    **kwargs,
+) -> AscensionRequest:
+    """Insert a pending Ascension Request and return it."""
+    request = AscensionRequest(
+        champion_id=champion.id, requester_user_id=requester_user_id, **kwargs
+    )
+    await load_objects([request])
+    return request
+
+
+async def get_ascension_requests(session: AsyncSession) -> Sequence[AscensionRequest]:
+    return (await session.exec(select(AscensionRequest))).all()
 
 
 async def push_champion_user(

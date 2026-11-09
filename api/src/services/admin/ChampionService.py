@@ -18,6 +18,7 @@ from src.Messages.champion_messages import (
 )
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionSagaRole import ChampionSagaRole
+from src.services.admin.AscensionRequestService import AscensionRequestService
 from src.utils.db import SessionDep
 
 VALID_CLASSES = {c.value for c in ChampionClass}
@@ -167,7 +168,11 @@ class ChampionService:
 
     @classmethod
     async def toggle_ascendable(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
-        return await cls._toggle(session, champion_id, "is_ascendable")
+        champion = await cls._toggle(session, champion_id, "is_ascendable")
+        if champion.is_ascendable:
+            await AscensionRequestService.remove_resolved(session)
+            await session.commit()
+        return champion
 
     @classmethod
     async def toggle_seven_stars(cls, session: SessionDep, champion_id: uuid.UUID) -> Champion:
@@ -217,6 +222,7 @@ class ChampionService:
                 session.add(new_champion)
                 created += 1
 
+        await AscensionRequestService.remove_resolved(session)
         await session.commit()
         return {"created": created, "updated": updated, "skipped": skipped}
 

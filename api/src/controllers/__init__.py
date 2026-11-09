@@ -1,3 +1,4 @@
+from src.controllers.account.game.ascension_request_controller import ascension_request_controller
 from src.controllers.account.game.champion_user_controller import champion_user_controller
 from src.controllers.account.game.game_account_controller import game_account_controller
 from src.controllers.account.game.upgrade_request_controller import upgrade_request_controller
@@ -7,6 +8,9 @@ from src.controllers.account.me_moderation_controller import me_moderation_contr
 from src.controllers.account.tierlist_controller import tierlist_controller
 from src.controllers.account.user_controller import user_controller
 from src.controllers.admin.admin_audit_controller import admin_audit_controller
+from src.controllers.admin.ascension_request_admin_controller import (
+    ascension_request_admin_controller,
+)
 from src.controllers.admin.champion_controller import champion_controller, champion_read_controller
 from src.controllers.admin.fight_record_controller import fight_record_controller
 from src.controllers.admin.login_stats_controller import login_stats_controller
@@ -58,6 +62,8 @@ routers = [
     vision_controller,
     champion_controller,
     champion_read_controller,
+    ascension_request_controller,
+    ascension_request_admin_controller,
     alliance_invitation_controller,
     alliance_core_controller,
     alliance_member_controller,

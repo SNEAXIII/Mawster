@@ -1247,6 +1247,18 @@ const fr: Translations = {
   // Gestion des champions
   champions: {
     title: 'Gestion des Champions',
+    ascensionRequest: {
+      request: "Demander l'ascension",
+      requested: 'Ascension demandée',
+      sent: "Demande d'ascension envoyée",
+      error: "Impossible d'envoyer la demande d'ascension",
+      listTitle: "Demandes d'ascension",
+      requestedBy: 'Demandé par {login}',
+      accept: 'Accepter',
+      refuse: 'Refuser',
+      acceptError: "Impossible d'accepter la demande d'ascension",
+      refuseError: "Impossible de refuser la demande d'ascension",
+    },
     classFilter: 'Classe',
     searchPlaceholder: 'Rechercher par nom ou alias...',
     ascendableFilter: 'Ascentionnable',
