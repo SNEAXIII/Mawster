@@ -112,6 +112,13 @@ _Debt_: the table is named `champion_user` and keyed by `game_account_id` — a
 historical misnomer. Should become `roster_entry`; the rename is a real migration
 across API, front and E2E, so it is deferred, not accepted.
 
+**Ascension Request**:
+An Account asking the Admins to mark a Champion as ascendable, after the game opened
+ascension to it. Targets the catalog, never a Roster Entry — raising a Roster Entry's
+own ascension is not a request, the Player just does it.
+_Table_: `ascension_request`.
+_Avoid_: ascendable request, upgrade request (that is an Officer asking a Player).
+
 ### Tier lists
 
 **Tier List**:
@@ -122,8 +129,8 @@ in their browser.
 _Table_: `tierlist`.
 _Avoid_: board, tierlist (in prose), tier (that is one row).
 
-It belongs to an Account and not to a Player — the single place in the game domain where
-that is true, and the reason it can never be shown inside an Alliance (see
+It belongs to an Account and not to a Player — the one thing a person owns in the game
+domain outside any Player, and the reason it can never be shown inside an Alliance (see
 `docs/adr/0014-tier-lists-belong-to-the-account.md`).
 
 **Tier**:

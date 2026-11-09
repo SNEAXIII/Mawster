@@ -11,6 +11,7 @@ from src.models.alliance.DefensePlan import (  # noqa: F401
     DefensePlanNode,
 )
 from src.models.alliance.DefenseTemplate import DefenseTemplate, DefenseTemplateNode  # noqa: F401
+from src.models.champion.AscensionRequest import AscensionRequest  # noqa: F401
 from src.models.champion.Champion import Champion  # noqa: F401
 from src.models.champion.ChampionSagaRole import ChampionSagaRole  # noqa: F401
 from src.models.champion.ChampionUser import ChampionUser  # noqa: F401
