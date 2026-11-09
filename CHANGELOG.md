@@ -3,6 +3,14 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.1.0](https://github.com/SNEAXIII/Mawster/compare/v2.0.0...v2.1.0) (2026-11-09)
+
+
+### Added
+
+* add ascension requests ([bea4a0b](https://github.com/SNEAXIII/Mawster/commit/bea4a0b9bf00158e2b06d18e2a911b960b428a71))
+* warn when an AI import holds a single screenshot ([#802](https://github.com/SNEAXIII/Mawster/issues/802)) ([b343824](https://github.com/SNEAXIII/Mawster/commit/b343824ce08c106d3ef88212ce7d7fb5dbccbbdf))
+
 ## [2.0.0](https://github.com/SNEAXIII/Mawster/compare/v1.37.0...v2.0.0) (2026-11-08)
 
 
