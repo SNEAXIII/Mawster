@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { SearchInput } from '@/components/search-input'
 import ChampionPortrait from '@/components/champion-portrait'
+import AscensionRequestButton from '@/components/ascension-request-button'
 import { cn } from '@/app/lib/utils'
 import type { AvailableChampion, ChampionOwner, DefensePlacement } from '@/app/services/defense'
 import { RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
@@ -261,52 +262,64 @@ export default function AllianceDefenseSelector({
                     const classColors = getClassColors(champ.champion_class)
                     const bestOwner = champ.owners[0]
                     return (
-                      <button
+                      <div
                         key={champ.champion_id}
-                        className={cn(
-                          'flex flex-col items-center gap-1 p-2 rounded-lg border transition-all',
-                          'hover:ring-2 hover:ring-white/40 cursor-pointer',
-                          'bg-card border-border'
-                        )}
-                        onClick={() => handleSelectChampion(champ)}
-                        title={`${champ.champion_name} — ${champ.owners.length} owner(s)`}
-                        data-cy={`champion-card-${champ.champion_name.replaceAll(/\s+/g, '-')}`}
+                        className='group relative'
                       >
-                        <ChampionPortrait
-                          imageUrl={champ.image_url}
-                          name={champ.champion_name}
-                          rarity={bestOwner.rarity}
-                          size={48}
-                          isPreferred={champ.owners.every((o) => o.is_preferred_attacker)}
-                          ascension={bestOwner.ascension}
-                          is_saga_attacker={champ.is_saga_attacker}
-                          is_saga_defender={champ.is_saga_defender}
-                          sagaMode='defender'
-                        />
-                        <span className='text-[10px] text-center truncate w-full leading-tight'>
-                          {shortenChampionName(champ.champion_name)}
-                        </span>
-                        <span className={cn('text-[9px] font-medium', classColors.label)}>
-                          {RARITY_LABELS[bestOwner.rarity] ?? bestOwner.rarity}
-                          {bestOwner.ascension > 0 && (
-                            <span className='text-purple-400 font-semibold'>
-                              · A{bestOwner.ascension}
-                            </span>
+                        <button
+                          className={cn(
+                            'flex size-full flex-col items-center gap-1 p-2 rounded-lg border transition-all',
+                            'hover:ring-2 hover:ring-white/40 cursor-pointer',
+                            'bg-card border-border'
                           )}
-                        </span>
-                        {champ.owners.length === 1 ? (
-                          <span className='text-[9px] text-muted-foreground truncate w-full text-center'>
-                            {bestOwner.game_pseudo} · {bestOwner.defender_count}/5
+                          onClick={() => handleSelectChampion(champ)}
+                          title={`${champ.champion_name} — ${champ.owners.length} owner(s)`}
+                          data-cy={`champion-card-${champ.champion_name.replaceAll(/\s+/g, '-')}`}
+                        >
+                          <ChampionPortrait
+                            imageUrl={champ.image_url}
+                            name={champ.champion_name}
+                            rarity={bestOwner.rarity}
+                            size={48}
+                            isPreferred={champ.owners.every((o) => o.is_preferred_attacker)}
+                            ascension={bestOwner.ascension}
+                            is_saga_attacker={champ.is_saga_attacker}
+                            is_saga_defender={champ.is_saga_defender}
+                            sagaMode='defender'
+                          />
+                          <span className='text-[10px] text-center truncate w-full leading-tight'>
+                            {shortenChampionName(champ.champion_name)}
                           </span>
-                        ) : (
-                          <span className='text-[9px] text-muted-foreground'>
-                            {t.game.defense.ownersCount.replace(
-                              '{count}',
-                              String(champ.owners.length)
+                          <span className={cn('text-[9px] font-medium', classColors.label)}>
+                            {RARITY_LABELS[bestOwner.rarity] ?? bestOwner.rarity}
+                            {bestOwner.ascension > 0 && (
+                              <span className='text-purple-400 font-semibold'>
+                                · A{bestOwner.ascension}
+                              </span>
                             )}
                           </span>
+                          {champ.owners.length === 1 ? (
+                            <span className='text-[9px] text-muted-foreground truncate w-full text-center'>
+                              {bestOwner.game_pseudo} · {bestOwner.defender_count}/5
+                            </span>
+                          ) : (
+                            <span className='text-[9px] text-muted-foreground'>
+                              {t.game.defense.ownersCount.replace(
+                                '{count}',
+                                String(champ.owners.length)
+                              )}
+                            </span>
+                          )}
+                        </button>
+                        {!champ.is_ascendable && (
+                          <div className='absolute right-1 top-1 z-40 flex rounded bg-black/60 opacity-100 transition-opacity sm:[@media(hover:hover)]:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100'>
+                            <AscensionRequestButton
+                              championId={champ.champion_id}
+                              variant='bar'
+                            />
+                          </div>
                         )}
-                      </button>
+                      </div>
                     )
                   })}
                 </div>

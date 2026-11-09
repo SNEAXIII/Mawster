@@ -140,6 +140,7 @@ class DefensePlanNodeService:
                     "champion_name": cu.champion.name,
                     "champion_alias": cu.champion.alias,
                     "champion_class": cu.champion.champion_class,
+                    "is_ascendable": cu.champion.is_ascendable,
                     "is_saga_attacker": is_saga_attacker,
                     "is_saga_defender": is_saga_defender,
                     "image_url": cu.champion.image_url,
