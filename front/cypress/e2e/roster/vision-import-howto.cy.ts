@@ -57,7 +57,7 @@ describe('Roster – Vision import how-to dialog', () => {
       });
 
       cy.getByCy('vision-single-screen-dialog').should('be.visible');
-      cy.getByCy('confirmation-dialog-confirm').click();
+      cy.getByCy('confirmation-dialog-cancel').click();
 
       cy.get('[data-cy^="preview-row-signature-input-"]', { timeout: 30000 }).should('have.length', 2);
     });

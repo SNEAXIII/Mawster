@@ -22,10 +22,10 @@ export default function VisionSingleScreenDialog({
       onOpenChange={warning.setOpen}
       title={copy.title}
       description={copy.body}
-      confirmText={copy.confirm}
-      cancelText={copy.addMore}
-      onConfirm={warning.confirm}
-      onCancelClick={warning.addMore}
+      confirmText={copy.addMore}
+      cancelText={copy.confirm}
+      onConfirm={warning.addMore}
+      onCancelClick={warning.confirm}
       dataCy='vision-single-screen-dialog'
     >
       <div className='flex items-center gap-2 pt-2'>
