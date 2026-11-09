@@ -312,3 +312,16 @@ async def test_retry_reverts_to_failed_when_publish_fails(session):
     assert job.error == JOB_NEVER_QUEUED
     assert vision_import.screens_done == 2
     assert vision_import.status == VisionImportStatus.DONE
+
+
+@pytest.mark.asyncio
+async def test_done_result_keeps_the_missing_cells_count(session):
+    vision_import, jobs = await _persist_import(
+        session, total=1, statuses=(VisionJobStatus.PENDING,)
+    )
+    message = _done_message(jobs[0], vision_import).model_copy(update={"missing_cells": 2})
+
+    await VisionResultService.handle(session, message)
+
+    assert jobs[0].status == VisionJobStatus.DONE
+    assert jobs[0].missing_cells == 2

@@ -63,8 +63,8 @@ async def _push_job(
     error: str | None = None,
     predictions: int = 0,
     created_at: datetime | None = None,
-    unidentified: int = 0,
-    reranked: int = 0,
+    confidences: list[float] | None = None,
+    missing_cells: int = 0,
 ) -> VisionJob:
     job = VisionJob(
         id=uuid.uuid4(),
@@ -72,6 +72,7 @@ async def _push_job(
         status=status,
         object_key=f"screens/{uuid.uuid4()}.png",
         error=error,
+        missing_cells=missing_cells,
     )
     if created_at is not None:
         job.created_at = created_at
@@ -80,11 +81,10 @@ async def _push_job(
         VisionPrediction(
             id=uuid.uuid4(),
             job_id=job.id,
-            champion_name=None if index < unidentified else f"Champ{index}",
+            champion_name=f"Champ{index}",
             stars=6,
             rank=3,
-            confidence=0.5,
-            reranked=index < reranked,
+            confidence=confidences[index] if confidences else 0.5,
         )
         for index in range(predictions)
     ]
@@ -105,9 +105,9 @@ async def _two_users_with_imports():
     await _push_import(account1.id, VisionImportStatus.CANCELLED, screens=2)
     second = await _push_import(account2.id, VisionImportStatus.CONFIRMED, screens=4)
 
-    await _push_job(first, predictions=3, unidentified=1, reranked=1)
+    await _push_job(first, predictions=3, confidences=[0.9, 0.6, 0.3])
     await _push_job(first, status=VisionJobStatus.FAILED, error="unreadable screenshot")
-    await _push_job(second, predictions=2)
+    await _push_job(second, predictions=2, missing_cells=2)
     return account1, account2
 
 
@@ -148,9 +148,6 @@ async def test_stats_overview_counts_every_outcome():
     assert overview["screens_total"] == 10
     assert overview["distinct_users"] == 2
     assert overview["distinct_game_accounts"] == 2
-    assert overview["shared_dataset_imports"] == 1
-    # 3 confirmed out of 4 finished imports.
-    assert overview["confirm_rate"] == 0.75
     assert overview["avg_screens_per_import"] == 2.5
 
 
@@ -164,11 +161,40 @@ async def test_stats_overview_reports_model_quality():
 
     assert overview["jobs_total"] == 3
     assert overview["jobs_failed"] == 1
-    assert overview["job_failure_rate"] == round(1 / 3, 4)
+    assert overview["jobs_with_missing_cells"] == 1
+    assert overview["missing_cells_total"] == 2
     assert overview["predictions_total"] == 5
-    assert overview["unidentified_predictions"] == 1
-    assert overview["reranked_predictions"] == 1
-    assert overview["avg_confidence"] == 0.5
+    assert overview["avg_confidence"] == 0.56
+    assert overview["min_confidence"] == 0.3
+    # Lowest card per import: 0.3 for the first, 0.5 for the second.
+    assert overview["avg_import_min_confidence"] == 0.4
+
+
+@pytest.mark.asyncio
+async def test_low_confidence_threshold_is_the_worst_percent_of_the_whole_base():
+    await push_one_user()
+    account = await push_game_account(user_id=USER_ID)
+    recent = await _push_import(account.id, VisionImportStatus.CONFIRMED)
+    old = await _push_import(
+        account.id, VisionImportStatus.CONFIRMED, created_at=utcnow() - timedelta(days=60)
+    )
+    # 200 cards: the worst 1 % is the two lowest, so the line sits on the second.
+    await _push_job(recent, predictions=100, confidences=[0.5 + i / 1000 for i in range(100)])
+    await _push_job(
+        old,
+        predictions=100,
+        confidences=[0.1, 0.2] + [0.9] * 98,
+        created_at=utcnow() - timedelta(days=60),
+    )
+
+    overview = (
+        await execute_get_request(f"{STATS_URL}?days=7", headers=STANDALONE_ADMIN_HEADERS)
+    ).json()["overview"]
+
+    # The old cards set the line, even though the window leaves them out.
+    assert overview["low_confidence_threshold"] == 0.2
+    assert overview["low_confidence_predictions"] == 0
+    assert overview["min_confidence"] == 0.5
 
 
 @pytest.mark.asyncio
@@ -178,8 +204,8 @@ async def test_stats_overview_is_zeroed_without_imports():
     body = (await execute_get_request(STATS_URL, headers=STANDALONE_ADMIN_HEADERS)).json()
 
     assert body["overview"]["imports_total"] == 0
-    assert body["overview"]["confirm_rate"] == 0.0
     assert body["overview"]["avg_confidence"] is None
+    assert body["overview"]["low_confidence_threshold"] is None
     assert body["top_errors"] == []
 
 
@@ -342,13 +368,19 @@ async def test_imports_log_rolls_up_failed_jobs_and_predictions():
     await push_one_user()
     account = await push_game_account(user_id=USER_ID)
     vision_import = await _push_import(account.id, VisionImportStatus.DONE)
-    await _push_job(vision_import, predictions=4)
+    await _push_job(vision_import, predictions=4, confidences=[0.2, 0.6, 0.7, 0.9], missing_cells=1)
     await _push_job(vision_import, status=VisionJobStatus.FAILED, error="blurry")
 
     body = (await execute_get_request(IMPORTS_URL, headers=STANDALONE_ADMIN_HEADERS)).json()
 
-    assert body["items"][0]["jobs_failed"] == 1
-    assert body["items"][0]["predictions_total"] == 4
+    row = body["items"][0]
+    assert row["jobs_failed"] == 1
+    assert row["missing_cells"] == 1
+    assert row["predictions_total"] == 4
+    assert row["min_confidence"] == 0.2
+    assert row["avg_confidence"] == 0.6
+    # 4 cards in the base: the worst 1 % is the single lowest one.
+    assert row["low_confidence_predictions"] == 1
 
 
 @pytest.mark.asyncio

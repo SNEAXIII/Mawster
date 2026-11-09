@@ -37,7 +37,7 @@ export function ProfileHeader({
             <PageTitle>{name ?? t.profile.user}</PageTitle>
             <Badge
               variant='secondary'
-              className='gap-1'
+              className='gap-1 w-fit self-center sm:self-start'
             >
               <Shield className='size-3' />
               {role?.toLowerCase() ?? t.profile.user.toLowerCase()}

@@ -136,6 +136,16 @@ impl<'a> Matrix<'a> {
             .flat_map(|(y, row)| row.iter().map(move |(x, card)| (format!("r{y}c{x}"), card)))
     }
 
+    /// Holes in the grid: a column the shot has but a row lacks, found by position.
+    pub fn missing_cells(&self) -> usize {
+        let rows: Vec<Vec<usize>> = self
+            .matrix
+            .iter()
+            .map(|row| row.iter().map(|(x, _)| *x).collect())
+            .collect();
+        count_missing_cells(&rows)
+    }
+
     pub fn into_flat(self) -> Vec<CardDetected<'a>> {
         self.matrix
             .into_iter()
@@ -189,11 +199,32 @@ impl<'a> Matrix<'a> {
             .collect()
     }
 }
+/// Columns are positional, so every row but the last spans the widest one; the last row
+/// may stop early, the roster just ends there. A whole missed row stays invisible.
+fn count_missing_cells(rows: &[Vec<usize>]) -> usize {
+    let Some(widest) = rows.iter().flatten().max().copied() else {
+        return 0;
+    };
+    let last = rows.len() - 1;
+    rows.iter()
+        .enumerate()
+        .map(|(y, columns)| {
+            let end = if y == last {
+                columns.iter().max().copied().unwrap_or(0)
+            } else {
+                widest
+            };
+            (0..=end).filter(|x| !columns.contains(x)).count()
+        })
+        .sum()
+}
+
 #[derive(Serialize)]
 pub struct MatrixPrediction {
     pub count: usize,
     /// Lowest naming confidence of the shot; `None` without a card.
     pub worst_confidence: Option<f32>,
+    pub missing_cells: usize,
     pub cells: Vec<(String, CardDetectedPrediction)>,
     pub timings: Vec<(&'static str, f64)>,
 }
@@ -209,6 +240,7 @@ impl From<&Matrix<'_>> for MatrixPrediction {
                 .iter()
                 .map(|(_, card)| card.confidence)
                 .min_by(f32::total_cmp),
+            missing_cells: matrix.missing_cells(),
             cells,
             timings: matrix.timings.clone(),
         }
@@ -218,6 +250,9 @@ impl From<&Matrix<'_>> for MatrixPrediction {
 impl fmt::Debug for MatrixPrediction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} cards", self.count)?;
+        if self.missing_cells > 0 {
+            write!(f, ", {} missing cell(s)", self.missing_cells)?;
+        }
         if let Some(confidence) = self.worst_confidence {
             write!(f, ", worst confidence {confidence:.3}")?;
         }

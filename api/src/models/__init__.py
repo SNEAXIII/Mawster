@@ -31,10 +31,10 @@ from src.models.user.NoteReport import NoteReport  # noqa: F401
 from src.models.user.User import User  # noqa: F401
 from src.models.user.UserMute import UserMute  # noqa: F401
 from src.models.user.UserWarn import UserWarn  # noqa: F401
+from src.models.vision.VisionCorrection import VisionCorrection  # noqa: F401
 from src.models.vision.VisionImport import VisionImport  # noqa: F401
 from src.models.vision.VisionJob import VisionJob  # noqa: F401
 from src.models.vision.VisionPrediction import VisionPrediction  # noqa: F401
-from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate  # noqa: F401
 from src.models.vision.VisionSample import VisionSample  # noqa: F401
 from src.models.war.Season import Season  # noqa: F401
 from src.models.war.War import War  # noqa: F401

@@ -76,4 +76,28 @@ describe('Game Accounts – role badges', () => {
         .should('have.attr', 'data-role', 'officer');
     });
   });
+
+  it('shows strategist badge after promotion', () => {
+    cy.apiBatchSetup([
+      {
+        discord_token: 'rb-owner4',
+        game_pseudo: 'OwnerPlayer4',
+        create_alliance: { name: 'TestAlliance4', tag: 'TS4' },
+      },
+      {
+        discord_token: 'rb-strategist',
+        game_pseudo: 'StrategistPlayer',
+        join_alliance_token: 'rb-owner4',
+      },
+    ]).then((users) => {
+      const owner = users['rb-owner4'];
+      const strategist = users['rb-strategist'];
+      cy.apiAddStrategist(owner.access_token, owner.alliance_id!, strategist.account_id!);
+      cy.apiLogin(strategist.user_id, 'profile');
+      cy.getByCy('account-role-badge-StrategistPlayer')
+        .scrollIntoView()
+        .should('be.visible')
+        .should('have.attr', 'data-role', 'strategist');
+    });
+  });
 });

@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/app/i18n'
+import { cn } from '@/app/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +23,7 @@ import {
 import { X } from 'lucide-react'
 import type { PaginatedVisionImports } from '@/app/services/vision-stats'
 import type { UserFilter } from '../_viewmodels/use-vision-stats-viewmodel'
+import VisionImportConfidenceCells from './vision-import-confidence-cells'
 
 interface VisionStatsImportsProps {
   data: PaginatedVisionImports
@@ -118,7 +120,11 @@ export default function VisionStatsImports({
                   <TableHead>{s.colStatus}</TableHead>
                   <TableHead>{s.colProgress}</TableHead>
                   <TableHead>{s.colFailedScreens}</TableHead>
+                  <TableHead>{s.colMissingCells}</TableHead>
                   <TableHead>{s.colPredictions}</TableHead>
+                  <TableHead>{s.colMinConfidence}</TableHead>
+                  <TableHead>{s.colAvgConfidence}</TableHead>
+                  <TableHead>{s.colLowCards}</TableHead>
                   <TableHead>{s.colShared}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -142,7 +148,14 @@ export default function VisionStatsImports({
                       {row.screens_done}/{row.screens_total}
                     </TableCell>
                     <TableCell className='tabular-nums'>{row.jobs_failed}</TableCell>
+                    <TableCell
+                      className={cn('tabular-nums', row.missing_cells > 0 && 'text-destructive')}
+                      data-cy='vision-imports-missing-cells'
+                    >
+                      {row.missing_cells}
+                    </TableCell>
                     <TableCell className='tabular-nums'>{row.predictions_total}</TableCell>
+                    <VisionImportConfidenceCells row={row} />
                     <TableCell>{row.share_dataset ? t.common.yes : t.common.no}</TableCell>
                   </TableRow>
                 ))}

@@ -54,6 +54,7 @@ updates:
       - /front
       - /backup
       - /static-assets
+      - /rust-vision
     schedule:
       interval: monthly
 

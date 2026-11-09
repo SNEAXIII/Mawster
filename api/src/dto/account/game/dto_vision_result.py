@@ -1,7 +1,7 @@
 import uuid
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.dto.account.game.dto_vision_predictions import VisionPreview
 from src.enums.VisionJobStatus import VisionJobStatus
@@ -24,8 +24,6 @@ class VisionPredictionMessage(BaseModel):
     ascension: int = 0
     confidence: float = 0.0
     preview: VisionPreview | None = None
-    # True when a pixel second pass overrode the first naming pass.
-    reranked: bool = False
 
 
 class VisionResultMessage(BaseModel):
@@ -36,4 +34,5 @@ class VisionResultMessage(BaseModel):
     status: Literal[VisionJobStatus.DONE, VisionJobStatus.FAILED]
     error: str | None = None
     result_key: str | None = None
+    missing_cells: int = Field(default=0, ge=0)
     predictions: list[VisionPredictionMessage] = []

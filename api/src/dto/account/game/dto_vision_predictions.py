@@ -47,7 +47,6 @@ class VisionPredictionResponse(BaseModel):
     preview: VisionPreview | None = None
     # Index of the job (screenshot) within the import, for grouping in the UI.
     job_index: int
-    reranked: bool = False
 
 
 class VisionPredictionsResponse(BaseModel):

@@ -7,7 +7,6 @@ from src.models.Base import FK_VISION_JOB, UUIDBase
 
 if TYPE_CHECKING:
     from src.models.vision.VisionJob import VisionJob
-    from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 
 
 class VisionPrediction(UUIDBase, table=True):
@@ -31,11 +30,8 @@ class VisionPrediction(UUIDBase, table=True):
     rank: int = 0
     signature: int = 0
     ascension: int = 0
+    # The naming margin: the best gallery match's lead over the second best.
     confidence: float = Field(default=0.0)
-    # The pixel second pass overrode CLIP's ranking on this card. Stored rather
-    # than derived: the margin alone cannot tell "corrected" from "unsure", and
-    # once the candidates are persisted the reason for their order is gone.
-    reranked: bool = Field(default=False)
     # All four or none, in screenshot pixels (see VisionPreview).
     preview_left: float | None = Field(default=None)
     preview_right: float | None = Field(default=None)
@@ -43,7 +39,3 @@ class VisionPrediction(UUIDBase, table=True):
     preview_bottom: float | None = Field(default=None)
 
     job: "VisionJob" = Relationship(back_populates="predictions")
-    candidates: list["VisionPredictionCandidate"] = Relationship(
-        back_populates="prediction",
-        sa_relationship_kwargs={"order_by": "VisionPredictionCandidate.position"},
-    )

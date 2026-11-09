@@ -31,7 +31,7 @@ describe('Roster – Basic', () => {
       cy.apiCreateGameAccount(access_token, 'Account2', false);
 
       cy.apiLogin(user_id, 'roster');
-      cy.contains('Select a game account').should('be.visible');
+      cy.getByCy('roster-account-select').should('be.visible');
     });
   });
 
