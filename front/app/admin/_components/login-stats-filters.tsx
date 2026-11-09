@@ -28,6 +28,7 @@ export default function LoginStatsFilters({
   const s = t.admin.loginStats
 
   const periodLabels: Record<number, string> = {
+    7: s.period7,
     30: s.period30,
     90: s.period90,
     365: s.period365,
