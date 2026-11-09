@@ -12,6 +12,7 @@ import VisionStatsPanel from './vision-stats-panel'
 import LoginStatsPanel from './login-stats-panel'
 import AuditPanel from './audit-panel'
 import { useAdminViewModel, AdminTab } from '../_viewmodels/use-admin-viewmodel'
+import { useAdminAscensionRequests } from '../_viewmodels/use-admin-ascension-requests'
 
 interface AdminContentProps {
   defaultTab?: AdminTab
@@ -19,12 +20,17 @@ interface AdminContentProps {
 
 export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<AdminContentProps>) {
   const vm = useAdminViewModel({ defaultTab })
+  const ascensionRequests = useAdminAscensionRequests()
   const { t } = useI18n()
   const isSuperAdmin = vm.session?.user?.role === 'super_admin'
+  const pendingRequests = ascensionRequests.requests.length
 
   const tabs: TabItem<AdminTab>[] = [
     { value: AdminTab.Users, label: t.nav.users },
-    { value: AdminTab.Champions, label: t.nav.champions },
+    {
+      value: AdminTab.Champions,
+      label: pendingRequests > 0 ? `${t.nav.champions} (${pendingRequests})` : t.nav.champions,
+    },
     { value: AdminTab.Seasons, label: t.nav.seasons },
     { value: AdminTab.KnowledgeBase, label: t.admin.knowledgeBase.tab },
     { value: AdminTab.VisionImports, label: t.admin.visionStats.tab },
@@ -49,7 +55,7 @@ export default function AdminContent({ defaultTab = AdminTab.Users }: Readonly<A
         onChange={vm.setActiveTab}
       />
       {vm.activeTab === AdminTab.Users && <UsersPanel currentUserRole={vm.session?.user?.role} />}
-      {vm.activeTab === AdminTab.Champions && <ChampionsPanel />}
+      {vm.activeTab === AdminTab.Champions && <ChampionsPanel requests={ascensionRequests} />}
       {vm.activeTab === AdminTab.Seasons && <SeasonsPanel />}
       {vm.activeTab === AdminTab.KnowledgeBase && <KnowledgeBasePanel />}
       {vm.activeTab === AdminTab.VisionImports && <VisionStatsPanel />}
