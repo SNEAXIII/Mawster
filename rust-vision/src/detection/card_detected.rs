@@ -103,7 +103,6 @@ impl<'l> CardDetected<'l> {
         })
     }
     /// Top-1 of the mosaic gallery on the champion box, and its margin over the top-2.
-    // ponytail: no ±2 % shift cascade, port `rank_cascade` from mosaic_bench if close calls miss.
     pub fn set_champion_name(&mut self, gallery: &[(String, Vec<f32>)]) {
         let query = embed(&self.champion_box.crop(self.image).to_rgb8());
         let (best, margin) = top_two(

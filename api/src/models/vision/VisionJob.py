@@ -24,6 +24,8 @@ class VisionJob(UUIDBase, TimestampMixin, table=True):
     result_key: str | None = Field(default=None, max_length=255)
     error: str | None = Field(default=None, max_length=512)
     attempts: int = Field(default=0, ge=0)
+    # Grid cells the worker found empty where a card should sit: a missed detection.
+    missing_cells: int = Field(default=0, ge=0)
 
     vision_import: "VisionImport" = Relationship(back_populates="jobs")
     predictions: list["VisionPrediction"] = Relationship(back_populates="job")

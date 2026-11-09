@@ -60,8 +60,6 @@ export interface VisionPrediction {
   confidence: number
   preview: VisionPreview | null
   job_index: number
-  // The pixel second pass overrode the first naming pass on this card.
-  reranked: boolean
 }
 
 // Overlapping screenshots read a champion several times. Stars stay in the key: a 6* and

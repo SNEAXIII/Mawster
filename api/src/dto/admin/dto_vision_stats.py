@@ -29,23 +29,23 @@ class VisionStatsOverview(BaseModel):
     screens_total: int = 0
     jobs_total: int = 0
     jobs_failed: int = 0
+    # Screenshots the worker found a hole in: a card the detector missed.
+    jobs_with_missing_cells: int = 0
+    missing_cells_total: int = 0
     predictions_total: int = 0
 
     distinct_users: int = 0
     distinct_game_accounts: int = 0
-    shared_dataset_imports: int = 0
 
-    # Model-quality signals. `unidentified_predictions` are the cards CLIP could
-    # not name at all; `reranked_predictions` the ones the pixel second pass
-    # overrode. Both are corrections the user had to look at.
+    # Confidence is the naming margin (top-1 lead over top-2): a low one is a card
+    # the model could have named either way.
     avg_confidence: float | None = None
-    unidentified_predictions: int = 0
-    reranked_predictions: int = 0
+    min_confidence: float | None = None
+    avg_import_min_confidence: float | None = None
+    # Over the whole base, whatever the window: see low_confidence_threshold().
+    low_confidence_threshold: float | None = None
+    low_confidence_predictions: int = 0
 
-    # Derived, 0..1. Kept server-side so the front and any future export agree
-    # on the denominator (finished imports, not imports still running).
-    confirm_rate: float = 0.0
-    job_failure_rate: float = 0.0
     avg_screens_per_import: float = 0.0
 
 
@@ -104,7 +104,11 @@ class VisionImportRow(PlayerIdentity):
     screens_total: int = 0
     screens_done: int = 0
     jobs_failed: int = 0
+    missing_cells: int = 0
     predictions_total: int = 0
+    min_confidence: float | None = None
+    avg_confidence: float | None = None
+    low_confidence_predictions: int = 0
     share_dataset: bool = False
 
 

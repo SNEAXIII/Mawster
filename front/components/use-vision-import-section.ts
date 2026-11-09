@@ -20,7 +20,8 @@ export function useVisionImportSection({
   onRosterUpdated,
 }: UseVisionImportSectionProps) {
   const { t } = useI18n()
-  const [shareDataset, setShareDataset] = useState(false)
+  // On by default; the review screen says what it does and one click opts out.
+  const [shareDataset, setShareDataset] = useState(true)
   const [bannerRefreshKey, setBannerRefreshKey] = useState(0)
 
   const singleScreen = useVisionSingleScreenWarning({

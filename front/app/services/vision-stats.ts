@@ -16,15 +16,17 @@ export interface VisionStatsOverview {
   screens_total: number
   jobs_total: number
   jobs_failed: number
+  jobs_with_missing_cells: number
+  missing_cells_total: number
   predictions_total: number
   distinct_users: number
   distinct_game_accounts: number
-  shared_dataset_imports: number
   avg_confidence: number | null
-  unidentified_predictions: number
-  reranked_predictions: number
-  confirm_rate: number
-  job_failure_rate: number
+  min_confidence: number | null
+  avg_import_min_confidence: number | null
+  // Over the whole base, whatever the window: the worst 1 % of every card read.
+  low_confidence_threshold: number | null
+  low_confidence_predictions: number
   avg_screens_per_import: number
 }
 
@@ -75,7 +77,11 @@ export interface VisionImportRow {
   screens_total: number
   screens_done: number
   jobs_failed: number
+  missing_cells: number
   predictions_total: number
+  min_confidence: number | null
+  avg_confidence: number | null
+  low_confidence_predictions: number
   share_dataset: boolean
 }
 

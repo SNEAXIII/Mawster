@@ -2,13 +2,14 @@
 
 import { useI18n } from '@/app/i18n'
 import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/app/lib/utils'
 import type { VisionStatsOverview } from '@/app/services/vision-stats'
 
 interface VisionStatsCardsProps {
   overview: VisionStatsOverview
 }
 
-const percent = (ratio: number) => `${Math.round(ratio * 1000) / 10}%`
+const score = (ratio: number | null) => (ratio === null ? '—' : `${Math.round(ratio * 1000) / 10}%`)
 const fill = (template: string, values: Record<string, string | number>) =>
   Object.entries(values).reduce(
     (text, [key, value]) => text.replace(`{{${key}}}`, String(value)),
@@ -19,7 +20,7 @@ export default function VisionStatsCards({ overview }: Readonly<VisionStatsCards
   const { t } = useI18n()
   const s = t.admin.visionStats
 
-  // Hero numbers, not a chart: eight single values with no shared scale have
+  // Hero numbers, not a chart: seven single values with no shared scale have
   // nothing to compare against each other.
   const tiles = [
     {
@@ -41,40 +42,30 @@ export default function VisionStatsCards({ overview }: Readonly<VisionStatsCards
       hint: fill(s.kpiScreensHint, { count: overview.avg_screens_per_import }),
     },
     {
-      cy: 'confirm-rate',
-      label: s.kpiConfirmRate,
-      value: percent(overview.confirm_rate),
-      hint: fill(s.kpiConfirmRateHint, {
-        confirmed: overview.imports_confirmed,
-        cancelled: overview.imports_cancelled,
-      }),
+      cy: 'missing-cells',
+      label: s.kpiMissingCells,
+      value: overview.jobs_with_missing_cells,
+      hint: fill(s.kpiMissingCellsHint, { count: overview.missing_cells_total }),
+      alert: overview.jobs_with_missing_cells > 0,
     },
     {
-      cy: 'predictions',
-      label: s.kpiPredictions,
-      value: overview.predictions_total,
-      hint: fill(s.kpiPredictionsHint, { count: overview.unidentified_predictions }),
+      cy: 'min-confidence',
+      label: s.kpiMinConfidence,
+      value: score(overview.min_confidence),
+      hint: fill(s.kpiMinConfidenceHint, { value: score(overview.avg_import_min_confidence) }),
+      alert: true,
     },
     {
-      cy: 'job-failure',
-      label: s.kpiJobFailure,
-      value: percent(overview.job_failure_rate),
-      hint: fill(s.kpiJobFailureHint, {
-        failed: overview.jobs_failed,
-        total: overview.jobs_total,
-      }),
+      cy: 'avg-confidence',
+      label: s.kpiAvgConfidence,
+      value: score(overview.avg_confidence),
+      hint: fill(s.kpiAvgConfidenceHint, { count: overview.predictions_total }),
     },
     {
-      cy: 'confidence',
-      label: s.kpiConfidence,
-      value: overview.avg_confidence === null ? '—' : percent(overview.avg_confidence),
-      hint: fill(s.kpiConfidenceHint, { count: overview.reranked_predictions }),
-    },
-    {
-      cy: 'shared',
-      label: s.kpiShared,
-      value: overview.shared_dataset_imports,
-      hint: s.kpiSharedHint,
+      cy: 'low-threshold',
+      label: s.kpiLowThreshold,
+      value: score(overview.low_confidence_threshold),
+      hint: fill(s.kpiLowThresholdHint, { count: overview.low_confidence_predictions }),
     },
   ]
 
@@ -92,7 +83,14 @@ export default function VisionStatsCards({ overview }: Readonly<VisionStatsCards
             <p className='text-muted-foreground text-xs font-medium uppercase tracking-wide'>
               {tile.label}
             </p>
-            <p className='mt-1 text-2xl font-semibold tabular-nums'>{tile.value}</p>
+            <p
+              className={cn(
+                'mt-1 text-2xl font-semibold tabular-nums',
+                tile.alert && 'text-destructive'
+              )}
+            >
+              {tile.value}
+            </p>
             <p className='text-muted-foreground mt-1 text-xs'>{tile.hint}</p>
           </CardContent>
         </Card>
