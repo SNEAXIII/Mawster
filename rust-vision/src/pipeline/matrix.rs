@@ -227,6 +227,11 @@ fn count_missing_cells(rows: &[Vec<usize>]) -> usize {
         .sum()
 }
 
+/// A 6★ below rank 4 is not imported; an unread rank stays, for the player to fix.
+fn clears_import_floor(card: &CardDetected) -> bool {
+    card.stars != 6 || card.rank.is_none_or(|rank| rank >= 4)
+}
+
 #[derive(Serialize)]
 pub struct MatrixPrediction {
     pub count: usize,
@@ -240,6 +245,7 @@ impl From<&Matrix<'_>> for MatrixPrediction {
     fn from(matrix: &Matrix<'_>) -> Self {
         let cells: Vec<(String, CardDetectedPrediction)> = matrix
             .cells()
+            .filter(|(_, card)| clears_import_floor(card))
             .map(|(cell_name, card)| (cell_name, CardDetectedPrediction::from(card)))
             .collect();
         Self {
