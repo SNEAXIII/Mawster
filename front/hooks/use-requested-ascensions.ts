@@ -24,23 +24,19 @@ function subscribe(listener: () => void) {
 }
 
 // ponytail: hand-rolled cache, move to TanStack Query along with the catalog caches.
-function loadRequestedIds(): Promise<void> {
+function loadRequestedIds() {
   sharedIds ??= getRequestedChampionIds()
     .then((ids) => setRequested(new Set([...requested, ...ids])))
-    .catch((err: unknown) => {
+    .catch(() => {
       sharedIds = null
-      throw err
     })
-  return sharedIds
 }
 
 /** Champion ids with a pending Ascension Request, shared by every mounted button. */
 export function useRequestedAscensions() {
   const ids = useSyncExternalStore(subscribe, getRequested, getRequested)
 
-  useEffect(() => {
-    loadRequestedIds().catch(() => {})
-  }, [])
+  useEffect(loadRequestedIds, [])
 
   return {
     isRequested: (championId: string) => ids.has(championId),
