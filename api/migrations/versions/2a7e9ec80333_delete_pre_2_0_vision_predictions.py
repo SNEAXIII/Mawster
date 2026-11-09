@@ -5,30 +5,27 @@ Revises: 14c078718005
 Create Date: 2026-11-09 19:52:50.591278
 
 """
-from typing import Sequence, Union
 
-from alembic import op
+from collections.abc import Sequence
+
 import sqlmodel  # noqa: F401
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '2a7e9ec80333'
-down_revision: Union[str, None] = '14c078718005'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+revision: str = "2a7e9ec80333"
+down_revision: str | None = "14c078718005"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
-# The 2.0 deploy finished at 00:17:45 UTC: jobs before it were read by the old
-# worker, whose confidence is a CLIP score, not the mosaic margin the KPIs rank.
-CUTOFF = "2026-11-08 00:18:00"
-
+# Jobs before the 2.0 deploy (00:17:45 UTC) carry a CLIP score, not the mosaic margin.
 # Finished imports only: one still awaiting review keeps its cards to confirm.
-_DELETE = f"""
+_DELETE = """
 DELETE FROM vision_prediction
 WHERE job_id IN (
     SELECT j.id FROM vision_job j
     JOIN vision_import i ON i.id = j.import_id
-    WHERE j.created_at < '{CUTOFF}'
+    WHERE j.created_at < '2026-11-08 00:18:00'
       AND i.status IN ('CONFIRMED', 'CANCELLED', 'FAILED')
 )
 """
