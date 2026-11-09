@@ -13,7 +13,6 @@ from src.dto.account.game.dto_vision_result import (
     VisionPredictionMessage,
     VisionResultMessage,
 )
-from src.enums.VisionCorrectionKind import VisionCorrectionKind
 from src.enums.VisionImportStatus import VisionImportStatus
 from src.enums.VisionJobStatus import VisionJobStatus
 from src.messaging import get_publisher
@@ -739,24 +738,15 @@ def _row(name: str, rarity: str, *, read: bool) -> dict:
 
 
 @pytest.mark.asyncio
-async def test_confirm_logs_edited_fields_and_added_cards_even_without_opt_in(fake_infra):
-    corrections = await _confirm_and_list_corrections(
-        [_row("Hulk", "7r4", read=True), _row("Thor", "7r2", read=False)]
-    )
+async def test_confirm_logs_each_edited_field_even_without_opt_in(fake_infra):
+    corrections = await _confirm_and_list_corrections([_row("Hulk", "7r4", read=True)])
 
-    by_kind = {c.kind: c for c in corrections}
-    assert len(corrections) == 2
-    edited = by_kind[VisionCorrectionKind.EDITED]
-    assert (edited.field, edited.predicted, edited.corrected) == ("rarity", "7r3", "7r4")
-    added = by_kind[VisionCorrectionKind.ADDED]
-    assert (added.prediction_id, added.corrected) == (None, "Thor")
+    assert [(c.field, c.predicted, c.corrected) for c in corrections] == [("rarity", "7r3", "7r4")]
 
 
 @pytest.mark.asyncio
-async def test_confirm_logs_a_dropped_card_as_removed(fake_infra):
-    corrections = await _confirm_and_list_corrections([])
-
-    assert [(c.kind, c.predicted) for c in corrections] == [(VisionCorrectionKind.REMOVED, "Hulk")]
+async def test_confirm_logs_nothing_for_a_row_without_a_reading(fake_infra):
+    assert await _confirm_and_list_corrections([_row("Thor", "7r2", read=False)]) == []
 
 
 @pytest.mark.asyncio

@@ -1,7 +1,7 @@
 """delete_pre_2_0_vision_predictions
 
 Revision ID: 2a7e9ec80333
-Revises: 14c078718005
+Revises: b7fbf20579f1
 Create Date: 2026-11-09 19:52:50.591278
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "2a7e9ec80333"
-down_revision: str | None = "14c078718005"
+down_revision: str | None = "b7fbf20579f1"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
