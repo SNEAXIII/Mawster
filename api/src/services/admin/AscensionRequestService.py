@@ -54,11 +54,9 @@ class AscensionRequestService:
         return [
             AscensionRequestResponse(
                 id=request.id,
-                champion_id=request.champion_id,
                 champion_name=request.champion.name,
                 image_url=request.champion.image_url,
                 requester_login=request.requester.login,
-                created_at=request.created_at,
             )
             for request in result.all()
         ]

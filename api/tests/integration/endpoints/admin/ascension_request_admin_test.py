@@ -97,10 +97,8 @@ class TestListPending:
         body = response.json()
         assert [row["champion_name"] for row in body] == ["Hercules", "Wolverine"]
         assert body[0]["id"] == str(request.id)
-        assert body[0]["champion_id"] == str(oldest.id)
         assert body[0]["image_url"] == "hercules.png"
         assert body[0]["requester_login"] == USER2_LOGIN
-        assert body[0]["created_at"]
 
 
 class TestAccept:

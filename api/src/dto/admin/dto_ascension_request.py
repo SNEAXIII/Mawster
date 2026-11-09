@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -10,8 +9,6 @@ class AscensionRequestCreate(BaseModel):
 
 class AscensionRequestResponse(BaseModel):
     id: uuid.UUID
-    champion_id: uuid.UUID
     champion_name: str
     image_url: str | None
     requester_login: str
-    created_at: datetime

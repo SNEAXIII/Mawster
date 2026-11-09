@@ -12,11 +12,9 @@ export const createAscensionRequest = (championId: string): Promise<void> =>
 
 export interface AdminAscensionRequest {
   id: string
-  champion_id: string
   champion_name: string
   image_url: string | null
   requester_login: string
-  created_at: string
 }
 
 export const getAdminAscensionRequests = (): Promise<AdminAscensionRequest[]> =>
