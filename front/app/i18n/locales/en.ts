@@ -423,6 +423,7 @@ const en = {
       leaveVisitSuccess: 'You are no longer visiting this alliance',
       leaveVisitError: 'Failed to leave the visited alliance',
       memberBadge: 'Member',
+      strategistBadge: 'Strategist',
       invitationTypeVisitor: 'Visitor invitation',
       statistics: {
         tabLabel: 'Statistics',

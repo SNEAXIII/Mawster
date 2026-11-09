@@ -22,9 +22,10 @@ import {
   Pencil,
   Check,
   X,
-  Shield,
   Crown,
   ShieldCheck,
+  MapPlus,
+  User,
   Eye,
 } from 'lucide-react'
 
@@ -35,7 +36,7 @@ const isPseudoInvalid = (value: string) => value.trim() !== '' && !PSEUDO_REGEX.
 /** Mirrors RESTORE_WINDOW_DAYS in GameAccountService — how long a deleted account lives on. */
 const RESTORE_WINDOW_DAYS = 7
 
-type RoleKey = 'owner' | 'officer' | 'member' | 'visitor'
+type RoleKey = 'owner' | 'officer' | 'strategist' | 'member' | 'visitor'
 
 const ROLE_CONFIG: Record<
   RoleKey,
@@ -43,7 +44,8 @@ const ROLE_CONFIG: Record<
 > = {
   owner: { Icon: Crown, cls: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300' },
   officer: { Icon: ShieldCheck, cls: 'bg-purple-500/20 text-purple-700 dark:text-purple-300' },
-  member: { Icon: Shield, cls: 'bg-info/20 text-info' },
+  strategist: { Icon: MapPlus, cls: 'bg-sky-500/20 text-sky-700 dark:text-sky-300' },
+  member: { Icon: User, cls: 'bg-info/20 text-info' },
   visitor: { Icon: Eye, cls: 'bg-muted/80 text-muted-foreground' },
 }
 
@@ -54,6 +56,7 @@ function getRoleKey(
   if (!allianceTag) return null
   if (entry?.is_owner) return 'owner'
   if (entry?.is_officer) return 'officer'
+  if (entry?.is_strategist) return 'strategist'
   if (entry) return 'member'
   return 'visitor'
 }
@@ -224,6 +227,7 @@ export default function GameAccountsSection() {
                 const ROLE_LABELS: Record<RoleKey, string> = {
                   owner: t.game.alliances.owner,
                   officer: t.game.alliances.officers,
+                  strategist: t.game.alliances.strategistBadge,
                   member: t.game.alliances.memberBadge,
                   visitor: t.game.alliances.visitorBadge,
                 }
