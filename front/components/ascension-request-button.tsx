@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, type MouseEvent } from 'react'
+import type { MouseEvent } from 'react'
 import { toast } from 'sonner'
 import { FiFlag } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
@@ -19,22 +19,17 @@ export default function AscensionRequestButton({
 }: Readonly<AscensionRequestButtonProps>) {
   const { t } = useI18n()
   const { isRequested, request } = useRequestedAscensions()
-  const pending = useRef(false)
   const requested = isRequested(championId)
   const { request: requestLabel, requested: requestedLabel } = t.champions.ascensionRequest
   const label = requested ? requestedLabel : requestLabel
 
   const onClick = async (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation()
-    if (pending.current) return
-    pending.current = true
     try {
       await request(championId)
-      toast.success(t.champions.ascensionRequest.sent)
+      toast.success(t.champions.ascensionRequest.sent, { id: championId })
     } catch {
-      toast.error(t.champions.ascensionRequest.error)
-    } finally {
-      pending.current = false
+      toast.error(t.champions.ascensionRequest.error, { id: championId })
     }
   }
 
