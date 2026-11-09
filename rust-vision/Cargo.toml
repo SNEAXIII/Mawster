@@ -85,3 +85,19 @@ multiple_crate_versions = "allow"
 [dev-dependencies]
 rstest = "0.27.0"
 tempfile = "3.27.0"
+
+# Debug runs 3 to 7x faster for 36 s more on a clean build. This crate needs its level too:
+# the image generics are instantiated here, the stack alone leaves `asc` and `name` slow.
+[profile.dev.package]
+image.opt-level = 3
+png.opt-level = 3
+zune-jpeg.opt-level = 3
+zune-core.opt-level = 3
+image-webp.opt-level = 3
+fdeflate.opt-level = 3
+miniz_oxide.opt-level = 3
+flate2.opt-level = 3
+crc32fast.opt-level = 3
+imageproc.opt-level = 3
+fast_image_resize.opt-level = 3
+mcoc-vision.opt-level = 1
