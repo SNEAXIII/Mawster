@@ -1063,6 +1063,7 @@ const fr: Translations = {
       tab: 'Connexions',
       title: 'Activité de connexion',
       subtitle: 'Quand les comptes se connectent ou rafraîchissent leur session.',
+      period7: '7 derniers jours',
       period30: '30 derniers jours',
       period90: '90 derniers jours',
       period365: '365 derniers jours',

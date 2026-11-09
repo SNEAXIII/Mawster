@@ -5,7 +5,7 @@ import { isOneOf } from '@/app/lib/utils'
 import { ALL_TIME_DAYS } from '@/app/services/vision-stats'
 import { getLoginStats, type LoginStats } from '@/app/services/login-stats'
 
-export const LOGIN_PERIOD_OPTIONS = [30, 90, 365, ALL_TIME_DAYS] as const
+export const LOGIN_PERIOD_OPTIONS = [7, 30, 90, 365, ALL_TIME_DAYS] as const
 export const DEFAULT_LOGIN_PERIOD = 365
 
 /** Loads the login activity; the period is shared by the three charts. */
