@@ -82,3 +82,46 @@ pub fn extract_cards(detections: Vec<Detection>, image: &DynamicImage) -> Vec<Ca
     }
     valid_cards
 }
+
+#[cfg(test)]
+mod tests {
+    use rstest::rstest;
+
+    use super::*;
+
+    #[rstest]
+    #[case::nothing(&[], None, MAX_MARGIN)]
+    #[case::uncontested(&[0.5], Some(0), MAX_MARGIN)]
+    #[case::best_first(&[0.9, 0.2, 0.5], Some(0), 0.4)]
+    #[case::best_in_the_middle(&[0.2, 0.9, 0.5], Some(1), 0.4)]
+    #[case::best_last(&[0.2, 0.5, 0.9], Some(2), 0.4)]
+    #[case::a_tie_has_no_lead(&[0.7, 0.7], Some(0), 0.0)]
+    fn top_two_finds_the_best_and_its_lead(
+        #[case] scores: &[f32],
+        #[case] best: Option<usize>,
+        #[case] lead: f32,
+    ) {
+        let (found, margin) = top_two(scores.iter().copied().enumerate());
+        assert_eq!(found, best);
+        assert!((margin - lead).abs() < 1e-6, "{margin}");
+    }
+
+    #[rstest]
+    #[case::card(DetectionClass::Card, 100.0, 100.0, true)]
+    #[case::thin_card(DetectionClass::Card, 50.0, 100.0, false)]
+    #[case::star_row(DetectionClass::Stars, 70.0, 10.0, true)]
+    #[case::short_star_row(DetectionClass::Stars, 40.0, 10.0, false)]
+    #[case::text_strip(DetectionClass::Text, 300.0, 100.0, true)]
+    #[case::strip_clipped_by_the_viewport(DetectionClass::Text, 330.0, 100.0, false)]
+    fn a_box_outside_its_class_ratio_is_dropped(
+        #[case] class: DetectionClass,
+        #[case] width: f32,
+        #[case] height: f32,
+        #[case] kept: bool,
+    ) {
+        assert_eq!(
+            Detection::new(class, [10.0, 20.0, 10.0 + width, 20.0 + height]).is_some(),
+            kept
+        );
+    }
+}

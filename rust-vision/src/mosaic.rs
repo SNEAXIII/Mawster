@@ -161,3 +161,93 @@ fn cut_visible_band(portrait: &RgbaImage) -> RgbaImage {
     let right = (side * VISIBLE_RIGHT).round() as u32;
     imageops::crop_imm(portrait, left, top, right - left, bottom.min(height) - top).to_image()
 }
+
+#[cfg(test)]
+mod tests {
+    use image::Rgb;
+    use rstest::rstest;
+
+    use super::*;
+
+    const FULL_HEIGHT: u32 = MOSAIC_HEIGHT * 10;
+
+    /// 10 px cells of noise, numbered from the bottom edge like the mosaic; values stay in 20..=220.
+    fn art(height: u32, seed: u32) -> RgbImage {
+        RgbImage::from_fn(240, height, |x, y| {
+            let cell = (x / 10).wrapping_mul(73_856_093)
+                ^ ((height - 1 - y) / 10).wrapping_mul(19_349_663)
+                ^ seed.wrapping_mul(83_492_791);
+            let [r, g, b, _] = cell.wrapping_mul(2_654_435_761).to_be_bytes();
+            Rgb([r, g, b].map(|channel| 20 + channel % 201))
+        })
+    }
+
+    fn score(left: &RgbImage, right: &RgbImage) -> f32 {
+        compare(&embed(left), &embed(right))
+    }
+
+    #[rstest]
+    #[case::full_art(FULL_HEIGHT, MOSAIC_HEIGHT - 2)]
+    #[case::taller_than_the_grid(FULL_HEIGHT + 50, MOSAIC_HEIGHT - 2)]
+    #[case::top_clipped(100, 9)]
+    fn an_embedding_drops_the_border_ring(#[case] height: u32, #[case] kept_rows: u32) {
+        let expected = (kept_rows * KEPT_WIDTH) as usize * CHANNELS;
+        assert_eq!(embed(&art(height, 1)).len(), expected);
+    }
+
+    #[test]
+    fn an_embedding_is_a_unit_vector() {
+        let length = embed(&art(FULL_HEIGHT, 1))
+            .iter()
+            .map(|value| value * value)
+            .sum::<f32>()
+            .sqrt();
+        assert!((length - 1.0).abs() < 1e-3, "{length}");
+    }
+
+    #[rstest]
+    #[case::brighter(|[r, g, b]: [u8; 3]| [r + 30, g + 30, b + 30])]
+    #[case::one_channel_washed_out(|[r, g, b]: [u8; 3]| [r / 2, g, b])]
+    fn lighting_does_not_change_the_match(#[case] relight: fn([u8; 3]) -> [u8; 3]) {
+        let original = art(FULL_HEIGHT, 1);
+        let mut relit = original.clone();
+        relit
+            .pixels_mut()
+            .for_each(|pixel| pixel.0 = relight(pixel.0));
+        let similarity = score(&original, &relit);
+        assert!(similarity > 0.99, "{similarity}");
+    }
+
+    #[test]
+    fn a_clipped_card_still_matches_its_own_art() {
+        let (full, clipped) = (art(FULL_HEIGHT, 1), art(100, 1));
+        let own = score(&clipped, &full);
+        let other = score(&clipped, &art(FULL_HEIGHT, 2));
+        assert!(own > 0.9 && other < 0.5, "own {own}, other {other}");
+    }
+
+    #[test]
+    fn a_crop_taller_than_the_grid_keeps_its_bottom_rows() {
+        let similarity = score(&art(FULL_HEIGHT + 50, 1), &art(FULL_HEIGHT, 1));
+        assert!(similarity > 0.99, "{similarity}");
+    }
+
+    #[test]
+    fn a_flat_image_yields_no_nan() {
+        let flat = RgbImage::from_pixel(240, FULL_HEIGHT, Rgb([90; 3]));
+        assert!(embed(&flat).iter().all(|value| value.is_finite()));
+    }
+
+    #[test]
+    fn a_crop_shorter_than_a_cell_embeds_to_nothing() {
+        let sliver = embed(&art(5, 1));
+        assert!(sliver.is_empty());
+        assert!(compare(&sliver, &embed(&art(FULL_HEIGHT, 1))).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn compare_aligns_on_the_bottom_rows() {
+        let similarity = compare(&[9.0, 1.0, 0.0], &[1.0, 0.0]);
+        assert!((similarity - 1.0).abs() < f32::EPSILON, "{similarity}");
+    }
+}

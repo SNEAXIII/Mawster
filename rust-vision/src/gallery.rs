@@ -142,3 +142,42 @@ pub fn load(path: &Path) -> Result<Vec<(String, Vec<f32>)>> {
     ensure!(reader.0.is_empty(), "{}: trailing bytes", path.display());
     Ok(entries)
 }
+
+#[cfg(test)]
+mod tests {
+    #![allow(clippy::unwrap_used)]
+
+    use std::path::PathBuf;
+
+    use rstest::rstest;
+
+    use super::*;
+
+    fn saved_gallery(dir: &Path) -> PathBuf {
+        let path = dir.join("nested/gallery.bin");
+        let gallery = vec![("Hulk".to_owned(), RgbImage::new(1, 1), vec![0.25, -0.5])];
+        save(&path, &gallery).unwrap();
+        path
+    }
+
+    #[test]
+    fn a_saved_gallery_loads_back() {
+        let dir = tempfile::tempdir().unwrap();
+        let entries = load(&saved_gallery(dir.path())).unwrap();
+        assert_eq!(entries, [("Hulk".to_owned(), vec![0.25, -0.5])]);
+    }
+
+    #[rstest]
+    #[case::truncated(|bytes: &mut Vec<u8>| { bytes.pop(); }, "truncated")]
+    #[case::trailing_bytes(|bytes: &mut Vec<u8>| bytes.push(0), "trailing bytes")]
+    #[case::built_under_other_settings(|bytes: &mut Vec<u8>| bytes[4] ^= 1, "run build_gallery")]
+    fn a_damaged_file_is_refused(#[case] damage: fn(&mut Vec<u8>), #[case] expected: &str) {
+        let dir = tempfile::tempdir().unwrap();
+        let path = saved_gallery(dir.path());
+        let mut bytes = fs::read(&path).unwrap();
+        damage(&mut bytes);
+        fs::write(&path, bytes).unwrap();
+        let error = load(&path).unwrap_err().to_string();
+        assert!(error.contains(expected), "{error}");
+    }
+}

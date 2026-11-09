@@ -100,3 +100,45 @@ fn classify(glyph: &GrayImage) -> Option<u8> {
     }
     Some(if w / h < ONE_MAX_ASPECT { 1 } else { 2 })
 }
+
+#[cfg(test)]
+mod tests {
+    use image::RgbImage;
+    use rstest::rstest;
+
+    use super::*;
+
+    const GOLD: Rgb<u8> = Rgb([200, 150, 40]);
+    const GREY: Rgb<u8> = Rgb([70, 70, 70]);
+
+    /// A 40 px crop with a white glyph of that size at its centre.
+    fn crop(background: Rgb<u8>, glyph_width: u32, glyph_height: u32) -> DynamicImage {
+        let (left, top) = (20 - glyph_width / 2, 20 - glyph_height / 2);
+        DynamicImage::ImageRgb8(RgbImage::from_fn(40, 40, |x, y| {
+            let on_glyph =
+                (left..left + glyph_width).contains(&x) && (top..top + glyph_height).contains(&y);
+            if on_glyph { Rgb([255; 3]) } else { background }
+        }))
+    }
+
+    #[rstest]
+    #[case::narrow_glyph(GOLD, 6, 24, Some(1))]
+    #[case::wide_glyph(GOLD, 16, 20, Some(2))]
+    #[case::badge_without_a_glyph(GOLD, 0, 0, None)]
+    #[case::glyph_too_short_to_read(GOLD, 1, 1, None)]
+    #[case::no_gold_no_badge(GREY, 16, 20, Some(0))]
+    fn reads_the_badge(
+        #[case] background: Rgb<u8>,
+        #[case] glyph_width: u32,
+        #[case] glyph_height: u32,
+        #[case] expected: Option<u8>,
+    ) {
+        let image = crop(background, glyph_width, glyph_height);
+        assert_eq!(read_ascension(&image), expected);
+    }
+
+    #[test]
+    fn an_empty_crop_is_unreadable() {
+        assert_eq!(read_ascension(&DynamicImage::new_rgb8(0, 0)), None);
+    }
+}

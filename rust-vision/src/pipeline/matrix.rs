@@ -25,6 +25,7 @@ pub struct Raw {
     /// Digit reader output, one entry per card in reading order.
     pub digits: Vec<Vec<Results>>,
 }
+
 impl<'a> Matrix<'a> {
     pub fn new(
         image: &'a DynamicImage,
@@ -189,6 +190,7 @@ impl<'a> Matrix<'a> {
             .collect()
     }
 }
+
 #[derive(Serialize)]
 pub struct MatrixPrediction {
     pub count: usize,
@@ -197,6 +199,7 @@ pub struct MatrixPrediction {
     pub cells: Vec<(String, CardDetectedPrediction)>,
     pub timings: Vec<(&'static str, f64)>,
 }
+
 impl From<&Matrix<'_>> for MatrixPrediction {
     fn from(matrix: &Matrix<'_>) -> Self {
         let cells: Vec<(String, CardDetectedPrediction)> = matrix
@@ -214,6 +217,7 @@ impl From<&Matrix<'_>> for MatrixPrediction {
         }
     }
 }
+
 /// The worker's log line: the cards themselves stay in the JSON.
 impl fmt::Debug for MatrixPrediction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -225,5 +229,134 @@ impl fmt::Debug for MatrixPrediction {
             write!(f, ", {step} {ms:.1}ms")?;
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #![allow(clippy::unwrap_used, clippy::float_cmp)]
+
+    use image::{Rgb, RgbImage};
+    use ndarray::Array2;
+    use rstest::rstest;
+    use ultralytics_inference::Boxes;
+
+    use super::*;
+
+    /// The detector's `[x1, y1, x2, y2, conf, cls]` rows for a card at `(x, y)`: card, stars, text.
+    fn parts(x: f32, y: f32) -> [[f32; 6]; 3] {
+        [
+            [x, y, x + 100.0, y + 100.0, 0.9, 0.0],
+            [x + 10.0, y + 40.0, x + 80.0, y + 50.0, 0.9, 1.0],
+            [x + 10.0, y + 70.0, x + 70.0, y + 94.0, 0.9, 2.0],
+        ]
+    }
+
+    fn cards<'a>(image: &'a DynamicImage, rows: &[[f32; 6]]) -> Vec<CardDetected<'a>> {
+        let data = rows.iter().flatten().copied().collect();
+        let rows = Array2::from_shape_vec((rows.len(), 6), data).unwrap();
+        extract_cards(read_detections(&Boxes::new(rows, (1, 1))), image)
+    }
+
+    fn all_stars_lit() -> DynamicImage {
+        DynamicImage::ImageRgb8(RgbImage::from_pixel(500, 500, Rgb([255; 3])))
+    }
+
+    #[rstest]
+    #[case::five_stars(5, false)]
+    #[case::six_stars(6, true)]
+    #[case::seven_stars(7, true)]
+    fn only_six_and_seven_star_cards_are_kept(#[case] lit: u32, #[case] kept: bool) {
+        let image = DynamicImage::ImageRgb8(RgbImage::from_fn(500, 500, |x, _| {
+            Rgb([if x < 10 + lit * 10 { 255 } else { 0 }; 3])
+        }));
+        assert_eq!(cards(&image, &parts(0.0, 0.0)).len(), usize::from(kept));
+    }
+
+    #[test]
+    fn each_card_takes_the_parts_inside_it() {
+        let image = all_stars_lit();
+        let [left_card, left_stars, left_text] = parts(0.0, 0.0);
+        let [right_card, right_stars, right_text] = parts(150.0, 0.0);
+        let found = cards(
+            &image,
+            &[
+                left_card,
+                right_card,
+                right_stars,
+                left_stars,
+                right_text,
+                left_text,
+            ],
+        );
+        assert_eq!(found.len(), 2);
+        for card in found {
+            assert_eq!(card.stars_box.left, card.card_box.left + 10.0);
+            assert_eq!(card.text_box.left, card.card_box.left + 10.0);
+        }
+    }
+
+    #[rstest]
+    #[case::stars(1)]
+    #[case::text(2)]
+    fn a_card_without_a_known_part_is_dropped(#[case] part: usize) {
+        let image = all_stars_lit();
+        let mut rows = parts(0.0, 0.0);
+        rows[part][5] = 7.0;
+        assert!(cards(&image, &rows).is_empty());
+    }
+
+    #[rstest]
+    #[case::within_half_a_card(50.0, &[2])]
+    #[case::past_half_a_card(51.0, &[1, 1])]
+    fn rows_group_cards_by_their_height(#[case] drop: f32, #[case] sizes: &[usize]) {
+        let image = all_stars_lit();
+        let found = cards(&image, &[parts(120.0, drop), parts(0.0, 0.0)].concat());
+        let rows = Matrix::build_card_matrix(&found);
+        assert_eq!(rows.iter().map(Vec::len).collect::<Vec<_>>(), sizes);
+        assert_eq!(rows[0][0].card_box.top, 0.0);
+    }
+
+    #[rstest]
+    #[case::a_missed_card_leaves_a_hole(vec![vec![10.0, 110.0, 310.0], vec![110.0, 210.0]], vec![vec![0, 1, 3], vec![1, 2]])]
+    #[case::a_lone_card_uses_the_other_rows_pitch(vec![vec![110.0], vec![10.0, 110.0]], vec![vec![1], vec![0, 1]])]
+    #[case::uneven_steps_snap_to_the_grid(vec![vec![10.0, 110.0], vec![108.0, 212.0]], vec![vec![0, 1], vec![1, 2]])]
+    #[case::no_pitch_without_neighbours(vec![vec![50.0], vec![50.0]], vec![vec![0], vec![0]])]
+    #[case::no_card(vec![], vec![])]
+    fn columns_come_from_the_x_centres(
+        #[case] centers: Vec<Vec<f32>>,
+        #[case] expected: Vec<Vec<usize>>,
+    ) {
+        assert_eq!(Matrix::grid_columns(&centers), expected);
+    }
+
+    #[test]
+    fn a_prediction_names_each_cell_and_keeps_the_worst_confidence() {
+        let image = all_stars_lit();
+        let mut found = cards(&image, &[parts(0.0, 0.0), parts(150.0, 0.0)].concat());
+        found[0].name_margin = 0.5;
+        found[1].name_margin = 0.25;
+        let matrix = Matrix {
+            matrix: vec![vec![(0, found[0].clone())], vec![(3, found[1].clone())]],
+            timings: vec![("yolo", 1.5)],
+        };
+        let prediction = MatrixPrediction::from(&matrix);
+        let cells: Vec<&str> = prediction.cells.iter().map(|(c, _)| c.as_str()).collect();
+        assert_eq!(cells, ["r0c0", "r1c3"]);
+        assert_eq!(
+            format!("{prediction:?}"),
+            "2 cards, worst confidence 0.250, yolo 1.5ms"
+        );
+    }
+
+    #[test]
+    fn a_shot_without_a_card_has_no_worst_confidence() {
+        let matrix = Matrix {
+            matrix: Vec::new(),
+            timings: Vec::new(),
+        };
+        let prediction = MatrixPrediction::from(&matrix);
+        assert_eq!(prediction.worst_confidence, None);
+        assert_eq!(format!("{prediction:?}"), "0 cards");
     }
 }

@@ -123,3 +123,65 @@ pub fn read_rank_sig(results: &[Results], width: f32) -> (Option<u8>, Option<u8>
     let (rank_side, sig_side) = digits.split_at(split + 1);
     (rank_of(rank_side, width), sig_of(sig_side))
 }
+
+#[cfg(test)]
+mod tests {
+    #![allow(clippy::unwrap_used, clippy::cast_precision_loss)]
+
+    use std::sync::Arc;
+
+    use ndarray::{Array2, Array3};
+    use rstest::rstest;
+    use ultralytics_inference::{Boxes, Speed};
+
+    use super::*;
+
+    /// One `(class, left)` per 4 px wide glyph on a 100 px band. Confidence falls along
+    /// the list: of two overlapping glyphs, the first listed wins.
+    fn read(glyphs: &[(u8, f32)]) -> (Option<u8>, Option<u8>) {
+        let data: Vec<f32> = glyphs
+            .iter()
+            .enumerate()
+            .flat_map(|(i, &(class, left))| {
+                let confidence = 0.9 - i as f32 / 100.0;
+                [left, 0.0, left + 4.0, 10.0, confidence, f32::from(class)]
+            })
+            .collect();
+        let mut result = Results::new(
+            Array3::zeros((1, 1, 3)),
+            String::new(),
+            Arc::default(),
+            Speed::default(),
+            (1, 1),
+        );
+        let rows = Array2::from_shape_vec((glyphs.len(), 6), data).unwrap();
+        result.boxes = Some(Boxes::new(rows, (1, 1)));
+        read_rank_sig(&[result], 100.0)
+    }
+
+    #[rstest]
+    #[case::rank_and_max_sig(&[(5, 10.0), (2, 40.0), (0, 45.0), (0, 50.0)], Some(5), Some(200))]
+    #[case::unawakened_sig(&[(3, 10.0), (0, 40.0)], Some(3), Some(0))]
+    #[case::label_glyphs_are_ignored(&[(10, 2.0), (10, 7.0), (4, 12.0), (7, 50.0)], Some(4), Some(7))]
+    #[case::sig_over_the_cap(&[(5, 10.0), (2, 40.0), (0, 45.0), (1, 50.0)], Some(5), None)]
+    #[case::four_digit_sig(&[(5, 10.0), (0, 40.0), (0, 45.0), (1, 50.0), (5, 55.0)], Some(5), None)]
+    #[case::rank_over_the_cap(&[(6, 10.0), (7, 50.0)], None, Some(7))]
+    #[case::rank_zero(&[(0, 10.0), (7, 50.0)], None, Some(7))]
+    #[case::two_digit_rank(&[(1, 10.0), (2, 15.0), (7, 50.0)], None, Some(7))]
+    #[case::stray_digit_before_the_rank(&[(8, 2.0), (3, 12.0), (7, 50.0)], Some(3), Some(7))]
+    #[case::nothing(&[], None, None)]
+    #[case::lone_digit(&[(5, 40.0)], None, None)]
+    #[case::no_dominant_gap(&[(5, 10.0), (2, 30.0), (7, 50.0)], None, None)]
+    #[case::one_tight_number(&[(1, 40.0), (2, 45.0)], None, None)]
+    #[case::phantom_on_the_right_edge(&[(5, 10.0), (7, 40.0), (9, 96.0)], Some(5), Some(7))]
+    #[case::phantom_on_the_left_edge(&[(3, 0.5), (5, 40.0)], None, None)]
+    #[case::rival_box_loses(&[(5, 10.0), (2, 40.0), (0, 45.0), (0, 50.0), (7, 50.0)], Some(5), Some(200))]
+    #[case::rival_box_wins(&[(5, 10.0), (2, 40.0), (0, 45.0), (7, 50.0), (0, 50.0)], Some(5), None)]
+    fn reads_rank_and_sig(
+        #[case] glyphs: &[(u8, f32)],
+        #[case] rank: Option<u8>,
+        #[case] sig: Option<u8>,
+    ) {
+        assert_eq!(read(glyphs), (rank, sig));
+    }
+}

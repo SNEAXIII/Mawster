@@ -200,3 +200,40 @@ impl From<&CardDetected<'_>> for CardDetectedPrediction {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #![allow(clippy::unwrap_used)]
+
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn an_unread_field_is_left_out_of_the_json() {
+        let prediction = CardDetectedPrediction {
+            champion_name: None,
+            stars: 6,
+            rank: None,
+            signature: None,
+            ascension: Some(0),
+            confidence: 0.5,
+            preview: PreviewBox(BoundingBox {
+                left: 1.0,
+                right: 2.0,
+                top: 3.0,
+                bottom: 4.0,
+            }),
+        };
+        assert_eq!(
+            serde_json::to_value(&prediction).unwrap(),
+            json!({
+                "champion_name": null,
+                "stars": 6,
+                "ascension": 0,
+                "confidence": 0.5,
+                "preview": {"left": 1.0, "right": 2.0, "top": 3.0, "bottom": 4.0},
+            })
+        );
+    }
+}
