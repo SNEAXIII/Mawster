@@ -11,10 +11,12 @@ the daily chart buckets by calendar day, and a partial first bucket makes the
 first bar of every chart look like a drop.
 """
 
+import math
 import uuid
 from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import Integer, cast, desc, func
+from sqlalchemy.orm import aliased
 from sqlmodel import case, col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -38,8 +40,11 @@ from src.models.user.User import User
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
+from src.models.vision.VisionPredictionCandidate import VisionPredictionCandidate
 
 TOP_ERRORS_LIMIT = 5
+# Share of the whole base whose confidence marks a card as among the worst read.
+LOW_CONFIDENCE_SHARE = 0.01
 
 _FINISHED_STATUSES = (
     VisionImportStatus.CONFIRMED,
@@ -53,6 +58,10 @@ def _ratio(numerator: int, denominator: int) -> float:
     if not denominator:
         return 0.0
     return round(numerator / denominator, 4)
+
+
+def _rounded(value) -> float | None:
+    return round(float(value), 4) if value is not None else None
 
 
 def _count_if(condition):
@@ -100,19 +109,17 @@ class VisionStatsService:
                     col(VisionImport.status),
                     func.count(col(VisionImport.id)),
                     func.coalesce(func.sum(col(VisionImport.screens_total)), 0),
-                    _count_if(col(VisionImport.share_dataset)),
                 )
                 .where(cls._since(col(VisionImport.created_at), days))
                 .group_by(col(VisionImport.status))
             )
         ).all()
 
-        per_status = {status: count for status, count, _, _ in rows}
+        per_status = {status: count for status, count, _ in rows}
         return {
             "per_status": per_status,
             "imports_total": sum(per_status.values()),
-            "screens_total": sum(int(screens) for _, _, screens, _ in rows),
-            "shared_dataset_imports": sum(int(shared) for *_, shared in rows),
+            "screens_total": sum(int(screens) for _, _, screens in rows),
         }
 
     @classmethod
@@ -129,29 +136,85 @@ class VisionStatsService:
         return total, failed
 
     @classmethod
+    async def low_confidence_threshold(cls, session: AsyncSession) -> float | None:
+        """Highest confidence among the worst 1 % of every card ever read.
+
+        Over the whole base, never the window: the line has to stay put while
+        the date filter moves, or "below it" would mean something else per view.
+        """
+        total = (await session.exec(select(func.count(col(VisionPrediction.id))))).one()
+        if not total:
+            return None
+        worst = math.ceil(total * LOW_CONFIDENCE_SHARE)
+        value = (
+            await session.exec(
+                select(col(VisionPrediction.confidence))
+                .order_by(col(VisionPrediction.confidence))
+                .offset(worst - 1)
+                .limit(1)
+            )
+        ).one()
+        return round(float(value), 4)
+
+    @classmethod
     async def _prediction_counters(
-        cls, session: AsyncSession, days: int
-    ) -> tuple[int, int, int, float | None]:
+        cls, session: AsyncSession, days: int, threshold: float | None
+    ) -> dict:
+        confidence = col(VisionPrediction.confidence)
+        low = _count_if(confidence <= threshold) if threshold is not None else 0
         row = (
             await session.exec(
                 select(
                     func.count(col(VisionPrediction.id)),
-                    _count_if(col(VisionPrediction.champion_name).is_(None)),
-                    _count_if(col(VisionPrediction.reranked)),
-                    func.avg(col(VisionPrediction.confidence)),
+                    func.avg(confidence),
+                    func.min(confidence),
+                    low,
                 )
                 .select_from(VisionPrediction)
                 .join(VisionJob, col(VisionJob.id) == col(VisionPrediction.job_id))
                 .where(cls._since(col(VisionJob.created_at), days))
             )
         ).one()
-        total, unidentified, reranked, avg_confidence = row
-        return (
-            int(total),
-            int(unidentified),
-            int(reranked),
-            round(float(avg_confidence), 4) if avg_confidence is not None else None,
+        total, avg_confidence, min_confidence, low_count = row
+        return {
+            "predictions_total": int(total),
+            "avg_confidence": _rounded(avg_confidence),
+            "min_confidence": _rounded(min_confidence),
+            "low_confidence_predictions": int(low_count),
+        }
+
+    @classmethod
+    async def _avg_import_min_confidence(cls, session: AsyncSession, days: int) -> float | None:
+        per_import = (
+            select(func.min(col(VisionPrediction.confidence)).label("lowest"))
+            .select_from(VisionPrediction)
+            .join(VisionJob, col(VisionJob.id) == col(VisionPrediction.job_id))
+            .where(cls._since(col(VisionJob.created_at), days))
+            .group_by(col(VisionJob.import_id))
+            .subquery()
         )
+        return _rounded((await session.exec(select(func.avg(per_import.c.lowest)))).one())
+
+    @classmethod
+    async def _avg_margin(cls, session: AsyncSession, days: int) -> float | None:
+        """Mean gap between the best and the second-best candidate of each card."""
+        first = aliased(VisionPredictionCandidate)
+        second = aliased(VisionPredictionCandidate)
+        value = (
+            await session.exec(
+                select(func.avg(col(first.score) - col(second.score)))
+                .select_from(first)
+                .join(
+                    second,
+                    (col(second.prediction_id) == col(first.prediction_id))
+                    & (col(second.position) == 1),
+                )
+                .join(VisionPrediction, col(VisionPrediction.id) == col(first.prediction_id))
+                .join(VisionJob, col(VisionJob.id) == col(VisionPrediction.job_id))
+                .where(col(first.position) == 0, cls._since(col(VisionJob.created_at), days))
+            )
+        ).one()
+        return _rounded(value)
 
     @classmethod
     async def _distinct_actors(cls, session: AsyncSession, days: int) -> tuple[int, int]:
@@ -228,9 +291,8 @@ class VisionStatsService:
         imports_total = counters["imports_total"]
 
         jobs_total, jobs_failed = await cls._job_counters(session, days)
-        predictions, unidentified, reranked, avg_confidence = await cls._prediction_counters(
-            session, days
-        )
+        threshold = await cls.low_confidence_threshold(session)
+        predictions = await cls._prediction_counters(session, days, threshold)
         distinct_users, distinct_accounts = await cls._distinct_actors(session, days)
         imports_all_time = (await session.exec(select(func.count(col(VisionImport.id))))).one()
 
@@ -249,18 +311,12 @@ class VisionStatsService:
             screens_total=counters["screens_total"],
             jobs_total=jobs_total,
             jobs_failed=jobs_failed,
-            predictions_total=predictions,
             distinct_users=distinct_users,
             distinct_game_accounts=distinct_accounts,
-            shared_dataset_imports=counters["shared_dataset_imports"],
-            avg_confidence=avg_confidence,
-            unidentified_predictions=unidentified,
-            reranked_predictions=reranked,
-            # Denominator is finished imports: an import still running has not
-            # yet had the chance to be confirmed, and counting it as a miss
-            # makes the rate sag every time someone starts a batch.
-            confirm_rate=_ratio(confirmed, finished),
-            job_failure_rate=_ratio(jobs_failed, jobs_total),
+            **predictions,
+            avg_import_min_confidence=await cls._avg_import_min_confidence(session, days),
+            low_confidence_threshold=threshold,
+            avg_margin=await cls._avg_margin(session, days),
             avg_screens_per_import=round(counters["screens_total"] / imports_total, 2)
             if imports_total
             else 0.0,
@@ -409,9 +465,9 @@ class VisionStatsService:
 
     @classmethod
     async def _job_rollup(
-        cls, session: AsyncSession, import_ids: list[uuid.UUID]
-    ) -> dict[uuid.UUID, tuple[int, int]]:
-        """(failed jobs, predictions) per import, for the page being rendered."""
+        cls, session: AsyncSession, import_ids: list[uuid.UUID], threshold: float | None
+    ) -> dict[uuid.UUID, dict]:
+        """Failed jobs and confidence figures per import, for the page being rendered."""
         if not import_ids:
             return {}
         failed_rows = (
@@ -424,9 +480,17 @@ class VisionStatsService:
                 .group_by(col(VisionJob.import_id))
             )
         ).all()
+        confidence = col(VisionPrediction.confidence)
+        low = _count_if(confidence <= threshold) if threshold is not None else 0
         prediction_rows = (
             await session.exec(
-                select(col(VisionJob.import_id), func.count(col(VisionPrediction.id)))
+                select(
+                    col(VisionJob.import_id),
+                    func.count(col(VisionPrediction.id)),
+                    func.min(confidence),
+                    func.avg(confidence),
+                    low,
+                )
                 .select_from(VisionJob)
                 .join(VisionPrediction, col(VisionPrediction.job_id) == col(VisionJob.id))
                 .where(col(VisionJob.import_id).in_(import_ids))
@@ -434,9 +498,17 @@ class VisionStatsService:
             )
         ).all()
         failed = {import_id: int(count) for import_id, count in failed_rows}
-        predictions = {import_id: int(count) for import_id, count in prediction_rows}
+        rollup = {
+            import_id: {
+                "predictions_total": int(count),
+                "min_confidence": _rounded(lowest),
+                "avg_confidence": _rounded(mean),
+                "low_confidence_predictions": int(low_count),
+            }
+            for import_id, count, lowest, mean, low_count in prediction_rows
+        }
         return {
-            import_id: (failed.get(import_id, 0), predictions.get(import_id, 0))
+            import_id: {"jobs_failed": failed.get(import_id, 0), **rollup.get(import_id, {})}
             for import_id in import_ids
         }
 
@@ -480,7 +552,8 @@ class VisionStatsService:
             )
         ).all()
 
-        rollup = await cls._job_rollup(session, [row[0].id for row in rows])
+        threshold = await cls.low_confidence_threshold(session)
+        rollup = await cls._job_rollup(session, [row[0].id for row in rows], threshold)
         items = [
             VisionImportRow(
                 id=vision_import.id,
@@ -492,8 +565,7 @@ class VisionStatsService:
                 game_pseudo=game_account.game_pseudo,
                 screens_total=vision_import.screens_total,
                 screens_done=vision_import.screens_done,
-                jobs_failed=rollup.get(vision_import.id, (0, 0))[0],
-                predictions_total=rollup.get(vision_import.id, (0, 0))[1],
+                **rollup.get(vision_import.id, {}),
                 share_dataset=vision_import.share_dataset,
             )
             for vision_import, game_account, user in rows
