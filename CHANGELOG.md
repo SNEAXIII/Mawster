@@ -3,6 +3,13 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.4.1](https://github.com/SNEAXIII/Mawster/compare/v2.4.0...v2.4.1) (2026-11-10)
+
+
+### Fixed
+
+* stop refreshing the session on every request once the token expires ([#825](https://github.com/SNEAXIII/Mawster/issues/825)) ([9f2caee](https://github.com/SNEAXIII/Mawster/commit/9f2caeefefe093e4243c01ad4347f1b90eaef8fb))
+
 ## [2.4.0](https://github.com/SNEAXIII/Mawster/compare/v2.3.0...v2.4.0) (2026-11-10)
 
 
