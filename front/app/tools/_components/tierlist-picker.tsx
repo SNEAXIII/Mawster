@@ -19,11 +19,10 @@ interface TierListPickerProps {
   lists: TierListSummary[]
   activeId: string | null
   /**
-   * How many champions the open board holds right now. The summaries are read
-   * when the lists load, so the row being edited would otherwise show a stale count.
+   * The open board's count and title right now. The summaries are read when the
+   * lists load, so the row being edited would otherwise show stale ones.
    */
   activeRankedCount: number
-  /** Named in the confirmation, so nobody deletes the wrong list. */
   activeTitle: string
   onSelect: (id: string) => void
   onCreate: () => void
@@ -57,15 +56,18 @@ export default function TierListPicker({
             <SelectValue placeholder={t.tierlist.pickList} />
           </SelectTrigger>
           <SelectContent>
-            {lists.map((list) => (
-              <SelectItem
-                key={list.id}
-                value={list.id}
-              >
-                {list.title || t.tierlist.boardTitle} (
-                {list.id === activeId ? activeRankedCount : list.ranked_champion_count})
-              </SelectItem>
-            ))}
+            {lists.map((list) => {
+              const active = list.id === activeId
+              return (
+                <SelectItem
+                  key={list.id}
+                  value={list.id}
+                >
+                  {(active ? activeTitle : list.title) || t.tierlist.boardTitle} (
+                  {active ? activeRankedCount : list.ranked_champion_count})
+                </SelectItem>
+              )
+            })}
           </SelectContent>
         </Select>
       )}

@@ -58,11 +58,12 @@ describe('Tier list – the browser lists', () => {
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-champion-ListHero"]').should('exist');
   });
 
-  it('renames a list from the title, and the selector shows it on the next load', () => {
+  it('renames a list from the title, and the selector follows as it is typed', () => {
     visitTierListWith([{ title: 'Alpha' }]);
 
     cy.getByCy('tierlist-title').should('have.value', 'Alpha');
     cy.getByCy('tierlist-title').clear().type('Renamed');
+    cy.getByCy('tierlist-picker').should('contain', 'Renamed');
 
     cy.reload();
     cy.getByCy('tierlist-picker').should('contain', 'Renamed');
