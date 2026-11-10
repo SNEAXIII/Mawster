@@ -47,7 +47,7 @@ Cas qui passent, pour référence :
 | `session.get(Model, obj_id)` | ok — un appel |
 | `svc.get_by_id(session, uuid.uuid4())` | ok — l'UUID est en allowlist |
 | `publish(job_id=uuid.uuid4(), import_id=uuid.uuid4())` | ok — deux UUID, zéro comptabilisé |
-| `MatchupTargetInput(**_defender_target(x))` | **signalé** — deux appels |
+| `TargetInput(**_defender_target(x))` | **signalé** — deux appels |
 | `Req(champion_id=uuid.uuid4(), targets=_targets())` | **signalé** — `_targets`, pas l'UUID |
 
 ## Workflow

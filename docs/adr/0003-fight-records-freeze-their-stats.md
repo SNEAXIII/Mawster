@@ -16,5 +16,4 @@ is only meaningful against fights at the same Tier.
 A correction of a closed War's Attacker re-freezes these two values, see
 `0017-a-closed-wars-map-stays-correctable.md`.
 
-Fight Records are frozen history, not an evidence base: the Matchup Builder is
-experimental and deliberately decoupled from them.
+Fight Records are frozen history, not an evidence base.

@@ -240,16 +240,6 @@ breaks it; a planning error is skipped; the done flag plays no part. Assists nev
 Computed on the fly, never stored.
 _Avoid_: series, combo.
 
-**Matchup Builder** (experimental):
-The feature rating attackers against targets to suggest who to send. Everything under
-it is experimental — nothing here is settled domain yet.
-
-**Matchup Rating** (experimental):
-An Alliance's verdict (discouraged, ok, good) on one attacker against one target: an
-enemy defender, a node, or both. Decoupled from Fight Records — it is not derived from
-what actually happened.
-_Avoid_: treating matchups as war history.
-
 ### War assignments
 
 Three distinct roles, each bringing one Roster Entry into a War:
