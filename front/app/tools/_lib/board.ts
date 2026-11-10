@@ -1,7 +1,4 @@
-import type { TierListDetail } from '@/app/services/tierlist'
-import { readStored, removeStored, writeStored } from './storage'
 import { NO_TAGS, hasAnyTag, type BoardState, type BoardTier, type ChampionTags } from './types'
-const STORAGE_NAME = 'board'
 
 /** Classic tier-maker ramp, warm to cool. Reused when a row is added. */
 export const TIER_PALETTE = [
@@ -20,11 +17,8 @@ export const TIER_PALETTE = [
 const DEFAULT_LABELS = ['S', 'A', 'B', 'C', 'D']
 
 /**
- * Rows created in the browser need an id before the API gives them one.
- *
- * `crypto.randomUUID` rather than `Math.random`: the id is only a React key
- * until the first save, but a predictable generator in an identifier is a
- * finding nobody should have to re-litigate at each review.
+ * `crypto.randomUUID` rather than `Math.random`: the id is only a React key, but a
+ * predictable generator in an identifier is a finding nobody should re-litigate.
  */
 export function newTierId(): string {
   return `tier-${crypto.randomUUID()}`
@@ -41,23 +35,6 @@ export function defaultTiers(): BoardTier[] {
 
 export function defaultBoard(): BoardState {
   return { id: null, title: '', tiers: defaultTiers(), tags: {} }
-}
-
-/** The board as the API returned it. */
-export function fromDetail(detail: TierListDetail): BoardState {
-  return {
-    id: detail.id,
-    title: detail.title,
-    tiers: detail.tiers.map((tier) => ({
-      id: tier.id,
-      label: tier.label,
-      color: tier.color,
-      championIds: tier.champion_ids,
-    })),
-    tags: Object.fromEntries(
-      detail.tags.map(({ champion_id, ...tags }) => [champion_id, tags as ChampionTags])
-    ),
-  }
 }
 
 /**
@@ -102,26 +79,6 @@ export function normalizeBoard(input: unknown, knownIds: Set<string>): BoardStat
     tiers,
     tags,
   }
-}
-
-export function loadStoredBoard(knownIds: Set<string>): BoardState | null {
-  try {
-    const raw = readStored(STORAGE_NAME)
-    if (!raw) return null
-    return normalizeBoard(JSON.parse(raw), knownIds)
-  } catch {
-    // Corrupted or hand-edited value: a fresh board beats a blank screen.
-    return null
-  }
-}
-
-export function storeBoard(board: BoardState): void {
-  writeStored(STORAGE_NAME, JSON.stringify(board))
-}
-
-/** Drop the browser's board once it has been brought into an account. */
-export function forgetStoredBoard(): void {
-  removeStored(STORAGE_NAME)
 }
 
 /** Champion ids sitting in a row, i.e. everything the pool must not show. */

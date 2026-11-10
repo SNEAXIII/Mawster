@@ -13,15 +13,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { useI18n } from '@/app/i18n'
-import type { TierListSummary } from '@/app/services/tierlist'
+import type { TierListSummary } from '../_lib/lists'
 
 interface TierListPickerProps {
   lists: TierListSummary[]
   activeId: string | null
   /**
-   * How many champions the open board holds right now. The count the API sent
-   * is a snapshot from load time, so the row being edited would keep showing a
-   * stale number until the next reload.
+   * How many champions the open board holds right now. The summaries are read
+   * when the lists load, so the row being edited would otherwise show a stale count.
    */
   activeRankedCount: number
   /** Named in the confirmation, so nobody deletes the wrong list. */
@@ -31,10 +30,7 @@ interface TierListPickerProps {
   onDelete: () => void
 }
 
-/**
- * Which of the account's tier lists is open. Signed out there is nothing to
- * pick — the browser keeps one board — so the whole row is hidden.
- */
+/** Which of the browser's tier lists is open. */
 export default function TierListPicker({
   lists,
   activeId,

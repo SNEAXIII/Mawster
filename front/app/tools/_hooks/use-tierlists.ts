@@ -1,84 +1,58 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useI18n } from '@/app/i18n'
+import { defaultBoard } from '../_lib/board'
 import {
+  MAX_TIER_LISTS,
   createTierList,
   deleteTierList,
-  fetchTierLists,
+  listTierLists,
   type TierListSummary,
-} from '@/app/services/tierlist'
-import { defaultBoard } from '../_lib/board'
-import { toSavePayload } from '../_lib/types'
+} from '../_lib/lists'
 
 interface TierLists {
   lists: TierListSummary[]
   loading: boolean
   error: string | null
-  /** Create an empty list and return it, so the caller can switch to it. */
-  create: () => Promise<TierListSummary | null>
-  remove: (id: string) => Promise<void>
-  refresh: () => Promise<void>
+  /** Create an empty list and return its id, so the caller can switch to it. */
+  create: () => string | null
+  remove: (id: string) => void
+  refresh: () => void
 }
 
-/**
- * The tier lists an account holds, as the picker shows them: names and counts,
- * never their contents. Signed out there are none — the browser keeps a single
- * board and no list to pick from.
- */
+/** The tier lists this browser holds, as the picker shows them: names and counts. */
 export function useTierLists(): TierLists {
-  const { status } = useSession()
-  const signedIn = status === 'authenticated'
+  const { t } = useI18n()
   const [lists, setLists] = useState<TierListSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const refresh = useCallback(async () => {
-    if (!signedIn) {
-      setLists([])
-      setLoading(false)
-      return
-    }
-    try {
-      setLists(await fetchTierLists())
-      setError(null)
-    } catch (err) {
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
-    }
-  }, [signedIn])
+  const refresh = useCallback(() => {
+    setLists(listTierLists())
+    setLoading(false)
+  }, [])
 
+  // After mount, never during render: the server has no localStorage.
   useEffect(() => {
-    if (status === 'loading') return
-    void refresh()
-  }, [status, refresh])
-
-  const create = useCallback(async () => {
-    try {
-      const created = await createTierList(toSavePayload(defaultBoard()))
-      await refresh()
-      return {
-        id: created.id,
-        title: created.title,
-        created_at: created.created_at,
-        tier_count: created.tiers.length,
-        ranked_champion_count: 0,
-      }
-    } catch (err) {
-      setError((err as Error).message)
-      return null
-    }
+    refresh()
   }, [refresh])
 
+  const create = useCallback(() => {
+    const id = createTierList(defaultBoard())
+    if (!id) {
+      setError(t.tierlist.listCapReached.replace('{limit}', String(MAX_TIER_LISTS)))
+      return null
+    }
+    setError(null)
+    refresh()
+    return id
+  }, [refresh, t])
+
   const remove = useCallback(
-    async (id: string) => {
-      try {
-        await deleteTierList(id)
-        await refresh()
-      } catch (err) {
-        setError((err as Error).message)
-      }
+    (id: string) => {
+      deleteTierList(id)
+      refresh()
     },
     [refresh]
   )

@@ -16,10 +16,6 @@ from src.models.champion.Champion import Champion  # noqa: F401
 from src.models.champion.ChampionSagaRole import ChampionSagaRole  # noqa: F401
 from src.models.champion.ChampionUser import ChampionUser  # noqa: F401
 from src.models.champion.RequestedUpgrade import RequestedUpgrade  # noqa: F401
-from src.models.tierlist.TierList import TierList  # noqa: F401
-from src.models.tierlist.TierListChampionTag import TierListChampionTag  # noqa: F401
-from src.models.tierlist.TierListRanking import TierListRanking  # noqa: F401
-from src.models.tierlist.TierListTier import TierListTier  # noqa: F401
 from src.models.user.AdminAuditEntry import AdminAuditEntry  # noqa: F401
 from src.models.user.GameAccount import GameAccount  # noqa: F401
 from src.models.user.GameAccountMastery import GameAccountMastery  # noqa: F401
