@@ -109,6 +109,41 @@ services:
         max-size: 10m
         max-file: '5'
 
+  postgres:
+    image: postgres:18-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
+    networks:
+      - internal
+    ports:
+      - target: 5432
+        published: 5432
+        protocol: tcp
+        mode: host
+    environment:
+      POSTGRES_USER: mawster
+      POSTGRES_DB: mawster
+      POSTGRES_PASSWORD_FILE: /run/secrets/mawster_db_password
+    secrets:
+      - mawster_db_password
+    volumes:
+      - data_pg:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'mawster', '-d', 'mawster']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '5'
+
   api:
     image: sneaxiii/mawster-api:latest
     networks:
@@ -458,6 +493,7 @@ services:
 
 volumes:
   data_db:
+  data_pg:
   traefik_data:
   api_logs:
   rabbitmq_data:
