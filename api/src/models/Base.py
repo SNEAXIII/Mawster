@@ -26,7 +26,6 @@ FK_DEFENSE_PLAN = "defense_plan.id"
 FK_DEFENSE_TEMPLATE = "defense_template.id"
 FK_GAME_ACCOUNT = "game_account.id"
 FK_MASTERY = "mastery.id"
-FK_MATCHUP_RATING = "matchup_rating.id"
 FK_SEASON = "season.id"
 FK_TIERLIST = "tierlist.id"
 FK_TIERLIST_TIER = "tierlist_tier.id"
@@ -152,7 +151,7 @@ class DefenderChampionFk(SQLModel):
     """Adds the FK to the champion that was defending.
 
     Pairs with :class:`ChampionFk` on the fight records, where the attacker column is
-    the plain ``champion_id``. MatchupRating keeps its own nullable version.
+    the plain ``champion_id``.
     """
 
     defender_champion_id: uuid.UUID = Field(foreign_key=FK_CHAMPION)

@@ -1,62 +1,11 @@
 'use client'
-import { Suspense, useEffect, useRef, useState } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useI18n } from '@/app/i18n'
-import { isOneOf } from '@/app/lib/utils'
-import TabBar, { type TabItem } from '@/components/tab-bar'
 import { PageContainer } from '@/components/page-container'
 import HistoryTab from './_components/history-tab'
-import MatchupsTab from './_components/matchups-tab'
-
-const KNOWLEDGE_BASE_TABS = ['history', 'matchups'] as const
-type KnowledgeBaseTab = (typeof KNOWLEDGE_BASE_TABS)[number]
-
-function KnowledgeBaseContent() {
-  const { t } = useI18n()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const router = useRouter()
-
-  const initialTab = searchParams.get('tab')
-  const [activeTab, setActiveTab] = useState<KnowledgeBaseTab>(
-    isOneOf(KNOWLEDGE_BASE_TABS, initialTab) ? initialTab : 'history'
-  )
-
-  const isFirstRender = useRef(true)
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('tab', activeTab)
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab])
-
-  const kb = t.game.knowledgeBase
-  const tabs: TabItem<KnowledgeBaseTab>[] = [
-    { value: 'history', label: kb.tabHistory, cy: 'kb-tab-history' },
-    { value: 'matchups', label: kb.tabMatchups, cy: 'kb-tab-matchups' },
-  ]
-
-  return (
-    <PageContainer stack>
-      <TabBar
-        tabs={tabs}
-        value={activeTab}
-        onChange={setActiveTab}
-      />
-      {activeTab === 'history' && <HistoryTab />}
-      {activeTab === 'matchups' && <MatchupsTab />}
-    </PageContainer>
-  )
-}
 
 export default function KnowledgeBasePage() {
   return (
-    <Suspense>
-      <KnowledgeBaseContent />
-    </Suspense>
+    <PageContainer stack>
+      <HistoryTab />
+    </PageContainer>
   )
 }

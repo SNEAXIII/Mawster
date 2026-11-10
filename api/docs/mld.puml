@@ -71,6 +71,26 @@ entity "vision_sample" as vision_sample {
   dataset_key : VARCHAR(255)
 }
 
+entity "admin_audit_entry" as admin_audit_entry {
+  * id : CHAR(32) <<PK>>
+  --
+  * created_at : DATETIME
+  user_id : CHAR(32) <<FK → user.id>>
+  role : ENUM('SUPER_ADMIN','ADMIN','USER')
+  * method : VARCHAR(255)
+  * route : VARCHAR(255)
+  * status_code : INTEGER
+  details : JSON
+}
+
+entity "ascension_request" as ascension_request {
+  * id : CHAR(32) <<PK>>
+  --
+  * created_at : DATETIME
+  * champion_id : CHAR(32) <<UQ>> <<FK → champion.id>>
+  * requester_user_id : CHAR(32) <<FK → user.id>>
+}
+
 entity "champion_saga_role" as champion_saga_role {
   * id : CHAR(32) <<PK>>
   --
@@ -106,6 +126,7 @@ entity "login_log" as login_log {
   --
   * user_id : CHAR(32) <<FK → user.id>>
   * date_connexion : DATETIME
+  * kind : ENUM('LOGIN','REFRESH')
 }
 
 entity "tierlist" as tierlist {
@@ -214,24 +235,6 @@ entity "game_account_mastery" as game_account_mastery {
   * defense : INTEGER
 }
 
-entity "matchup_rating" as matchup_rating {
-  * id : CHAR(32) <<PK>>
-  --
-  * created_at : DATETIME
-  * champion_id : CHAR(32) <<FK → champion.id>>
-  * alliance_id : CHAR(32) <<FK → alliance.id>>
-  season_id : CHAR(32) <<FK → season.id>>
-  * created_by_game_account_id : CHAR(32) <<FK → game_account.id>>
-  * updated_by_game_account_id : CHAR(32) <<FK → game_account.id>>
-  * target_type : ENUM('DEFENDER','NODE')
-  defender_champion_id : CHAR(32) <<FK → champion.id>>
-  node_number : INTEGER
-  * target_key : VARCHAR(64)
-  * verdict : ENUM('DISCOURAGED','OK','GOOD')
-  prefight_champion_id : CHAR(32) <<FK → champion.id>>
-  * updated_at : DATETIME
-}
-
 entity "tierlist_champion_tag" as tierlist_champion_tag {
   * id : CHAR(32) <<PK>>
   --
@@ -314,14 +317,6 @@ entity "defense_plan_node" as defense_plan_node {
   champion_user_id : CHAR(32) <<FK → champion_user.id>>
 }
 
-entity "matchup_synergy" as matchup_synergy {
-  * id : CHAR(32) <<PK>>
-  --
-  * champion_id : CHAR(32) <<FK → champion.id>>
-  * matchup_rating_id : CHAR(32) <<FK → matchup_rating.id>>
-  * is_required : BOOL
-}
-
 entity "requested_upgrade" as requested_upgrade {
   * id : CHAR(32) <<PK>>
   --
@@ -353,6 +348,7 @@ entity "vision_job" as vision_job {
   result_key : VARCHAR(255)
   error : VARCHAR(512)
   * attempts : INTEGER
+  * missing_cells : INTEGER
 }
 
 entity "war_ban" as war_ban {
@@ -392,9 +388,17 @@ entity "war_prefight_attacker" as war_prefight_attacker {
   * war_id : CHAR(32) <<FK → war.id>>
   * game_account_id : CHAR(32) <<FK → game_account.id>>
   * created_at : DATETIME
-  * champion_user_id : CHAR(32) <<FK → champion_user.id>>
+  * champion_id : CHAR(32) <<FK → champion.id>>
   * battlegroup : INTEGER
+  champion_user_id : CHAR(32) <<FK → champion_user.id>>
   * target_node_number : INTEGER
+}
+
+entity "war_ready_battlegroup" as war_ready_battlegroup {
+  * id : CHAR(32) <<PK>>
+  --
+  * war_id : CHAR(32) <<FK → war.id>>
+  * battlegroup : INTEGER
 }
 
 entity "war_synergy_attacker" as war_synergy_attacker {
@@ -403,8 +407,9 @@ entity "war_synergy_attacker" as war_synergy_attacker {
   * war_id : CHAR(32) <<FK → war.id>>
   * game_account_id : CHAR(32) <<FK → game_account.id>>
   * created_at : DATETIME
-  * champion_user_id : CHAR(32) <<FK → champion_user.id>>
+  * champion_id : CHAR(32) <<FK → champion.id>>
   * battlegroup : INTEGER
+  champion_user_id : CHAR(32) <<FK → champion_user.id>>
   * target_champion_user_id : CHAR(32) <<FK → champion_user.id>>
 }
 
@@ -419,7 +424,6 @@ entity "vision_prediction" as vision_prediction {
   * signature : INTEGER
   * ascension : INTEGER
   * confidence : FLOAT
-  * reranked : BOOL
   preview_left : FLOAT
   preview_right : FLOAT
   preview_top : FLOAT
@@ -435,13 +439,15 @@ entity "war_fight_record" as war_fight_record {
   * ascension : INTEGER
 }
 
-entity "vision_prediction_candidate" as vision_prediction_candidate {
+entity "vision_correction" as vision_correction {
   * id : CHAR(32) <<PK>>
   --
+  * created_at : DATETIME
+  * import_id : CHAR(32) <<FK → vision_import.id>>
   * prediction_id : CHAR(32) <<FK → vision_prediction.id>>
-  * name : VARCHAR(100)
-  * score : FLOAT
-  * position : INTEGER
+  * field : VARCHAR(32)
+  predicted : VARCHAR(100)
+  * corrected : VARCHAR(100)
 }
 
 entity "war_fight_note" as war_fight_note {
@@ -487,6 +493,7 @@ entity "war_fight_note_revision" as war_fight_note_revision {
   * edited_at : DATETIME
 }
 
+admin_audit_entry }o--o| user
 alliance }o--|| game_account
 alliance_invitation }o--|| alliance
 alliance_invitation }o--|| game_account
@@ -496,6 +503,8 @@ alliance_strategist }o--|| alliance
 alliance_strategist }o--|| game_account
 alliance_visitor }o--|| alliance
 alliance_visitor }o--|| game_account
+ascension_request }o--|| champion
+ascension_request }o--|| user
 champion_saga_role }o--|| champion
 champion_saga_role }o--|| season
 champion_user }o--|| champion
@@ -516,13 +525,6 @@ game_account }o--|| user
 game_account_mastery }o--|| game_account
 game_account_mastery }o--|| mastery
 login_log }o--|| user
-matchup_rating }o--o| champion
-matchup_rating }o--o| season
-matchup_rating }o--|| alliance
-matchup_rating }o--|| champion
-matchup_rating }o--|| game_account
-matchup_synergy }o--|| champion
-matchup_synergy }o--|| matchup_rating
 note_report }o--o| user
 note_report }o--|| game_account
 note_report }o--|| war_fight_note
@@ -538,10 +540,11 @@ tierlist_tier }o--|| tierlist
 user_mute }o--o| user
 user_mute }o--|| user
 user_warn }o--|| user
+vision_correction }o--|| vision_import
+vision_correction }o--|| vision_prediction
 vision_import }o--|| game_account
 vision_job }o--|| vision_import
 vision_prediction }o--|| vision_job
-vision_prediction_candidate }o--|| vision_prediction
 war }o--o| season
 war }o--|| alliance
 war }o--|| game_account
@@ -565,9 +568,13 @@ war_fight_record_import }o--o| season
 war_fight_record_import }o--|| alliance
 war_fight_record_import }o--|| champion
 war_fight_record_import }o--|| game_account
-war_prefight_attacker }o--|| champion_user
+war_prefight_attacker }o--o| champion_user
+war_prefight_attacker }o--|| champion
 war_prefight_attacker }o--|| game_account
 war_prefight_attacker }o--|| war
+war_ready_battlegroup }o--|| war
+war_synergy_attacker }o--o| champion_user
+war_synergy_attacker }o--|| champion
 war_synergy_attacker }o--|| champion_user
 war_synergy_attacker }o--|| game_account
 war_synergy_attacker }o--|| war

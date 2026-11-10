@@ -221,25 +221,6 @@ declare global {
       apiAddStrategist(token: string, allianceId: string, gameAccountId: string): Chainable<any>;
 
       /**
-       * Upsert one or two matchup ratings for a champion (POST /alliances/{id}/matchups).
-       * Officer/owner token only. A single call may carry at most one `defender` and one
-       * `node` target (the API rejects duplicate target types).
-       */
-      apiUpsertMatchup(
-        token: string,
-        allianceId: string,
-        championId: string,
-        targets: Array<{
-          target_type: 'defender' | 'node';
-          defender_champion_id?: string;
-          node_number?: number;
-          verdict: 'good' | 'ok' | 'discouraged';
-          prefight_champion_id?: string;
-          synergies?: Array<{ champion_id: string; is_required?: boolean }>;
-        }>,
-      ): Chainable<any>;
-
-      /**
        * Create an upgrade request for a champion user (POST /champion-users/upgrade-requests).
        */
       apiCreateUpgradeRequest(token: string, championUserId: string, requestedRarity: string): Chainable<any>;

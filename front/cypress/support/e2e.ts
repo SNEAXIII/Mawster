@@ -502,35 +502,6 @@ Cypress.Commands.add('apiAddStrategist', (token: string, allianceId: string, gam
   });
 });
 
-// ── Upsert a matchup rating (officer/owner only) ─────────────────────────────
-
-Cypress.Commands.add(
-  'apiUpsertMatchup',
-  (
-    token: string,
-    allianceId: string,
-    championId: string,
-    targets: Array<{
-      target_type: 'defender' | 'node';
-      defender_champion_id?: string;
-      node_number?: number;
-      verdict: 'good' | 'ok' | 'discouraged';
-      prefight_champion_id?: string;
-      synergies?: Array<{ champion_id: string; is_required?: boolean }>;
-    }>,
-  ) => {
-    cy.request({
-      method: 'POST',
-      url: `${BACKEND}/alliances/${allianceId}/matchups`,
-      headers: { Authorization: `Bearer ${token}` },
-      body: { champion_id: championId, targets },
-    }).then((res) => {
-      expect(res.status).to.eq(201);
-      return res.body;
-    });
-  },
-);
-
 // ── Setup knowledge base scenario (light, no truncate) ──────────────────────────
 
 export function setupKnowledgeBase(prefix: string): Cypress.Chainable<{
