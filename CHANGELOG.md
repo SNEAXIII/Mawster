@@ -3,6 +3,18 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.3.0](https://github.com/SNEAXIII/Mawster/compare/v2.2.0...v2.3.0) (2026-11-10)
+
+
+### Added
+
+* add a 7-day period to the admin login activity filter ([#816](https://github.com/SNEAXIII/Mawster/issues/816)) ([ffc6e43](https://github.com/SNEAXIII/Mawster/commit/ffc6e43503dd2b241084217eb6581bf30922cddc))
+
+
+### Fixed
+
+* correct linkedProjects path in VSCode settings ([c2ece54](https://github.com/SNEAXIII/Mawster/commit/c2ece5433c8db4a6639e274758741b029beb5d2b))
+
 ## [2.2.0](https://github.com/SNEAXIII/Mawster/compare/v2.1.0...v2.2.0) (2026-11-09)
 
 

@@ -1054,6 +1054,7 @@ const en = {
       tab: 'Logins',
       title: 'Login activity',
       subtitle: 'When Accounts sign in or refresh their session.',
+      period7: 'Last 7 days',
       period30: 'Last 30 days',
       period90: 'Last 90 days',
       period365: 'Last 365 days',
