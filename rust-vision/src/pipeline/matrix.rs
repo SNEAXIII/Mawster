@@ -67,11 +67,7 @@ impl<'a> Matrix<'a> {
         }
         laps.lap("name");
 
-        let mut matrix = Self::build_card_matrix(&valid_cards);
-
-        for row in &mut matrix {
-            row.sort_by(|a, b| a.card_box.center().0.total_cmp(&b.card_box.center().0));
-        }
+        let mut matrix = Self::build_rows(&valid_cards);
         laps.lap("matrix");
 
         // Get ranks and sig
@@ -154,10 +150,10 @@ impl<'a> Matrix<'a> {
             .collect()
     }
 
-    /// Rows top to bottom, not yet sorted left to right.
-    fn build_card_matrix(valid_cards_1d: &[CardDetected<'a>]) -> Vec<Vec<CardDetected<'a>>> {
+    /// Rows top to bottom, each sorted left to right.
+    fn build_rows(cards: &[CardDetected<'a>]) -> Vec<Vec<CardDetected<'a>>> {
         let center_y = |c: &CardDetected| c.card_box.center().1;
-        let mut cards = valid_cards_1d.to_vec();
+        let mut cards = cards.to_vec();
         cards.sort_by(|a, b| center_y(a).total_cmp(&center_y(b)));
         let mut rows: Vec<Vec<CardDetected>> = Vec::new();
         for card in cards {
@@ -168,6 +164,9 @@ impl<'a> Matrix<'a> {
             } else {
                 rows.push(vec![card]);
             }
+        }
+        for row in &mut rows {
+            row.sort_by(|a, b| a.card_box.center().0.total_cmp(&b.card_box.center().0));
         }
         rows
     }
@@ -232,6 +231,10 @@ impl From<&Matrix<'_>> for MatrixPrediction {
     fn from(matrix: &Matrix<'_>) -> Self {
         let cells: Vec<(String, CardDetectedPrediction)> = matrix
             .cells()
+            // 7★, or 6★ from rank 4; an unread rank stays, for the player to fix.
+            .filter(|(_, card)| {
+                card.stars > 6 || (card.stars == 6 && card.rank.is_none_or(|rank| rank >= 4))
+            })
             .map(|(cell_name, card)| (cell_name, CardDetectedPrediction::from(card)))
             .collect();
         Self {
