@@ -17,42 +17,30 @@ services:
       - MARIADB_ROOT_PASSWORD=rootpassword
     volumes:
       - ./db/dev:/var/lib/mysql
-  phpmyadmin-dev:
-    image: phpmyadmin/phpmyadmin
+  postgres-dev:
+    image: postgres:18-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
     ports:
-      - 8080:80
-    container_name: myadmin-dev
+      - 5432:5432
+    container_name: postgres-dev
     networks:
       - internal-dev
     environment:
-      - PMA_HOST=mariadb-dev
-      - PMA_PORT=3306
-    depends_on:
-      - mariadb-dev
-  mariadb-test:
-    image: mariadb:11.4
+      - POSTGRES_DB=mawster
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - ./db/pg-dev:/var/lib/postgresql
+  postgres-test:
+    image: postgres:18-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
     ports:
-      - 3307:3306
-    container_name: mariadb-test
+      - 5433:5432
+    container_name: postgres-test
     networks:
       - internal-dev
     environment:
-      - MARIADB_DATABASE=mawster
-      - MARIADB_USER=user
-      - MARIADB_PASSWORD=password
-      - MARIADB_ROOT_PASSWORD=rootpassword
-  phpmyadmin-test:
-    image: phpmyadmin/phpmyadmin
-    ports:
-      - 8081:80
-    container_name: myadmin-test
-    networks:
-      - internal-dev
-    environment:
-      - PMA_HOST=mariadb-test
-      - PMA_PORT=3306
-    depends_on:
-      - mariadb-test
+      - POSTGRES_DB=mawster
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
   rabbitmq:
     image: rabbitmq:3.13-management
     container_name: rabbitmq-dev

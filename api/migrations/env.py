@@ -1,23 +1,24 @@
 import os
 from logging.config import fileConfig
 
+import alembic_postgresql_enum  # noqa: F401
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 try:
     from src.security.secrets import SECRET
 
-    _mariadb_user = SECRET.MARIADB_USER
-    _mariadb_password = SECRET.MARIADB_PASSWORD
-    _mariadb_host = SECRET.MARIADB_HOST
-    _mariadb_port = str(SECRET.MARIADB_PORT)
-    _mariadb_database = SECRET.MARIADB_DATABASE
+    _pg_user = SECRET.POSTGRES_USER
+    _pg_password = SECRET.POSTGRES_PASSWORD
+    _pg_host = SECRET.POSTGRES_HOST
+    _pg_port = str(SECRET.POSTGRES_PORT)
+    _pg_db = SECRET.POSTGRES_DB
 except ImportError:
-    _mariadb_user = os.environ["MARIADB_USER"]
-    _mariadb_password = os.environ["MARIADB_PASSWORD"]
-    _mariadb_host = os.environ.get("MARIADB_HOST", "mariadb")
-    _mariadb_port = os.environ.get("MARIADB_PORT", "3306")
-    _mariadb_database = os.environ["MARIADB_DATABASE"]
+    _pg_user = os.environ["POSTGRES_USER"]
+    _pg_password = os.environ["POSTGRES_PASSWORD"]
+    _pg_host = os.environ.get("POSTGRES_HOST", "postgres")
+    _pg_port = os.environ.get("POSTGRES_PORT", "5432")
+    _pg_db = os.environ["POSTGRES_DB"]
 
 try:
     from src.models import SQLModel
@@ -30,11 +31,11 @@ except ImportError:
 # access to the values within the .ini file in use.
 config = context.config
 section = config.config_ini_section
-config.set_section_option(section, "MARIADB_USER", _mariadb_user)
-config.set_section_option(section, "MARIADB_PASSWORD", _mariadb_password)
-config.set_section_option(section, "MARIADB_HOST", _mariadb_host)
-config.set_section_option(section, "MARIADB_PORT", _mariadb_port)
-config.set_section_option(section, "MARIADB_DATABASE", _mariadb_database)
+config.set_section_option(section, "POSTGRES_USER", _pg_user)
+config.set_section_option(section, "POSTGRES_PASSWORD", _pg_password)
+config.set_section_option(section, "POSTGRES_HOST", _pg_host)
+config.set_section_option(section, "POSTGRES_PORT", _pg_port)
+config.set_section_option(section, "POSTGRES_DB", _pg_db)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

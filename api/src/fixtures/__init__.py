@@ -3,5 +3,5 @@ from sqlmodel import create_engine
 from src.security.secrets import SECRET
 
 sync_engine = create_engine(
-    f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}:{SECRET.MARIADB_PORT}/{SECRET.MARIADB_DATABASE}",
+    f"postgresql+psycopg://{SECRET.POSTGRES_USER}:{SECRET.POSTGRES_PASSWORD}@{SECRET.POSTGRES_HOST}:{SECRET.POSTGRES_PORT}/{SECRET.POSTGRES_DB}",
 )

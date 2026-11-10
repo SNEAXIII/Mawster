@@ -18,18 +18,17 @@ _log = logging.getLogger(__name__)
 
 def _default_database() -> int:
     """Return the default database port based on mode."""
-    return 3305 if not IS_TESTING else 3307
+    return 5432 if not IS_TESTING else 5433
 
 
 class Settings(BaseSettings):
-    MARIADB_DATABASE: str = Field(...) if IS_PROD else Field("mawster")
-    MARIADB_USER: str = Field(...) if IS_PROD else Field("user")
-    MARIADB_PASSWORD: str = Field(...) if IS_PROD else Field("password")
-    MARIADB_ROOT_PASSWORD: str | None = Field(None if IS_PROD else "rootpassword")
-    MARIADB_PORT: int = Field(...) if IS_PROD else Field(_default_database())
+    POSTGRES_DB: str = Field(...) if IS_PROD else Field("mawster")
+    POSTGRES_USER: str = Field(...) if IS_PROD else Field("user")
+    POSTGRES_PASSWORD: str = Field(...) if IS_PROD else Field("password")
+    POSTGRES_PORT: int = Field(...) if IS_PROD else Field(_default_database())
     # Not "localhost": on Windows it resolves to ::1, and that route stalls ~44 ms
     # once a statement outgrows a buffer - which selectinload does on a full roster.
-    MARIADB_HOST: str = Field("mariadb" if IS_PROD else "127.0.0.1")
+    POSTGRES_HOST: str = Field("postgres" if IS_PROD else "127.0.0.1")
     SECRET_KEY: str = (
         Field(...) if IS_PROD else Field("dev-secret-key_dev-secret-key_dev-secret-key")
     )
@@ -84,9 +83,8 @@ def _warn_if_weak_defaults() -> None:
     if IS_PROD:
         return  # pragma: no cover
     weak = {
-        "MARIADB_PASSWORD": ("password", SECRET.MARIADB_PASSWORD),
-        "MARIADB_ROOT_PASSWORD": ("rootpassword", SECRET.MARIADB_ROOT_PASSWORD or ""),
-        "MARIADB_USER": ("user", SECRET.MARIADB_USER),
+        "POSTGRES_PASSWORD": ("password", SECRET.POSTGRES_PASSWORD),
+        "POSTGRES_USER": ("user", SECRET.POSTGRES_USER),
     }
     for name, (default, current) in weak.items():
         if current == default:
