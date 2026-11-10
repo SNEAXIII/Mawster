@@ -23,7 +23,6 @@ import { cn } from '@/app/lib/utils'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
 import ChampionPool from './champion-pool'
 import ChampionSheet from './champion-sheet'
-import ImportLocalBoardDialog from './import-local-board-dialog'
 import ReviewMode from './review-mode'
 import TierListHeader from './tierlist-header'
 import TierListPicker from './tierlist-picker'
@@ -101,23 +100,21 @@ export default function TierListBoard() {
   }
   // Nothing until the stored board has been read — rendering the default first
   // would flash an empty tier list over the one the visitor saved.
-  if (vm.catalog.loading || !vm.persistence.loaded) return null
+  if (vm.catalog.loading || !vm.loaded) return null
 
   return (
     <ExportModeProvider value={vm.exporting}>
       <div className='flex flex-col gap-4'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
-          {vm.signedIn && (
-            <TierListPicker
-              lists={vm.tierLists.lists}
-              activeId={vm.activeId}
-              activeRankedCount={vm.rankedCount}
-              activeTitle={vm.board.title}
-              onSelect={vm.setActiveId}
-              onCreate={vm.handleCreateList}
-              onDelete={vm.handleDeleteList}
-            />
-          )}
+          <TierListPicker
+            lists={vm.tierLists.lists}
+            activeId={vm.activeId}
+            activeRankedCount={vm.rankedCount}
+            activeTitle={vm.board.title}
+            onSelect={vm.setActiveId}
+            onCreate={vm.handleCreateList}
+            onDelete={vm.handleDeleteList}
+          />
           <TierListToolbar
             busy={vm.exporting}
             onExportJson={vm.handleExportJson}
@@ -138,7 +135,7 @@ export default function TierListBoard() {
           </p>
         )}
 
-        {!vm.signedIn && <p className='text-xs text-muted-foreground'>{t.tierlist.signedOut}</p>}
+        <p className='text-xs text-muted-foreground'>{t.tierlist.storedInBrowser}</p>
 
         <TierListHeader
           board={vm.board}
@@ -149,7 +146,6 @@ export default function TierListBoard() {
           onFiltersChange={vm.setFilters}
           shown={vm.poolChampions.length}
           total={vm.catalog.champions.length}
-          persistence={vm.persistence}
         />
 
         <div className='flex flex-wrap items-center gap-3'>
@@ -258,11 +254,6 @@ export default function TierListBoard() {
             onClose={vm.closeReview}
           />
         )}
-        <ImportLocalBoardDialog
-          storedBoard={vm.offerLocalBoard}
-          onImport={vm.handleImportLocalBoard}
-          onDiscard={vm.handleDiscardLocalBoard}
-        />
       </div>
     </ExportModeProvider>
   )

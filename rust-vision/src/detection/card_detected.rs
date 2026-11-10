@@ -67,30 +67,26 @@ impl<'l> CardDetected<'l> {
         stars_box: StarsBox,
         text_box: TextsBox,
         image: &'l DynamicImage,
-    ) -> Option<Self> {
+    ) -> Self {
         let stars = Self::get_stars_number(&stars_box, image);
-        if stars >= 6 {
-            let asc_box = Self::asc_box(&text_box);
-            let champion_box = Self::champion_box(&card_box, &stars_box);
-            let preview_box = Self::preview_box(&card_box, &champion_box, &asc_box);
-            Some(Self {
-                card_box,
-                stars_box,
-                text_box,
-                asc_box,
-                rank_sig_box: Self::rank_sig_box(&text_box),
-                champion_box,
-                preview_box,
-                image,
-                champion_name: None,
-                name_margin: 0.0,
-                stars,
-                rank: None,
-                sig: None,
-                ascension: None,
-            })
-        } else {
-            None
+        let asc_box = Self::asc_box(&text_box);
+        let champion_box = Self::champion_box(&card_box, &stars_box);
+        let preview_box = Self::preview_box(&card_box, &champion_box, &asc_box);
+        Self {
+            card_box,
+            stars_box,
+            text_box,
+            asc_box,
+            rank_sig_box: Self::rank_sig_box(&text_box),
+            champion_box,
+            preview_box,
+            image,
+            champion_name: None,
+            name_margin: 0.0,
+            stars,
+            rank: None,
+            sig: None,
+            ascension: None,
         }
     }
     /// The review thumbnail: the card's width, from the champion down to the ascension badge.

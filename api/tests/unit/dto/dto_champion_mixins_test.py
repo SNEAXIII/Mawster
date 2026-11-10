@@ -19,7 +19,6 @@ from src.dto.admin.dto_fight_record import (
 )
 from src.dto.alliance.defense.dto_defense_plan import DefensePlanNodeResponse
 from src.dto.alliance.dto_alliance_roster import AllianceRosterEntryResponse
-from src.dto.alliance.dto_matchup import ChampionRef as MatchupChampionRef
 from src.dto.alliance.war.dto_war import (
     AvailableAttackerResponse,
     AvailablePrefightAttackerResponse,
@@ -88,10 +87,6 @@ class TestChampionIdentity:
 class TestChampionRef:
     def test_adds_only_the_id_to_the_identity(self):
         assert set(ChampionRef.model_fields) == CHAMPION_IDENTITY_FIELDS | {"champion_id"}
-
-    def test_matchup_reexport_is_the_shared_class(self):
-        """MatchupService imports ChampionRef from dto_matchup; it must be the same class."""
-        assert MatchupChampionRef is ChampionRef
 
     @pytest.mark.parametrize("dto", REF_CARRIERS)
     def test_carrier_exposes_the_champion_id(self, dto):

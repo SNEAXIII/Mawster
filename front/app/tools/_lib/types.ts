@@ -1,12 +1,14 @@
-import type { TierListSavePayload, TierListTag } from '@/app/services/tierlist'
-
 export { CLASS_ORDER as CHAMPION_CLASSES } from '@/app/lib/champion-class'
 
-/**
- * The tags a champion carries in one tier list, without the champion id the API
- * response carries — here the id is the key of the map holding them.
- */
-export type ChampionTags = Omit<TierListTag, 'champion_id'>
+/** The tags a champion carries in one tier list; its id is the key of the map holding them. */
+export interface ChampionTags {
+  is_attacker: boolean
+  is_defender: boolean
+  is_alliance_war: boolean
+  is_battlegrounds: boolean
+  is_awakened: boolean
+  signature: number
+}
 
 export const NO_TAGS: ChampionTags = {
   is_attacker: false,
@@ -36,26 +38,13 @@ export interface BoardTier {
   championIds: string[]
 }
 
-/** The board as the page holds it, before it is sent back as a whole. */
+/** The board as the page holds it, and as the browser stores it. */
 export interface BoardState {
-  /** The tier list this board is saved to; null while it lives only in the browser. */
+  /** The tier list this board is saved to; null until its first change creates one. */
   id: string | null
   title: string
   tiers: BoardTier[]
   tags: Record<string, ChampionTags>
-}
-
-/** What the save endpoint expects, built from the board the page holds. */
-export function toSavePayload(board: BoardState): TierListSavePayload {
-  return {
-    title: board.title,
-    tiers: board.tiers.map((tier) => ({
-      label: tier.label,
-      color: tier.color,
-      champion_ids: tier.championIds,
-    })),
-    tags: Object.entries(board.tags).map(([champion_id, tags]) => ({ champion_id, ...tags })),
-  }
 }
 
 /** True when a champion carries at least one mark worth storing. */

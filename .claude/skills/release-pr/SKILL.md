@@ -2,7 +2,8 @@
 name: release-pr
 description: >
   Promeut `main` vers `release` (production) ou `staging` et déclenche le déploiement : merge la
-  PR release-please, ouvre et merge la PR de promotion, surveille le run jusqu'au déploiement.
+  PR de bump des artefacts vision puis la PR release-please, ouvre et merge la PR de promotion,
+  surveille le run jusqu'au déploiement.
   Jamais pour une branche de feature — pour ça, voir `git:make-pr`.
 user-invocable: true
 ---
@@ -32,6 +33,22 @@ dernier tag `v*` (`released != true`). La PR release-please doit donc être merg
 ## Pré-vol
 
 Toujours `git fetch origin --tags --prune` d'abord.
+
+### PR de bump vision (prod et staging)
+
+```bash
+gh pr list --state open --head chore/bump-artifacts-vision --json number,url,mergeable \
+  --jq '.[0]'
+gh pr checks <n>
+```
+
+Elle pointe le submodule `rust-vision/artifacts-vision` sur le dernier modèle : elle part avec la
+promotion. Checks verts → elle est squashée en premier (voir Déroulé). Check rouge ou en cours, ou
+`mergeable` ≠ `MERGEABLE` : avertissement — l'exposer et demander s'il faut promouvoir sans elle.
+Aucune PR ouverte : rien à faire.
+
+En prod, les contrôles 1 et 2 ci-dessous se lisent **après** son merge : elle ajoute un commit
+`chore:` après le dernier tag.
 
 ### Bloquants — prod
 
@@ -104,11 +121,23 @@ s'appliquent pas : staging n'exige aucun tag — c'est là qu'on teste avant de 
 ## Récapitulatif — une seule confirmation
 
 Avant d'agir, afficher : le mode, la branche cible, la version promue, les contrôles passés, et
-ce qui va être mergé (PR release-please + PR de promotion). Une fois confirmé, tout s'enchaîne
+ce qui va être mergé (PR de bump vision + PR release-please + PR de promotion). Une fois confirmé, tout s'enchaîne
 sans redemander : chaque attente (tag, run de déploiement) est un watch en tâche de fond pendant
 lequel le travail continue, et sa notification enchaîne l'étape suivante.
 
 ## Déroulé — prod
+
+0. **Squash de la PR de bump vision**, si elle existe et est verte :
+
+   ```bash
+   gh pr merge <n> --squash
+   gh run list --workflow "Release Please" --branch main -L 1 --json databaseId --jq '.[0].databaseId'
+   gh run watch <id> --exit-status
+   ```
+
+   Ce run force-push la PR release-please sur le nouveau `main` : l'attendre (en tâche de fond),
+   puis relire le contrôle 2 avant l'étape 1. Si le bump est le seul commit depuis le dernier tag,
+   release-please n'ouvre aucune PR (`chore` est masqué) : le contrôle 2 arrête la promotion.
 
 1. **Squash de la PR release-please**, si elle existe :
 
@@ -156,7 +185,8 @@ lequel le travail continue, et sa notification enchaîne l'étape suivante.
 
 ## Déroulé — staging
 
-Identique, sans les étapes 1 et 2 — staging n'exige aucun tag :
+Identique, sans les étapes 1 et 2 — staging n'exige aucun tag. L'étape 0 reste (squash du bump,
+sans attendre Release Please) :
 
 ```bash
 gh pr create --base staging --head main --title "staging: $(git describe --tags --match 'v*' origin/main)"

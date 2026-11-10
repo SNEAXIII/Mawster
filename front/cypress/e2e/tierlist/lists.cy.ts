@@ -1,18 +1,13 @@
 import {
-  BACKEND,
   closeChampionSheet,
-  seedTierList,
   setupTierList,
-  visitTierListAs,
+  visitTierListSignedOut,
+  visitTierListWith,
   type TierListSetup,
 } from '../../support/e2e';
 
-/**
- * Tier lists once signed in: several per account, picked from the selector, and
- * never visible to anyone else — a list belongs to the account, not to a player
- * (see docs/adr/0014).
- */
-describe('Tier list – the account lists', () => {
+/** Several tier lists per browser, picked from the selector. */
+describe('Tier list – the browser lists', () => {
   const CATALOG = [{ name: 'ListHero', championClass: 'Cosmic' }];
 
   let setup: TierListSetup;
@@ -25,8 +20,7 @@ describe('Tier list – the account lists', () => {
   });
 
   it('creates the first list on the first change', () => {
-    cy.intercept('POST', '**/api/back/tierlists').as('createList');
-    visitTierListAs(setup.userData.user_id);
+    visitTierListSignedOut();
 
     cy.getByCy('tierlist-create').should('be.visible');
     cy.getByCy('tierlist-picker').should('not.exist');
@@ -35,13 +29,11 @@ describe('Tier list – the account lists', () => {
     cy.getByCy('tierlist-send-to-S').click();
     closeChampionSheet();
 
-    cy.wait('@createList').its('response.statusCode').should('eq', 201);
     cy.getByCy('tierlist-picker').should('be.visible');
   });
 
   it('creates a second list and shows both in the selector', () => {
-    seedTierList(setup.userData.access_token, 'Alpha');
-    visitTierListAs(setup.userData.user_id);
+    visitTierListWith([{ title: 'Alpha' }]);
 
     cy.getByCy('tierlist-picker').should('contain', 'Alpha');
     cy.getByCy('tierlist-create').click();
@@ -53,13 +45,8 @@ describe('Tier list – the account lists', () => {
   });
 
   it('loads the right board when switching lists', () => {
-    seedTierList(setup.userData.access_token, 'Alpha', [setup.championIds.ListHero]);
-    seedTierList(setup.userData.access_token, 'Beta');
-    visitTierListAs(setup.userData.user_id);
+    visitTierListWith([{ title: 'Alpha', championIds: [setup.championIds.ListHero] }, { title: 'Beta' }]);
 
-    // Which one the page opens on is not something to lean on: `created_at` has
-    // no fractional seconds, so two lists seeded in the same second tie and the
-    // order is arbitrary. Every test here picks the list it means to work on.
     cy.selectOption('tierlist-picker', 'Alpha');
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-champion-ListHero"]').should('exist');
 
@@ -71,24 +58,19 @@ describe('Tier list – the account lists', () => {
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-champion-ListHero"]').should('exist');
   });
 
-  it('renames a list from the title, and the selector shows it on the next load', () => {
-    seedTierList(setup.userData.access_token, 'Alpha');
-    cy.intercept('PUT', '**/api/back/tierlists/*').as('saveList');
-    visitTierListAs(setup.userData.user_id);
+  it('renames a list from the title, and the selector follows as it is typed', () => {
+    visitTierListWith([{ title: 'Alpha' }]);
 
     cy.getByCy('tierlist-title').should('have.value', 'Alpha');
     cy.getByCy('tierlist-title').clear().type('Renamed');
-    cy.wait('@saveList').its('response.statusCode').should('eq', 200);
+    cy.getByCy('tierlist-picker').should('contain', 'Renamed');
 
-    // The selector reads the summaries the API sent; it picks the new title up
-    // on the next load, not while the board is being edited.
     cy.reload();
     cy.getByCy('tierlist-picker').should('contain', 'Renamed');
   });
 
   it('counts the board being edited, not the snapshot from load time', () => {
-    seedTierList(setup.userData.access_token, 'Alpha');
-    visitTierListAs(setup.userData.user_id);
+    visitTierListWith([{ title: 'Alpha' }]);
 
     cy.getByCy('tierlist-picker').should('contain', 'Alpha (0)');
     cy.getByCy('tierlist-champion-ListHero').click();
@@ -99,9 +81,7 @@ describe('Tier list – the account lists', () => {
   });
 
   it('names the list in the delete confirmation', () => {
-    seedTierList(setup.userData.access_token, 'Alpha');
-    seedTierList(setup.userData.access_token, 'Beta');
-    visitTierListAs(setup.userData.user_id);
+    visitTierListWith([{ title: 'Alpha' }, { title: 'Beta' }]);
 
     cy.selectOption('tierlist-picker', 'Alpha');
     cy.getByCy('tierlist-delete').click();
@@ -110,9 +90,7 @@ describe('Tier list – the account lists', () => {
   });
 
   it('switches to another list once the open one is deleted', () => {
-    seedTierList(setup.userData.access_token, 'Alpha');
-    seedTierList(setup.userData.access_token, 'Beta');
-    visitTierListAs(setup.userData.user_id);
+    visitTierListWith([{ title: 'Alpha' }, { title: 'Beta' }]);
 
     cy.selectOption('tierlist-picker', 'Alpha');
     cy.getByCy('tierlist-title').should('have.value', 'Alpha');
@@ -124,9 +102,7 @@ describe('Tier list – the account lists', () => {
   });
 
   it('hides the delete button when a single list is left', () => {
-    seedTierList(setup.userData.access_token, 'Alpha');
-    seedTierList(setup.userData.access_token, 'Beta');
-    visitTierListAs(setup.userData.user_id);
+    visitTierListWith([{ title: 'Alpha' }, { title: 'Beta' }]);
 
     cy.selectOption('tierlist-picker', 'Alpha');
     cy.getByCy('tierlist-delete').click();
@@ -136,26 +112,8 @@ describe('Tier list – the account lists', () => {
     cy.getByCy('tierlist-delete').should('not.exist');
   });
 
-  it('answers 404, not 403, on another account list', () => {
-    seedTierList(setup.userData.access_token, 'Private').then((listId) => {
-      cy.registerUser('tl-lists-intruder').then((intruder) => {
-        cy.request({
-          method: 'GET',
-          url: `${BACKEND}/tierlists/${listId}`,
-          headers: { Authorization: `Bearer ${intruder.access_token}` },
-          failOnStatusCode: false,
-        })
-          .its('status')
-          .should('eq', 404);
-      });
-    });
-  });
-
   it('says so when the twenty-list cap is reached', () => {
-    for (let index = 0; index < 20; index += 1) {
-      seedTierList(setup.userData.access_token, `List ${index}`);
-    }
-    visitTierListAs(setup.userData.user_id);
+    visitTierListWith(Array.from({ length: 20 }, (_, index) => ({ title: `List ${index}` })));
 
     cy.getByCy('tierlist-create').click();
 

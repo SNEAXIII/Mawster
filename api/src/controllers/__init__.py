@@ -5,7 +5,6 @@ from src.controllers.account.game.upgrade_request_controller import upgrade_requ
 from src.controllers.account.game.vision_controller import vision_controller
 from src.controllers.account.me_dashboard_controller import me_dashboard_controller
 from src.controllers.account.me_moderation_controller import me_moderation_controller
-from src.controllers.account.tierlist_controller import tierlist_controller
 from src.controllers.account.user_controller import user_controller
 from src.controllers.admin.admin_audit_controller import admin_audit_controller
 from src.controllers.admin.ascension_request_admin_controller import (
@@ -34,7 +33,6 @@ from src.controllers.alliance.defense.defense_plan_node_controller import (
 from src.controllers.alliance.defense.defense_template_controller import (
     defense_template_controller,
 )
-from src.controllers.alliance.matchup_controller import matchup_controller
 from src.controllers.alliance.war.fight_record_import_controller import (
     fight_record_import_controller,
 )
@@ -69,7 +67,6 @@ routers = [
     alliance_member_controller,
     alliance_visitor_controller,
     alliance_roster_controller,
-    matchup_controller,
     defense_plan_node_controller,
     defense_template_controller,
     defense_plan_controller,
@@ -94,5 +91,4 @@ routers = [
     login_stats_controller,
     admin_audit_controller,
     catalog_controller,
-    tierlist_controller,
 ]

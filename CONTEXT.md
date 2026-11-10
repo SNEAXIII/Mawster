@@ -122,20 +122,14 @@ _Avoid_: ascendable request, upgrade request (that is an Officer asking a Player
 ### Tier lists
 
 **Tier List**:
-A ranked opinion an Account holds about Champions: rows it labels and colours, Champions
-dropped into them. Spans the whole Champion catalog, never a roster — you rank Champions
-you will never own. An Account keeps as many as it likes; a signed-out visitor keeps one,
-in their browser.
-_Table_: `tierlist`.
+A ranked opinion about Champions: rows labelled and coloured, Champions dropped into them.
+Spans the whole Champion catalog, never a roster — you rank Champions you will never own.
+Kept in the browser, up to twenty, signed in or not: the backend holds none (see
+`docs/adr/0020-tier-lists-live-in-the-browser.md`). Shared by exporting a file.
 _Avoid_: board, tierlist (in prose), tier (that is one row).
-
-It belongs to an Account and not to a Player — the one thing a person owns in the game
-domain outside any Player, and the reason it can never be shown inside an Alliance (see
-`docs/adr/0014-tier-lists-belong-to-the-account.md`).
 
 **Tier**:
 One row of a Tier List: a label, a colour, a position. Holds Rankings and nothing else.
-_Table_: `tierlist_tier`.
 _Avoid_: never the bare word in prose next to an Alliance — an Alliance's Tier is its
 competitive bracket (`Tier = 1..20`), an unrelated concept. Say "Tier List row" when both
 are in play.
@@ -143,7 +137,6 @@ are in play.
 **Ranking**:
 One Champion sitting in one Tier, at a position. Scoped to its Tier List — the same
 Champion is S in one and C in another, and two Tier Lists share nothing.
-_Table_: `tierlist_ranking`.
 _Avoid_: placement (taken by Defense Placement), slot, entry.
 
 **Tag**:
@@ -156,14 +149,10 @@ An opinion, never a fact. The defender tag means "I rate it on defense" and is u
 a Saga's `is_saga_defender`, which is a Season bonus the game grants. Likewise the
 Battlegrounds tag names the game's PvP mode, never Mawster's Battlegroup. Tags double as
 the pool filters.
-_Table_: `tierlist_champion_tag`, one row per tagged Champion.
 _Debt_: non-playable catalog entries (event bosses, minions — `doombot`, `symbioid`,
 `sentinelbot`, `anti-venomoid`) are hidden by a hard-coded list in the front. The fact
 belongs to the catalog: `Champion` should carry `is_playable`, so roster search and the
 vision pipeline read the same truth.
-_Debt_: saving a Tier List rewrites it whole — the front PUTs every Tier, Ranking and Tag
-a second after the last gesture. Fine at a few Ko; a diff endpoint is the fix if a list
-ever grows past that.
 
 ### War
 
@@ -239,16 +228,6 @@ in War date order, then by ascending node number. A KO or a fight flagged not do
 breaks it; a planning error is skipped; the done flag plays no part. Assists never count.
 Computed on the fly, never stored.
 _Avoid_: series, combo.
-
-**Matchup Builder** (experimental):
-The feature rating attackers against targets to suggest who to send. Everything under
-it is experimental — nothing here is settled domain yet.
-
-**Matchup Rating** (experimental):
-An Alliance's verdict (discouraged, ok, good) on one attacker against one target: an
-enemy defender, a node, or both. Decoupled from Fight Records — it is not derived from
-what actually happened.
-_Avoid_: treating matchups as war history.
 
 ### War assignments
 

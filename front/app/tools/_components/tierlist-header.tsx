@@ -30,11 +30,10 @@ interface TierListHeaderProps {
   onFiltersChange: (filters: FilterState) => void
   shown: number
   total: number
-  persistence: { saving: boolean; error: string | null }
 }
 
 /**
- * Title, save state and the filters. The filters sit above the board because
+ * Title and the filters. The filters sit above the board because
  * they narrow the rows as well as the pool — they are the page's controls, not
  * the pool's.
  */
@@ -47,7 +46,6 @@ export default function TierListHeader({
   onFiltersChange,
   shown,
   total,
-  persistence,
 }: Readonly<TierListHeaderProps>) {
   const { t } = useI18n()
 
@@ -97,12 +95,6 @@ export default function TierListHeader({
           data-cy='tierlist-title'
           className='min-w-48 flex-1 border-none bg-transparent text-lg font-black tracking-tight outline-none sm:text-xl'
         />
-        <span
-          className='text-xs text-muted-foreground'
-          data-cy='tierlist-save-state'
-        >
-          {persistence.error ?? (persistence.saving ? t.tierlist.saving : t.tierlist.saved)}
-        </span>
       </div>
 
       <div className='flex flex-col gap-3 rounded-lg border bg-card p-3'>

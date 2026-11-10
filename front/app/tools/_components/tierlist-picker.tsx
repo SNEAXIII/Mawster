@@ -13,28 +13,23 @@ import {
 import { Button } from '@/components/ui/button'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { useI18n } from '@/app/i18n'
-import type { TierListSummary } from '@/app/services/tierlist'
+import type { TierListSummary } from '../_lib/lists'
 
 interface TierListPickerProps {
   lists: TierListSummary[]
   activeId: string | null
   /**
-   * How many champions the open board holds right now. The count the API sent
-   * is a snapshot from load time, so the row being edited would keep showing a
-   * stale number until the next reload.
+   * The open board's count and title right now. The summaries are read when the
+   * lists load, so the row being edited would otherwise show stale ones.
    */
   activeRankedCount: number
-  /** Named in the confirmation, so nobody deletes the wrong list. */
   activeTitle: string
   onSelect: (id: string) => void
   onCreate: () => void
   onDelete: () => void
 }
 
-/**
- * Which of the account's tier lists is open. Signed out there is nothing to
- * pick — the browser keeps one board — so the whole row is hidden.
- */
+/** Which of the browser's tier lists is open. */
 export default function TierListPicker({
   lists,
   activeId,
@@ -61,15 +56,18 @@ export default function TierListPicker({
             <SelectValue placeholder={t.tierlist.pickList} />
           </SelectTrigger>
           <SelectContent>
-            {lists.map((list) => (
-              <SelectItem
-                key={list.id}
-                value={list.id}
-              >
-                {list.title || t.tierlist.boardTitle} (
-                {list.id === activeId ? activeRankedCount : list.ranked_champion_count})
-              </SelectItem>
-            ))}
+            {lists.map((list) => {
+              const active = list.id === activeId
+              return (
+                <SelectItem
+                  key={list.id}
+                  value={list.id}
+                >
+                  {(active ? activeTitle : list.title) || t.tierlist.boardTitle} (
+                  {active ? activeRankedCount : list.ranked_champion_count})
+                </SelectItem>
+              )
+            })}
           </SelectContent>
         </Select>
       )}

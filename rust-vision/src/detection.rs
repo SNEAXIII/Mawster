@@ -66,7 +66,8 @@ fn top_two<T>(scores: impl Iterator<Item = (T, f32)>) -> (Option<T>, f32) {
     (best.map(|(item, _)| item), margin)
 }
 
-/// Pairs every card with its stars and text strip, and keeps the 6★ and 7★ ones.
+/// Pairs every card with its stars and text strip, whatever its rarity: the lower ones still fill
+/// a grid cell, and only the prediction leaves them out.
 pub fn extract_cards(detections: Vec<Detection>, image: &DynamicImage) -> Vec<CardDetected<'_>> {
     let mut valid_cards: Vec<CardDetected> = Vec::new();
     let (cards_box, mut stars_box, mut texts_box) = split_by_class(detections);
@@ -75,9 +76,8 @@ pub fn extract_cards(detections: Vec<Detection>, image: &DynamicImage) -> Vec<Ca
         let text = texts_box.extract_if(.., |t| t.is_fit_in(&card)).next();
         if let Some(stars) = stars
             && let Some(text) = text
-            && let Some(card) = CardDetected::new(card, stars, text, image)
         {
-            valid_cards.push(card);
+            valid_cards.push(CardDetected::new(card, stars, text, image));
         }
     }
     valid_cards

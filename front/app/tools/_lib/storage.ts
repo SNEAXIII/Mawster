@@ -1,10 +1,4 @@
-/**
- * Browser storage for the signed-out board and the display preferences.
- *
- * A signed-out visitor keeps exactly one board, here. Signing in does not
- * migrate it silently — the page offers to import it (see the import dialog),
- * so nobody's existing lists get overwritten by a board they were only trying out.
- */
+/** Browser storage for the tier lists and the display preferences. */
 const PREFIX = 'mawster-tierlist:'
 
 export function readStored(name: string): string | null {
