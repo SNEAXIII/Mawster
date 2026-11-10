@@ -3,6 +3,15 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.4.0](https://github.com/SNEAXIII/Mawster/compare/v2.3.0...v2.4.0) (2026-11-10)
+
+
+### Added
+
+* keep tier lists in the browser ([#823](https://github.com/SNEAXIII/Mawster/issues/823)) ([0e42e15](https://github.com/SNEAXIII/Mawster/commit/0e42e157370f172635122345a4ecbc605ecc28c4))
+* leave 6-star champions below rank 4 out of the AI import ([#817](https://github.com/SNEAXIII/Mawster/issues/817)) ([5e2e975](https://github.com/SNEAXIII/Mawster/commit/5e2e9755526f65c81fe3a0dd664c0681c2c7dfbc))
+* remove the matchup builder ([#821](https://github.com/SNEAXIII/Mawster/issues/821)) ([90bf8ca](https://github.com/SNEAXIII/Mawster/commit/90bf8ca21b52fefed1c09670fccaee6c27505882))
+
 ## [2.3.0](https://github.com/SNEAXIII/Mawster/compare/v2.2.0...v2.3.0) (2026-11-10)
 
 
