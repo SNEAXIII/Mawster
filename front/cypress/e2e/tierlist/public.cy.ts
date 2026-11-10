@@ -36,14 +36,12 @@ describe('Tier list – signed out', () => {
     cy.contains('2 of 2').should('be.visible');
   });
 
-  it('says the tier list stays in this browser', () => {
-    cy.contains('You are not signed in: this tier list stays in this browser.').should('be.visible');
+  it('says the tier lists stay in this browser', () => {
+    cy.contains('Your tier lists are kept in this browser only').should('be.visible');
   });
 
-  it('offers neither the list picker nor the create button', () => {
-    cy.getByCy('tierlist-picker').should('not.exist');
-    cy.getByCy('tierlist-create').should('not.exist');
-    cy.getByCy('tierlist-delete').should('not.exist');
+  it('offers the create button without a session', () => {
+    cy.getByCy('tierlist-create').should('be.visible');
   });
 
   it('starts on five empty rows, S to D', () => {
@@ -57,8 +55,6 @@ describe('Tier list – signed out', () => {
     rankChampion('PublicOne', 'S');
 
     cy.getByCy('tierlist-row-S').find('[data-cy="tierlist-champion-PublicOne"]').should('exist');
-    // The board is written a second after the last change — waiting on the
-    // stored value is what makes the reload deterministic.
     storedBoard().should('not.be.null');
 
     cy.reload();

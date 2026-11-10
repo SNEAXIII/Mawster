@@ -1933,9 +1933,25 @@ export function visitTierListSignedOut(): void {
   cy.getByCy('tierlist-pool').should('exist');
 }
 
-/** Open the tier list signed in as a user, and wait for the catalog. */
-export function visitTierListAs(userId: string): void {
-  cy.apiLogin(userId, '/tools');
+/** Open the tier list on a browser already holding these lists, in this order. */
+export function visitTierListWith(lists: { title: string; championIds?: string[] }[]): void {
+  cy.clearAllCookies();
+  cy.clearAllSessionStorage();
+  cy.clearAllLocalStorage();
+  const stored = lists.map(({ title, championIds = [] }, index) => ({
+    id: `seeded-${index}`,
+    title,
+    tiers: ['S', 'A', 'B', 'C', 'D'].map((label, row) => ({
+      id: `tier-${index}-${label}`,
+      label,
+      color: '#ff7f7f',
+      championIds: row === 0 ? championIds : [],
+    })),
+    tags: {},
+  }));
+  cy.visit('/tools', {
+    onBeforeLoad: (win) => win.localStorage.setItem(TIER_LISTS_KEY, JSON.stringify(stored)),
+  });
   cy.getByCy('tierlist-pool').should('exist');
 }
 
@@ -1956,34 +1972,9 @@ export function closeChampionSheet(): void {
   cy.getByCy('tierlist-champion-sheet').should('not.exist');
 }
 
-/** The board this browser holds, as it was written — null when it holds none. */
-export function storedBoard(): Cypress.Chainable<string | null> {
-  return cy.window().its('localStorage').invoke('getItem', 'mawster-tierlist:board');
-}
+const TIER_LISTS_KEY = 'mawster-tierlist:lists';
 
-/** One tier list created straight through the API, so a spec can start with several. */
-export function seedTierList(
-  token: string,
-  title: string,
-  firstRowChampionIds: string[] = [],
-): Cypress.Chainable<string> {
-  return cy
-    .request({
-      method: 'POST',
-      url: `${BACKEND}/tierlists`,
-      headers: { Authorization: `Bearer ${token}` },
-      body: {
-        title,
-        tiers: ['S', 'A', 'B', 'C', 'D'].map((label, index) => ({
-          label,
-          color: '#ff7f7f',
-          champion_ids: index === 0 ? firstRowChampionIds : [],
-        })),
-        tags: [],
-      },
-    })
-    .then((res) => {
-      expect(res.status).to.eq(201);
-      return res.body.id as string;
-    });
+/** The tier lists this browser holds, as they were written — null when it holds none. */
+export function storedBoard(): Cypress.Chainable<string | null> {
+  return cy.window().its('localStorage').invoke('getItem', TIER_LISTS_KEY);
 }

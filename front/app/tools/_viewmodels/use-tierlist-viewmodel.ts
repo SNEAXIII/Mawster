@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSession } from 'next-auth/react'
 import { useI18n } from '@/app/i18n'
 import { useImageExport } from '@/hooks/use-image-export'
 import { toast } from 'sonner'
@@ -16,7 +15,6 @@ import { EMPTY_FILTERS, matchesFilters, type FilterState } from '../_lib/filters
 /** Everything the tier list page holds, so the components stay presentational. */
 export function useTierListViewModel() {
   const { t } = useI18n()
-  const { status } = useSession()
   const catalog = useCatalog()
   const { board, setBoard, actions } = useBoard()
   const tierLists = useTierLists()
@@ -31,7 +29,7 @@ export function useTierListViewModel() {
     },
     [refreshLists]
   )
-  const persistence = useBoardPersistence({
+  const loaded = useBoardPersistence({
     board,
     setBoard,
     knownIds: catalog.knownIds,
@@ -45,14 +43,13 @@ export function useTierListViewModel() {
   const [prefs, setPrefs] = usePrefs()
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS)
   const { exporting, exportPng } = useImageExport()
-  const [localBoardHandled, setLocalBoardHandled] = useState(false)
   // Snapshot of the queue, taken when a run starts; null while idle.
   const [reviewQueue, setReviewQueue] = useState<string[] | null>(null)
   // Whether a run also walks champions already sitting in a row.
   const [reviewPlaced, setReviewPlaced] = useState(false)
   const boardRef = useRef<HTMLDivElement>(null)
 
-  // Open the account's first list once they are known, and follow along when
+  // Open the first list once they are known, and follow along when
   // one is created or the open one is deleted.
   useEffect(() => {
     if (tierLists.loading) return
@@ -123,35 +120,16 @@ export function useTierListViewModel() {
     [actions, board.id, catalog.knownIds, t]
   )
 
-  const handleCreateList = useCallback(async () => {
-    const created = await tierLists.create()
-    if (created) setActiveId(created.id)
+  const handleCreateList = useCallback(() => {
+    const id = tierLists.create()
+    if (id) setActiveId(id)
   }, [tierLists])
 
-  const handleDeleteList = useCallback(async () => {
+  const handleDeleteList = useCallback(() => {
     if (!activeId) return
-    await tierLists.remove(activeId)
+    tierLists.remove(activeId)
     setActiveId(null)
   }, [activeId, tierLists])
-
-  const handleImportLocalBoard = useCallback(() => {
-    if (persistence.storedBoard) {
-      actions.replaceBoard({ ...persistence.storedBoard, id: board.id })
-    }
-    persistence.dropStoredBoard()
-    setLocalBoardHandled(true)
-  }, [actions, board.id, persistence])
-
-  const handleDiscardLocalBoard = useCallback(() => {
-    persistence.dropStoredBoard()
-    setLocalBoardHandled(true)
-  }, [persistence])
-
-  /** The browser's board is only worth offering to someone signed in. */
-  const offerLocalBoard =
-    status === 'authenticated' && !localBoardHandled && persistence.loaded
-      ? persistence.storedBoard
-      : null
 
   return {
     catalog,
@@ -161,7 +139,7 @@ export function useTierListViewModel() {
     setPrefs,
     filters,
     setFilters,
-    persistence,
+    loaded,
     tierLists,
     activeId,
     setActiveId,
@@ -176,15 +154,11 @@ export function useTierListViewModel() {
     visibleByTier,
     boardRef,
     exporting,
-    offerLocalBoard,
-    signedIn: status === 'authenticated',
     handleExportJson: () => exportJson(board),
     handleExportPng,
     handleImportJson,
     handleCreateList,
     handleDeleteList,
     handleReset: () => actions.replaceBoard({ ...defaultBoard(), id: board.id }),
-    handleImportLocalBoard,
-    handleDiscardLocalBoard,
   }
 }

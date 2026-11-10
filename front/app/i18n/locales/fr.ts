@@ -1520,11 +1520,6 @@ const fr: Translations = {
     importDone: 'Tier list importée.',
     reset: 'Réinitialiser',
     resetConfirm: 'Réinitialiser cette tier list ? Ses lignes et ses tags seront perdus.',
-    importLocalTitle: 'Récupérer votre tier list locale ?',
-    importLocalBody:
-      "Ce navigateur contient une tier list de {count} champions classés, d'avant votre connexion. L'importer remplace la tier list actuellement ouverte.",
-    importLocalConfirm: "L'importer",
-    importLocalDiscard: 'La supprimer',
     title: 'Tier list',
     dragHint: 'Glissez un champion dans une ligne, ou touchez-le pour le taguer.',
     addTier: 'Ajouter une ligne',
@@ -1540,10 +1535,10 @@ const fr: Translations = {
     search: 'Rechercher un champion',
     boardTitle: 'Tier list sans titre',
     shown: '{shown} sur {total}',
-    saving: 'Enregistrement…',
-    saved: 'Enregistré',
-    savedLocally: 'Enregistré dans ce navigateur',
-    signedOut: "Vous n'êtes pas connecté : cette tier list reste dans ce navigateur.",
+    storedInBrowser:
+      'Vos tier lists sont gardées dans ce navigateur uniquement : exportez-en une pour la garder ailleurs.',
+    listCapReached:
+      "Vous avez déjà {limit} tier lists. Supprimez-en une avant d'en créer une autre.",
     loadError: "Le catalogue des champions n'a pas pu être chargé.",
     saveError: "La tier list n'a pas pu être enregistrée.",
     cardSize: 'Taille des cartes',

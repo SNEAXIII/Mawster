@@ -129,14 +129,6 @@ entity "login_log" as login_log {
   * kind : ENUM('LOGIN','REFRESH')
 }
 
-entity "tierlist" as tierlist {
-  * id : CHAR(32) <<PK>>
-  --
-  * created_at : DATETIME
-  * user_id : CHAR(32) <<FK → user.id>>
-  * title : VARCHAR(100)
-}
-
 entity "user_mute" as user_mute {
   * id : CHAR(32) <<PK>>
   --
@@ -235,29 +227,6 @@ entity "game_account_mastery" as game_account_mastery {
   * defense : INTEGER
 }
 
-entity "tierlist_champion_tag" as tierlist_champion_tag {
-  * id : CHAR(32) <<PK>>
-  --
-  * champion_id : CHAR(32) <<FK → champion.id>>
-  * tierlist_id : CHAR(32) <<FK → tierlist.id>>
-  * is_six_star_only : BOOL
-  * is_attacker : BOOL
-  * is_defender : BOOL
-  * is_alliance_war : BOOL
-  * is_battlegrounds : BOOL
-  * is_awakened : BOOL
-  * signature : INTEGER
-}
-
-entity "tierlist_tier" as tierlist_tier {
-  * id : CHAR(32) <<PK>>
-  --
-  * tierlist_id : CHAR(32) <<FK → tierlist.id>>
-  * label : VARCHAR(40)
-  * color : VARCHAR(32)
-  * position : INTEGER
-}
-
 entity "vision_import" as vision_import {
   * id : CHAR(32) <<PK>>
   --
@@ -326,15 +295,6 @@ entity "requested_upgrade" as requested_upgrade {
   * requested_stars : INTEGER
   * requested_rank : INTEGER
   done_at : DATETIME
-}
-
-entity "tierlist_ranking" as tierlist_ranking {
-  * id : CHAR(32) <<PK>>
-  --
-  * champion_id : CHAR(32) <<FK → champion.id>>
-  * tierlist_id : CHAR(32) <<FK → tierlist.id>>
-  * tier_id : CHAR(32) <<FK → tierlist_tier.id>>
-  * position : INTEGER
 }
 
 entity "vision_job" as vision_job {
@@ -530,13 +490,6 @@ note_report }o--|| game_account
 note_report }o--|| war_fight_note
 requested_upgrade }o--|| champion_user
 requested_upgrade }o--|| game_account
-tierlist }o--|| user
-tierlist_champion_tag }o--|| champion
-tierlist_champion_tag }o--|| tierlist
-tierlist_ranking }o--|| champion
-tierlist_ranking }o--|| tierlist
-tierlist_ranking }o--|| tierlist_tier
-tierlist_tier }o--|| tierlist
 user_mute }o--o| user
 user_mute }o--|| user
 user_warn }o--|| user

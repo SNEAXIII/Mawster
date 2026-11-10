@@ -1,5 +1,7 @@
 # Tier lists belong to the Account
 
+_Superseded by `0020-tier-lists-live-in-the-browser.md`._
+
 Everywhere else in Mawster the game domain hangs off a Player: a roster, an alliance
 membership, a war action, the author of a note. A Tier List does not. It hangs off the
 Account, and the same list is the same list whichever Player is currently selected.
