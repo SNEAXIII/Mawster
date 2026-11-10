@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import { encode, getToken, type JWT } from 'next-auth/jwt'
 import { getServerApiUrl } from '@/app/lib/serverApiUrl'
 import { refreshBackendToken } from '@/app/lib/auth-refresh'
+import { SECURE_COOKIE, SESSION_COOKIE, SESSION_MAX_AGE } from '@/app/lib/session-cookie'
 
 /**
  * Catch-all proxy: every request to /api/back/<path>
@@ -9,10 +10,8 @@ import { refreshBackendToken } from '@/app/lib/auth-refresh'
  * the encrypted NextAuth cookie — the session payload never carries it.
  */
 
-// Same cookie choice as Auth.js: secure cookie name when the app URL is https.
-const SECURE_COOKIE = (process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? 'https:').startsWith(
-  'https:'
-)
+// Auth.js CHUNK_SIZE: a bigger value would need its chunking, left to the jwt callback.
+const MAX_COOKIE_VALUE = 3936
 
 async function readBackendToken(req: NextRequest) {
   const token = await getToken({
@@ -20,9 +19,28 @@ async function readBackendToken(req: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
     secureCookie: SECURE_COOKIE,
   })
-  if (!token) return null
+  if (!token) return { stored: null, token: null }
   const fresh = token.accessTokenExpires && Date.now() < token.accessTokenExpires
-  return fresh ? token : refreshBackendToken(token)
+  return { stored: token, token: fresh ? token : await refreshBackendToken(token) }
+}
+
+/** Without this, every call after expiry refreshes again until the jwt callback runs. */
+async function persistSession(req: NextRequest, res: NextResponse, token: JWT) {
+  if (req.cookies.has(`${SESSION_COOKIE}.0`)) return
+  const value = await encode({
+    token,
+    secret: process.env.NEXTAUTH_SECRET!,
+    salt: SESSION_COOKIE,
+    maxAge: SESSION_MAX_AGE,
+  })
+  if (value.length > MAX_COOKIE_VALUE) return
+  res.cookies.set(SESSION_COOKIE, value, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    secure: SECURE_COOKIE,
+    maxAge: SESSION_MAX_AGE,
+  })
 }
 
 /**
@@ -33,11 +51,23 @@ async function readBackendToken(req: NextRequest) {
 const PUBLIC_PATHS = new Set(['stats/public', 'catalog/champions'])
 
 async function proxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
-  const { path } = await params
-  const backendPath = path.join('/')
+  const backendPath = (await params).path.join('/')
   const isPublicPath = PUBLIC_PATHS.has(backendPath)
+  const { stored, token } = isPublicPath
+    ? { stored: null, token: null }
+    : await readBackendToken(req)
 
-  const token = isPublicPath ? null : await readBackendToken(req)
+  const res = await forward(req, backendPath, isPublicPath, token)
+  if (token && token !== stored) await persistSession(req, res, token)
+  return res
+}
+
+async function forward(
+  req: NextRequest,
+  backendPath: string,
+  isPublicPath: boolean,
+  token: JWT | null
+) {
   const expired = !!token && (token.expired || !token.backendAuthenticated)
 
   if (!isPublicPath && (!token?.accessToken || expired)) {
