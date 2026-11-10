@@ -6,7 +6,7 @@ use ultralytics_inference::{Results, YOLOModel};
 
 use super::Laps;
 use crate::{
-    detection::{CardBox, CardDetected, CardDetectedPrediction, extract_cards, read_detections},
+    detection::{CardDetected, CardDetectedPrediction, extract_cards, read_detections},
     digits::read_rank_sig,
 };
 
@@ -16,8 +16,6 @@ pub struct Matrix<'a> {
     pub matrix: Vec<Vec<(usize, CardDetected<'a>)>>,
     /// Wall time of each step, in ms, in run order.
     pub timings: Vec<(&'static str, f64)>,
-    /// Holes in the grid, laid out with the dropped 5★ and lower so their cells are not holes.
-    pub missing_cells: usize,
 }
 
 /// What the debug overlays draw on top of the cards; the worker never needs it.
@@ -55,13 +53,12 @@ impl<'a> Matrix<'a> {
             let matrix = Self {
                 matrix: Vec::new(),
                 timings: laps.steps.clone(),
-                missing_cells: 0,
             };
             return Ok((matrix, raw));
         };
         let detections = read_detections(boxes);
         laps.lap("detections");
-        let (mut valid_cards, low_rarity) = extract_cards(detections, image);
+        let mut valid_cards = extract_cards(detections, image);
         laps.lap("cards (build+stars)");
         valid_cards.iter_mut().for_each(CardDetected::set_ascension);
         laps.lap("asc");
@@ -70,12 +67,7 @@ impl<'a> Matrix<'a> {
         }
         laps.lap("name");
 
-        let mut every_box: Vec<CardBox> = valid_cards.iter().map(|c| c.card_box).collect();
-        every_box.extend(low_rarity);
-        let missing_cells = count_missing_cells(&Self::grid_columns(&Self::row_centers(
-            &Self::build_rows(&every_box, |b| *b),
-        )));
-        let mut matrix = Self::build_rows(&valid_cards, |c| c.card_box);
+        let mut matrix = Self::build_rows(&valid_cards);
         laps.lap("matrix");
 
         // Get ranks and sig
@@ -98,22 +90,17 @@ impl<'a> Matrix<'a> {
             (card.rank, card.sig) = read_rank_sig(results, card.rank_sig_box.width().trunc());
         }
         laps.lap("rank/sig");
-        let boxes: Vec<Vec<CardBox>> = matrix
+        let centers: Vec<Vec<f32>> = matrix
             .iter()
-            .map(|row| row.iter().map(|c| c.card_box).collect())
+            .map(|row| row.iter().map(|c| c.card_box.center().0).collect())
             .collect();
-        let matrix = Self::grid_columns(&Self::row_centers(&boxes))
+        let matrix = Self::grid_columns(&centers)
             .into_iter()
             .zip(matrix)
             .map(|(cols, row)| cols.into_iter().zip(row).collect())
             .collect();
         let timings = laps.steps.clone();
-        let matrix = Self {
-            matrix,
-            timings,
-            missing_cells,
-        };
-        Ok((matrix, Raw { yolo, digits }))
+        Ok((Self { matrix, timings }, Raw { yolo, digits }))
     }
 
     /// No Lanczos pre-resize: only the end2end export needed it; the one-to-many export
@@ -145,6 +132,16 @@ impl<'a> Matrix<'a> {
             .flat_map(|(y, row)| row.iter().map(move |(x, card)| (format!("r{y}c{x}"), card)))
     }
 
+    /// Holes in the grid: a column the shot has but a row lacks, found by position.
+    pub fn missing_cells(&self) -> usize {
+        let rows: Vec<Vec<usize>> = self
+            .matrix
+            .iter()
+            .map(|row| row.iter().map(|(x, _)| *x).collect())
+            .collect();
+        count_missing_cells(&rows)
+    }
+
     pub fn into_flat(self) -> Vec<CardDetected<'a>> {
         self.matrix
             .into_iter()
@@ -154,14 +151,14 @@ impl<'a> Matrix<'a> {
     }
 
     /// Rows top to bottom, each sorted left to right.
-    fn build_rows<T: Clone>(cards: &[T], card_box: impl Fn(&T) -> CardBox) -> Vec<Vec<T>> {
-        let center_y = |c: &T| card_box(c).center().1;
+    fn build_rows(cards: &[CardDetected<'a>]) -> Vec<Vec<CardDetected<'a>>> {
+        let center_y = |c: &CardDetected| c.card_box.center().1;
         let mut cards = cards.to_vec();
         cards.sort_by(|a, b| center_y(a).total_cmp(&center_y(b)));
-        let mut rows: Vec<Vec<T>> = Vec::new();
+        let mut rows: Vec<Vec<CardDetected>> = Vec::new();
         for card in cards {
             if let Some(row) = rows.last_mut()
-                && center_y(&card) - center_y(&row[0]) <= center_y(&row[0]) - card_box(&row[0]).top
+                && center_y(&card) - center_y(&row[0]) <= center_y(&row[0]) - row[0].card_box.top
             {
                 row.push(card);
             } else {
@@ -169,15 +166,9 @@ impl<'a> Matrix<'a> {
             }
         }
         for row in &mut rows {
-            row.sort_by(|a, b| card_box(a).center().0.total_cmp(&card_box(b).center().0));
+            row.sort_by(|a, b| a.card_box.center().0.total_cmp(&b.card_box.center().0));
         }
         rows
-    }
-
-    fn row_centers(rows: &[Vec<CardBox>]) -> Vec<Vec<f32>> {
-        rows.iter()
-            .map(|row| row.iter().map(|b| b.center().0).collect())
-            .collect()
     }
 
     /// Column of each card from its x centre, rows sorted left to right: the pitch is the smallest
@@ -227,11 +218,6 @@ fn count_missing_cells(rows: &[Vec<usize>]) -> usize {
         .sum()
 }
 
-/// A 6★ below rank 4 is not imported; an unread rank stays, for the player to fix.
-fn clears_import_floor(card: &CardDetected) -> bool {
-    card.stars != 6 || card.rank.is_none_or(|rank| rank >= 4)
-}
-
 #[derive(Serialize)]
 pub struct MatrixPrediction {
     pub count: usize,
@@ -245,7 +231,10 @@ impl From<&Matrix<'_>> for MatrixPrediction {
     fn from(matrix: &Matrix<'_>) -> Self {
         let cells: Vec<(String, CardDetectedPrediction)> = matrix
             .cells()
-            .filter(|(_, card)| clears_import_floor(card))
+            // 7★, or 6★ from rank 4; an unread rank stays, for the player to fix.
+            .filter(|(_, card)| {
+                card.stars > 6 || (card.stars == 6 && card.rank.is_none_or(|rank| rank >= 4))
+            })
             .map(|(cell_name, card)| (cell_name, CardDetectedPrediction::from(card)))
             .collect();
         Self {
@@ -254,7 +243,7 @@ impl From<&Matrix<'_>> for MatrixPrediction {
                 .iter()
                 .map(|(_, card)| card.confidence)
                 .min_by(f32::total_cmp),
-            missing_cells: matrix.missing_cells,
+            missing_cells: matrix.missing_cells(),
             cells,
             timings: matrix.timings.clone(),
         }
