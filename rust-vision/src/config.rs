@@ -12,17 +12,11 @@ use ultralytics_inference::InferenceConfig;
 
 /// The private repo, checked out as a submodule: models and the verified screenshots.
 pub const REAL_DIR: &str = "artifacts-vision/data/real";
-
 const DETECTOR_MODEL: &str = "artifacts-vision/artifacts/yolo/best.onnx";
-
-const DIGITS_MODEL: &str = "artifacts-vision/artifacts/ocr/digits.onnx";
-
+const DIGITS_MODEL: &str = "artifacts-vision/artifacts/ocr/digits_yolo26n_224_e140_fp16.onnx";
 const GALLERY_FILE: &str = "artifacts/gallery/mosaic.bin";
-
 const PORTRAITS_DIR: &str = "../static-assets/static/champions";
-
 const CHAMPIONS_JSON: &str = "../api/src/fixtures/champions.json";
-
 const CARD_BACKGROUND: &str = "src/fixtures/card_bg.png";
 
 fn env(key: &str) -> Option<String> {

@@ -26,7 +26,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY src src
 RUN cargo build --release --locked --bin mcoc-vision
 COPY artifacts-vision/artifacts/yolo/best.onnx artifacts-vision/artifacts/yolo/
-COPY artifacts-vision/artifacts/ocr/digits.onnx artifacts-vision/artifacts/ocr/
+COPY artifacts-vision/artifacts/ocr/digits_yolo26n_224_e140_fp16.onnx artifacts-vision/artifacts/ocr/
 COPY --from=gallery /app/gallery.bin artifacts/gallery/mosaic.bin
 RUN --mount=type=bind,source=artifacts-vision/data/real,target=/app/artifacts-vision/data/real \
     ./target/release/mcoc-vision --no-save && touch /gt-passed
@@ -43,7 +43,8 @@ RUN cp --parents -L /lib64/ld-linux-x86-64.so.2 /runtime
 FROM scratch AS worker
 WORKDIR /app
 COPY --from=worker-build /runtime /
-COPY artifacts-vision/artifacts/yolo/best.onnx artifacts-vision/artifacts/ocr/digits.onnx ./
+COPY artifacts-vision/artifacts/yolo/best.onnx ./
+COPY artifacts-vision/artifacts/ocr/digits_yolo26n_224_e140_fp16.onnx ./digits.onnx
 COPY --from=gallery /app/gallery.bin .
 COPY --from=worker-build /app/target/release/worker .
 # BuildKit only builds what the target needs: this makes the ground-truth gate one of them.
