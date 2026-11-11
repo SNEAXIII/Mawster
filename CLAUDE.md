@@ -2,7 +2,7 @@
 
 Mawster — MCOC (Marvel Contest of Champions) alliance management tool.
 
-- **Backend** (`api/`): FastAPI + SQLModel + MariaDB (async), Python 3.14, **uv**
+- **Backend** (`api/`): FastAPI + SQLModel + PostgreSQL (async), Python 3.14, **uv**
 - **Frontend** (`front/`): Next.js App Router, React 19, Tailwind CSS 4, shadcn/ui
 - **Auth**: Discord OAuth2 → NextAuth 5 → backend JWT (HS256), sent as `Authorization: Bearer`
 - **i18n**: `useI18n()` — `front/app/i18n/locales/en.ts` & `fr.ts`
@@ -43,8 +43,8 @@ the user runs `make e2e-open` (Cypress UI) — never launch it yourself.
 `pnpm dev` (`front/`).
 
 **Calling the dev API**: `curl -H "Authorization: Bearer $(make -s dev-token)"` from `api/` acts as
-the user's own account; `PSEUDO=<game_pseudo>` acts as another player. The DB stores UUIDs as 32
-hex chars, the API answers them dashed.
+the user's own account; `PSEUDO=<game_pseudo>` acts as another player. UUIDs are native `uuid`:
+dashed in the DB and the API alike.
 
 **Driving the front**: the `dev-browser` skill (`--browser mawster`, dev-login on `/login`).
 
@@ -72,7 +72,7 @@ loading); auth via `Depends(AuthService.get_current_user_in_jwt)`; raise `HTTPEx
 ## Testing
 
 **Backend**: unit in `api/tests/unit/`, integration in `api/tests/integration/endpoints/` — on
-in-memory SQLite, one per xdist worker, not MariaDB. Update tests alongside code changes.
+in-memory SQLite, one per xdist worker, not PostgreSQL. Update tests alongside code changes.
 
 **E2E** — setup helpers live in `front/cypress/support/e2e.ts`:
 
@@ -178,19 +178,12 @@ Dev ports and credentials: `compose-dev.yaml`.
 
 ### Backup / Restore
 
-Backups are **gzipped** SQL dumps in `backups/` (`unzip` fails). The client is `mariadb`, never
-`mysql` — the pinned 11.4 image ships no alias.
-
-```bash
-gunzip -c backups/<file>.sql.gz | docker exec -i mariadb-dev mariadb -u root -prootpassword mawster
-```
-
-A plain `.sql` goes through the container — PowerShell rejects `<`, and `Get-Content |` re-encodes
-to cp1252 and corrupts the UTF-8:
+Backups are `pg_dump -Fc` archives in `backups/` (`<file>.dump`, binary: `pg_restore`, not `psql`).
+They go through the container, from PowerShell — Git Bash rewrites `/tmp` into a Windows path:
 ```powershell
-docker cp <file>.sql mariadb-dev:/tmp/dump.sql
-docker exec mariadb-dev sh -c "mariadb -u root -prootpassword mawster < /tmp/dump.sql"
-docker exec mariadb-dev rm /tmp/dump.sql
+docker cp backups/<file>.dump postgres-dev:/tmp/dump.dump
+docker exec postgres-dev pg_restore --clean --if-exists --no-owner -U user -d mawster /tmp/dump.dump
+docker exec postgres-dev rm /tmp/dump.dump
 ```
 
 A restore overwrites the dev DB and lags the local head — run `make migrate` from `api/` afterwards.
