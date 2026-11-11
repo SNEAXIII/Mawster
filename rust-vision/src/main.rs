@@ -38,15 +38,14 @@ fn main() -> anyhow::Result<()> {
     let gallery = gallery::load(&models.gallery)?;
     let mut yolo_area = YOLOModel::load_with_config(&models.detector, get_yolo_config(0.7, 0.1))?;
     let mut yolo_digits = YOLOModel::load_with_config(&models.digits, get_digits_config(0.7, 0.1))?;
-
     let mut score = Score::default();
     // One image at a time: decoding the whole set up front cost ~15 MB per shot.
     let mut samples: Vec<(&str, Vec<f64>)> = Vec::new();
     let mut totals = Vec::new();
     for path in &paths {
-        let mut laps = Laps::default();
         let image = load_image(path)?;
-        laps.lap("load");
+        // Decoding the file is the caller's I/O, not the pipeline: timed from here.
+        let mut laps = Laps::default();
         let (card_matrix, raw) = Matrix::with_raw(
             &image,
             &mut yolo_area,
@@ -80,6 +79,12 @@ fn main() -> anyhow::Result<()> {
         }
         write_rust_cards(path, &card_matrix)?;
         let debug_path = get_and_create_debug_path(path)?;
+        // The exact pixels the digit reader is handed, one file per cell.
+        for (cell, card) in card_matrix.cells() {
+            card.rank_sig_box
+                .crop(&image)
+                .save(debug_path.with_file_name(format!("band_{cell}.png")))?;
+        }
         let mut canvas = if overlays.contains(&Overlay::Yolo) {
             annotate_image(&image, result, None).to_rgb8()
         } else {
