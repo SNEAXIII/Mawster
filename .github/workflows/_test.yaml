@@ -245,26 +245,21 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.e2e-plan.outputs.matrix) }}
     env:
-      MARIADB_USER: user
-      MARIADB_PASSWORD: password
-      # Load-bearing since the backend creates its own database: it connects as
-      # root to CREATE DATABASE mawster_test_N and grant it to MARIADB_USER.
-      MARIADB_ROOT_PASSWORD: rootpassword
-      # Same tag as compose-dev, stack-app-dev, staging and prod: the CI was the
-      # only environment left running whatever `latest` happened to be that day.
-      MARIADB_IMAGE: mariadb:11.4
-    # MariaDB is started by hand rather than declared under `services:`, whose
-    # image pull is paid before the first step of every job in the matrix. Pulled
-    # and booted in the background instead, during the setup steps: each backend
-    # waits for the server itself (api/app_testing.py), so nothing races it.
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: --locale-provider=icu --icu-locale=und
+      # Same digest as compose-dev and the stacks.
+      POSTGRES_IMAGE: postgres:18-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
+    # Not under `services:`, whose pull every matrix job pays before its first step: pulled in the
+    # background instead, while each backend waits for the server itself (api/app_testing.py).
     steps:
-      - name: Start MariaDB in the background
+      - name: Start PostgreSQL in the background
         run: |
-          nohup docker run -d --name mariadb-test -p 3307:3306 \
-            -e "MARIADB_USER=$MARIADB_USER" \
-            -e "MARIADB_PASSWORD=$MARIADB_PASSWORD" \
-            -e "MARIADB_ROOT_PASSWORD=$MARIADB_ROOT_PASSWORD" \
-            "$MARIADB_IMAGE" >/dev/null 2>&1 &
+          nohup docker run -d --name postgres-test -p 5433:5432 \
+            -e "POSTGRES_USER=$POSTGRES_USER" \
+            -e "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" \
+            -e "POSTGRES_INITDB_ARGS=$POSTGRES_INITDB_ARGS" \
+            "$POSTGRES_IMAGE" >/dev/null 2>&1 &
 
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -279,7 +274,7 @@ jobs:
         working-directory: ./api
         # Same flags as the lint job above.
         run: uv sync --all-groups --locked --no-build --no-install-project
-      # They wait for MariaDB and migrate while the frontend is set up below.
+      # They wait for PostgreSQL and migrate while the frontend is set up below.
       - name: Start backends in the background
         run: python3 scripts/e2e/e2e_parallel.py backends --spec "${{ matrix.specs }}"
 

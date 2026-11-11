@@ -18,7 +18,7 @@ SHELL := powershell.exe
 HELP_LINES := \
 	"", \
 	"=== Dev ===", \
-	"db-dev                 --> demarrer la stack dev (rabbitmq + rustfs + mariadb-dev + static)", \
+	"db-dev                 --> demarrer la stack dev (rabbitmq + rustfs + postgres-dev + static)", \
 	"db-dev-all             --> demarrer tous les services de compose-dev.yaml", \
 	"vision-up              --> demarrer rabbitmq + rustfs (+ creation des buckets)", \
 	"vision-down            --> arreter rabbitmq + rustfs", \
@@ -28,7 +28,7 @@ HELP_LINES := \
 	"", \
 	"=== E2E (UI Cypress locale, la suite tourne en CI) ===", \
 	"e2e-open               --> demarrer les services + ouvrir l'UI Cypress", \
-	"e2e-db                 --> demarrer uniquement mariadb-test", \
+	"e2e-db                 --> demarrer uniquement postgres-test", \
 	"e2e-stop               --> arreter l'API et le frontend de test", \
 	"Logs      : .e2e-api.log  .e2e-front.log", \
 	"Variables : NEXTAUTH_SECRET=...", \
@@ -104,7 +104,7 @@ else
 help:
 	@echo "" ; \
 	echo "=== Dev ===" ; \
-	echo "db-dev                 --> demarrer la stack dev (rabbitmq + rustfs + mariadb-dev + static)" ; \
+	echo "db-dev                 --> demarrer la stack dev (rabbitmq + rustfs + postgres-dev + static)" ; \
 	echo "db-dev-all             --> demarrer tous les services de compose-dev.yaml" ; \
 	echo "vision-up              --> demarrer rabbitmq + rustfs (+ creation des buckets)" ; \
 	echo "vision-down            --> arreter rabbitmq + rustfs" ; \
@@ -113,7 +113,7 @@ help:
 	echo "" ; \
 	echo "=== E2E (UI Cypress locale, la suite tourne en CI) ===" ; \
 	echo "e2e-open               --> demarrer les services + ouvrir l'UI Cypress" ; \
-	echo "e2e-db                 --> demarrer uniquement mariadb-test" ; \
+	echo "e2e-db                 --> demarrer uniquement postgres-test" ; \
 	echo "e2e-stop               --> arreter l'API et le frontend de test" ; \
 	echo "Logs      : .e2e-api.log  .e2e-front.log" ; \
 	echo "Variables : NEXTAUTH_SECRET=..." ; \
@@ -216,8 +216,8 @@ dev-migrate:
 	set -a; . ./$(DEV_ENV); set +a; \
 	docker service rm $(DEV_STACK)-migrate 2>/dev/null || true; \
 	docker service create --name $(DEV_STACK)-migrate --network $(DEV_NET) \
-	  -e MARIADB_USER=mawster -e MARIADB_PORT=3306 -e MARIADB_DATABASE=mawster \
-	  -e MARIADB_PASSWORD="$$MARIADB_PASSWORD" \
+	  -e POSTGRES_USER=mawster -e POSTGRES_PORT=5432 -e POSTGRES_DB=mawster \
+	  -e POSTGRES_PASSWORD="$$MARIADB_PASSWORD" \
 	  --mode replicated-job mawster-migrate-dev:local sh migrate.sh; \
 	docker service logs $(DEV_STACK)-migrate; \
 	docker service rm $(DEV_STACK)-migrate
@@ -242,7 +242,7 @@ dev-logs:
 endif
 
 e2e-db:
-	docker compose -f compose-dev.yaml up mariadb-test -d
+	docker compose -f compose-dev.yaml up postgres-test -d
 
 vision-up:
 	docker compose -f compose-dev.yaml up -d rabbitmq rustfs
@@ -263,10 +263,9 @@ migrate:
 		--name mawster-migrate \
 		--network internal \
 		--secret mawster_db_password \
-		--secret mawster_db_root_password \
-		-e MARIADB_USER=mawster \
-		-e MARIADB_PORT=3306 \
-		-e MARIADB_DATABASE=mawster \
+		-e POSTGRES_USER=mawster \
+		-e POSTGRES_PORT=5432 \
+		-e POSTGRES_DB=mawster \
 		--mode replicated-job \
 		sneaxiii/mawster-migrate:latest sh migrate.sh
 	docker service logs -f mawster-migrate
@@ -339,7 +338,7 @@ db-access:
 	docker compose -f compose-prod.yaml -f compose-prod.yaml -f compose-db-access.yaml up mariadb backup -d
 
 db-dev:
-	docker compose -f compose-dev.yaml up -d --build mariadb-dev static
+	docker compose -f compose-dev.yaml up -d --build postgres-dev static
 
 db-dev-all:
 	docker compose -f compose-dev.yaml up -d --build
