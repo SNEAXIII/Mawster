@@ -4,7 +4,7 @@ use super::Laps;
 use crate::gallery::Entry;
 use crate::{
     detection::{CardDetected, CardDetectedPrediction, extract_cards, read_detections},
-    digits::read_rank_sig,
+    digits::{read_rank_sig, weakest_digit},
 };
 use image::DynamicImage;
 use serde::Serialize;
@@ -88,7 +88,9 @@ impl<'a> Matrix<'a> {
         );
         for (card, results) in matrix.iter_mut().flatten().zip(&digits) {
             // `crop` truncates the band to whole pixels.
-            (card.rank, card.sig) = read_rank_sig(results, card.rank_sig_box.width().trunc());
+            let width = card.rank_sig_box.width().trunc();
+            (card.rank, card.sig) = read_rank_sig(results, width);
+            card.digit_confidence = weakest_digit(results, width);
         }
         laps.lap("rank/sig");
         let centers: Vec<Vec<f32>> = matrix

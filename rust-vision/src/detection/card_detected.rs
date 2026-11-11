@@ -13,9 +13,11 @@ pub enum Detection {
     Stars(StarsBox),
     Text(TextsBox),
 }
+
 pub fn calculate_ratio(coords: [f32; 4]) -> f32 {
     (coords[2] - coords[0]) / (coords[3] - coords[1])
 }
+
 impl Detection {
     pub const fn class(&self) -> DetectionClass {
         match self {
@@ -24,6 +26,7 @@ impl Detection {
             Self::Text(_) => DetectionClass::Text,
         }
     }
+
     pub(super) fn new(class: DetectionClass, coords: [f32; 4]) -> Option<Self> {
         let rules = class.rules();
         let ratio = calculate_ratio(coords);
@@ -43,6 +46,7 @@ impl Detection {
         })
     }
 }
+
 #[derive(Clone, Debug)]
 pub struct CardDetected<'l> {
     pub card_box: CardBox,
@@ -59,8 +63,11 @@ pub struct CardDetected<'l> {
     pub stars: u8,
     pub rank: Option<u8>,
     pub sig: Option<u8>,
+    /// Confidence of the weakest rank/sig digit, `None` when the band shows none.
+    pub digit_confidence: Option<f32>,
     pub ascension: Option<u8>,
 }
+
 impl<'l> CardDetected<'l> {
     pub fn new(
         card_box: CardBox,
@@ -86,9 +93,11 @@ impl<'l> CardDetected<'l> {
             stars,
             rank: None,
             sig: None,
+            digit_confidence: None,
             ascension: None,
         }
     }
+
     /// The review thumbnail: the card's width, from the champion down to the ascension badge.
     fn preview_box(card: &CardBox, champion: &ChampionBox, asc: &AscBox) -> PreviewBox {
         PreviewBox(BoundingBox {
@@ -98,6 +107,7 @@ impl<'l> CardDetected<'l> {
             bottom: asc.bottom,
         })
     }
+
     /// Top-1 of the mosaic gallery on the champion box (`gallery::rank`), and its margin over the top-2.
     pub fn set_champion_name(&mut self, gallery: &[Entry]) {
         let crop = self.champion_box.crop(self.image).to_rgb8();
@@ -109,9 +119,11 @@ impl<'l> CardDetected<'l> {
         );
         (self.champion_name, self.name_margin) = (best.cloned(), margin);
     }
+
     pub fn set_ascension(&mut self) {
         self.ascension = crate::asc::read_ascension(&self.asc_box.crop(self.image));
     }
+
     /// Ascension badge: last fifth of the text strip, lower half, nudged 2 px up-left.
     fn asc_box(text: &TextsBox) -> AscBox {
         let width = (text.right - text.left) / 5.0;
@@ -125,6 +137,7 @@ impl<'l> CardDetected<'l> {
             bottom: top + height,
         })
     }
+
     fn rank_sig_box(text: &TextsBox) -> RankSigBox {
         let width = text.right - text.left;
         let height = (text.bottom - text.top) / 3.0;
@@ -137,6 +150,7 @@ impl<'l> CardDetected<'l> {
             bottom: top + height,
         })
     }
+
     fn champion_box(card: &CardBox, stars: &StarsBox) -> ChampionBox {
         let width = stars.right - stars.left;
         let height = (stars.bottom - stars.top) * 3.5;
@@ -149,6 +163,7 @@ impl<'l> CardDetected<'l> {
             bottom: top,
         })
     }
+
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_sign_loss)]
     fn get_stars_number(stars: &StarsBox, image: &'l DynamicImage) -> u8 {
@@ -169,6 +184,7 @@ impl<'l> CardDetected<'l> {
         to_return
     }
 }
+
 #[derive(Debug, Serialize)]
 pub struct CardDetectedPrediction {
     pub champion_name: Option<String>,
@@ -183,6 +199,7 @@ pub struct CardDetectedPrediction {
     pub confidence: f32,
     pub preview: PreviewBox,
 }
+
 impl From<&CardDetected<'_>> for CardDetectedPrediction {
     fn from(card: &CardDetected<'_>) -> Self {
         Self {
