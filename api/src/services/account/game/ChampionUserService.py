@@ -3,7 +3,7 @@ import uuid
 
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
-from sqlmodel import col, select
+from sqlmodel import col, func, select
 from starlette import status
 
 from src.enums.ChampionRarity import ChampionRarity
@@ -21,7 +21,6 @@ from src.Messages.champion_user_messages import (
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
-from src.services.admin.ChampionService import ChampionService
 from src.services.alliance.defense.DefensePlanService import DefensePlanService
 from src.services.alliance.UpgradeRequestService import UpgradeRequestService
 from src.utils.db import SessionDep
@@ -153,11 +152,11 @@ class ChampionUserService:
         if await session.get(GameAccount, game_account_id) is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, GAME_ACCOUNT_NOT_FOUND)
 
-        names = {entry["champion_name"] for entry in champions}
+        names = {entry["champion_name"].lower() for entry in champions}
         by_name = {
-            c.name: c
+            c.name.lower(): c
             for c in (
-                await session.exec(select(Champion).where(col(Champion.name).in_(names)))
+                await session.exec(select(Champion).where(func.lower(Champion.name).in_(names)))
             ).all()
         }
         roster: dict[tuple[uuid.UUID, int], ChampionUser] = {}
@@ -184,10 +183,7 @@ class ChampionUserService:
                 continue
             seen.add(key)
 
-            # A name the collation matches but not byte for byte falls back to the single lookup.
-            champion = by_name.get(champion_name) or await ChampionService.get_champion_by_name(
-                session, champion_name
-            )
+            champion = by_name.get(champion_name.lower())
             if champion is None:
                 raise HTTPException(
                     status.HTTP_404_NOT_FOUND, champion_name_not_found(champion_name)
