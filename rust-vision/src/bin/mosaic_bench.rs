@@ -79,62 +79,13 @@ fn best_score(queries: &[Vec<f32>], embedding: &[f32]) -> f32 {
 
 /// Gallery indices by descending score.
 fn rank(gallery: &[Entry], queries: &[Vec<f32>]) -> Vec<(usize, f32)> {
-    rank_among(gallery, queries, 0..gallery.len())
-}
-
-fn rank_among(
-    gallery: &[Entry],
-    queries: &[Vec<f32>],
-    candidates: impl Iterator<Item = usize>,
-) -> Vec<(usize, f32)> {
-    let mut scores: Vec<(usize, f32)> = candidates
-        .map(|index| (index, best_score(queries, &gallery[index].plain)))
+    let mut scores: Vec<(usize, f32)> = gallery
+        .iter()
+        .enumerate()
+        .map(|(index, entry)| (index, best_score(queries, &entry.plain)))
         .collect();
     scores.sort_by(|a, b| b.1.total_cmp(&a.1));
     scores
-}
-
-/// Cards whose plain-mosaic margin falls under one of these get the shift search.
-const CASCADE_MARGINS: [f32; 3] = [0.02, 0.05, 0.10];
-const SHORTLIST: usize = 5;
-
-/// One plain mosaic for every card; only a close call pays for the ±2 % shift
-/// search, and only over the first pass's shortlist. Says whether it reranked.
-fn rank_cascade(
-    gallery: &[Entry],
-    screenshot: &RgbImage,
-    portrait: [f32; 4],
-    min_margin: f32,
-) -> (Vec<(usize, f32)>, bool) {
-    let first = rank(gallery, &query_features(screenshot, portrait, SHIFTS[0].1));
-    if first[0].1 - first[1].1 >= min_margin {
-        return (first, false);
-    }
-    let queries = query_features(screenshot, portrait, SHIFTS[1].1);
-    let shortlist = first[..SHORTLIST].iter().map(|&(index, _)| index);
-    (rank_among(gallery, &queries, shortlist), true)
-}
-
-struct CascadeTally {
-    hits: usize,
-    reranked: usize,
-    secs: f64,
-}
-
-fn tally_cascades(
-    cascades: &mut [CascadeTally],
-    gallery: &[Entry],
-    screenshot: &RgbImage,
-    portrait: [f32; 4],
-    truth: &str,
-) {
-    for (min_margin, tally) in CASCADE_MARGINS.iter().zip(cascades) {
-        let started = Instant::now();
-        let (ranked, reranked) = rank_cascade(gallery, screenshot, portrait, *min_margin);
-        tally.secs += started.elapsed().as_secs_f64();
-        tally.reranked += usize::from(reranked);
-        tally.hits += usize::from(gallery[ranked[0].0].name.eq_ignore_ascii_case(truth));
-    }
 }
 
 /// Paints a normalised embedding back as an image: grey is the channel's mean,
@@ -290,14 +241,6 @@ fn main() -> Result<()> {
         .iter()
         .map(|_| (Tally::default(), 0))
         .collect();
-    let mut cascades: Vec<CascadeTally> = CASCADE_MARGINS
-        .iter()
-        .map(|_| CascadeTally {
-            hits: 0,
-            reranked: 0,
-            secs: 0.0,
-        })
-        .collect();
     let mut cards = 0_u32;
     let mut gt_paths: Vec<_> = fs::read_dir(REAL_DIR)?
         .filter_map(|e| Some(e.ok()?.path()))
@@ -340,7 +283,6 @@ fn main() -> Result<()> {
             let b = [b[0], b[1], b[2], b[3]];
             cards += 1;
             let card_id = format!("{stem} {cell}");
-            tally_cascades(&mut cascades, &gallery, &img, b, truth);
             let t0 = Instant::now();
             let ranked = rank_masked(&gallery, &img, b);
             masked.secs += t0.elapsed().as_secs_f64();
@@ -365,7 +307,7 @@ fn main() -> Result<()> {
         }
     }
 
-    print_summary(cards, &tallies, &masked, &masked_cascades, &cascades);
+    print_summary(cards, &tallies, &masked, &masked_cascades);
     Ok(())
 }
 
@@ -375,7 +317,6 @@ fn print_summary(
     tallies: &[Tally],
     masked: &Tally,
     masked_cascades: &[(Tally, usize)],
-    cascades: &[CascadeTally],
 ) {
     println!(
         "mosaic {}*{}, border {}",
@@ -405,16 +346,6 @@ fn print_summary(
         line(
             format!("masked if < {min_margin:.2} ({:.1} %)", pct(*reranked)),
             t,
-        );
-    }
-    for (min_margin, tally) in CASCADE_MARGINS.iter().zip(cascades) {
-        println!(
-            "cascade margin < {min_margin:.2}: top1 {}/{cards} ({:.1} %) · reranked {} ({:.1} %) · {:.2} ms/card",
-            tally.hits,
-            pct(tally.hits),
-            tally.reranked,
-            pct(tally.reranked),
-            1000.0 * tally.secs / f64::from(cards),
         );
     }
     if let Some((_, (shipped, _))) = MASKED_MARGINS
