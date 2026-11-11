@@ -36,7 +36,7 @@ HELP_LINES := \
 	"=== Prod / Swarm ===", \
 	"deploy                 --> builder les images et (re)demarrer tous les containers de production", \
 	"panic                  --> retirer les stacks mawster / mawster-obs / mawster-staging", \
-	"db-access              --> demarrer mariadb + backup en prod (acces DB)", \
+	"db-access              --> demarrer postgres + backup en prod (acces DB)", \
 	"migrate                --> lancer les migrations Alembic via Docker Swarm (prod)", \
 	"migrate-staging        --> lancer les migrations Alembic via Docker Swarm (staging)", \
 	"seed-champions         --> charger le catalogue champions/masteries en prod (idempotent)", \
@@ -47,9 +47,9 @@ HELP_LINES := \
 	"backup-now-staging     --> declencher un backup manuel (staging, local only)", \
 	"backup-list            --> lister les fichiers de backup locaux", \
 	"backup-list-staging    --> lister les fichiers de backup staging locaux", \
-	"backup-restore         --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)", \
+	"backup-restore         --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.dump)", \
 	"backup-restore-staging --> restaurer un backup local dans la staging (FILE=...)", \
-	"backup-restore-remote  --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)", \
+	"backup-restore-remote  --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.dump)", \
 	""
 
 help:
@@ -78,13 +78,13 @@ e2e-open: e2e-db
 	@echo 'Lancement de Cypress...'; Set-Location front; pnpm exec cypress open
 
 backup-list:
-	Get-ChildItem backups\mawster_*.sql.gz -ErrorAction SilentlyContinue | Select-Object Length,Name | Format-Table -AutoSize; if (-not (Test-Path 'backups\mawster_*.sql.gz')) { Write-Host '(no local backups)' }
+	Get-ChildItem backups\mawster_*.dump -ErrorAction SilentlyContinue | Select-Object Length,Name | Format-Table -AutoSize; if (-not (Test-Path 'backups\mawster_*.dump')) { Write-Host '(no local backups)' }
 
 backup-restore:
-	if (-not '$(FILE)') { Write-Host 'Usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz'; exit 1 }; $$pass = (Select-String 'MARIADB_ROOT_PASSWORD' db.env).Line.Split('=')[1]; docker exec -e "MARIADB_ROOT_PASSWORD=$$pass" backup /usr/local/bin/restore.sh $(FILE)
+	if (-not '$(FILE)') { Write-Host 'Usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.dump'; exit 1 }; docker exec backup /usr/local/bin/restore.sh $(FILE)
 
 backup-restore-remote:
-	if (-not '$(FILE)') { Write-Host 'Usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz'; exit 1 }; $$pass = (Select-String 'MARIADB_ROOT_PASSWORD' db.env).Line.Split('=')[1]; docker exec -e "MARIADB_ROOT_PASSWORD=$$pass" backup /usr/local/bin/restore.sh --remote $(FILE)
+	if (-not '$(FILE)') { Write-Host 'Usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.dump'; exit 1 }; docker exec backup /usr/local/bin/restore.sh --remote $(FILE)
 
 backup-list-staging:
 	Get-ChildItem backups-staging\mawster_*.sql.gz -ErrorAction SilentlyContinue | Select-Object Length,Name | Format-Table -AutoSize; if (-not (Test-Path 'backups-staging\mawster_*.sql.gz')) { Write-Host '(no local backups)' }
@@ -131,7 +131,7 @@ help:
 	echo "=== Prod / Swarm ===" ; \
 	echo "deploy                 --> builder les images et (re)demarrer tous les containers de production" ; \
 	echo "panic                  --> retirer les stacks mawster / mawster-obs / mawster-staging" ; \
-	echo "db-access              --> demarrer mariadb + backup en prod (acces DB)" ; \
+	echo "db-access              --> demarrer postgres + backup en prod (acces DB)" ; \
 	echo "migrate                --> lancer les migrations Alembic via Docker Swarm (prod)" ; \
 	echo "migrate-staging        --> lancer les migrations Alembic via Docker Swarm (staging)" ; \
 	echo "seed-champions         --> charger le catalogue champions/masteries en prod (idempotent)" ; \
@@ -142,9 +142,9 @@ help:
 	echo "backup-now-staging     --> declencher un backup manuel (staging, local only)" ; \
 	echo "backup-list            --> lister les fichiers de backup locaux" ; \
 	echo "backup-list-staging    --> lister les fichiers de backup staging locaux" ; \
-	echo "backup-restore         --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)" ; \
+	echo "backup-restore         --> restaurer depuis un backup local (FILE=mawster_YYYY-MM-DD_HH-MM.dump)" ; \
 	echo "backup-restore-staging --> restaurer un backup local dans la staging (FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz)" ; \
-	echo "backup-restore-remote  --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz)" ; \
+	echo "backup-restore-remote  --> restaurer depuis Google Drive (FILE=mawster_YYYY-MM-DD_HH-MM.dump)" ; \
 	echo ""
 
 e2e-stop:
@@ -168,20 +168,18 @@ e2e-open: e2e-db
 	(cd front && pnpm exec cypress open)
 
 backup-list:
-	ls -lh backups/mawster_*.sql.gz 2>/dev/null || echo "(no local backups)"
+	ls -lh backups/mawster_*.dump 2>/dev/null || echo "(no local backups)"
 
 backup-list-staging:
 	ls -lh backups-staging/mawster_*.sql.gz 2>/dev/null || echo "(no local backups)"
 
 backup-restore:
-	@test -n "$(FILE)" || (echo "Usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
-	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
-		$$(docker ps -q -f name=mawster_backup) /usr/local/bin/restore.sh $(FILE)
+	@test -n "$(FILE)" || (echo "Usage: make backup-restore FILE=mawster_YYYY-MM-DD_HH-MM.dump" && exit 1)
+	docker exec $$(docker ps -q -f name=mawster_backup) /usr/local/bin/restore.sh $(FILE)
 
 backup-restore-remote:
-	@test -n "$(FILE)" || (echo "Usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
-	docker exec -e MARIADB_ROOT_PASSWORD="$$(grep MARIADB_ROOT_PASSWORD db.env | cut -d= -f2)" \
-		$$(docker ps -q -f name=mawster_backup) /usr/local/bin/restore.sh --remote $(FILE)
+	@test -n "$(FILE)" || (echo "Usage: make backup-restore-remote FILE=mawster_YYYY-MM-DD_HH-MM.dump" && exit 1)
+	docker exec $$(docker ps -q -f name=mawster_backup) /usr/local/bin/restore.sh --remote $(FILE)
 
 backup-restore-staging:
 	@test -n "$(FILE)" || (echo "Usage: make backup-restore-staging FILE=mawster-staging_YYYY-MM-DD_HH-MM.sql.gz" && exit 1)
@@ -217,7 +215,7 @@ dev-migrate:
 	docker service rm $(DEV_STACK)-migrate 2>/dev/null || true; \
 	docker service create --name $(DEV_STACK)-migrate --network $(DEV_NET) \
 	  -e POSTGRES_USER=mawster -e POSTGRES_PORT=5432 -e POSTGRES_DB=mawster \
-	  -e POSTGRES_PASSWORD="$$MARIADB_PASSWORD" \
+	  -e POSTGRES_PASSWORD="$$POSTGRES_PASSWORD" \
 	  --mode replicated-job mawster-migrate-dev:local sh migrate.sh; \
 	docker service logs $(DEV_STACK)-migrate; \
 	docker service rm $(DEV_STACK)-migrate
@@ -234,7 +232,7 @@ dev-reset: dev-seed
 
 dev-nuke: dev-down
 	@echo "Attente du retrait du stack..."; sleep 5
-	docker volume rm $(DEV_STACK)_data_db_dev 2>/dev/null || true
+	docker volume rm $(DEV_STACK)_data_pg 2>/dev/null || true
 
 dev-logs:
 	docker service logs -f $(DEV_STACK)_api
@@ -335,7 +333,7 @@ panic:
 	docker stack rm mawster-staging
 
 db-access:
-	docker compose -f compose-prod.yaml -f compose-prod.yaml -f compose-db-access.yaml up mariadb backup -d
+	docker compose -f compose-prod.yaml -f compose-prod.yaml -f compose-db-access.yaml up postgres backup -d
 
 db-dev:
 	docker compose -f compose-dev.yaml up -d --build postgres-dev static

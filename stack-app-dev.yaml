@@ -6,40 +6,6 @@ networks:
     attachable: true
 
 services:
-  mariadb:
-    image: mariadb:11.4
-    networks:
-      - internal-dev
-    ports:
-      - target: 3306
-        published: 3308
-        protocol: tcp
-        mode: host
-    environment:
-      MARIADB_USER: mawster
-      MARIADB_DATABASE: mawster
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
-    volumes:
-      - data_db_dev:/var/lib/mysql
-    healthcheck:
-      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: on-failure
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: '5'
-
   postgres:
     image: postgres:18-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
     networks:
@@ -54,7 +20,7 @@ services:
       POSTGRES_DB: mawster
       # Applied once, when the volume is first initialised: dictionary sort order, as MariaDB had.
       POSTGRES_INITDB_ARGS: --locale-provider=icu --icu-locale=und
-      POSTGRES_PASSWORD: ${MARIADB_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - data_pg:/var/lib/postgresql
     healthcheck:
@@ -86,9 +52,10 @@ services:
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: '60'
       REFRESH_TOKEN_EXPIRE_DAYS: '7'
-      MARIADB_USER: mawster
-      MARIADB_PORT: '3306'
-      MARIADB_DATABASE: mawster
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: '5432'
+      POSTGRES_USER: mawster
+      POSTGRES_DB: mawster
       ALLOWED_ORIGINS: https://www.dev.mawster.app
       # Applications auxquelles un access token doit avoir ete delivre. Sans elles,
       # un token emis pour une autre application authentifierait son porteur ici.
@@ -97,7 +64,7 @@ services:
       API_PORT: '8000'
       EMAIL_PEPPER_VERSION: '1'
       SECRET_KEY: ${SECRET_KEY}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       EMAIL_PEPPER: ${EMAIL_PEPPER}
     command: ['sh', 'run.sh']
     deploy:
@@ -184,5 +151,4 @@ services:
         max-file: '3'
 
 volumes:
-  data_db_dev:
   data_pg:
