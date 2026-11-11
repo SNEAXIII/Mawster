@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use image::{DynamicImage, RgbImage, imageops};
 use mcoc_vision::{
     config::{GalleryConfig, REAL_DIR},
-    gallery::{self, Gallery},
+    gallery::{self, Entry, SUSPICIOUS_MARGIN},
     mosaic,
 };
 use serde_json::Value;
@@ -28,25 +28,46 @@ const TILE_WIDTH: u32 = 240;
 const TILE_HEIGHT: u32 = 140;
 const GAP: u32 = 8;
 
-#[allow(
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss,
-    clippy::cast_precision_loss
-)]
-fn query_features(img: &RgbImage, portrait: [f32; 4], shifts: &[f32]) -> Vec<Vec<f32>> {
+/// The portrait box moved by `dx`, `dy` of its width and height.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+fn crop(img: &RgbImage, portrait: [f32; 4], dx: f32, dy: f32) -> RgbImage {
     let (w, h) = (portrait[2] - portrait[0], portrait[3] - portrait[1]);
-    let mut out = Vec::new();
-    for dx in shifts {
-        for dy in shifts {
-            let x = (portrait[0] + dx * w).max(0.0) as u32;
-            let y = (portrait[1] + dy * h).max(0.0) as u32;
-            out.push(mosaic::embed(
-                &imageops::crop_imm(img, x, y, w as u32, h as u32).to_image(),
-            ));
-        }
-    }
-    out
+    let x = dx.mul_add(w, portrait[0]).max(0.0) as u32;
+    let y = dy.mul_add(h, portrait[1]).max(0.0) as u32;
+    imageops::crop_imm(img, x, y, w as u32, h as u32).to_image()
 }
+
+fn query_features(img: &RgbImage, portrait: [f32; 4], shifts: &[f32]) -> Vec<Vec<f32>> {
+    shifts
+        .iter()
+        .flat_map(|&dx| {
+            shifts
+                .iter()
+                .map(move |&dy| mosaic::embed(&crop(img, portrait, dx, dy)))
+        })
+        .collect()
+}
+
+/// The query normalised over each champion's foreground in turn, for the whole gallery.
+fn rank_masked(gallery: &[Entry], img: &RgbImage, portrait: [f32; 4]) -> Vec<(usize, f32)> {
+    let query = mosaic::inner_cells(&crop(img, portrait, 0.0, 0.0));
+    let mut scores: Vec<(usize, f32)> = gallery
+        .iter()
+        .enumerate()
+        .map(|(index, entry)| {
+            (
+                index,
+                mosaic::compare_masked(&query, &entry.masked, &entry.mask),
+            )
+        })
+        .collect();
+    scores.sort_by(|a, b| b.1.total_cmp(&a.1));
+    scores
+}
+
+/// Plain margins under which `gallery::rank` re-scores the shortlist on the foregrounds;
+/// infinity always does.
+const MASKED_MARGINS: [f32; 5] = [0.05, 0.10, 0.15, 0.20, f32::INFINITY];
 
 /// A champion's score is its best match over the shifted crops.
 fn best_score(queries: &[Vec<f32>], embedding: &[f32]) -> f32 {
@@ -57,17 +78,17 @@ fn best_score(queries: &[Vec<f32>], embedding: &[f32]) -> f32 {
 }
 
 /// Gallery indices by descending score.
-fn rank(gallery: &Gallery, queries: &[Vec<f32>]) -> Vec<(usize, f32)> {
+fn rank(gallery: &[Entry], queries: &[Vec<f32>]) -> Vec<(usize, f32)> {
     rank_among(gallery, queries, 0..gallery.len())
 }
 
 fn rank_among(
-    gallery: &Gallery,
+    gallery: &[Entry],
     queries: &[Vec<f32>],
     candidates: impl Iterator<Item = usize>,
 ) -> Vec<(usize, f32)> {
     let mut scores: Vec<(usize, f32)> = candidates
-        .map(|index| (index, best_score(queries, &gallery[index].2)))
+        .map(|index| (index, best_score(queries, &gallery[index].plain)))
         .collect();
     scores.sort_by(|a, b| b.1.total_cmp(&a.1));
     scores
@@ -80,7 +101,7 @@ const SHORTLIST: usize = 5;
 /// One plain mosaic for every card; only a close call pays for the ±2 % shift
 /// search, and only over the first pass's shortlist. Says whether it reranked.
 fn rank_cascade(
-    gallery: &Gallery,
+    gallery: &[Entry],
     screenshot: &RgbImage,
     portrait: [f32; 4],
     min_margin: f32,
@@ -102,7 +123,7 @@ struct CascadeTally {
 
 fn tally_cascades(
     cascades: &mut [CascadeTally],
-    gallery: &Gallery,
+    gallery: &[Entry],
     screenshot: &RgbImage,
     portrait: [f32; 4],
     truth: &str,
@@ -112,7 +133,7 @@ fn tally_cascades(
         let (ranked, reranked) = rank_cascade(gallery, screenshot, portrait, *min_margin);
         tally.secs += started.elapsed().as_secs_f64();
         tally.reranked += usize::from(reranked);
-        tally.hits += usize::from(gallery[ranked[0].0].0.eq_ignore_ascii_case(truth));
+        tally.hits += usize::from(gallery[ranked[0].0].name.eq_ignore_ascii_case(truth));
     }
 }
 
@@ -169,35 +190,30 @@ fn write_debug_sheet(path: &Path, images: &[&RgbImage]) -> Result<()> {
     Ok(())
 }
 
-#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn write_miss(
-    gallery: &Gallery,
+    gallery: &[Entry],
+    bands: &[RgbImage],
     ranked: &[(usize, f32)],
     screenshot: &RgbImage,
     portrait: [f32; 4],
     truth: &str,
     card_id: &str,
 ) -> Result<()> {
-    let (x, y) = (portrait[0] as u32, portrait[1] as u32);
-    let (width, height) = (
-        (portrait[2] - portrait[0]) as u32,
-        (portrait[3] - portrait[1]) as u32,
-    );
-    let crop = imageops::crop_imm(screenshot, x, y, width, height).to_image();
+    let crop = crop(screenshot, portrait, 0.0, 0.0);
     let (picked, picked_score) = ranked[0];
     let Some(&(right, right_score)) = ranked
         .iter()
-        .find(|(index, _)| gallery[*index].0.eq_ignore_ascii_case(truth))
+        .find(|(index, _)| gallery[*index].name.eq_ignore_ascii_case(truth))
     else {
         return Ok(());
     };
     fs::create_dir_all(DEBUG_DIR)?;
     let path = Path::new(DEBUG_DIR).join(format!("{card_id}.png"));
-    write_debug_sheet(&path, &[&crop, &gallery[picked].1, &gallery[right].1])?;
+    write_debug_sheet(&path, &[&crop, &bands[picked], &bands[right]])?;
     println!(
         "  {}: picked {} {picked_score:.3}, right {truth} {right_score:.3}",
         path.display(),
-        gallery[picked].0
+        gallery[picked].name
     );
     Ok(())
 }
@@ -212,26 +228,39 @@ struct Tally {
     errors: Vec<String>,
 }
 
+impl Default for Tally {
+    fn default() -> Self {
+        Self {
+            hits: 0,
+            hits5: 0,
+            margin: 0.0,
+            closest: (f32::MAX, String::new()),
+            secs: 0.0,
+            errors: Vec::new(),
+        }
+    }
+}
+
 impl Tally {
     /// Counts one card's ranking; says whether the first pick was right.
     fn record(
         &mut self,
-        gallery: &Gallery,
+        gallery: &[Entry],
         ranked: &[(usize, f32)],
         card: &str,
         truth: &str,
     ) -> bool {
-        let pred = &gallery[ranked[0].0].0;
+        let pred = &gallery[ranked[0].0].name;
         let margin = ranked[0].1 - ranked[1].1;
         self.margin += margin;
         if margin < self.closest.0 {
-            let runner_up = &gallery[ranked[1].0].0;
+            let runner_up = &gallery[ranked[1].0].name;
             self.closest = (margin, format!("{card}: {pred} over {runner_up}"));
         }
         self.hits5 += usize::from(
             ranked[..5]
                 .iter()
-                .any(|(i, _)| gallery[*i].0.eq_ignore_ascii_case(truth)),
+                .any(|(i, _)| gallery[*i].name.eq_ignore_ascii_case(truth)),
         );
         let hit = pred.eq_ignore_ascii_case(truth);
         if hit {
@@ -246,23 +275,20 @@ impl Tally {
 #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
 fn main() -> Result<()> {
     let start = Instant::now();
-    let gallery = gallery::build(&GalleryConfig::default())?;
+    let (gallery, bands): (Vec<Entry>, Vec<RgbImage>) = gallery::build(&GalleryConfig::default())?
+        .into_iter()
+        .unzip();
     println!(
         "gallery: {} portraits in {:.2?}",
         gallery.len(),
         start.elapsed()
     );
 
-    let mut tallies: Vec<Tally> = SHIFTS
+    let mut tallies: Vec<Tally> = SHIFTS.iter().map(|_| Tally::default()).collect();
+    let mut masked = Tally::default();
+    let mut masked_cascades: Vec<(Tally, usize)> = MASKED_MARGINS
         .iter()
-        .map(|_| Tally {
-            hits: 0,
-            hits5: 0,
-            margin: 0.0,
-            closest: (f32::MAX, String::new()),
-            secs: 0.0,
-            errors: Vec::new(),
-        })
+        .map(|_| (Tally::default(), 0))
         .collect();
     let mut cascades: Vec<CascadeTally> = CASCADE_MARGINS
         .iter()
@@ -313,26 +339,44 @@ fn main() -> Result<()> {
                 .collect();
             let b = [b[0], b[1], b[2], b[3]];
             cards += 1;
+            let card_id = format!("{stem} {cell}");
             tally_cascades(&mut cascades, &gallery, &img, b, truth);
+            let t0 = Instant::now();
+            let ranked = rank_masked(&gallery, &img, b);
+            masked.secs += t0.elapsed().as_secs_f64();
+            masked.record(&gallery, &ranked, &card_id, truth);
+            for (min_margin, (t, reranked)) in MASKED_MARGINS.iter().zip(&mut masked_cascades) {
+                let t0 = Instant::now();
+                let (ranked, rescored) =
+                    gallery::rank(&gallery, &crop(&img, b, 0.0, 0.0), *min_margin);
+                t.secs += t0.elapsed().as_secs_f64();
+                *reranked += usize::from(rescored);
+                t.record(&gallery, &ranked, &card_id, truth);
+            }
             for ((label, shifts), t) in SHIFTS.iter().zip(&mut tallies) {
                 let t0 = Instant::now();
                 let ranked = rank(&gallery, &query_features(&img, b, shifts));
                 t.secs += t0.elapsed().as_secs_f64();
-                if !t.record(&gallery, &ranked, &format!("{stem} {cell}"), truth)
-                    && *label == DEBUG_SETTING
-                {
-                    write_miss(&gallery, &ranked, &img, b, truth, &format!("{stem}_{cell}"))?;
+                if !t.record(&gallery, &ranked, &card_id, truth) && *label == DEBUG_SETTING {
+                    let sheet = format!("{stem}_{cell}");
+                    write_miss(&gallery, &bands, &ranked, &img, b, truth, &sheet)?;
                 }
             }
         }
     }
 
-    print_summary(cards, &tallies, &cascades);
+    print_summary(cards, &tallies, &masked, &masked_cascades, &cascades);
     Ok(())
 }
 
 #[allow(clippy::cast_precision_loss)]
-fn print_summary(cards: u32, tallies: &[Tally], cascades: &[CascadeTally]) {
+fn print_summary(
+    cards: u32,
+    tallies: &[Tally],
+    masked: &Tally,
+    masked_cascades: &[(Tally, usize)],
+    cascades: &[CascadeTally],
+) {
     println!(
         "mosaic {}*{}, border {}",
         mosaic::MOSAIC_WIDTH,
@@ -342,10 +386,9 @@ fn print_summary(cards: u32, tallies: &[Tally], cascades: &[CascadeTally]) {
 
     let pct = |n: usize| 100.0 * n as f32 / cards as f32;
     println!("{cards} cards vs GT");
-    for ((label, shifts), t) in SHIFTS.iter().zip(tallies) {
+    let line = |label: String, t: &Tally| {
         println!(
-            "mosaic {label:<10} ({} crops): top1 {}/{cards} ({:.1} %) · top5 {:.1} % · margin {:.3} · {:.2} ms/card",
-            shifts.len().pow(2),
+            "mosaic {label:<24}: top1 {}/{cards} ({:.1} %) · top5 {:.1} % · margin {:.3} · {:.2} ms/card",
             t.hits,
             pct(t.hits),
             pct(t.hits5),
@@ -353,6 +396,16 @@ fn print_summary(cards: u32, tallies: &[Tally], cascades: &[CascadeTally]) {
             1000.0 * t.secs / f64::from(cards),
         );
         println!("    closest call {:.3} · {}", t.closest.0, t.closest.1);
+    };
+    for ((label, shifts), t) in SHIFTS.iter().zip(tallies) {
+        line(format!("plain {label} ({} crops)", shifts.len().pow(2)), t);
+    }
+    line("masked, whole gallery".to_owned(), masked);
+    for (min_margin, (t, reranked)) in MASKED_MARGINS.iter().zip(masked_cascades) {
+        line(
+            format!("masked if < {min_margin:.2} ({:.1} %)", pct(*reranked)),
+            t,
+        );
     }
     for (min_margin, tally) in CASCADE_MARGINS.iter().zip(cascades) {
         println!(
@@ -364,8 +417,12 @@ fn print_summary(cards: u32, tallies: &[Tally], cascades: &[CascadeTally]) {
             1000.0 * tally.secs / f64::from(cards),
         );
     }
-    if let Some(best) = tallies.iter().max_by_key(|t| t.hits) {
-        println!("\nerrors of the best setting:");
-        best.errors.iter().for_each(|e| println!("  {e}"));
+    if let Some((_, (shipped, _))) = MASKED_MARGINS
+        .iter()
+        .zip(masked_cascades)
+        .find(|(margin, _)| **margin == SUSPICIOUS_MARGIN)
+    {
+        println!("\nerrors of the shipped setting (masked if < {SUSPICIOUS_MARGIN:.2}):");
+        shipped.errors.iter().for_each(|e| println!("  {e}"));
     }
 }

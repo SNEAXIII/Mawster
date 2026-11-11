@@ -30,7 +30,7 @@ impl<'a> Matrix<'a> {
         image: &'a DynamicImage,
         yolo_area: &mut YOLOModel,
         yolo_digits: &mut YOLOModel,
-        gallery: &[(String, Vec<f32>)],
+        gallery: &[crate::gallery::Entry],
     ) -> anyhow::Result<Self> {
         let laps = &mut Laps::default();
         Ok(Self::with_raw(image, yolo_area, yolo_digits, gallery, laps)?.0)
@@ -41,7 +41,7 @@ impl<'a> Matrix<'a> {
         image: &'a DynamicImage,
         yolo_area: &mut YOLOModel,
         yolo_digits: &mut YOLOModel,
-        gallery: &[(String, Vec<f32>)],
+        gallery: &[crate::gallery::Entry],
         laps: &mut Laps,
     ) -> anyhow::Result<(Self, Raw)> {
         let yolo = Self::detect(image, yolo_area, laps)?;

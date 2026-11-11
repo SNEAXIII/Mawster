@@ -19,6 +19,16 @@ impl<'a> Reader<'a> {
         ))?)
     }
 
+    /// A length-prefixed run of little-endian `f32`.
+    pub(super) fn floats(&mut self) -> Result<Vec<f32>> {
+        let len = self.len()?;
+        Ok(self
+            .take(4 * len)?
+            .chunks_exact(4)
+            .map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]]))
+            .collect())
+    }
+
     pub(super) fn string(&mut self) -> Result<String> {
         let len = self.len()?;
         Ok(String::from_utf8(self.take(len)?.to_vec())?)
