@@ -52,6 +52,8 @@ services:
     environment:
       POSTGRES_USER: mawster
       POSTGRES_DB: mawster
+      # Applied once, when the volume is first initialised: dictionary sort order, as MariaDB had.
+      POSTGRES_INITDB_ARGS: --locale-provider=icu --icu-locale=und
       POSTGRES_PASSWORD: ${MARIADB_PASSWORD}
     volumes:
       - data_pg:/var/lib/postgresql
