@@ -8,8 +8,59 @@ use std::{collections::HashMap, fs, path::Path};
 /// Non-square portraits whose art is not the bottom-left square: stem, x, y, side.
 const OFFSET_ART: [(&str, u32, u32, u32); 1] = [("bullseye", 26, 0, 534)];
 
-/// Name, the band it was embedded from (kept for the debug sheets), and its embedding.
-pub type Gallery = Vec<(String, RgbImage, Vec<f32>)>;
+/// Plain margin under which a naming is suspicious: the shortlist is then re-scored on the
+/// champions' foregrounds, which a prismatic card background cannot sway.
+pub const SUSPICIOUS_MARGIN: f32 = 0.10;
+/// Plain candidates the foreground pass re-scores.
+pub const SHORTLIST: usize = 5;
+
+/// What the runtime names a champion with.
+#[derive(Debug, PartialEq)]
+pub struct Entry {
+    pub name: String,
+    /// Over the whole band, card background included (`mosaic::embed`).
+    pub plain: Vec<f32>,
+    /// Over its foreground only (`mosaic::embed_masked`).
+    pub masked: Vec<f32>,
+    pub mask: Vec<bool>,
+}
+
+/// Each entry with the band it was embedded from, kept for the debug sheets.
+pub type Gallery = Vec<(Entry, RgbImage)>;
+
+/// Gallery indices by descending score, plain first; under `suspicious_margin`, only the
+/// shortlist comes back, re-scored on the foregrounds. Says whether it re-scored.
+pub fn rank(
+    entries: &[Entry],
+    crop: &RgbImage,
+    suspicious_margin: f32,
+) -> (Vec<(usize, f32)>, bool) {
+    let query = mosaic::embed(crop);
+    let plain = sorted(
+        entries
+            .iter()
+            .enumerate()
+            .map(|(index, entry)| (index, mosaic::compare(&query, &entry.plain))),
+    );
+    if plain.len() < 2 || plain[0].1 - plain[1].1 >= suspicious_margin {
+        return (plain, false);
+    }
+    let cells = mosaic::inner_cells(crop);
+    let shortlist = plain.iter().take(SHORTLIST).map(|&(index, _)| {
+        let entry = &entries[index];
+        (
+            index,
+            mosaic::compare_masked(&cells, &entry.masked, &entry.mask),
+        )
+    });
+    (sorted(shortlist), true)
+}
+
+fn sorted(scores: impl Iterator<Item = (usize, f32)>) -> Vec<(usize, f32)> {
+    let mut scores: Vec<(usize, f32)> = scores.collect();
+    scores.sort_by(|a, b| b.1.total_cmp(&a.1));
+    scores
+}
 
 /// Portrait file stem → display name. A stem champions.json lacks stays out of the gallery.
 fn names(path: &Path) -> Result<HashMap<String, String>> {
@@ -79,25 +130,34 @@ pub fn build(config: &GalleryConfig) -> Result<Gallery> {
         let Some(name) = names.get(stem).cloned() else {
             continue;
         };
-        let band = mosaic::make_portrait_band_with_background(&portrait_art(&path)?, &card_bg);
-        let embedding = mosaic::embed(&band);
-        out.push((name, band, embedding));
+        let portrait = portrait_art(&path)?;
+        let band = mosaic::make_portrait_band_with_background(&portrait, &card_bg);
+        let mask = mosaic::foreground(&portrait);
+        let entry = Entry {
+            name,
+            plain: mosaic::embed(&band),
+            masked: mosaic::embed_masked(&band, &mask),
+            mask,
+        };
+        out.push((entry, band));
     }
     Ok(out)
 }
 
-/// Little-endian: the mosaic stamp, the entry count, then per entry its name and embedding,
-/// each prefixed with its length as a u32.
+/// Little-endian: the mosaic stamp, the entry count, then per entry its name, plain and masked
+/// embeddings, and mask (a byte per cell), each prefixed with its length as a u32.
 pub fn save(path: &Path, gallery: &Gallery) -> Result<()> {
     let mut bytes = Vec::new();
     put_bytes(&mut bytes, mosaic::stamp().as_bytes())?;
     put_len(&mut bytes, gallery.len())?;
-    for (name, _, embedding) in gallery {
-        put_bytes(&mut bytes, name.as_bytes())?;
-        put_len(&mut bytes, embedding.len())?;
-        for value in embedding {
-            bytes.extend(value.to_le_bytes());
+    for (entry, _) in gallery {
+        put_bytes(&mut bytes, entry.name.as_bytes())?;
+        for embedding in [&entry.plain, &entry.masked] {
+            put_len(&mut bytes, embedding.len())?;
+            bytes.extend(embedding.iter().flat_map(|value| value.to_le_bytes()));
         }
+        put_len(&mut bytes, entry.mask.len())?;
+        bytes.extend(entry.mask.iter().map(|&kept| u8::from(kept)));
     }
     if let Some(dir) = path.parent() {
         fs::create_dir_all(dir)?;
@@ -117,7 +177,7 @@ fn put_bytes(bytes: &mut Vec<u8>, data: &[u8]) -> Result<()> {
 }
 
 /// Names and embeddings; refuses a file built under other mosaic settings.
-pub fn load(path: &Path) -> Result<Vec<(String, Vec<f32>)>> {
+pub fn load(path: &Path) -> Result<Vec<Entry>> {
     let bytes = fs::read(path).with_context(|| path.display().to_string())?;
     let mut reader = Reader::new(&bytes);
     let stamp = reader.string()?;
@@ -131,13 +191,16 @@ pub fn load(path: &Path) -> Result<Vec<(String, Vec<f32>)>> {
     let mut entries = Vec::with_capacity(count);
     for _ in 0..count {
         let name = reader.string()?;
-        let len = reader.len()?;
-        let embedding = reader
-            .take(4 * len)?
-            .chunks_exact(4)
-            .map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]]))
-            .collect();
-        entries.push((name, embedding));
+        let plain = reader.floats()?;
+        let masked = reader.floats()?;
+        let cells = reader.len()?;
+        let mask = reader.take(cells)?.iter().map(|&byte| byte != 0).collect();
+        entries.push(Entry {
+            name,
+            plain,
+            masked,
+            mask,
+        });
     }
     ensure!(reader.0.is_empty(), "{}: trailing bytes", path.display());
     Ok(entries)

@@ -5,7 +5,7 @@ use super::{
     AscBox, BoundingBox, CardBox, ChampionBox, DetectionClass, PreviewBox, RankSigBox, StarsBox,
     TextsBox, top_two,
 };
-use crate::mosaic::{compare, embed};
+use crate::gallery::{self, Entry, SUSPICIOUS_MARGIN};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Detection {
@@ -98,13 +98,14 @@ impl<'l> CardDetected<'l> {
             bottom: asc.bottom,
         })
     }
-    /// Top-1 of the mosaic gallery on the champion box, and its margin over the top-2.
-    pub fn set_champion_name(&mut self, gallery: &[(String, Vec<f32>)]) {
-        let query = embed(&self.champion_box.crop(self.image).to_rgb8());
+    /// Top-1 of the mosaic gallery on the champion box (`gallery::rank`), and its margin over the top-2.
+    pub fn set_champion_name(&mut self, gallery: &[Entry]) {
+        let crop = self.champion_box.crop(self.image).to_rgb8();
+        let (ranked, _) = gallery::rank(gallery, &crop, SUSPICIOUS_MARGIN);
         let (best, margin) = top_two(
-            gallery
-                .iter()
-                .map(|(name, embedding)| (name, compare(&query, embedding))),
+            ranked
+                .into_iter()
+                .map(|(index, score)| (&gallery[index].name, score)),
         );
         (self.champion_name, self.name_margin) = (best.cloned(), margin);
     }
