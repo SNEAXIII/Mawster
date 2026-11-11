@@ -1,7 +1,5 @@
 from sqlmodel import create_engine
 
-from src.security.secrets import SECRET
+from src.utils.db import url_object
 
-sync_engine = create_engine(
-    f"postgresql+psycopg://{SECRET.POSTGRES_USER}:{SECRET.POSTGRES_PASSWORD}@{SECRET.POSTGRES_HOST}:{SECRET.POSTGRES_PORT}/{SECRET.POSTGRES_DB}",
-)
+sync_engine = create_engine(url_object)
