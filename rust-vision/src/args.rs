@@ -102,7 +102,10 @@ fn selected_paths(wanted: &[RangeInclusive<u32>]) -> Result<Vec<String>> {
     if !wanted.is_empty() {
         paths.retain(|p| shot_number(p).is_some_and(|n| wanted.iter().any(|r| r.contains(&n))));
         if paths.is_empty() {
-            bail!("no image matching those shots in {}", mcoc_vision::config::REAL_DIR);
+            bail!(
+                "no image matching those shots in {}",
+                mcoc_vision::config::REAL_DIR
+            );
         }
     }
     Ok(paths)

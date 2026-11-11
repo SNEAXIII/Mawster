@@ -103,7 +103,10 @@ impl Score {
                 println!("  {line}");
             }
         }
-        anyhow::ensure!(self.cells > 0, "FAIL: no verified cell, nothing was checked");
+        anyhow::ensure!(
+            self.cells > 0,
+            "FAIL: no verified cell, nothing was checked"
+        );
         anyhow::ensure!(
             self.extra.is_empty() && self.missing.is_empty() && self.wrong.is_empty(),
             "FAIL: {} extra, {} missing cards, {} wrong fields",

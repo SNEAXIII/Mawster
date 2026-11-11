@@ -56,8 +56,10 @@ async fn main() -> Result<()> {
         .confirm_select(ConfirmSelectOptions::default())
         .await?;
     info!(
-        prefetch = PREFETCH, inference_channel = INFERENCE_CHANNEL,
-        results_channel = RESULTS_CHANNEL, "worker capacities"
+        prefetch = PREFETCH,
+        inference_channel = INFERENCE_CHANNEL,
+        results_channel = RESULTS_CHANNEL,
+        "worker capacities"
     );
 
     let (tx_inference, rx_inference) = channel::<InferenceRequest>(INFERENCE_CHANNEL);
