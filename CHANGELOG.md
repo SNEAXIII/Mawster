@@ -3,6 +3,13 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.4.2](https://github.com/SNEAXIII/Mawster/compare/v2.4.1...v2.4.2) (2026-11-11)
+
+
+### Fixed
+
+* name champions on prismatic card backgrounds ([cd39e57](https://github.com/SNEAXIII/Mawster/commit/cd39e5784103515f5b59abc2f51b7ddc459e7e30))
+
 ## [2.4.1](https://github.com/SNEAXIII/Mawster/compare/v2.4.0...v2.4.1) (2026-11-10)
 
 
