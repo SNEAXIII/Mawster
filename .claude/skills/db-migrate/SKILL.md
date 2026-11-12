@@ -17,16 +17,16 @@ Génère une migration Alembic sur une DB dédiée (`mawster_migrate`) sans touc
 
 ## Commandes
 
-Toutes les commandes s'exécutent depuis `api/` avec `MARIADB_DATABASE=mawster_migrate`.
+Toutes les commandes s'exécutent depuis `api/` avec `POSTGRES_DB=mawster_migrate`.
 
 **Garder la sortie hors du contexte** : Alembic (`create-mig`, `migrate`) crache toute la réflexion de schéma + le SQL. Exécuter ces commandes via `ctx_execute(language: "shell", code: "...")` plutôt qu'avec Bash — seule une synthèse rentre dans le contexte.
 
 ```bash
-cd api && MARIADB_DATABASE=mawster_migrate make reset-db
+cd api && POSTGRES_DB=mawster_migrate make reset-db
 
-cd api && MARIADB_DATABASE=mawster_migrate make create-mig MESSAGE="<MESSAGE>"
+cd api && POSTGRES_DB=mawster_migrate make create-mig MESSAGE="<MESSAGE>"
 
-cd api && MARIADB_DATABASE=mawster_migrate make migrate
+cd api && POSTGRES_DB=mawster_migrate make migrate
 ```
 
 ## Après la migration
@@ -48,5 +48,5 @@ make migrate
 
 ## Important
 
-- Ne jamais utiliser `make reset-db` sans `MARIADB_DATABASE=mawster_migrate` — ça écrase la DB de dev
-- Si `mawster_migrate` n'existe pas encore, la créer manuellement une fois : `CREATE DATABASE mawster_migrate;`
+- Ne jamais utiliser `make reset-db` sans `POSTGRES_DB=mawster_migrate` — ça écrase la DB de dev
+- Si `mawster_migrate` n'existe pas encore, la créer une fois sur `postgres-dev` : `docker exec postgres-dev createdb -U user mawster_migrate`

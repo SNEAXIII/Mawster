@@ -1,4 +1,5 @@
-from sqlmodel import SQLModel  # noqa: F401
+from sqlalchemy import Index, UniqueConstraint
+from sqlmodel import SQLModel
 
 from src.models.alliance.Alliance import Alliance  # noqa: F401
 from src.models.alliance.AllianceInvitation import AllianceInvitation  # noqa: F401
@@ -41,3 +42,15 @@ from src.models.war.WarFightRecordImport import WarFightRecordImport  # noqa: F4
 from src.models.war.WarPrefightAttacker import WarPrefightAttacker  # noqa: F401
 from src.models.war.WarReadyBattlegroup import WarReadyBattlegroup  # noqa: F401
 from src.models.war.WarSynergyAttacker import WarSynergyAttacker  # noqa: F401
+
+# InnoDB indexed every FK on its own; PostgreSQL does not, so the FK columns that lead no
+# key get the index here, once for every model.
+for _table in SQLModel.metadata.tables.values():
+    _keys = [tuple(_table.primary_key.columns)]
+    _keys += [tuple(c.columns) for c in _table.constraints if isinstance(c, UniqueConstraint)]
+    _keys += [tuple(i.columns) for i in _table.indexes]
+    for _fk in _table.foreign_key_constraints:
+        _cols = tuple(_fk.columns)
+        if not any(_key[: len(_cols)] == _cols for _key in _keys):
+            Index(f"ix_{_table.name}_{'_'.join(c.name for c in _cols)}", *_cols)
+            _keys.append(_cols)

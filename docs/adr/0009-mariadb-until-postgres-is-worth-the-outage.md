@@ -1,5 +1,7 @@
 # MariaDB stays until Postgres is worth an outage
 
+_Superseded by `0021-postgres-before-the-rust-port.md`._
+
 MariaDB was never chosen over Postgres; it was what the project started on, and no moment since
 has been convenient enough to change it. That is an honest description of the state: the
 preference now runs the other way. Postgres handles memory and connections better under

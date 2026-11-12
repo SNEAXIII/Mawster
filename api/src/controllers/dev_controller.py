@@ -255,13 +255,13 @@ async def dev_login_by_pseudo(body: DevLoginByPseudoRequest, session: SessionDep
 
 
 async def _empty_all_tables(session: SessionDep) -> None:
-    # DELETE, not TRUNCATE: InnoDB rebuilds every table on TRUNCATE, even an empty one. One round
-    # trip, since asyncmy enables multi-statements. Nothing to reset either: every key is a UUID.
+    # DELETE, not TRUNCATE: TRUNCATE costs a fixed ~1 ms per table on this per-test hot path.
+    # FK triggers off for this transaction (alliance <-> game_account cycle): superuser, dev/E2E only.
     deletes = "".join(
-        f"DELETE FROM `{table.name}`;"  # noqa: S608, the table names come from SQLModel.metadata
+        f'DELETE FROM "{table.name}";'  # noqa: S608, the table names come from SQLModel.metadata
         for table in reversed(SQLModel.metadata.sorted_tables)
     )
-    await session.exec(text(f"SET FOREIGN_KEY_CHECKS = 0; {deletes} SET FOREIGN_KEY_CHECKS = 1;"))
+    await session.exec(text(f"SET LOCAL session_replication_role = replica; {deletes}"))
     await session.commit()
 
 
@@ -526,10 +526,10 @@ async def get_env_info():
     return EnvInfo(
         mode=os.getenv("MODE", "dev"),
         api_port=SECRET.API_PORT,
-        db_host=SECRET.MARIADB_HOST,
-        db_port=SECRET.MARIADB_PORT,
-        db_name=SECRET.MARIADB_DATABASE,
-        db_user=SECRET.MARIADB_USER,
+        db_host=SECRET.POSTGRES_HOST,
+        db_port=SECRET.POSTGRES_PORT,
+        db_name=SECRET.POSTGRES_DB,
+        db_user=SECRET.POSTGRES_USER,
     )
 
 

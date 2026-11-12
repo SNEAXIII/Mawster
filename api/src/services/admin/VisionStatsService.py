@@ -70,7 +70,7 @@ def _count_if(condition):
 def _as_date(value: date | datetime | str) -> date:
     """Normalise what the DB returned for `DATE(created_at)`.
 
-    MariaDB hands back a `date`, SQLite a `'YYYY-MM-DD'` string. Both are
+    PostgreSQL hands back a `date`, SQLite a `'YYYY-MM-DD'` string. Both are
     correct; only the Python type differs, and the DTO wants one of them.
     """
     if isinstance(value, datetime):

@@ -80,10 +80,9 @@ jobs:
               --name mawster-migrate \
               --network internal \
               --secret mawster_db_password \
-              --secret mawster_db_root_password \
-              -e MARIADB_USER=mawster \
-              -e MARIADB_PORT=3306 \
-              -e MARIADB_DATABASE=mawster \
+              -e POSTGRES_USER=mawster \
+              -e POSTGRES_PORT=5432 \
+              -e POSTGRES_DB=mawster \
               --mode replicated-job \
               sneaxiii/mawster-migrate:latest sh migrate.sh
 

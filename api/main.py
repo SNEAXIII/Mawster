@@ -29,7 +29,7 @@ setup_logging(logging.INFO if IS_PROD else logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 if not IS_PROD:
-    logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
+    logger.info("Starting Mawster API — database: %s", SECRET.POSTGRES_DB)
 
 
 @asynccontextmanager

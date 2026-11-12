@@ -1,6 +1,5 @@
 from time import sleep
 
-import pymysql
 from sqlalchemy import text
 
 import src.models  # noqa: F401
@@ -9,16 +8,10 @@ from src.fixtures import sync_engine as engine
 
 def delete_attempt():
     with engine.connect() as conn:
-        conn.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
-        result = conn.execute(
-            text("SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()")
-        )
-        tables = [row[0] for row in result]
-        for table in tables:
-            conn.execute(text(f"DROP TABLE IF EXISTS `{table}`"))
-        conn.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+        conn.execute(text("DROP SCHEMA public CASCADE"))
+        conn.execute(text("CREATE SCHEMA public"))
         conn.commit()
-    print(f"✅ Database emptied: dropped {len(tables)} table(s), schema NOT recreated.")
+    print("✅ Database emptied: public schema recreated empty, tables NOT recreated.")
 
 
 def delete(number_of_attempts=7):
@@ -31,7 +24,7 @@ def delete(number_of_attempts=7):
             print(f"❌ Attempt {attempt + 1} failed: {e}")
             sleep(attempt + 1)
     msg = f"Failed to delete database after {number_of_attempts} attempts"
-    raise pymysql.err.OperationalError(msg)
+    raise RuntimeError(msg)
 
 
 if __name__ == "__main__":

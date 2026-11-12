@@ -1,7 +1,7 @@
 """Login activity aggregates for the admin Logins tab.
 
 Buckets are computed in Python rather than SQL: converting to a time zone
-needs MariaDB's zone tables, which SQLite (the test engine) does not have.
+needs `AT TIME ZONE`, which SQLite (the test engine) does not have.
 The window follows `VisionStatsService.window_start`, so both admin tabs
 agree on what "last 30 days" means.
 """

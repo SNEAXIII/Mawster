@@ -5,7 +5,7 @@ set -e
 # Makefile, which docker exec into a live api task and invoke this script).
 #
 # Why this script exists: the loaders import src.security.secrets, whose
-# Settings requires MARIADB_PASSWORD, SECRET_KEY, EMAIL_PEPPER, RABBITMQ_URL,
+# Settings requires POSTGRES_PASSWORD, SECRET_KEY, EMAIL_PEPPER, RABBITMQ_URL,
 # RUSTFS_ACCESS_KEY and RUSTFS_SECRET_KEY in MODE=prod. run.sh exports those
 # at runtime inside PID 1, but `docker exec` spawns a fresh process that does
 # NOT inherit PID 1's runtime exports - it only sees the container's static
@@ -16,7 +16,7 @@ set -e
 # No wait-for-it.sh here (unlike run.sh): this only ever runs inside a
 # container that is already serving traffic, so the database is already up.
 export SECRET_KEY="${SECRET_KEY:-$(cat /run/secrets/mawster_secret_key)}"
-export MARIADB_PASSWORD="${MARIADB_PASSWORD:-$(cat /run/secrets/mawster_db_password)}"
+export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-$(cat /run/secrets/mawster_db_password)}"
 export EMAIL_PEPPER="${EMAIL_PEPPER:-$(cat /run/secrets/mawster_email_pepper)}"
 
 # Vision: broker URL + object-store keys. RABBITMQ_URL / RUSTFS_ACCESS_KEY /

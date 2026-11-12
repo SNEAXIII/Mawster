@@ -10,8 +10,6 @@ secrets:
     external: true
   mawster_db_password:
     external: true
-  mawster_db_root_password:
-    external: true
   mawster_email_pepper:
     external: true
   mawster_nextauth_secret:
@@ -72,27 +70,27 @@ services:
         max-size: 10m
         max-file: '5'
 
-  mariadb:
-    image: mariadb:11.4
+  postgres:
+    image: postgres:18-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
     networks:
       - internal
     ports:
-      - target: 3306
-        published: 3306
+      - target: 5432
+        published: 5432
         protocol: tcp
         mode: host
     environment:
-      MARIADB_USER: mawster
-      MARIADB_DATABASE: mawster
-      MARIADB_PASSWORD_FILE: /run/secrets/mawster_db_password
-      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/mawster_db_root_password
+      POSTGRES_USER: mawster
+      POSTGRES_DB: mawster
+      # Applied once, when the volume is first initialised: dictionary sort order, as MariaDB had.
+      POSTGRES_INITDB_ARGS: --locale-provider=icu --icu-locale=und
+      POSTGRES_PASSWORD_FILE: /run/secrets/mawster_db_password
     secrets:
       - mawster_db_password
-      - mawster_db_root_password
     volumes:
-      - data_db:/var/lib/mysql
+      - data_pg:/var/lib/postgresql
     healthcheck:
-      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      test: ['CMD', 'pg_isready', '-U', 'mawster', '-d', 'mawster']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -119,9 +117,10 @@ services:
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: '60'
       REFRESH_TOKEN_EXPIRE_DAYS: '7'
-      MARIADB_USER: mawster
-      MARIADB_PORT: '3306'
-      MARIADB_DATABASE: mawster
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: '5432'
+      POSTGRES_USER: mawster
+      POSTGRES_DB: mawster
       ALLOWED_ORIGINS: https://www.mawster.app
       API_PORT: '8000'
       EMAIL_PEPPER_VERSION: '1'
@@ -264,12 +263,13 @@ services:
       - internal
     environment:
       TZ: Europe/Paris
-      MARIADB_USER: mawster
-      MARIADB_DATABASE: mawster
-      MARIADB_PORT: '3306'
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: '5432'
+      POSTGRES_USER: mawster
+      POSTGRES_DB: mawster
       BACKUP_INTERVAL: '7200'
     secrets:
-      - mawster_db_root_password
+      - mawster_db_password
       - mawster_rclone_conf
     volumes:
       - type: bind
@@ -457,7 +457,7 @@ services:
         max-file: '5'
 
 volumes:
-  data_db:
+  data_pg:
   traefik_data:
   api_logs:
   rabbitmq_data:
