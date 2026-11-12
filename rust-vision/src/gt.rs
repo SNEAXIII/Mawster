@@ -42,6 +42,8 @@ pub struct Score {
     wrong: Vec<String>,
     /// Shots with no GT or an unverified one: reported, never a failure.
     skipped: Vec<String>,
+    /// Weakest rank/sig digit of every verified cell found, `None` when none was read.
+    digit_confidences: Vec<(String, Option<f32>)>,
 }
 
 impl Score {
@@ -70,6 +72,8 @@ impl Score {
                     .push(format!("{stem} {cell}  GT {}", truth["name"]));
                 continue;
             };
+            self.digit_confidences
+                .push((format!("{stem} {cell}"), card.digit_confidence));
             let got = readings(card);
             for ((field, got), hits) in FIELDS.iter().zip(&got).zip(&mut self.hits) {
                 let want = &truth[field];
@@ -87,6 +91,7 @@ impl Score {
     /// Prints the report; errs on any deviation from the GT.
     #[allow(clippy::cast_precision_loss)]
     pub fn check(&self) -> anyhow::Result<()> {
+        self.print_digit_confidences();
         println!("\n=== GT report: {} verified cells ===", self.cells);
         for (field, hits) in FIELDS.iter().zip(self.hits) {
             let pct = 100.0 * hits as f32 / self.cells.max(1) as f32;
@@ -116,6 +121,44 @@ impl Score {
         );
         println!("\nPASS: every field of every verified cell matches the GT");
         Ok(())
+    }
+
+    /// Distribution of each cell's weakest digit: the margin a 100 % GT hides.
+    #[allow(
+        clippy::cast_precision_loss,
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss
+    )]
+    fn print_digit_confidences(&self) {
+        let mut read: Vec<(&str, f32)> = self
+            .digit_confidences
+            .iter()
+            .filter_map(|(cell, conf)| Some((cell.as_str(), (*conf)?)))
+            .collect();
+        read.sort_by(|a, b| a.1.total_cmp(&b.1));
+        println!(
+            "\nweakest digit per cell: {} read, {} without any digit",
+            read.len(),
+            self.digit_confidences.len() - read.len()
+        );
+        let Some(&(_, min)) = read.first() else {
+            return;
+        };
+        let at = |q: f32| read[((read.len() - 1) as f32 * q).round() as usize].1;
+        println!(
+            "  min {min:.3}  p1 {:.3}  p5 {:.3}  p50 {:.3}  mean {:.3}",
+            at(0.01),
+            at(0.05),
+            at(0.5),
+            read.iter().map(|(_, c)| c).sum::<f32>() / read.len() as f32
+        );
+        for floor in [0.8, 0.9] {
+            let below = read.iter().filter(|(_, c)| *c < floor).count();
+            println!("  < {floor}: {below}");
+        }
+        for (cell, conf) in read.iter().take(5) {
+            println!("  {conf:.3}  {cell}");
+        }
     }
 }
 
