@@ -3,6 +3,13 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.5.0](https://github.com/SNEAXIII/Mawster/compare/v2.4.2...v2.5.0) (2026-11-12)
+
+
+### Added
+
+* read rank and sig with the YOLO26 digit reader ([40041ba](https://github.com/SNEAXIII/Mawster/commit/40041ba5e79e115b0e854977ce985abdf6679b23))
+
 ## [2.4.2](https://github.com/SNEAXIII/Mawster/compare/v2.4.1...v2.4.2) (2026-11-11)
 
 
