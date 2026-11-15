@@ -1924,12 +1924,17 @@ export function setupTierList(
   });
 }
 
-/** Open the tier list with no session at all, and wait for the catalog. */
-export function visitTierListSignedOut(): void {
+/** Open a page with no session at all. */
+export function visitSignedOut(path: string): void {
   cy.clearAllCookies();
   cy.clearAllSessionStorage();
   cy.clearAllLocalStorage();
-  cy.visit('/tools');
+  cy.visit(path);
+}
+
+/** Open the tier list with no session at all, and wait for the catalog. */
+export function visitTierListSignedOut(): void {
+  visitSignedOut('/tools');
   cy.getByCy('tierlist-pool').should('exist');
 }
 
