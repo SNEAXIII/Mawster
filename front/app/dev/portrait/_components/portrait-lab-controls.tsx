@@ -3,6 +3,7 @@
 import type { FrameWindow } from '@/components/champion-portrait'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { MAX_ASCENSION } from '@/app/services/roster'
 
 export interface PortraitLabState {
   championIndex: number
@@ -10,7 +11,7 @@ export interface PortraitLabState {
   size: number
   preferred: boolean
   saga: boolean
-  ascension: 0 | 1 | 2
+  ascension: number
   outline: boolean
   window: FrameWindow
 }
@@ -83,12 +84,17 @@ export default function PortraitLabControls({
           <select
             className={SELECT_CLASS}
             value={state.ascension}
-            onChange={(e) => onChange({ ascension: Number(e.target.value) as 0 | 1 | 2 })}
+            onChange={(e) => onChange({ ascension: Number(e.target.value) })}
             data-cy='lab-ascension-level'
           >
-            <option value={0}>none</option>
-            <option value={1}>A1</option>
-            <option value={2}>A2</option>
+            {Array.from({ length: MAX_ASCENSION + 1 }, (_, level) => (
+              <option
+                key={level}
+                value={level}
+              >
+                {level === 0 ? 'none' : `A${level}`}
+              </option>
+            ))}
           </select>
         </label>
 

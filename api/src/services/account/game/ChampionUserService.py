@@ -7,6 +7,7 @@ from sqlmodel import col, select
 from starlette import status
 
 from src.enums.ChampionRarity import ChampionRarity
+from src.game_types import MAX_ASCENSION
 from src.Messages.champion_user_messages import (
     CHAMPION_CANNOT_BE_ASCENDED,
     CHAMPION_NOT_FOUND,
@@ -59,9 +60,9 @@ class ChampionUserService:
         """Validate and potentially coerce ascension level.
 
         - If the champion is not ascendable, force ascension to 0.
-        - If ascension is not in {0, 1, 2}, raise 400.
+        - If ascension is outside 0..MAX_ASCENSION, raise 400.
         """
-        if ascension not in (0, 1, 2):
+        if not 0 <= ascension <= MAX_ASCENSION:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, invalid_ascension_level(ascension))
         if not champion.is_ascendable:
             return 0
@@ -292,7 +293,7 @@ class ChampionUserService:
     async def ascend_champion(
         cls, session: SessionDep, champion_user: ChampionUser
     ) -> ChampionUser:
-        """Ascend a champion to the next ascension level (0 → 1 → 2).
+        """Ascend a champion to the next ascension level, up to MAX_ASCENSION.
 
         Raises 400 if the champion is not ascendable or already at max ascension.
         """
@@ -304,7 +305,7 @@ class ChampionUserService:
         if not champion.is_ascendable:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, CHAMPION_CANNOT_BE_ASCENDED)
 
-        if champion_user.ascension >= 2:
+        if champion_user.ascension >= MAX_ASCENSION:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST, champion_already_max_ascension(champion_user.ascension)
             )
