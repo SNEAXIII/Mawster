@@ -3,7 +3,7 @@
 import type { FrameWindow } from '@/components/champion-portrait'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { MAX_ASCENSION } from '@/app/services/roster'
+import { ASCENSION_OPTIONS } from '@/components/roster/roster-filters'
 
 export interface PortraitLabState {
   championIndex: number
@@ -87,7 +87,7 @@ export default function PortraitLabControls({
             onChange={(e) => onChange({ ascension: Number(e.target.value) })}
             data-cy='lab-ascension-level'
           >
-            {Array.from({ length: MAX_ASCENSION + 1 }, (_, level) => (
+            {ASCENSION_OPTIONS.map((level) => (
               <option
                 key={level}
                 value={level}

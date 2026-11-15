@@ -2,7 +2,7 @@ import { type ChangeEvent, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import { withToast } from '@/app/lib/with-toast'
-import { MAX_ASCENSION, type RosterEntry, raritySortValue } from '@/app/services/roster'
+import { isAscension, type RosterEntry, raritySortValue } from '@/app/services/roster'
 import type { PreviewRow } from '@/components/roster/import-preview-row'
 import { isValidRarity } from '@/components/roster/import-row-validation'
 import {
@@ -52,10 +52,7 @@ function validateEntry(
       rarity: obj.rarity,
       signature: typeof obj.signature === 'number' ? obj.signature : 0,
       is_preferred_attacker: obj.is_preferred_attacker === true,
-      ascension:
-        typeof obj.ascension === 'number' && obj.ascension >= 0 && obj.ascension <= MAX_ASCENSION
-          ? obj.ascension
-          : 0,
+      ascension: isAscension(obj.ascension) ? obj.ascension : 0,
     },
   }
 }

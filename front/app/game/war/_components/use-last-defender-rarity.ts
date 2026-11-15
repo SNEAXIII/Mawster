@@ -1,6 +1,6 @@
 'use client'
 
-import { MAX_ASCENSION, RARITIES } from '@/app/services/roster'
+import { RARITIES, isAscension } from '@/app/services/roster'
 import { useStoredValue } from '@/hooks/use-stored-value'
 
 export interface DefenderRarity {
@@ -17,15 +17,10 @@ export function parseDefenderRarity(raw: unknown): DefenderRarity {
   if (typeof raw !== 'object' || raw === null) return DEFAULT_RARITY
   const { stars, rank, ascension } = raw as Partial<Record<keyof DefenderRarity, unknown>>
   const known = (RARITIES as readonly string[]).includes(`${stars}r${rank}`)
-  const validAscension =
-    typeof ascension === 'number' &&
-    Number.isInteger(ascension) &&
-    ascension >= 0 &&
-    ascension <= MAX_ASCENSION
   return {
     stars: known ? (stars as number) : DEFAULT_RARITY.stars,
     rank: known ? (rank as number) : DEFAULT_RARITY.rank,
-    ascension: validAscension ? ascension : DEFAULT_RARITY.ascension,
+    ascension: isAscension(ascension) ? ascension : DEFAULT_RARITY.ascension,
   }
 }
 
