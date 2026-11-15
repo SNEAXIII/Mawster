@@ -3,6 +3,14 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.6.0](https://github.com/SNEAXIII/Mawster/compare/v2.5.0...v2.6.0) (2026-11-15)
+
+
+### Added
+
+* add a saga tab to the tools page ([11889d5](https://github.com/SNEAXIII/Mawster/commit/11889d5bdde03fb11a72bbec5343d365276056b2))
+* highlight defenders below a rank threshold ([1c29a69](https://github.com/SNEAXIII/Mawster/commit/1c29a698984dc8189c3b28abfe65edb99d105431))
+
 ## [2.5.0](https://github.com/SNEAXIII/Mawster/compare/v2.4.2...v2.5.0) (2026-11-12)
 
 
