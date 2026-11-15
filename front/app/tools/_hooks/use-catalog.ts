@@ -10,7 +10,7 @@ import { fetchCatalog, type CatalogChampion } from '@/app/services/tierlist'
  * Hard-coded here as accepted debt: the fact belongs to the catalog, and the
  * real fix is an `is_playable` column on `champion` (see CONTEXT.md).
  */
-const NOT_PLAYABLE = new Set(['Anti-Venomoid', 'Doombot', 'Sentinelbot', 'Symbioid'])
+export const NOT_PLAYABLE = new Set(['Anti-Venomoid', 'Doombot', 'Sentinelbot', 'Symbioid'])
 
 interface Catalog {
   champions: CatalogChampion[]

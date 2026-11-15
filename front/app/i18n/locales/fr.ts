@@ -1498,6 +1498,19 @@ const fr: Translations = {
     loadError: 'Impossible de charger tes joueurs.',
   },
 
+  saga: {
+    title: 'Saga',
+    season: 'Saison {number}',
+    seasonUpcoming: 'Saison {number} (à venir)',
+    attackers: 'Attaquants de saga',
+    defenders: 'Défenseurs de saga',
+    empty: 'Aucun champion de saga pour cette saison.',
+    noSeason: 'Aucune saison régulière à afficher pour le moment.',
+    exportPng: 'Exporter PNG',
+    exportTitle: 'Saga — Saison {number}',
+    loadError: "La saga n'a pas pu être chargée.",
+  },
+
   tierlist: {
     clearTierConfirm: 'Renvoyer les {count} champions de la ligne {label} au pool ?',
     removeTierConfirm: 'Supprimer la ligne {label} ? Ses champions retournent au pool.',

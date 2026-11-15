@@ -1483,6 +1483,19 @@ const en = {
     loadError: 'Your players could not be loaded.',
   },
 
+  saga: {
+    title: 'Saga',
+    season: 'Season {number}',
+    seasonUpcoming: 'Season {number} (upcoming)',
+    attackers: 'Saga attackers',
+    defenders: 'Saga defenders',
+    empty: 'No saga champion in this season.',
+    noSeason: 'No regular season to show yet.',
+    exportPng: 'Export PNG',
+    exportTitle: 'Saga — Season {number}',
+    loadError: 'The saga could not be loaded.',
+  },
+
   tierlist: {
     clearTierConfirm: 'Send the {count} champions in row {label} back to the pool?',
     removeTierConfirm: 'Delete row {label}? Its champions go back to the pool.',
