@@ -1,3 +1,5 @@
+from src.game_types import MAX_ASCENSION
+
 # ─── Champion User error messages ────────────────────────
 CHAMPION_USER_NOT_FOUND = "Champion user not found"
 NOT_YOUR_CHAMPION = "Not your champion"
@@ -15,7 +17,7 @@ def invalid_rarity_format(rarity: str) -> str:  # pragma: no cover
 
 
 def invalid_ascension_level(ascension: int) -> str:
-    return f"Invalid ascension level '{ascension}'. Must be 0, 1, or 2."
+    return f"Invalid ascension level '{ascension}'. Must be between 0 and {MAX_ASCENSION}."
 
 
 def champion_name_not_found(champion_name: str) -> str:

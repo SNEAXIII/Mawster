@@ -6,7 +6,7 @@ export default function AscensionBadge({
   level,
   additionalClasses = '',
   size,
-}: Readonly<{ level: 1 | 2; additionalClasses?: string; size: number }>) {
+}: Readonly<{ level: number; additionalClasses?: string; size: number }>) {
   return (
     <div
       className={cn(

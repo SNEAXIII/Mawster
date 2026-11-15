@@ -24,7 +24,8 @@ Tier = Annotated[int, Field(ge=1, le=20)]
 # Champion stats, as the game ranks them.
 Stars = Annotated[int, Field(ge=6, le=7)]
 Rank = Annotated[int, Field(ge=1, le=6)]
-Ascension = Annotated[int, Field(ge=0, le=2)]
+MAX_ASCENSION = 2
+Ascension = Annotated[int, Field(ge=0, le=MAX_ASCENSION)]
 Signature = Annotated[int, Field(ge=0, le=200)]
 
 # Widest per-format KO cap (Big Thing); WarFormatConfig narrows it per format.

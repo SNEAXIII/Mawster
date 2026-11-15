@@ -20,6 +20,8 @@ interface WarMapNodeProps {
   hidePseudo?: boolean
   hideSig?: boolean
   dimmed?: boolean
+  /** Under the viewer's Rank Threshold, or Unfilled. */
+  highlighted?: boolean
   hasPrefight?: boolean
   hasNote?: boolean
   /** A closed War's fight whose Attacker left: the defender can't be replaced or removed. */
@@ -63,6 +65,7 @@ export function WarMapNode({
   hidePseudo = false,
   hideSig = false,
   dimmed = false,
+  highlighted = false,
   hasPrefight = false,
   hasNote = false,
   locked = false,
@@ -81,9 +84,10 @@ export function WarMapNode({
       className={cn(
         'group relative rounded-md transition-opacity',
         hasPrefight && 'ring-2 ring-foreground',
-        !hasPrefight && !dimmed && placement && 'ring-1 ring-white/30',
+        !hasPrefight && highlighted && 'ring-2 ring-destructive',
+        !hasPrefight && !highlighted && !dimmed && placement && 'ring-1 ring-white/30',
         // Empty nodes recede so the eye lands on what is actually placed.
-        !placement && 'opacity-45 hover:opacity-80',
+        !placement && !highlighted && 'opacity-45 hover:opacity-80',
         dimmed && 'opacity-25'
       )}
       style={{
@@ -218,6 +222,7 @@ interface WarMapProps {
   hidePseudo?: boolean
   hideSig?: boolean
   dimmedNodes?: Set<number>
+  highlightedNodes?: Set<number>
   prefightNodes?: Set<number>
   noteNodes?: Set<number>
   lockedNodes?: Set<number>
@@ -232,6 +237,7 @@ export default function WarMap({
   hidePseudo = false,
   hideSig = false,
   dimmedNodes,
+  highlightedNodes,
   prefightNodes,
   noteNodes,
   lockedNodes,
@@ -280,6 +286,7 @@ export default function WarMap({
                     hidePseudo={hidePseudo}
                     hideSig={hideSig}
                     dimmed={dimmedNodes?.has(nodeNumber) ?? false}
+                    highlighted={highlightedNodes?.has(nodeNumber) ?? false}
                     hasPrefight={prefightNodes?.has(nodeNumber) ?? false}
                     hasNote={noteNodes?.has(nodeNumber) ?? false}
                     locked={lockedNodes?.has(nodeNumber) ?? false}

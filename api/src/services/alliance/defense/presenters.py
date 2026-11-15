@@ -96,6 +96,7 @@ def _node_response(node: DefensePlanNode, battlegroup: int, saga: dict) -> Defen
         is_saga_defender=is_saga_defender,
         placed_by_id=node.placed_by_id,
         placed_by_pseudo=node.placed_by.game_pseudo if node.placed_by else None,
+        is_ascendable=node.champion.is_ascendable,
         **champion_fields(node.champion),
         **player,
     )

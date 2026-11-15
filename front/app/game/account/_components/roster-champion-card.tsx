@@ -4,7 +4,12 @@ import { useI18n } from '@/app/i18n'
 import { cn } from '@/app/lib/utils'
 import ChampionPortrait from '@/components/champion-portrait'
 import AscensionRequestButton from '@/components/ascension-request-button'
-import { type RosterEntry, shortenChampionName, getNextRarity } from '@/app/services/roster'
+import {
+  type RosterEntry,
+  shortenChampionName,
+  getNextRarity,
+  MAX_ASCENSION,
+} from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
 import { Trash2, Pencil, ArrowUp, X, Star } from 'lucide-react'
 import { memo } from 'react'
@@ -135,7 +140,7 @@ function RosterChampionCard({
               <span className='text-xs leading-none'>⚔</span>
             </CardAction>
           )}
-          {entry.is_ascendable && entry.ascension < 2 && onAscend && (
+          {entry.is_ascendable && entry.ascension < MAX_ASCENSION && onAscend && (
             <CardAction
               className='text-purple-400 hover:text-purple-300'
               onClick={() => onAscend(entry)}

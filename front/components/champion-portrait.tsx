@@ -99,7 +99,7 @@ interface ChampionPortraitProps {
    * - 'all'      — show if either (default)
    */
   sagaMode?: SagaMode
-  /** Purple "A1"/"A2" badge at top-right for ascension level (0 = no badge) */
+  /** Purple "A<level>" badge at top-right for ascension level (0 = no badge) */
   ascension?: number
   /** Override the image placement inside the frame — used by the /dev/portrait lab */
   frameWindow?: FrameWindow
@@ -194,7 +194,7 @@ export default function ChampionPortrait({
           size={Number(size / 2.5)}
         />
       )}
-      {(ascension === 1 || ascension === 2) && (
+      {ascension > 0 && (
         <AscensionBadge
           additionalClasses='z-30'
           size={Number(size / 2.3)}
