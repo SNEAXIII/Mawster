@@ -19,12 +19,10 @@ export interface CatalogResponse {
   champions: CatalogChampion[]
 }
 
-export type CatalogSeasonStatus = 'upcoming' | 'active' | 'ended'
-
 /** A regular season the saga tab can show. */
 export interface CatalogSeason {
   number: number
-  status: CatalogSeasonStatus
+  status: 'upcoming' | 'active' | 'ended'
 }
 
 /** The champion catalog, for the current season or the given one. Answers signed out. */

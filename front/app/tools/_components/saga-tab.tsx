@@ -19,10 +19,9 @@ import SagaBoard from './saga-board'
 /** The saga attackers and defenders of a regular season, with a PNG export. */
 export default function SagaTab() {
   const { t } = useI18n()
-  const saga = useSaga()
+  const { seasons, seasonNumber, setSeasonNumber, attackers, defenders, loading, error } = useSaga()
   const captureRef = useRef<HTMLDivElement>(null)
   const { exporting, exportPng } = useImageExport()
-  const { seasons, seasonNumber, attackers, defenders, loading, error } = saga
 
   if (error)
     return (
@@ -52,7 +51,7 @@ export default function SagaTab() {
         <div className='flex flex-wrap items-center justify-between gap-2'>
           <Select
             value={String(seasonNumber ?? '')}
-            onValueChange={(value) => saga.setSeasonNumber(Number(value))}
+            onValueChange={(value) => setSeasonNumber(Number(value))}
           >
             <SelectTrigger
               className='w-44'
