@@ -19,7 +19,19 @@ export interface CatalogResponse {
   champions: CatalogChampion[]
 }
 
-/** The champion catalog. Answers signed out — the tier list is public. */
-export async function fetchCatalog(): Promise<CatalogResponse> {
-  return api('/catalog/champions', 'Failed to load the champion catalog')
+/** A regular season the saga tab can show. */
+export interface CatalogSeason {
+  number: number
+  status: 'upcoming' | 'active' | 'ended'
+}
+
+/** The champion catalog, for the current season or the given one. Answers signed out. */
+export async function fetchCatalog(seasonNumber?: number): Promise<CatalogResponse> {
+  const query = seasonNumber === undefined ? '' : `?season_number=${seasonNumber}`
+  return api(`/catalog/champions${query}`, 'Failed to load the champion catalog')
+}
+
+/** The regular seasons, newest first. Answers signed out. */
+export async function fetchCatalogSeasons(): Promise<CatalogSeason[]> {
+  return api('/catalog/seasons', 'Failed to load the seasons')
 }

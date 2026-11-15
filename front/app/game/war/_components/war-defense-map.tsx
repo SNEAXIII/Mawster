@@ -38,6 +38,7 @@ function toDefensePlacement(p: WarPlacement): DefensePlacement {
     signature: 0,
     is_preferred_attacker: false,
     ascension: p.ascension,
+    is_ascendable: false,
     is_saga_attacker: p.is_saga_attacker,
     is_saga_defender: p.is_saga_defender,
     placed_by_id: null,

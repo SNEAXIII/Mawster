@@ -536,6 +536,14 @@ const en = {
       sagaDefenderFilter: 'Saga Defender',
       notPreferredFilter: 'Not Preferred',
       rankFilter: 'Rank',
+      rankThreshold: {
+        rank: 'Rank threshold',
+        ascension: 'Ascension threshold',
+        belowRank: 'below rank',
+        belowAscension: 'below ascension',
+        unfilled: 'unfilled',
+        exportLine: '{count} defender(s) below {rank}',
+      },
       playerFilter: 'Player',
       allFilter: 'All',
       searchPlayer: 'Search player...',
@@ -1473,6 +1481,19 @@ const en = {
     warNotReady: 'Battlegroup not Ready yet',
     warReady: 'Battlegroup Ready',
     loadError: 'Your players could not be loaded.',
+  },
+
+  saga: {
+    title: 'Saga',
+    season: 'Season {number}',
+    seasonUpcoming: 'Season {number} (upcoming)',
+    attackers: 'Saga attackers',
+    defenders: 'Saga defenders',
+    empty: 'No saga champion in this season.',
+    noSeason: 'No regular season to show yet.',
+    exportPng: 'Export PNG',
+    exportTitle: 'Saga — Season {number}',
+    loadError: 'The saga could not be loaded.',
   },
 
   tierlist: {

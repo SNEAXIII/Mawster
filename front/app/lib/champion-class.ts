@@ -65,11 +65,13 @@ export function getClassIconUrl(championClass: string): string | null {
   return `/static/icons/class-${championClass.toLowerCase()}.webp`
 }
 
+/** Position of a class in CLASS_ORDER, unknown values last. */
+export function classRank(championClass: string): number {
+  const i = CLASS_ORDER.indexOf(championClass as ChampionClass)
+  return i === -1 ? CLASS_ORDER.length : i
+}
+
 /** Sort an arbitrary class list into CLASS_ORDER, unknown values last, alphabetically. */
 export function sortByClassOrder(classes: readonly string[]): string[] {
-  const rank = (c: string) => {
-    const i = CLASS_ORDER.indexOf(c as ChampionClass)
-    return i === -1 ? CLASS_ORDER.length : i
-  }
-  return [...classes].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+  return [...classes].sort((a, b) => classRank(a) - classRank(b) || a.localeCompare(b))
 }

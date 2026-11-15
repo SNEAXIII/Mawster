@@ -48,7 +48,7 @@ async function persistSession(req: NextRequest, res: NextResponse, token: JWT) {
  * rather than reaching FastAPI unauthenticated: the proxy is what decides a
  * request may travel without a token, so the list lives in one place.
  */
-const PUBLIC_PATHS = new Set(['stats/public', 'catalog/champions'])
+const PUBLIC_PATHS = new Set(['stats/public', 'catalog/champions', 'catalog/seasons'])
 
 async function proxy(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const backendPath = (await params).path.join('/')

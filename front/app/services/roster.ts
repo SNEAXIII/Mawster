@@ -4,6 +4,9 @@ import { api, jsonBody } from '@/app/services/utils'
 // ─── Types ───────────────────────────────────────────────
 export const RARITIES = ['6r4', '6r5', '7r1', '7r2', '7r3', '7r4', '7r5', '7r6'] as const
 export type ChampionRarity = (typeof RARITIES)[number]
+export const MAX_ASCENSION = 2
+export const isAscension = (raw: unknown): raw is number =>
+  Number.isInteger(raw) && (raw as number) >= 0 && (raw as number) <= MAX_ASCENSION
 
 export const RARITY_LABELS: Record<string, string> = {
   '6r4': '6R4',

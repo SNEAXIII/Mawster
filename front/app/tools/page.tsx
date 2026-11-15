@@ -6,10 +6,12 @@ import { PageContainer } from '@/components/page-container'
 import { useI18n } from '@/app/i18n'
 import { useTabParam } from '@/hooks/use-tab-param'
 import TierListBoard from './_components/tierlist-board'
+import SagaTab from './_components/saga-tab'
 
 /** The tools a player can use without an alliance, and mostly without an account. */
 enum ToolsTab {
   TierList = 'tierlist',
+  Saga = 'saga',
 }
 
 const TOOLS_TABS = Object.values(ToolsTab)
@@ -20,6 +22,7 @@ function ToolsContent() {
 
   const tabs: TabItem<ToolsTab>[] = [
     { value: ToolsTab.TierList, label: t.tierlist.title, cy: 'tab-tierlist' },
+    { value: ToolsTab.Saga, label: t.saga.title, cy: 'tab-saga' },
   ]
 
   return (
@@ -33,6 +36,7 @@ function ToolsContent() {
         onChange={setActiveTab}
       />
       {activeTab === ToolsTab.TierList && <TierListBoard />}
+      {activeTab === ToolsTab.Saga && <SagaTab />}
     </PageContainer>
   )
 }

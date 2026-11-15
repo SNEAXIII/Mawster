@@ -1,6 +1,16 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.dto.admin.dto_champion import ChampionResponse
+from src.enums.SeasonStatus import SeasonStatus
+
+
+class CatalogSeasonResponse(BaseModel):
+    """A regular season the public catalog can be read for."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    number: int
+    status: SeasonStatus
 
 
 class CatalogChampionResponse(ChampionResponse):

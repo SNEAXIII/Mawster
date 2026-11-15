@@ -47,6 +47,22 @@ class SeasonService:
         return list(result.all())
 
     @classmethod
+    async def get_regular_seasons(cls, session: SessionDep) -> list[Season]:
+        result = await session.exec(
+            select(Season)
+            .where(Season.format == SeasonFormat.REGULAR)
+            .order_by(col(Season.number).desc())
+        )
+        return list(result.all())
+
+    @classmethod
+    async def get_by_number(cls, session: SessionDep, number: int) -> Season:
+        season = (await session.exec(select(Season).where(Season.number == number))).first()
+        if season is None:
+            raise HTTPException(http_status.HTTP_404_NOT_FOUND, SEASON_NOT_FOUND)
+        return season
+
+    @classmethod
     async def create_season(
         cls, session: SessionDep, number: int, season_format: SeasonFormat = SeasonFormat.REGULAR
     ) -> Season:
