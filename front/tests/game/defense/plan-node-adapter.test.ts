@@ -26,6 +26,7 @@ const assignedNode: DefensePlanNode = {
   signature: 200,
   is_preferred_attacker: true,
   ascension: 1,
+  is_ascendable: false,
   is_saga_attacker: false,
   is_saga_defender: true,
   placed_by_id: 'user-1',
