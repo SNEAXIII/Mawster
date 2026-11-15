@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ConfirmationDialog } from '@/components/confirmation-dialog'
 import { useDefenseActionsContext } from '@/app/contexts/defense-actions-context'
 import ExportHeader from '@/app/game/_components/export-header'
+import RankThresholdBar, { RankThresholdLine, useRankThreshold } from './rank-threshold-bar'
 import type { SeasonFormat } from '@/app/services/season'
 
 const WarMap = dynamic(() => import('./war-map'), {
@@ -65,6 +66,7 @@ export default function DefenseGrid({
   const dimmedNodes = playerFilter
     ? new Set(placements.filter((p) => p.game_pseudo !== playerFilter).map((p) => p.node_number))
     : undefined
+  const threshold = useRankThreshold(placements, format)
 
   const currentPlacement = placements.find((p) => p.node_number === selectorNode)
   const selectorChampions =
@@ -77,8 +79,8 @@ export default function DefenseGrid({
   return (
     <>
       <div className='flex flex-col-reverse lg:flex-row gap-4'>
-        {/* War Map */}
         <div className='overflow-x-auto flex-1 min-w-0 rounded-xl border bg-card shadow-sm'>
+          {!exporting && <RankThresholdBar threshold={threshold} />}
           <div
             ref={exportDefenseMapRef}
             className={cn('p-2 w-max mx-auto', exporting && 'bg-black')}
@@ -91,18 +93,19 @@ export default function DefenseGrid({
                 bg={selectedBg}
               />
             )}
+            {exporting && <RankThresholdLine threshold={threshold} />}
             <WarMap
               placements={placements}
               onNodeClick={onNodeClick}
               onRemove={handleRemoveDefender}
               canManage={canManage && !exporting}
               dimmedNodes={dimmedNodes}
+              highlightedNodes={exporting ? undefined : threshold.highlighted}
               format={format}
             />
           </div>
         </div>
 
-        {/* Side panel */}
         <div className={cn('shrink-0', exporting ? 'w-80' : 'w-full lg:w-72 xl:w-80')}>
           <Card ref={exportDefenseAssignementsRef}>
             <CardContent className='p-3'>
