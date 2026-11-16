@@ -28,8 +28,11 @@ export function uploadShots(...files: string[]): void {
     { force: true },
   );
   if (files.length === 1) {
-    cy.getByCy('vision-single-screen-dialog').should('be.visible');
-    cy.getByCy('confirmation-dialog-cancel').click();
+    // Scoped: the how-to dialog may still be closing, with its own cancel button.
+    cy.getByCy('vision-single-screen-dialog')
+      .should('be.visible')
+      .find('[data-cy="confirmation-dialog-cancel"]')
+      .click();
   }
 }
 
