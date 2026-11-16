@@ -1,0 +1,654 @@
+{
+  "shot_0001.png": {
+    "Black Panther (Civil War)": {
+      "rarity": "7r5",
+      "signature": 200,
+      "ascension": 2
+    },
+    "Sentinel": {
+      "rarity": "7r5",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Absorbing Man": {
+      "rarity": "7r5",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Thanos (Deathless)": {
+      "rarity": "7r5",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Abomination (Immortal)": {
+      "rarity": "7r4",
+      "signature": 140,
+      "ascension": 1
+    },
+    "Maestro (Cosmic)": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 2
+    },
+    "Baron Zemo": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Kindred": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Karolina Dean": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Viv Vision": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Photon": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Knull": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Prowler": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Spider-Woman (Jessica Drew)": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Mojo": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Kushala": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    }
+  },
+  "shot_0004.png": {
+    "Black Panther (Civil War)": {
+      "rarity": "7r5",
+      "signature": 200,
+      "ascension": 2
+    },
+    "Sentinel": {
+      "rarity": "7r5",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Absorbing Man": {
+      "rarity": "7r5",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Thanos (Deathless)": {
+      "rarity": "7r5",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Abomination (Immortal)": {
+      "rarity": "7r4",
+      "signature": 140,
+      "ascension": 1
+    },
+    "Maestro (Cosmic)": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 2
+    },
+    "Baron Zemo": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Kindred": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Karolina Dean": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Viv Vision": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Photon": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Knull": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Prowler": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Spider-Woman (Jessica Drew)": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Mojo": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Kushala": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Yelena Belova": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Shocker": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Spider-Man (Stark Enhanced)": {
+      "rarity": "7r4",
+      "signature": 40,
+      "ascension": 0
+    },
+    "Bastion": {
+      "rarity": "7r4",
+      "signature": 100,
+      "ascension": 0
+    },
+    "The Hood": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Dazzler": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "The Serpent": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Crossbones": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Nico Minoru": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Okoye": {
+      "rarity": "7r4",
+      "signature": 61,
+      "ascension": 0
+    },
+    "Cull Obsidian": {
+      "rarity": "7r4",
+      "signature": 61,
+      "ascension": 0
+    },
+    "Jean Grey": {
+      "rarity": "7r4",
+      "signature": 140,
+      "ascension": 0
+    },
+    "Jack O'Lantern": {
+      "rarity": "7r4",
+      "signature": 40,
+      "ascension": 0
+    },
+    "Korg": {
+      "rarity": "7r3",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Arnim Zola": {
+      "rarity": "7r4",
+      "signature": 70,
+      "ascension": 0
+    },
+    "Scorpion": {
+      "rarity": "7r4",
+      "signature": 1,
+      "ascension": 0
+    },
+    "Mister Sinister": {
+      "rarity": "7r4",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Captain Britain": {
+      "rarity": "7r4",
+      "signature": 60,
+      "ascension": 0
+    },
+    "Human Torch": {
+      "rarity": "7r4",
+      "signature": 0,
+      "ascension": 0
+    },
+    "Deadpool (X-Force)": {
+      "rarity": "7r4",
+      "signature": 20,
+      "ascension": 0
+    },
+    "Mysterio": {
+      "rarity": "7r3",
+      "signature": 105,
+      "ascension": 0
+    },
+    "Onslaught": {
+      "rarity": "7r4",
+      "signature": 0,
+      "ascension": 0
+    },
+    "Nova": {
+      "rarity": "7r3",
+      "signature": 200,
+      "ascension": 0
+    },
+    "Dust": {
+      "rarity": "7r3",
+      "signature": 40,
+      "ascension": 1
+    },
+    "Thing": {
+      "rarity": "7r3",
+      "signature": 100,
+      "ascension": 0
+    },
+    "Dani Moonstar": {
+      "rarity": "7r3",
+      "signature": 80,
+      "ascension": 1
+    },
+    "Lizard": {
+      "rarity": "7r3",
+      "signature": 100,
+      "ascension": 1
+    },
+    "White Tiger": {
+      "rarity": "7r3",
+      "signature": 60,
+      "ascension": 0
+    },
+    "Guardian": {
+      "rarity": "7r3",
+      "signature": 80,
+      "ascension": 0
+    },
+    "Beta Ray Bill": {
+      "rarity": "7r3",
+      "signature": 100,
+      "ascension": 0
+    },
+    "Count Nefaria": {
+      "rarity": "7r3",
+      "signature": 60,
+      "ascension": 0
+    },
+    "The Maker": {
+      "rarity": "7r3",
+      "signature": 80,
+      "ascension": 0
+    }
+  },
+  "shot_0065.jpg": {
+    "Blade": {
+      "rarity": "7r2",
+      "signature": 60,
+      "ascension": 1
+    },
+    "Longshot": {
+      "rarity": "6r5",
+      "signature": 100,
+      "ascension": 1
+    },
+    "Human Torch": {
+      "rarity": "6r5",
+      "signature": 140,
+      "ascension": 1
+    },
+    "Omega Sentinel": {
+      "rarity": "6r5",
+      "signature": 100,
+      "ascension": 1
+    },
+    "Mantis": {
+      "rarity": "7r2",
+      "signature": 80,
+      "ascension": 0
+    },
+    "Moondragon": {
+      "rarity": "7r2",
+      "signature": 60,
+      "ascension": 1
+    },
+    "Shang-Chi": {
+      "rarity": "7r2",
+      "signature": 80,
+      "ascension": 0
+    },
+    "King Groot (Deathless)": {
+      "rarity": "7r2",
+      "signature": 140,
+      "ascension": 0
+    },
+    "Punisher 2099": {
+      "rarity": "7r2",
+      "signature": 100,
+      "ascension": 0
+    },
+    "Vox": {
+      "rarity": "7r2",
+      "signature": 100,
+      "ascension": 0
+    },
+    "Archangel": {
+      "rarity": "6r5",
+      "signature": 81,
+      "ascension": 1
+    },
+    "Negasonic Teenage Warhead": {
+      "rarity": "7r2",
+      "signature": 60,
+      "ascension": 0
+    },
+    "Iron Man": {
+      "rarity": "7r2",
+      "signature": 40,
+      "ascension": 0
+    },
+    "Guillotine (Deathless)": {
+      "rarity": "7r2",
+      "signature": 20,
+      "ascension": 0
+    },
+    "Spider-Ham": {
+      "rarity": "6r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Chee'ilth": {
+      "rarity": "7r2",
+      "signature": 60,
+      "ascension": 0
+    }
+  },
+  "shot_0066.jpg": {
+    "Professor X": {
+      "rarity": "7r2",
+      "signature": 40,
+      "ascension": 0
+    },
+    "The Overseer": {
+      "rarity": "7r2",
+      "signature": 80,
+      "ascension": 0
+    },
+    "Ghost Rider": {
+      "rarity": "7r2",
+      "signature": 20,
+      "ascension": 0
+    },
+    "Nimrod": {
+      "rarity": "6r5",
+      "signature": 60,
+      "ascension": 1
+    },
+    "Hulk": {
+      "rarity": "7r2",
+      "signature": 60,
+      "ascension": 0
+    },
+    "Captain Marvel": {
+      "rarity": "6r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Warlock": {
+      "rarity": "7r2",
+      "signature": 40,
+      "ascension": 0
+    },
+    "Quicksilver": {
+      "rarity": "6r4",
+      "signature": 161,
+      "ascension": 1
+    },
+    "Namor": {
+      "rarity": "7r2",
+      "signature": 20,
+      "ascension": 0
+    },
+    "Peni Parker": {
+      "rarity": "7r1",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Invisible Woman (Victorious)": {
+      "rarity": "7r3",
+      "signature": 20,
+      "ascension": 0
+    },
+    "Human Torch (Victorious)": {
+      "rarity": "7r3",
+      "signature": 20,
+      "ascension": 0
+    },
+    "Magik": {
+      "rarity": "7r2",
+      "signature": 0,
+      "ascension": 0
+    },
+    "Jabari Panther": {
+      "rarity": "7r1",
+      "signature": 160,
+      "ascension": 1
+    },
+    "The Destroyer": {
+      "rarity": "7r1",
+      "signature": 120,
+      "ascension": 1
+    },
+    "Nick Fury": {
+      "rarity": "6r4",
+      "signature": 100,
+      "ascension": 1
+    }
+  },
+  "shot_0067.jpg": {
+    "Spider-Man (Stealth Suit)": {
+      "rarity": "7r2",
+      "signature": 0,
+      "ascension": 0
+    },
+    "Ronan": {
+      "rarity": "6r4",
+      "signature": 200,
+      "ascension": 1
+    },
+    "Mordo": {
+      "rarity": "7r1",
+      "signature": 120,
+      "ascension": 0
+    },
+    "Phoenix": {
+      "rarity": "7r2",
+      "signature": 0,
+      "ascension": 0
+    },
+    "Nick Fury": {
+      "rarity": "7r2",
+      "signature": 0,
+      "ascension": 0
+    },
+    "Shang-Chi": {
+      "rarity": "6r4",
+      "signature": 100,
+      "ascension": 1
+    },
+    "Wiccan": {
+      "rarity": "7r1",
+      "signature": 140,
+      "ascension": 0
+    },
+    "Patriot": {
+      "rarity": "7r2",
+      "signature": 0,
+      "ascension": 0
+    },
+    "Spider-Man (Classic)": {
+      "rarity": "7r1",
+      "signature": 120,
+      "ascension": 1
+    },
+    "Gambit": {
+      "rarity": "7r1",
+      "signature": 100,
+      "ascension": 0
+    },
+    "Purgatory": {
+      "rarity": "7r1",
+      "signature": 60,
+      "ascension": 1
+    },
+    "Lady Deathstrike": {
+      "rarity": "7r1",
+      "signature": 160,
+      "ascension": 0
+    },
+    "Apocalypse": {
+      "rarity": "7r2",
+      "signature": 0,
+      "ascension": 0
+    },
+    "Silver Surfer": {
+      "rarity": "7r1",
+      "signature": 120,
+      "ascension": 0
+    },
+    "Rocket Raccoon": {
+      "rarity": "7r1",
+      "signature": 140,
+      "ascension": 0
+    },
+    "Electro": {
+      "rarity": "6r4",
+      "signature": 80,
+      "ascension": 1
+    }
+  },
+  "shot_0068.jpg": {
+    "Ebony Maw": {
+      "rarity": "7r1",
+      "signature": 80,
+      "ascension": 0
+    },
+    "Spider-Man (Supreme)": {
+      "rarity": "7r1",
+      "signature": 60,
+      "ascension": 0
+    },
+    "Silver Sable": {
+      "rarity": "7r1",
+      "signature": 120,
+      "ascension": 0
+    },
+    "Elsa Bloodstone": {
+      "rarity": "7r1",
+      "signature": 120,
+      "ascension": 0
+    },
+    "Wong": {
+      "rarity": "7r1",
+      "signature": 100,
+      "ascension": 0
+    },
+    "Sauron": {
+      "rarity": "7r1",
+      "signature": 140,
+      "ascension": 0
+    },
+    "Ant-Man": {
+      "rarity": "7r1",
+      "signature": 100,
+      "ascension": 0
+    },
+    "Sorcerer Supreme": {
+      "rarity": "7r1",
+      "signature": 80,
+      "ascension": 0
+    },
+    "Hawkeye": {
+      "rarity": "7r1",
+      "signature": 120,
+      "ascension": 0
+    },
+    "Quicksilver": {
+      "rarity": "7r1",
+      "signature": 100,
+      "ascension": 0
+    },
+    "Isophyne": {
+      "rarity": "7r1",
+      "signature": 80,
+      "ascension": 0
+    },
+    "Gamora": {
+      "rarity": "7r1",
+      "signature": 60,
+      "ascension": 0
+    },
+    "Daredevil (Hell's Kitchen)": {
+      "rarity": "7r1",
+      "signature": 60,
+      "ascension": 0
+    },
+    "Stryfe": {
+      "rarity": "7r1",
+      "signature": 120,
+      "ascension": 0
+    },
+    "Mangog": {
+      "rarity": "7r1",
+      "signature": 80,
+      "ascension": 0
+    },
+    "Doctor Voodoo": {
+      "rarity": "7r1",
+      "signature": 100,
+      "ascension": 0
+    }
+  }
+}
