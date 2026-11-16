@@ -134,6 +134,7 @@ services:
   vision-worker:
     build:
       context: ./rust-vision
+      dockerfile: worker.Dockerfile
       additional_contexts:
         portraits: ./static-assets/static/champions
         api-fixtures: ./api/src/fixtures
