@@ -316,7 +316,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
-    needs: [e2e-plan, e2e-build, lint-test-python, lint-test-front, lint-test-static-assets]
+    needs: [e2e-plan, e2e-build, e2e-build-vision, lint-test-python, lint-test-front, lint-test-static-assets, lint-test-vision]
     strategy:
       fail-fast: false
       matrix:
@@ -407,7 +407,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
-    needs: [e2e-build, e2e-build-vision, lint-test-python, lint-test-front, lint-test-static-assets]
+    needs: [e2e-plan, e2e-build, e2e-build-vision, lint-test-python, lint-test-front, lint-test-static-assets, lint-test-vision]
     env:
       MARIADB_USER: user
       MARIADB_PASSWORD: password
