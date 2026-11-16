@@ -463,7 +463,7 @@ fn draw_lines(out: &mut RgbImage, font: &FontRef, b: &BoundingBox, lines: &[(Str
             font,
             text,
         );
-        y += line_px * LINE_SPACING;
+        y = line_px.mul_add(LINE_SPACING, y);
     }
 }
 
