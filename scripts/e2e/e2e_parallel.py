@@ -27,8 +27,6 @@ from config import (  # pylint: disable=import-error,wrong-import-position
     BASE_CDP_PORT,
     BASE_FRONT_PORT,
     FRONT_DIR,
-    RABBITMQ_PORT,
-    RUSTFS_PORT,
     log,
     worker_log_dir,
 )
@@ -38,7 +36,6 @@ from report import (  # pylint: disable=import-error,wrong-import-position
     parse_cypress_stats,
 )
 from servers import (  # pylint: disable=import-error,wrong-import-position
-    assert_vision_worker_alive,
     init_vision_buckets,
     pipe_output,
     start_backend,
@@ -46,11 +43,9 @@ from servers import (  # pylint: disable=import-error,wrong-import-position
     start_static_server,
     start_vision_worker,
     wait_for_servers,
-    wait_for_tcp,
     wait_for_vision_consumer,
 )
 from spec_planner import (  # pylint: disable=import-error,wrong-import-position
-    LANE_SEPARATOR,
     resolve_spec_lanes,
 )
 
@@ -126,8 +121,6 @@ def start_backends(
     """
     start_static_server()
     if vision:
-        wait_for_tcp(RABBITMQ_PORT, "RabbitMQ")
-        wait_for_tcp(RUSTFS_PORT, "RustFS")
         init_vision_buckets()
     for worker in range(len(lanes)):
         start_backend(worker, vision)
@@ -136,15 +129,13 @@ def start_backends(
         start_vision_worker(worker_bin, gallery)
 
 
-def run_tests(lanes: list[list[Path]], vision: bool = False) -> int:
+def run_tests(lanes: list[list[Path]]) -> int:
     """Start the frontends, wait for every server, run one Cypress per lane, write the report."""
     workers = len(lanes)
     start_time = time.time()
     for worker in range(workers):
         start_frontend(worker)
     wait_for_servers(workers)
-    if vision:
-        assert_vision_worker_alive()
 
     log("All servers ready. Launching Cypress workers...")
     for i, lane in enumerate(lanes):
@@ -197,22 +188,18 @@ def main() -> None:
     parser.add_argument("--gallery", type=Path, help="backends --vision: the gallery file.")
     args = parser.parse_args()
 
-    if args.vision:
-        # Counted before resolving: a bad spec name must not hide the lane error.
-        lane_count = len([part for part in args.spec.split(LANE_SEPARATOR) if part.strip()])
-        if lane_count != 1:
-            parser.error(
-                f"--vision needs exactly one lane, got {lane_count}: one consumer on vision.jobs"
-            )
-        if args.step == "backends" and not (args.worker_bin and args.gallery):
-            parser.error("backends --vision needs --worker-bin and --gallery")
-
     lanes = resolve_spec_lanes(args.spec)
+    if args.vision and len(lanes) != 1:
+        parser.error(
+            f"--vision needs exactly one lane, got {len(lanes)}: one consumer on vision.jobs"
+        )
+    if args.vision and args.step == "backends" and not (args.worker_bin and args.gallery):
+        parser.error("backends --vision needs --worker-bin and --gallery")
     log(f"{args.step}: {len(lanes)} worker(s)")
     if args.step == "backends":
         start_backends(lanes, args.vision, args.worker_bin, args.gallery)
     else:
-        sys.exit(run_tests(lanes, args.vision))
+        sys.exit(run_tests(lanes))
 
 
 if __name__ == "__main__":

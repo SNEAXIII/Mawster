@@ -21,16 +21,13 @@ MARIADB_PORT = int(os.environ.get("MARIADB_PORT", "3307"))
 HEALTH_TIMEOUT = 60
 
 # Vision mode (--vision): dev credentials, as in compose-dev.yaml and api/src/security/secrets.py.
-RABBITMQ_PORT = 5672
 RABBITMQ_URL = "amqp://mawster:mawster@localhost:5672/%2f"
-RUSTFS_PORT = 9000
-RUSTFS_URL = f"http://localhost:{RUSTFS_PORT}"
+RUSTFS_URL = "http://localhost:9000"
 RUSTFS_ACCESS_KEY = "mawster"
 RUSTFS_SECRET_KEY = "mawsterpassword"  # noqa: S105
 VISION_MODELS_DIR = ROOT / "rust-vision" / "artifacts-vision" / "artifacts"
 # Cold RabbitMQ and RustFS images can take minutes to pull and boot.
 VISION_STARTUP_TIMEOUT = 180
-VISION_PID_FILE = "vision-worker.pid"
 
 
 def worker_log_dir(worker: int) -> Path:

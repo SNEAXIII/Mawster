@@ -3,7 +3,6 @@
 import json
 import os
 import re
-import socket
 import subprocess
 import sys
 import threading
@@ -29,7 +28,6 @@ from config import (  # pylint: disable=import-error,wrong-import-position
     RUSTFS_URL,
     STATIC_PORT,
     VISION_MODELS_DIR,
-    VISION_PID_FILE,
     VISION_STARTUP_TIMEOUT,
     log,
     worker_log_dir,
@@ -189,19 +187,6 @@ def wait_for_servers(workers: int) -> None:
         )
 
 
-def wait_for_tcp(port: int, label: str, timeout: int = VISION_STARTUP_TIMEOUT) -> None:
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        try:
-            socket.create_connection(("localhost", port), timeout=2).close()
-            log(f"{label} accepting connections on port {port}")
-            return
-        except OSError:
-            time.sleep(1)
-    msg = f"{label} on port {port} did not accept connections within {timeout}s"
-    raise TimeoutError(msg)
-
-
 def run_aws(*args: str) -> subprocess.CompletedProcess:
     """Run the AWS CLI image against RustFS, the way compose-dev's rustfs-init does."""
     env = {
@@ -262,7 +247,7 @@ def init_vision_buckets() -> None:
 
 
 def start_vision_worker(worker_bin: Path, gallery: Path) -> None:
-    """Start the Rust worker detached; its pid goes to a file so `tests` can check it is alive."""
+    """Start the Rust worker detached."""
     log_dir = worker_log_dir(0)
     log_dir.mkdir(parents=True, exist_ok=True)
     env = {
@@ -277,14 +262,13 @@ def start_vision_worker(worker_bin: Path, gallery: Path) -> None:
     }
     log(f"Starting vision worker {worker_bin}")
     with (log_dir / "vision-worker.log").open("w", encoding="utf-8") as log_file:
-        proc = subprocess.Popen(
+        subprocess.Popen(
             [str(worker_bin.resolve())],
             env=env,
             stdout=log_file,
             stderr=subprocess.STDOUT,
             start_new_session=True,
         )
-    (log_dir / VISION_PID_FILE).write_text(str(proc.pid), encoding="utf-8")
 
 
 def wait_for_vision_consumer(timeout: int = VISION_STARTUP_TIMEOUT) -> None:
@@ -300,13 +284,3 @@ def wait_for_vision_consumer(timeout: int = VISION_STARTUP_TIMEOUT) -> None:
         time.sleep(0.5)
     msg = f"vision consumer did not start within {timeout}s, see {log_file}"
     raise TimeoutError(msg)
-
-
-def assert_vision_worker_alive() -> None:
-    log_dir = worker_log_dir(0)
-    # OSError covers both a missing pid file and a dead process.
-    try:
-        os.kill(int((log_dir / VISION_PID_FILE).read_text(encoding="utf-8")), 0)
-    except OSError:
-        log(f"Vision worker is not running, see {log_dir / 'vision-worker.log'}")
-        sys.exit(1)
