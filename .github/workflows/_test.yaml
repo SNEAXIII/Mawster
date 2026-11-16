@@ -166,6 +166,32 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  lint-test-vision:
+    name: Lint & Test for vision worker
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./rust-vision
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Cache cargo dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust-vision/target
+          key: cargo-vision-lint-${{ runner.os }}-${{ hashFiles('rust-vision/Cargo.lock') }}
+      - name: Run clippy
+        run: cargo clippy --locked --all-targets --all-features
+      - name: Run vision tests
+        run: cargo test --locked --all-features
+
   e2e-plan:
     name: E2E — Plan spec distribution
     permissions:
