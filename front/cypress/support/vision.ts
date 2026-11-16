@@ -12,16 +12,13 @@ export const SHOTS: Record<string, Record<string, ShotCard>> = expected;
 export const VISION_TIMEOUT = 180000;
 
 // The bulk import resolves every predicted name, so each champion a shot shows must exist.
-// Ascendable, or the API zeroes the ascension the shot shows.
+// The class is never checked; ascendable, or the API zeroes the ascension the shot shows.
 export function loadShotChampions(adminToken: string, shots: string[], extra: string[] = []) {
   const names = new Set([...shots.flatMap((s) => Object.keys(SHOTS[s])), ...extra]);
-  return cy.readFile<{ name: string; champion_class: string }[]>('../api/src/fixtures/champions.json').then((all) => {
-    const cls = new Map(all.map((c) => [c.name, c.champion_class]));
-    return cy.apiLoadChampions(
-      adminToken,
-      [...names].map((name) => ({ name, cls: cls.get(name) ?? '', is_ascendable: true })),
-    );
-  });
+  return cy.apiLoadChampions(
+    adminToken,
+    [...names].map((name) => ({ name, cls: 'Science', is_ascendable: true })),
+  );
 }
 
 export function uploadShots(...files: string[]): void {
