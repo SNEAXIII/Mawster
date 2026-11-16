@@ -54,8 +54,8 @@ describe('Roster – Vision import: editing the read results', () => {
       // Rarity, signature, ascension: each turns an unchanged row into an update, the score untouched.
       const edits: [string, (i: number) => void][] = [
         ['Sentinel', (i) => cy.selectOption(`preview-row-rarity-select-${i}`, '7R6')],
-        ['Photon', (i) => cy.getByCy(`preview-row-signature-input-${i}`).clear().type('150')],
-        ['Knull', (i) => cy.getByCy(`preview-row-ascension-input-${i}`).clear().type('2')],
+        ['Photon', (i) => cy.getByCy(`preview-row-signature-input-${i}`).type('{selectall}150')],
+        ['Knull', (i) => cy.getByCy(`preview-row-ascension-input-${i}`).type('{selectall}2')],
       ];
       for (const [name, edit] of edits) {
         rowIndexOf(name).then((i) => {
