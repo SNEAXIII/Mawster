@@ -8,8 +8,8 @@ export interface ShotCard {
 }
 export const SHOTS: Record<string, Record<string, ShotCard>> = expected;
 
-// A shot reads in under 1 s on CPU and the front polls every 1.5 s: 30 s is headroom, not a wait.
-export const VISION_TIMEOUT = 30000;
+// A shot reads in under 1 s on CPU and the front polls every 1.5 s.
+export const VISION_TIMEOUT = 10000;
 
 // The bulk import resolves every predicted name, so each champion a shot shows must exist.
 // The class is never checked; ascendable, or the API zeroes the ascension the shot shows.
