@@ -96,7 +96,12 @@ impl Args {
 fn selected_paths(wanted: &[RangeInclusive<u32>]) -> Result<Vec<String>> {
     let mut paths: Vec<String> = std::fs::read_dir(mcoc_vision::config::REAL_DIR)?
         .filter_map(|e| e.ok()?.path().to_str().map(String::from))
-        .filter(|p| p.ends_with(".png") || p.ends_with(".jpg"))
+        .filter(|p| {
+            Path::new(p)
+                .extension()
+                .and_then(|e| e.to_str())
+                .is_some_and(|e| e.eq_ignore_ascii_case("png") || e.eq_ignore_ascii_case("jpg"))
+        })
         .collect();
     paths.sort();
     if !wanted.is_empty() {
