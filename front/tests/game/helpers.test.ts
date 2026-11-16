@@ -16,8 +16,7 @@ describe('rarityWeight', () => {
 describe('parseRankRange', () => {
   // Indexes into RARITIES: 6r4=0, 6r5=1, 7r1=2 … 7r6=7.
   it.each([
-    ['legacy tiers → min..max', ['7r3', '6r5', '7r1'], [1, 4]],
-    ['legacy unknown tiers dropped', ['9r9', '7r2', 'x'], [3, 3]],
+    ['tier strings → default', ['7r3', '6r5', '7r1'], [2, 7]],
     ['current [lo, hi] kept', [2, 6], [2, 6]],
     ['swapped [hi, lo] ordered', [6, 2], [2, 6]],
     ['empty array → default', [], [2, 7]],
