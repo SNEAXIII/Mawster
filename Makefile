@@ -289,9 +289,10 @@ migrate-staging:
 	@docker service ps mawster-migrate-staging --format "{{.CurrentState}}" | grep -q "^Failed" && \
 		(docker service rm mawster-migrate-staging; exit 1) || docker service rm mawster-migrate-staging
 
-# Exec into the api container: seed.sh re-exports the secret-backed vars a
+# Exec into the api container: it has the secrets mounted, which a
 # standalone job lacks. start-first keeps the old container running, hence
 # the ancestor filter and the poll.
+SEED_CMD = uv run --no-build --no-sync python -m src.fixtures.load_champions && uv run --no-build --no-sync python -m src.fixtures.load_masteries
 .PHONY: seed-champions seed-champions-staging
 seed-champions:
 	@CID=""; \
@@ -304,7 +305,7 @@ seed-champions:
 		echo "seed-champions: no running mawster_api container found after 60s" >&2; \
 		exit 1; \
 	fi; \
-	docker exec $$CID sh seed.sh
+	docker exec $$CID sh -c "$(SEED_CMD)"
 
 seed-champions-staging:
 	@CID=""; \
@@ -317,7 +318,7 @@ seed-champions-staging:
 		echo "seed-champions-staging: no running mawster-staging_api container found after 60s" >&2; \
 		exit 1; \
 	fi; \
-	docker exec $$CID sh seed.sh
+	docker exec $$CID sh -c "$(SEED_CMD)"
 
 deploy:
 	docker pull sneaxiii/mawster-api:latest

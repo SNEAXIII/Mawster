@@ -15,7 +15,6 @@ dependencies = [
     "sqlmodel",
     "asyncmy",
     "nh3",
-    "sentry-sdk",
     "prometheus-fastapi-instrumentator",
     "aio-pika",
     "aioboto3",

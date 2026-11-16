@@ -127,7 +127,7 @@ services:
       EMAIL_PEPPER_VERSION: '1'
       # Vision: the API publishes jobs to RabbitMQ and reads crops/results from
       # RustFS. Bucket names + retention are plain config; the broker URL and the
-      # store keys are injected from secret files by the command shim below.
+      # store keys are read by the API from the secret files mounted below.
       RUSTFS_ENDPOINT: http://rustfs:9000
       # What the BROWSER calls. SigV4 signs the Host header, so a URL signed
       # against the internal name above is rejected the instant a browser sends
@@ -149,8 +149,6 @@ services:
       - mawster_rustfs_secret_key
     volumes:
       - api_logs:/app/api/logs
-    # run.sh reads the vision secrets from /run/secrets (same as the db/pepper
-    # secrets) and exports RABBITMQ_URL / RUSTFS_* before starting the API.
     command: ['sh', 'run.sh']
     deploy:
       replicas: 2

@@ -810,7 +810,6 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pyjwt" },
     { name = "python-multipart" },
-    { name = "sentry-sdk" },
     { name = "sqlmodel" },
 ]
 
@@ -845,7 +844,6 @@ requires-dist = [
     { name = "pydantic-settings" },
     { name = "pyjwt" },
     { name = "python-multipart" },
-    { name = "sentry-sdk" },
     { name = "sqlmodel" },
 ]
 
