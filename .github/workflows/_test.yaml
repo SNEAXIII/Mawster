@@ -6,6 +6,8 @@ on:
     secrets:
       SONAR_TOKEN:
         required: true
+      BOT_TOKEN:
+        required: true
 
 env:
   NODE_VERSION: '24'
@@ -191,6 +193,55 @@ jobs:
         run: cargo clippy --locked --all-targets --all-features
       - name: Run vision tests
         run: cargo test --locked --all-features
+
+  e2e-build-vision:
+    name: E2E — Build vision worker
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./rust-vision
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Resolve the private submodule commit
+        id: private
+        run: echo "sha=$(git rev-parse HEAD:rust-vision/artifacts-vision)" >> "$GITHUB_OUTPUT"
+      - name: Checkout the private models and screenshots
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: SNEAXIII/artifacts-vision
+          ref: ${{ steps.private.outputs.sha }}
+          path: rust-vision/artifacts-vision
+          token: ${{ secrets.BOT_TOKEN }}
+          persist-credentials: false
+      - name: Cache cargo dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust-vision/target
+          key: cargo-vision-release-${{ runner.os }}-${{ hashFiles('rust-vision/Cargo.lock') }}
+      - name: Build the worker, the gallery builder and the GT runner
+        run: cargo build --release --locked --features worker --bins
+      - name: Build the gallery
+        run: ./target/release/build_gallery --portraits ../static-assets/static/champions --champions ../api/src/fixtures/champions.json --output artifacts/gallery/mosaic.bin
+      - name: Run the ground truth
+        run: ./target/release/mcoc-vision --no-save
+      # Models stay out: artifacts of a public repo are public.
+      - name: Archive the worker and its gallery
+        run: tar -czf /tmp/vision-worker.tar.gz -C target/release worker -C ../../artifacts/gallery mosaic.bin
+      - name: Upload the vision worker
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: vision-worker
+          path: /tmp/vision-worker.tar.gz
+          retention-days: 1
+          if-no-files-found: error
 
   e2e-plan:
     name: E2E — Plan spec distribution
