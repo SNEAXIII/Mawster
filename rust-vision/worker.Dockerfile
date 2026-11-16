@@ -12,19 +12,20 @@ COPY Cargo.toml Cargo.lock ./
 COPY src src
 RUN cargo chef prepare
 
-FROM base-rust AS no-features
+FROM base-rust AS deps
 COPY --from=prepare-deps /app/recipe.json recipe.json
 RUN cargo chef cook --release --locked
+RUN cargo chef cook --release --locked --features worker
 COPY Cargo.toml Cargo.lock ./
 COPY src src
 
-FROM no-features AS gallery
+FROM deps AS gallery
 COPY --from=portraits . portraits
 COPY --from=api-fixtures champions.json .
 RUN cargo build --release --locked --bin build_gallery
 RUN ./target/release/build_gallery --portraits portraits --champions champions.json --output gallery.bin
 
-FROM no-features AS ground-truth
+FROM deps AS ground-truth
 RUN cargo build --release --locked --bin mcoc-vision
 ENV DETECTOR_MODEL=best.onnx DIGITS_MODEL=digits.onnx
 COPY artifacts-vision/artifacts/yolo/best.onnx ./
@@ -33,11 +34,8 @@ COPY --from=gallery /app/gallery.bin artifacts/gallery/mosaic.bin
 RUN --mount=type=bind,source=artifacts-vision/data/real,target=/app/artifacts-vision/data/real \
     ./target/release/mcoc-vision --no-save && touch /gt-passed
 
-FROM base-rust AS worker-build
-COPY --from=prepare-deps /app/recipe.json recipe.json
-RUN cargo chef cook --release --locked --features worker --bin worker
-COPY Cargo.toml Cargo.lock ./
-COPY src src
+FROM deps AS worker-build
+
 RUN cargo build --release --locked --features worker --bin worker
 RUN mkdir /runtime && ldd target/release/worker | awk '/=> \//{print $3}' | xargs -I{} cp --parents -L {} /runtime
 RUN cp --parents -L /lib64/ld-linux-x86-64.so.2 /runtime

@@ -10,20 +10,20 @@ COPY Cargo.toml Cargo.lock ./
 COPY src src
 RUN cargo chef prepare
 
-FROM base-rust AS assets
+FROM base-rust AS deps
 COPY --from=prepare-deps /app/recipe.json recipe.json
-RUN cargo chef cook --release --locked --bin build_assets --features=assets
+RUN cargo chef cook --release --locked
+RUN cargo chef cook --release --locked --features=assets
+RUN cargo chef cook --release --locked --features=server
 COPY Cargo.toml Cargo.lock ./
 COPY src src
+
+FROM deps AS assets
 RUN cargo build --release --locked --bin build_assets --features=assets
 COPY static static
 RUN ./target/release/build_assets
 
-FROM base-rust AS server
-COPY --from=prepare-deps /app/recipe.json recipe.json
-RUN cargo chef cook --release --locked --bin mawster-static-files --features=server
-COPY Cargo.toml Cargo.lock ./
-COPY src src
+FROM deps AS server
 RUN cargo build --release --locked --bin mawster-static-files --features=server
 
 FROM scratch AS runtime
