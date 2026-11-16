@@ -26,7 +26,10 @@ def count(conn, table) -> int:
 def main(source_url: str, target_url: str) -> None:
     head = ScriptDirectory(str(API_DIR / "migrations")).get_current_head()
     tables = SQLModel.metadata.sorted_tables
-    with create_engine(source_url).connect() as src, create_engine(target_url).begin() as tgt:
+    with (
+        create_engine(source_url).connect() as src,  # NOSONAR URLs typed by the operator, one-shot
+        create_engine(target_url).begin() as tgt,  # NOSONAR URLs typed by the operator, one-shot
+    ):
         if not inspect(tgt).has_table("alembic_version"):
             sys.exit(f"Refused: the target has no alembic_version, migrate it to {head} first.")
         version = tgt.execute(text("SELECT version_num FROM alembic_version")).scalar()
