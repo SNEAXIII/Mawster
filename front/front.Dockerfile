@@ -56,7 +56,10 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 #Add utils script
-COPY --chmod=555 ./run.sh ./wait-for-it.sh ./
-RUN sed -i 's/\r$//' run.sh wait-for-it.sh
+COPY --chmod=555 ./run.sh ./
+RUN sed -i 's/\r$//' run.sh
 
 USER nextjs
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
+    CMD wget -qO /dev/null "http://127.0.0.1:${PORT:-3000}/api/version" || exit 1

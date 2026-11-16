@@ -1,5 +1,4 @@
 set -e
-./wait-for-it.sh mariadb:3306 -t 60 --strict
 
 export SECRET_KEY="${SECRET_KEY:-$(cat /run/secrets/mawster_secret_key)}"
 export MARIADB_PASSWORD="${MARIADB_PASSWORD:-$(cat /run/secrets/mawster_db_password)}"

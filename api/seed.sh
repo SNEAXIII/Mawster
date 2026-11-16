@@ -12,9 +12,6 @@ set -e
 # launch environment. Without this script, the loaders crash on import with a
 # pydantic ValidationError before touching the database. Mirrors run.sh's
 # exports exactly, minus the ones the loaders don't need.
-#
-# No wait-for-it.sh here (unlike run.sh): this only ever runs inside a
-# container that is already serving traffic, so the database is already up.
 export SECRET_KEY="${SECRET_KEY:-$(cat /run/secrets/mawster_secret_key)}"
 export MARIADB_PASSWORD="${MARIADB_PASSWORD:-$(cat /run/secrets/mawster_db_password)}"
 export EMAIL_PEPPER="${EMAIL_PEPPER:-$(cat /run/secrets/mawster_email_pepper)}"

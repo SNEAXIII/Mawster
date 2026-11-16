@@ -111,6 +111,15 @@ async def metrics():
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
 
+logging.getLogger("uvicorn.access").addFilter(lambda record: "/health" not in record.getMessage())
+
+
+@app.get("/health", include_in_schema=False)
+async def health():
+    # Liveness only: probing the database here would have swarm kill every replica on a DB blip.
+    return {"status": "ok"}
+
+
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
@@ -156,7 +165,8 @@ async def log_and_audit_requests(
     process_time = perf_counter() - start_time
     if not IS_PROD:
         response.headers["X-Process-Time"] = str(process_time)
-    logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
+    if uri != "/health":
+        logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
     if method != "GET":
         user_id = "anonymous"
         auth = request.headers.get("Authorization", "")
