@@ -46,4 +46,5 @@ from the environment, or from `/run/secrets` in Swarm: the image is `FROM scratc
 
 ## Conventions
 English; conventional commits, typed by what a Mawster player sees (see Mawster's CLAUDE.md).
-No unit tests while the port is still moving: the safety net is the GT run and `mosaic_bench`.
+The worker is the production implementation. Safety net: clippy + `cargo test`, the GT run (in CI
+and in the image build), and the `vision-*` Cypress specs in the `e2e-vision` job.
