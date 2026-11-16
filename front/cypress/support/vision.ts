@@ -41,7 +41,7 @@ export function assertPreviewMatchesShots(shots: string[], overrides: Record<str
   const want = shots
     .flatMap((s) => Object.entries(SHOTS[s]))
     .map(([name, c]) => rowKey(name, { ...c, ...overrides[name] }))
-    .sort();
+    .sort((a, b) => a.localeCompare(b));
   cy.get('[data-cy^="preview-group-toggle-"]', { timeout: VISION_TIMEOUT }).each(($toggle) => {
     if ($toggle.attr('data-state') === 'closed') cy.wrap($toggle).click();
   });
@@ -55,7 +55,7 @@ export function assertPreviewMatchesShots(shots: string[], overrides: Record<str
           ascension: Number($row.find('[data-cy^="preview-row-ascension-input-"]').val()),
         });
       })
-      .sort();
+      .sort((a, b) => a.localeCompare(b));
     expect(got).to.deep.equal(want);
   });
 }
