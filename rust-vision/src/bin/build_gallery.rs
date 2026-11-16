@@ -16,9 +16,7 @@ fn main() -> Result<()> {
             && loaded
                 .iter()
                 .zip(&built)
-                .all(|((read_name, read), (name, _, embedding))| {
-                    read_name == name && read == embedding
-                }),
+                .all(|(read, (entry, _))| read == entry),
         "{} does not read back what was written",
         path.display()
     );

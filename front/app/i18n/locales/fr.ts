@@ -540,6 +540,14 @@ const fr: Translations = {
       sagaDefenderFilter: 'Saga Défenseur',
       notPreferredFilter: 'Non préféré',
       rankFilter: 'Rang',
+      rankThreshold: {
+        rank: 'Seuil de rang',
+        ascension: "Seuil d'ascension",
+        belowRank: 'sous le rang',
+        belowAscension: "sous l'ascension",
+        unfilled: 'non rempli(s)',
+        exportLine: '{count} défenseur(s) sous {rank}',
+      },
       playerFilter: 'Joueur',
       allFilter: 'Tous',
       searchPlayer: 'Rechercher un joueur...',
@@ -1488,6 +1496,19 @@ const fr: Translations = {
     warNotReady: 'Groupe de combat pas encore prêt',
     warReady: 'Groupe de combat prêt',
     loadError: 'Impossible de charger tes joueurs.',
+  },
+
+  saga: {
+    title: 'Saga',
+    season: 'Saison {number}',
+    seasonUpcoming: 'Saison {number} (à venir)',
+    attackers: 'Attaquants de saga',
+    defenders: 'Défenseurs de saga',
+    empty: 'Aucun champion de saga pour cette saison.',
+    noSeason: 'Aucune saison régulière à afficher pour le moment.',
+    exportPng: 'Exporter PNG',
+    exportTitle: 'Saga — Saison {number}',
+    loadError: "La saga n'a pas pu être chargée.",
   },
 
   tierlist: {

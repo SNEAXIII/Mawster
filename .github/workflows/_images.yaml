@@ -67,7 +67,7 @@ jobs:
           - name: Vision Worker
             image: mawster-vision-worker
             context: ./rust-vision
-            file: ./rust-vision/Dockerfile
+            file: ./rust-vision/worker.Dockerfile
             # Models and screenshots live in a private submodule: the image is pushed to a private repo.
             private_submodule: true
             build_contexts: |

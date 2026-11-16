@@ -1,14 +1,14 @@
 use anyhow::{Context, Result};
 use futures_lite::StreamExt;
+use lapin::Connection;
 use lapin::options::{BasicConsumeOptions, BasicQosOptions, BasicRejectOptions};
 use lapin::types::FieldTable;
-use lapin::Connection;
 use tokio::sync::mpsc::Sender;
 use tracing::{error, info};
 
+use crate::PREFETCH;
 use crate::job::{InFlightJob, InferenceRequest, ResultsRequest, VisionJob};
 use crate::s3::S3;
-use crate::PREFETCH;
 
 const QUEUE_JOBS: &str = "vision.jobs";
 
@@ -44,8 +44,11 @@ pub async fn consume(
             continue;
         };
         info!(
-            job_id = vision_job.job_id, import_id = vision_job.import_id,
-            bucket = vision_job.bucket, object_key = vision_job.object_key, "job received"
+            job_id = vision_job.job_id,
+            import_id = vision_job.import_id,
+            bucket = vision_job.bucket,
+            object_key = vision_job.object_key,
+            "job received"
         );
 
         let response = s3

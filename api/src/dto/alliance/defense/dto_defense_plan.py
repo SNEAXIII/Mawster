@@ -45,6 +45,7 @@ class DefensePlanNodeResponse(ChampionFields, SagaRoles):
     signature: int = 0
     is_preferred_attacker: bool = False
     ascension: int = 0
+    is_ascendable: bool = False
     placed_by_id: uuid.UUID | None = None
     placed_by_pseudo: str | None = None
 

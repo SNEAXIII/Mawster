@@ -1,5 +1,8 @@
 FROM rust:1.99.1-alpine3.22 AS base-rust
-RUN cargo install --locked cargo-chef --version 0.1.78
+ADD --checksum=sha256:aca691abfbfbbe00d482e0ed2249eec3091b65e96a0ce92947fb5b254d48b16d \
+    https://github.com/LukeMathWalker/cargo-chef/releases/download/v0.1.78/cargo-chef-x86_64-unknown-linux-musl.tar.xz /tmp/chef.tar.xz
+RUN tar -xJf /tmp/chef.tar.xz -C /usr/local/cargo/bin --strip-components=1 \
+      cargo-chef-x86_64-unknown-linux-musl/cargo-chef && rm /tmp/chef.tar.xz
 WORKDIR /app
 
 FROM base-rust AS prepare-deps
@@ -7,20 +10,20 @@ COPY Cargo.toml Cargo.lock ./
 COPY src src
 RUN cargo chef prepare
 
-FROM base-rust AS assets
+FROM base-rust AS deps
 COPY --from=prepare-deps /app/recipe.json recipe.json
-RUN cargo chef cook --release --locked --bin build_assets --features=assets
+RUN cargo chef cook --release --locked
+RUN cargo chef cook --release --locked --features=assets
+RUN cargo chef cook --release --locked --features=server
 COPY Cargo.toml Cargo.lock ./
 COPY src src
+
+FROM deps AS assets
 RUN cargo build --release --locked --bin build_assets --features=assets
 COPY static static
 RUN ./target/release/build_assets
 
-FROM base-rust AS server
-COPY --from=prepare-deps /app/recipe.json recipe.json
-RUN cargo chef cook --release --locked --bin mawster-static-files --features=server
-COPY Cargo.toml Cargo.lock ./
-COPY src src
+FROM deps AS server
 RUN cargo build --release --locked --bin mawster-static-files --features=server
 
 FROM scratch AS runtime

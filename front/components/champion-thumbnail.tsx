@@ -1,13 +1,14 @@
 'use client'
 
 import React from 'react'
-import { getChampionImageUrl } from '@/app/services/champions'
+import { getChampionImageUrl, MAX_THUMBNAIL_SIZE } from '@/app/services/champions'
 import { cn } from '@/app/lib/utils'
+import { useExportMode } from '@/app/contexts/export-mode-context'
 
 interface ChampionThumbnailProps {
   imageUrl: string | null | undefined
   name: string
-  /** Rendered square size in px (also the resolution requested). Default 32. */
+  /** Rendered square size in px (also the resolution requested, full size while exporting). Default 32. */
   size?: number
   className?: string
 }
@@ -22,7 +23,8 @@ export default function ChampionThumbnail({
   size = 32,
   className,
 }: Readonly<ChampionThumbnailProps>) {
-  const src = getChampionImageUrl(imageUrl, size)
+  const exporting = useExportMode()
+  const src = getChampionImageUrl(imageUrl, exporting ? MAX_THUMBNAIL_SIZE : size)
   const box = { width: size, height: size }
 
   if (!src)

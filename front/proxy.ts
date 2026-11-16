@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
-import { isServerDev } from '@/app/lib/dev-mode'
+import { SECURE_COOKIE } from '@/app/lib/session-cookie'
 
 // `/tools` is open on purpose: the tier list reads the champion catalog, which
 // answers without a session, and a signed-out visitor keeps a board in their
@@ -19,7 +19,7 @@ export async function proxy(request: NextRequest) {
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: !isServerDev(),
+    secureCookie: SECURE_COOKIE,
   })
   const isTokenExpired = token?.expired || !token?.backendAuthenticated
 

@@ -50,7 +50,15 @@ macro_rules! box_types {
         }
     )*};
 }
-box_types!(CardBox, StarsBox, TextsBox, ChampionBox, AscBox, RankSigBox, PreviewBox);
+box_types!(
+    CardBox,
+    StarsBox,
+    TextsBox,
+    ChampionBox,
+    AscBox,
+    RankSigBox,
+    PreviewBox
+);
 pub(super) trait FitIn {
     fn is_fit_in(&self, card: &CardBox) -> bool;
 }

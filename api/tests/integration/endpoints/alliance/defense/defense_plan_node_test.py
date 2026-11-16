@@ -30,6 +30,13 @@ def _plan(alliance_id, plan_id, suffix: str = "") -> str:
     return f"/alliances/{alliance_id}/defense/plans/{plan_id}{suffix}"
 
 
+async def _bg_with_ascendable_spider():
+    bg = await setup_defense_bg()
+    bg.spider.is_ascendable = True
+    await load_objects([bg.spider])
+    return bg
+
+
 class TestPlanNodes:
     @pytest.mark.asyncio
     async def test_roster_entry_alone_places_its_champion_and_player(self):
@@ -140,6 +147,16 @@ class TestPlanNodes:
         assert resp.status_code == 403
 
     @pytest.mark.asyncio
+    async def test_plan_node_reports_is_ascendable(self):
+        bg = await _bg_with_ascendable_spider()
+        plan = await push_plan(bg.alliance.id)
+        await push_plan_node(plan, 1, bg.owner_spider)
+        await push_plan_node(plan, 2, bg.member_iron_man)
+        body = (await execute_get_request(_plan(bg.alliance.id, plan.id), headers=OWNER)).json()
+        flags = {n["champion_name"]: n["is_ascendable"] for n in body["nodes"]}
+        assert flags == {"Spider-Man": True, "Iron Man": False}
+
+    @pytest.mark.asyncio
     async def test_remove_then_clear(self):
         bg = await setup_defense_bg()
         plan = await push_plan(bg.alliance.id)
@@ -201,9 +218,7 @@ class TestSelectorData:
 
     @pytest.mark.asyncio
     async def test_available_champions_expose_is_ascendable(self):
-        bg = await setup_defense_bg()
-        bg.spider.is_ascendable = True
-        await load_objects([bg.spider])
+        bg = await _bg_with_ascendable_spider()
         plan = await push_plan(bg.alliance.id)
         route = _plan(bg.alliance.id, plan.id, "/available-champions?node_number=1")
         rows = (await execute_get_request(route, headers=OWNER)).json()

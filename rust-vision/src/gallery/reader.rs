@@ -3,7 +3,7 @@ use anyhow::{Result, ensure};
 pub(super) struct Reader<'a>(pub(super) &'a [u8]);
 
 impl<'a> Reader<'a> {
-    pub(super) fn new(bytes: &'a [u8]) -> Self {
+    pub(super) const fn new(bytes: &'a [u8]) -> Self {
         Self(bytes)
     }
     pub(super) fn take(&mut self, n: usize) -> Result<&'a [u8]> {
@@ -17,6 +17,18 @@ impl<'a> Reader<'a> {
         Ok(usize::try_from(u32::from_le_bytes(
             self.take(4)?.try_into()?,
         ))?)
+    }
+
+    /// A length-prefixed run of little-endian `f32`.
+    pub(super) fn floats(&mut self) -> Result<Vec<f32>> {
+        let len = self.len()?;
+        Ok(self
+            .take(4 * len)?
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|c| f32::from_le_bytes(*c))
+            .collect())
     }
 
     pub(super) fn string(&mut self) -> Result<String> {

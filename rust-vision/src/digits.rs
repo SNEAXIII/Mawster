@@ -95,10 +95,7 @@ fn sig_of(side: &[Glyph]) -> Option<u8> {
 /// `(rank, sig)` off one band `width` px wide, split at the widest gap. Refuses rather
 /// than guesses: a confident wrong rank is worse than a missing one.
 pub fn read_rank_sig(results: &[Results], width: f32) -> (Option<u8>, Option<u8>) {
-    let mut digits: Vec<Glyph> = suppress_overlaps(glyphs(results))
-        .into_iter()
-        .filter(|g| g.class != LABEL_CLASS && g.xyxy[0] > EDGE_PX && g.xyxy[2] < width - EDGE_PX)
-        .collect();
+    let mut digits = kept_digits(results, width);
     // One digit alone gives no gap: it could be the rank or a stray sig digit.
     if digits.len() < 2 {
         return (None, None);
@@ -122,4 +119,20 @@ pub fn read_rank_sig(results: &[Results], width: f32) -> (Option<u8>, Option<u8>
     }
     let (rank_side, sig_side) = digits.split_at(split + 1);
     (rank_of(rank_side, width), sig_of(sig_side))
+}
+
+/// The digit glyphs a reading is built from: overlaps resolved, labels and edge halves dropped.
+fn kept_digits(results: &[Results], width: f32) -> Vec<Glyph> {
+    suppress_overlaps(glyphs(results))
+        .into_iter()
+        .filter(|g| g.class != LABEL_CLASS && g.xyxy[0] > EDGE_PX && g.xyxy[2] < width - EDGE_PX)
+        .collect()
+}
+
+/// Confidence of the weakest digit `read_rank_sig` would use: how close the band came to a miss.
+pub fn weakest_digit(results: &[Results], width: f32) -> Option<f32> {
+    kept_digits(results, width)
+        .iter()
+        .map(|g| g.confidence)
+        .min_by(f32::total_cmp)
 }

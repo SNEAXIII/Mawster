@@ -11,13 +11,19 @@ class CatalogService:
     """The champion catalog as it is served to anyone, signed in or not."""
 
     @staticmethod
-    async def get_public_catalog(session: AsyncSession) -> CatalogResponse:
-        """Every champion, with the saga roles of the season currently running.
+    async def get_public_catalog(
+        session: AsyncSession, season_number: int | None = None
+    ) -> CatalogResponse:
+        """Every champion, with the saga roles of the chosen season, else the current one.
 
         No season running means no saga role: the flags come back false rather than
         carrying over the last season's, which would read as current and be wrong.
         """
-        season = await SeasonService.get_current_season(session)
+        season = (
+            await SeasonService.get_by_number(session, season_number)
+            if season_number is not None
+            else await SeasonService.get_current_season(session)
+        )
         saga_roles = (
             await SagaService.get_roles_for_season(session, season.id) if season is not None else {}
         )

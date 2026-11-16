@@ -5,7 +5,8 @@ SEED ?= 99
 EPOCHS ?= 100
 DEVICE ?= 0
 MODEL ?= yolo26n.pt
-ND ?= 8000
+EPOCHS_DIGITS ?= 200
+ND ?= 16000
 VALND ?= 800
 PARTS_LANG ?= fr
 SHOTS ?=
@@ -16,7 +17,7 @@ COPIES ?= 1
 RUFF ?= uvx ruff@0.16.0  # keep in step with .pre-commit-config.yaml
 
 .PHONY: help setup install install-train pdn-layers parts synth synth-train synth-val train \
-        synth-digits train-digits export-onnx worker publish-job timeline lint check fix format clean
+        synth-digits train-digits export-onnx export-detector export-digits worker publish-job timeline lint check fix format clean
 
 help:
 	@echo "setup         --> uv sync + pre-commit hooks"
@@ -29,8 +30,10 @@ help:
 	@echo "synth-val     --> generate only the val split (VAL=$(VAL), SEED=$(SEED))"
 	@echo "train         --> train the detector into out/runs, a GPU step (EPOCHS=$(EPOCHS) DEVICE=$(DEVICE) MODEL=$(MODEL))"
 	@echo "synth-digits  --> generate train ($(ND)) + val ($(VALND)) rank/sig band datasets"
-	@echo "train-digits  --> train the 11-class rank/sig digit reader (DEVICE=$(DEVICE))"
-	@echo "export-onnx   --> export the trained detector + digit reader beside their .pt in out/runs"
+	@echo "train-digits  --> train the 11-class rank/sig digit reader (EPOCHS_DIGITS=$(EPOCHS_DIGITS) DEVICE=$(DEVICE))"
+	@echo "export-onnx   --> export-detector + export-digits"
+	@echo "export-detector --> export the trained detector beside its .pt in out/runs"
+	@echo "export-digits --> export the trained digit reader beside its .pt in out/runs"
 	@echo "worker        --> run the Rust worker in release, logging to out/worker.log"
 	@echo "publish-job   --> upload a screenshot to RustFS and queue its job (IMG=$(IMG) COPIES=$(COPIES))"
 	@echo "timeline      --> chart the jobs per worker stage from out/worker.log into out/job_timeline.png"
@@ -65,14 +68,18 @@ train:
 	$(TRAIN) -m yolo.detector.train_card_detector --epochs $(EPOCHS) --device $(DEVICE) --model $(MODEL)
 
 synth-digits:
-	$(TRAIN) -m yolo.synth.gen_digit_bands --n $(ND) --split train
-	$(TRAIN) -m yolo.synth.gen_digit_bands --n $(VALND) --split val --seed $(SEED)
+	$(TRAIN) -m yolo.synth.gen_digit_bands --n $(ND) --split train --workers $(WORKERS)
+	$(TRAIN) -m yolo.synth.gen_digit_bands --n $(VALND) --split val --seed $(SEED) --workers $(WORKERS)
 
 train-digits:
-	$(TRAIN) -m yolo.digits.train_digit_reader --epochs $(EPOCHS) --device $(DEVICE)
+	$(TRAIN) -m yolo.digits.train_digit_reader --epochs $(EPOCHS_DIGITS) --device $(DEVICE)
 
-export-onnx:
+export-onnx: export-detector export-digits
+
+export-detector:
 	$(TRAIN) scripts/export_detector_onnx.py
+
+export-digits:
 	$(TRAIN) scripts/export_digits_onnx.py
 
 worker:

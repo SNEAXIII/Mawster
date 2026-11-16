@@ -1,5 +1,6 @@
 """The servers one E2E worker needs: a backend and a frontend per worker, one static server."""
 
+import json
 import os
 import re
 import subprocess
@@ -20,8 +21,14 @@ from config import (  # pylint: disable=import-error,wrong-import-position
     FRONT_DIR,
     HEALTH_TIMEOUT,
     POSTGRES_PORT,
+    RABBITMQ_URL,
     ROOT,
+    RUSTFS_ACCESS_KEY,
+    RUSTFS_SECRET_KEY,
+    RUSTFS_URL,
     STATIC_PORT,
+    VISION_MODELS_DIR,
+    VISION_STARTUP_TIMEOUT,
     log,
     worker_log_dir,
 )
@@ -100,7 +107,7 @@ def start_static_server() -> None:
     )
 
 
-def start_backend(worker: int) -> None:
+def start_backend(worker: int, vision: bool = False) -> None:
     api_port = BASE_API_PORT + worker
     db = get_db_name(worker)
     env = {
@@ -115,6 +122,8 @@ def start_backend(worker: int) -> None:
         # lines, which are the only place the real startup error is reported.
         "PYTHONUNBUFFERED": "1",
     }
+    if vision:
+        env["VISION_CONSUMER_ENABLED"] = "true"
     log(f"Worker {worker}: starting backend  — PORT={api_port}  DB={db}  MODE=testing")
     log_dir = worker_log_dir(worker)
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -176,3 +185,102 @@ def wait_for_servers(workers: int) -> None:
         wait_for_http(
             localhost_url(BASE_FRONT_PORT + worker, "/api/auth/providers"), f"Frontend {worker}"
         )
+
+
+def run_aws(*args: str) -> subprocess.CompletedProcess:
+    """Run the AWS CLI image against RustFS, the way compose-dev's rustfs-init does."""
+    env = {
+        **os.environ,
+        "AWS_ACCESS_KEY_ID": RUSTFS_ACCESS_KEY,
+        "AWS_SECRET_ACCESS_KEY": RUSTFS_SECRET_KEY,
+        "AWS_DEFAULT_REGION": "us-east-1",
+    }
+    cmd = [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "host",
+        "-e",
+        "AWS_ACCESS_KEY_ID",
+        "-e",
+        "AWS_SECRET_ACCESS_KEY",
+        "-e",
+        "AWS_DEFAULT_REGION",
+        "amazon/aws-cli:latest",
+        "--endpoint-url",
+        RUSTFS_URL,
+        *args,
+    ]
+    return subprocess.run(cmd, env=env, capture_output=True, text=True, check=False)
+
+
+def init_vision_buckets() -> None:
+    """Create the vision and dataset buckets and the vision CORS rule. No lifecycle rule in testing."""
+    deadline = time.time() + VISION_STARTUP_TIMEOUT
+    while run_aws("s3", "ls").returncode != 0:
+        if time.time() >= deadline:
+            msg = f"RustFS did not answer at {RUSTFS_URL} within {VISION_STARTUP_TIMEOUT}s"
+            raise TimeoutError(msg)
+        time.sleep(2)
+    # Failure ignored on mb, as in compose: the bucket may already exist.
+    run_aws("s3", "mb", "s3://vision")
+    run_aws("s3", "mb", "s3://dataset")
+    cors = {
+        "CORSRules": [
+            {
+                "AllowedOrigins": [f"http://localhost:{BASE_FRONT_PORT}"],
+                "AllowedMethods": ["GET", "PUT"],
+                "AllowedHeaders": ["*"],
+                "ExposeHeaders": ["ETag"],
+                "MaxAgeSeconds": 3000,
+            }
+        ]
+    }
+    result = run_aws(
+        "s3api", "put-bucket-cors", "--bucket", "vision", "--cors-configuration", json.dumps(cors)
+    )
+    if result.returncode != 0:
+        msg = f"put-bucket-cors failed: {result.stderr.strip()}"
+        raise RuntimeError(msg)
+    log("RustFS buckets and CORS ready")
+
+
+def start_vision_worker(worker_bin: Path, gallery: Path) -> None:
+    """Start the Rust worker detached."""
+    log_dir = worker_log_dir(0)
+    log_dir.mkdir(parents=True, exist_ok=True)
+    env = {
+        **os.environ,
+        "RABBITMQ_URL": RABBITMQ_URL,
+        "RUSTFS_ENDPOINT": RUSTFS_URL,
+        "RUSTFS_ACCESS_KEY": RUSTFS_ACCESS_KEY,
+        "RUSTFS_SECRET_KEY": RUSTFS_SECRET_KEY,
+        "DETECTOR_MODEL": str(VISION_MODELS_DIR / "yolo" / "best.onnx"),
+        "DIGITS_MODEL": str(VISION_MODELS_DIR / "ocr" / "digits_yolo26n_224_e140_fp16.onnx"),
+        "GALLERY_FILE": str(gallery.resolve()),
+    }
+    log(f"Starting vision worker {worker_bin}")
+    with (log_dir / "vision-worker.log").open("w", encoding="utf-8") as log_file:
+        subprocess.Popen(
+            [str(worker_bin.resolve())],
+            env=env,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+
+
+def wait_for_vision_consumer(timeout: int = VISION_STARTUP_TIMEOUT) -> None:
+    """Wait until the backend has declared vision.jobs: the worker dies if it consumes before that."""
+    log_file = worker_log_dir(0) / "backend.log"
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if log_file.exists() and "vision consumer listening" in log_file.read_text(
+            encoding="utf-8", errors="replace"
+        ):
+            log("Backend vision consumer is listening")
+            return
+        time.sleep(0.5)
+    msg = f"vision consumer did not start within {timeout}s, see {log_file}"
+    raise TimeoutError(msg)

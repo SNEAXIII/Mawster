@@ -1,14 +1,14 @@
 use std::fmt;
 
+use super::Laps;
+use crate::gallery::Entry;
+use crate::{
+    detection::{CardDetected, CardDetectedPrediction, extract_cards, read_detections},
+    digits::{read_rank_sig, weakest_digit},
+};
 use image::DynamicImage;
 use serde::Serialize;
 use ultralytics_inference::{Results, YOLOModel};
-
-use super::Laps;
-use crate::{
-    detection::{CardDetected, CardDetectedPrediction, extract_cards, read_detections},
-    digits::read_rank_sig,
-};
 
 /// Rows top to bottom, each left to right, every card beside its grid column: a missed card
 /// leaves a hole instead of shifting the rest of its row.
@@ -25,12 +25,13 @@ pub struct Raw {
     /// Digit reader output, one entry per card in reading order.
     pub digits: Vec<Vec<Results>>,
 }
+
 impl<'a> Matrix<'a> {
     pub fn new(
         image: &'a DynamicImage,
         yolo_area: &mut YOLOModel,
         yolo_digits: &mut YOLOModel,
-        gallery: &[(String, Vec<f32>)],
+        gallery: &[Entry],
     ) -> anyhow::Result<Self> {
         let laps = &mut Laps::default();
         Ok(Self::with_raw(image, yolo_area, yolo_digits, gallery, laps)?.0)
@@ -41,7 +42,7 @@ impl<'a> Matrix<'a> {
         image: &'a DynamicImage,
         yolo_area: &mut YOLOModel,
         yolo_digits: &mut YOLOModel,
-        gallery: &[(String, Vec<f32>)],
+        gallery: &[Entry],
         laps: &mut Laps,
     ) -> anyhow::Result<(Self, Raw)> {
         let yolo = Self::detect(image, yolo_area, laps)?;
@@ -87,7 +88,9 @@ impl<'a> Matrix<'a> {
         );
         for (card, results) in matrix.iter_mut().flatten().zip(&digits) {
             // `crop` truncates the band to whole pixels.
-            (card.rank, card.sig) = read_rank_sig(results, card.rank_sig_box.width().trunc());
+            let width = card.rank_sig_box.width().trunc();
+            (card.rank, card.sig) = read_rank_sig(results, width);
+            card.digit_confidence = weakest_digit(results, width);
         }
         laps.lap("rank/sig");
         let centers: Vec<Vec<f32>> = matrix
@@ -198,6 +201,7 @@ impl<'a> Matrix<'a> {
             .collect()
     }
 }
+
 /// Columns are positional, so every row but the last spans the widest one; the last row
 /// may stop early, the roster just ends there. A whole missed row stays invisible.
 fn count_missing_cells(rows: &[Vec<usize>]) -> usize {
@@ -227,6 +231,7 @@ pub struct MatrixPrediction {
     pub cells: Vec<(String, CardDetectedPrediction)>,
     pub timings: Vec<(&'static str, f64)>,
 }
+
 impl From<&Matrix<'_>> for MatrixPrediction {
     fn from(matrix: &Matrix<'_>) -> Self {
         let cells: Vec<(String, CardDetectedPrediction)> = matrix
@@ -249,6 +254,7 @@ impl From<&Matrix<'_>> for MatrixPrediction {
         }
     }
 }
+
 /// The worker's log line: the cards themselves stay in the JSON.
 impl fmt::Debug for MatrixPrediction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

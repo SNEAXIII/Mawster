@@ -3,6 +3,35 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.6.0](https://github.com/SNEAXIII/Mawster/compare/v2.5.0...v2.6.0) (2026-11-15)
+
+
+### Added
+
+* add a saga tab to the tools page ([11889d5](https://github.com/SNEAXIII/Mawster/commit/11889d5bdde03fb11a72bbec5343d365276056b2))
+* highlight defenders below a rank threshold ([1c29a69](https://github.com/SNEAXIII/Mawster/commit/1c29a698984dc8189c3b28abfe65edb99d105431))
+
+## [2.5.0](https://github.com/SNEAXIII/Mawster/compare/v2.4.2...v2.5.0) (2026-11-12)
+
+
+### Added
+
+* read rank and sig with the YOLO26 digit reader ([40041ba](https://github.com/SNEAXIII/Mawster/commit/40041ba5e79e115b0e854977ce985abdf6679b23))
+
+## [2.4.2](https://github.com/SNEAXIII/Mawster/compare/v2.4.1...v2.4.2) (2026-11-11)
+
+
+### Fixed
+
+* name champions on prismatic card backgrounds ([cd39e57](https://github.com/SNEAXIII/Mawster/commit/cd39e5784103515f5b59abc2f51b7ddc459e7e30))
+
+## [2.4.1](https://github.com/SNEAXIII/Mawster/compare/v2.4.0...v2.4.1) (2026-11-10)
+
+
+### Fixed
+
+* stop refreshing the session on every request once the token expires ([#825](https://github.com/SNEAXIII/Mawster/issues/825)) ([9f2caee](https://github.com/SNEAXIII/Mawster/commit/9f2caeefefe093e4243c01ad4347f1b90eaef8fb))
+
 ## [2.4.0](https://github.com/SNEAXIII/Mawster/compare/v2.3.0...v2.4.0) (2026-11-10)
 
 

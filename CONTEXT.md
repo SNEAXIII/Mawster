@@ -308,6 +308,12 @@ every other plan is a draft of intent and blocks nothing. Plain members and Visi
 Template needs the placement right.
 _Table_: `defense_active_plan`.
 
+**Rank Threshold**:
+A rarity and an ascension a viewer picks on a Defense Plan, under which its defenders show
+as still to rank up, along with its Unfilled nodes — a Champion with no Player, or no
+Champion at all. Ascension only counts for an ascendable Champion. Kept per viewer, never stored.
+_Avoid_: rank target, rank counter.
+
 The asymmetry is deliberate: your layout is a plan you reuse and refine, while an
 enemy layout is throwaway scouting of a different Opponent every War.
 

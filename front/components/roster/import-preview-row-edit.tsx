@@ -14,7 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
-import { RARITIES, RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
+import { MAX_ASCENSION, RARITIES, RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
 import { previewAspectRatio, previewImageStyle } from '@/app/services/vision-screens'
 import type { PreviewRow, PreviewRowPatch } from './import-preview-row'
@@ -50,11 +50,9 @@ const SCORE_CLASSES: Record<ScoreLevel, string> = {
   high: 'bg-green-600 text-white border-transparent',
 }
 
-// Same bounds the backend enforces: signature <= 200, ascension in 0..2
-// (dto_champion_user: ge=0, le=2). The max attribute alone does not stop a
+// Same bounds the backend enforces (game_types): the max attribute alone does not stop a
 // paste or a typed-over value, so every edit is clamped here too.
 const MAX_SIGNATURE = 200
-const MAX_ASCENSION = 2
 
 function clamp(raw: string, max: number): number {
   const n = Number(raw)
@@ -121,6 +119,8 @@ export default function ImportPreviewRowEdit({
     <div
       className={`flex flex-col gap-2 py-3 ${rowStateClass(row.ignored === true, issues.length > 0)}`}
       data-cy={`preview-row-${index}`}
+      data-champion={row.champion_name}
+      data-rarity={row.newRarity}
       data-invalid={issues.length > 0}
       data-ignored={row.ignored === true}
     >

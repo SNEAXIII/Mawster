@@ -10,6 +10,7 @@ import {
   type JwtPayload,
 } from '@/app/lib/auth-refresh'
 import { withBackendProfile } from '@/app/lib/backend-profile'
+import { SESSION_MAX_AGE } from '@/app/lib/session-cookie'
 
 import { isServerDev } from '@/app/lib/dev-mode'
 
@@ -203,6 +204,7 @@ export const {
   },
   session: {
     strategy: 'jwt',
+    maxAge: SESSION_MAX_AGE,
   },
   debug: process.env.NODE_ENV === 'development',
 })

@@ -5,7 +5,7 @@
 # meant `uvx ruff check` and the pre-commit hook could disagree with the code the repo
 # was written against, and a plain version bump could break every commit. The set is
 # pinned explicitly here instead, and sub-projects `extend` this file so a rule is
-# defined once for api/, scripts/, static-assets/ and fake-worker/.
+# defined once for api/, scripts/ and static-assets/.
 
 line-length = 100
 indent-width = 4

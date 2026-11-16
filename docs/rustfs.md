@@ -21,18 +21,24 @@ docker run --rm $ENVS rclone/rclone ls rfs:vision --max-age 5h --use-server-modt
 
 # Téléchargement
 docker run --rm $ENVS -v /tmp/rustfs-dump:/out rclone/rclone copy rfs:vision /out --max-age 5h --use-server-modtime -P
+
+# Archive
+cd /tmp && zip -qr rustfs-dump.zip rustfs-dump && rm -rf rustfs-dump
 exit
 ```
 
 - `--max-age` : `30m`, `5h`, `2d`… `--use-server-modtime` filtre sur la date d'upload sans un HEAD par objet.
 - Un seul import : `rfs:vision/imports/<import_id>`. Le dataset : `rfs:dataset`.
 - `RC` vide → `docker ps --format '{{.Names}}' | grep rustfs` donne le vrai nom du conteneur.
+- Plusieurs imports remontent : chaque dossier `imports/<import_id>` compte autant de PNG que
+  d'écrans, ce qui suffit à le relier à sa ligne du tableau admin (heures en UTC). Supprime les
+  autres avant l'archive.
 
 ## En local
 
 ```powershell
-scp -r root@mawster.app:/tmp/rustfs-dump ./rustfs-dump
-ssh root@mawster.app rm -rf /tmp/rustfs-dump
+scp root@mawster.app:/tmp/rustfs-dump.zip .
+ssh root@mawster.app rm /tmp/rustfs-dump.zip
 ```
 
 Réf. : [rclone filtering](https://rclone.org/filtering/), [rclone S3](https://rclone.org/s3/).

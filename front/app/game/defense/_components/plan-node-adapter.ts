@@ -34,6 +34,7 @@ export function templateNodeToPlacement(
     signature: 0,
     is_preferred_attacker: false,
     ascension: 0,
+    is_ascendable: false,
     is_saga_attacker: false,
     is_saga_defender: false,
     placed_by_id: null,

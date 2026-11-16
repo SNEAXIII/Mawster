@@ -1,4 +1,4 @@
-import type { RosterEntry } from '@/app/services/roster'
+import { MAX_ASCENSION, type RosterEntry } from '@/app/services/roster'
 
 export interface RosterFilters {
   name: string
@@ -13,7 +13,7 @@ export interface RosterFilters {
 }
 
 export const RANK_OPTIONS = ['7r1', '7r2', '7r3', '7r4', '7r5', '7r6'] as const
-export const ASCENSION_OPTIONS = [0, 1, 2] as const
+export const ASCENSION_OPTIONS = Array.from({ length: MAX_ASCENSION + 1 }, (_, level) => level)
 export const MAX_SIGNATURE = 200
 
 export const EMPTY_FILTERS: RosterFilters = {
