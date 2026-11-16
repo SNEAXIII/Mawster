@@ -24,6 +24,7 @@ jobs:
     uses: $/.github/workflows/_test.yaml # NOSONAR githubactions:S7637 - false positive: local file, nothing to pin.
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
 
   changes:
     permissions:
