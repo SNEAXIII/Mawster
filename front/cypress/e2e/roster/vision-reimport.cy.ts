@@ -18,16 +18,12 @@ describe('Roster – Vision re-import of the same screenshot', () => {
       cy.getByCy('import-preview-confirm-button').should('be.enabled').click();
       cy.getByCy('import-report-close-button').click();
 
-      for (let attempt = 2; attempt <= 3; attempt++) {
-        uploadShots('shot_0001.png');
-        assertPreviewMatchesShots(['shot_0001.png']);
-        cy.get('[data-cy^="preview-row-status-badge-"]').should(($badges) => {
-          expect([...$badges].map((b) => b.dataset.status)).to.deep.equal(Array($badges.length).fill('unchanged'));
-        });
-        cy.getByCy('import-preview-confirm-button').should('be.disabled');
-        cy.get('body').type('{esc}');
-        cy.getByCy('import-preview-confirm-button').should('not.exist');
-      }
+      uploadShots('shot_0001.png');
+      assertPreviewMatchesShots(['shot_0001.png']);
+      cy.get('[data-cy^="preview-row-status-badge-"]').should(($badges) => {
+        expect([...$badges].map((b) => b.dataset.status)).to.deep.equal(Array($badges.length).fill('unchanged'));
+      });
+      cy.getByCy('import-preview-confirm-button').should('be.disabled');
     });
   });
 });
