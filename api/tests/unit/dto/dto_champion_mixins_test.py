@@ -27,6 +27,7 @@ from src.dto.alliance.war.dto_war import (
     WarSynergyResponse,
 )
 from src.dto.mixins import ChampionIdentity, ChampionRef, RosterEntryInput, SagaRoles
+from src.enums.AttackPreference import AttackPreference
 
 CHAMPION_IDENTITY_FIELDS = {"champion_name", "champion_class", "image_url"}
 SAGA_FIELDS = {"is_saga_attacker", "is_saga_defender"}
@@ -106,7 +107,7 @@ class TestSagaRoles:
 
 class TestRosterEntryInput:
     def test_declares_exactly_the_player_stated_fields(self):
-        expected = {"rarity", "signature", "is_preferred_attacker", "ascension"}
+        expected = {"rarity", "signature", "attack_preference", "ascension"}
         assert set(RosterEntryInput.model_fields) == expected
 
     @pytest.mark.parametrize("dto", [ChampionUserCreateRequest, ChampionUserBulkEntry])
@@ -126,7 +127,7 @@ class TestRosterEntryInput:
         entry = dto.model_validate(_roster_payload(dto))
         assert entry.signature == 0
         assert entry.ascension == 0
-        assert entry.is_preferred_attacker is False
+        assert entry.attack_preference == AttackPreference.NEUTRAL
 
 
 def _roster_payload(dto, **overrides):

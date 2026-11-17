@@ -1,3 +1,4 @@
+import type { AttackPreference } from '@/app/services/roster'
 import { api, jsonBody } from '@/app/services/utils'
 import type { SeasonFormat } from '@/app/services/season'
 
@@ -17,7 +18,7 @@ export interface DefensePlacement {
   champion_image_url: string | null
   rarity: string
   signature: number
-  is_preferred_attacker: boolean
+  attack_preference: AttackPreference
   ascension: number
   is_ascendable: boolean
   is_saga_attacker: boolean
@@ -36,7 +37,7 @@ export interface ChampionOwner {
   rank: number
   signature: number
   defender_count: number
-  is_preferred_attacker: boolean
+  attack_preference: AttackPreference
   ascension: number
 }
 
@@ -84,7 +85,7 @@ export interface DefensePlanNode {
   game_pseudo: string | null
   rarity: string | null
   signature: number
-  is_preferred_attacker: boolean
+  attack_preference: AttackPreference
   ascension: number
   is_ascendable: boolean
   is_saga_attacker: boolean

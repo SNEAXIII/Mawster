@@ -17,6 +17,7 @@ from src.dto.alliance.war.dto_war import (
     WarSynergyResponse,
     WarUpdateRequest,
 )
+from src.enums.AttackPreference import AttackPreference
 from src.models.Base import utcnow
 
 
@@ -104,7 +105,7 @@ def _make_attacker(**overrides):
         "stars": 7,
         "rank": 3,
         "ascension": 1,
-        "is_preferred_attacker": True,
+        "attack_preference": AttackPreference.PREFERRED,
     }
     defaults.update(overrides)
     obj = _ns(**defaults)
@@ -241,7 +242,7 @@ class TestWarPlacementResponseDTO:
         assert dto.attacker_ascension is None
         assert dto.attacker_is_saga_attacker is None
         assert dto.attacker_is_saga_defender is None
-        assert dto.attacker_is_preferred_attacker is None
+        assert dto.attacker_attack_preference is None
 
     def test_placement_rarity_format(self):
         p = _make_placement(stars=6, rank=4)
@@ -280,7 +281,7 @@ class TestWarPlacementResponseDTO:
         assert dto.attacker_image_url == "/img/herc.png"
         assert dto.attacker_rarity == "7r3"
         assert dto.attacker_ascension == 1
-        assert dto.attacker_is_preferred_attacker is True
+        assert dto.attacker_attack_preference == AttackPreference.PREFERRED
         assert dto.attacker_is_saga_attacker is None
         assert dto.attacker_is_saga_defender is None
 

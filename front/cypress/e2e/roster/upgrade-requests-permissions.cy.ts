@@ -76,13 +76,16 @@ describe('Roster – Upgrade Requests (Permissions)', () => {
       cy.getByCy('invite-member-toggle').should('be.visible');
       cy.getByCy('view-roster-URMember').click();
 
-      cy.getByCy('cancel-pending-request').should('exist');
-      cy.getByCy('cancel-pending-request').first().focus().click();
+      cy.getByCy('champion-card-SentryCard').click();
+      cy.getByCy('cancel-pending-request').should('exist').click();
 
       cy.get('[role="alertdialog"]').contains('button', 'Cancel request').click();
 
-      cy.getByCy('cancel-pending-request').should('not.exist');
       cy.getByCy('upgrade-requests-section').should('not.exist');
+      // Reopened, the dialog offers the upgrade again instead of the cancel
+      cy.getByCy('champion-card-SentryCard').click();
+      cy.getByCy('champion-upgrade').should('exist');
+      cy.getByCy('cancel-pending-request').should('not.exist');
     });
   });
 });

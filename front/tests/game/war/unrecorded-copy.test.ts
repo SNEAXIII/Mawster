@@ -25,7 +25,7 @@ const copy = (over: Partial<AvailableAttacker>): AvailableAttacker => ({
   champion_name: 'Storm',
   champion_alias: null,
   image_url: null,
-  is_preferred_attacker: false,
+  attack_preference: 'neutral',
   is_saga_attacker: false,
   is_saga_defender: false,
   is_on_defense: false,

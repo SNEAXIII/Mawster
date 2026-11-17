@@ -5,6 +5,7 @@ import uuid
 import pytest
 
 from main import app
+from src.enums.AttackPreference import AttackPreference
 from src.models.champion.ChampionUser import ChampionUser
 from src.utils.db import get_session
 from tests.integration.endpoints.setup.game_setup import (
@@ -210,30 +211,29 @@ class TestAllianceRosterFilters:
 
     @pytest.mark.asyncio
     async def test_preferred_attacker_filter(self):
+        """Neutral and Detested entries are left out of the Preferred-only filter."""
         await _setup_users()
         alliance, owner_acc = await push_alliance_with_owner(
             user_id=USER_ID, game_pseudo=GAME_PSEUDO
         )
-        herc = await push_champion(name="Hercules", champion_class="Cosmic")
-        doom = await push_champion(name="Doctor Doom", champion_class="Mystic")
-        await load_objects(
-            [
+        prefs = {
+            "Hercules": AttackPreference.PREFERRED,
+            "Doctor Doom": AttackPreference.NEUTRAL,
+            "Kitty Pryde": AttackPreference.DETESTED,
+        }
+        entries = []
+        for name, pref in prefs.items():
+            champ = await push_champion(name=name, champion_class="Cosmic")
+            entries.append(
                 ChampionUser(
                     game_account_id=owner_acc.id,
-                    champion_id=herc.id,
+                    champion_id=champ.id,
                     stars=7,
                     rank=5,
-                    is_preferred_attacker=True,
-                ),
-                ChampionUser(
-                    game_account_id=owner_acc.id,
-                    champion_id=doom.id,
-                    stars=7,
-                    rank=5,
-                    is_preferred_attacker=False,
-                ),
-            ]
-        )
+                    attack_preference=pref,
+                )
+            )
+        await load_objects(entries)
         response = await execute_get_request(
             f"/alliances/{alliance.id}/roster?preferred_attacker=true", headers=HEADERS_OWNER
         )

@@ -5,7 +5,7 @@ import { StickyNote } from 'lucide-react'
 import { useI18n } from '@/app/i18n'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import ChampionPortrait from '@/components/champion-portrait'
-import { shortenChampionName } from '@/app/services/roster'
+import { shortenChampionName, type AttackPreference } from '@/app/services/roster'
 import UnrecordedBadge from './unrecorded-badge'
 import PrefightSelectorDialog from './prefight-selector'
 import AssistSelectorDialog from './assist-selector'
@@ -20,7 +20,7 @@ interface NodeActionsPopoverProps {
   championClass: string | null
   rarity: string
   size?: number
-  isPreferred?: boolean
+  attackPreference?: AttackPreference
   ascension?: number
   is_saga_attacker?: boolean
   is_saga_defender?: boolean
@@ -35,7 +35,7 @@ export default function NodeActionsPopover({
   championClass,
   rarity,
   size = 35,
-  isPreferred = false,
+  attackPreference,
   ascension = 0,
   is_saga_attacker = false,
   is_saga_defender = false,
@@ -75,7 +75,7 @@ export default function NodeActionsPopover({
               name={championName}
               rarity={rarity}
               size={size}
-              isPreferred={isPreferred}
+              attackPreference={attackPreference}
               ascension={ascension}
               is_saga_attacker={is_saga_attacker}
               is_saga_defender={is_saga_defender}

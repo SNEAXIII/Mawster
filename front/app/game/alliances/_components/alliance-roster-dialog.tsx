@@ -82,6 +82,7 @@ export default function AllianceRosterDialog({
               />
               <RosterGrid
                 groupedRoster={vm.groupedRoster}
+                roster={roster}
                 isFiltered={vm.hasActiveFilters}
                 readOnly={!canRequestUpgrade}
                 upgradeRequests={upgradeRequests}

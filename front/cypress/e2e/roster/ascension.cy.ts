@@ -93,8 +93,9 @@ describe('Roster – Ascension', () => {
         // No ascension badge initially
         cy.getByCy('champion-ascension').should('not.exist');
 
-        // Click ascend button (FiStar) on the card via title attribute
-        cy.getByCy('champion-card-AscCardHero').find('[title="Ascension"]').focus().click();
+        // Open the champion dialog, then ascend
+        cy.getByCy('champion-card-AscCardHero').click();
+        cy.getByCy('champion-ascend').click();
 
         // Confirm ascension in dialog
         cy.get('[role="alertdialog"]').should('be.visible');

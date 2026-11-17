@@ -10,7 +10,8 @@ const [THANOS] = CHAMPIONS
 const PORTRAITS = [
   { label: '7r5 plain', rarity: '7r5' },
   { label: '6r5 plain', rarity: '6r5' },
-  { label: 'preferred', rarity: '7r5', isPreferred: true },
+  { label: 'preferred', rarity: '7r5', attackPreference: 'preferred' },
+  { label: 'detested', rarity: '7r5', attackPreference: 'detested' },
   { label: 'saga', rarity: '7r5', is_saga_attacker: true },
   { label: 'A2', rarity: '7r5', ascension: 2 },
   { label: 'synergy', rarity: '7r5', mode: 'synergy' },

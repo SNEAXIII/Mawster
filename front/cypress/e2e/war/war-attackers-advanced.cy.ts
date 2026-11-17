@@ -115,7 +115,7 @@ describe('War – Attackers mode (advanced)', () => {
     setupAttackerScenario('atk-pref-selector').then(({ adminToken, memberData, memberAccId, ownerData }) => {
       cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
         cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-          is_preferred_attacker: true,
+          attack_preference: 'preferred',
         }).then(() => {
           goToAttackersMode(ownerData.user_id);
           openWarNode(10);
@@ -132,7 +132,7 @@ describe('War – Attackers mode (advanced)', () => {
       ({ adminToken, memberData, memberAccId, ownerData, allianceId, warId }) => {
         cy.apiLoadChampion(adminToken, 'Deadpool', 'Mutant').then((champs) => {
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: true,
+            attack_preference: 'preferred',
           }).then((cu) => {
             cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, cu.id);
             goToAttackersMode(ownerData.user_id);

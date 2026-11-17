@@ -1,3 +1,4 @@
+import type { AttackPreference } from '@/app/services/roster'
 import { api, jsonBody } from '@/app/services/utils'
 import { cacheScreen, clearScreens } from '@/app/services/vision-screens'
 
@@ -92,7 +93,7 @@ export interface ConfirmedRow {
   rarity: string
   signature: number
   ascension: number
-  is_preferred_attacker: boolean
+  attack_preference: AttackPreference
   prediction_id: string | null
 }
 

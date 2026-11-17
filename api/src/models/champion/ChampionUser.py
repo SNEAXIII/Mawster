@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship
 
+from src.enums.AttackPreference import AttackPreference
 from src.models.Base import (
     Ascension,
     ChampionFk,
@@ -24,7 +25,10 @@ class ChampionUser(UUIDBase, ChampionFk, GameAccountFk, table=True):
     stars: Stars = 7
     rank: Rank = 1
     signature: Signature = 0
-    is_preferred_attacker: bool = Field(default=False)
+    attack_preference: AttackPreference = Field(
+        default=AttackPreference.NEUTRAL,
+        sa_column_kwargs={"server_default": AttackPreference.NEUTRAL.name},
+    )
     ascension: Ascension = 0
 
     @property

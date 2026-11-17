@@ -4,7 +4,7 @@ import React from 'react'
 import { useI18n } from '@/app/i18n'
 import { ArrowRight } from 'lucide-react'
 import ChampionPortrait from '@/components/champion-portrait'
-import { RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
+import { type AttackPreference, RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
 import type { VisionPreview } from '@/app/services/vision'
 import ImportPreviewRowEdit from './import-preview-row-edit'
@@ -19,7 +19,7 @@ export interface PreviewRow {
   oldSignature: number | null
   isNew: boolean
   hasChanges: boolean
-  is_preferred_attacker?: boolean
+  attack_preference?: AttackPreference
   ascension?: number
   // Original ascension, so manual edits can be diffed against it — optional
   // because JSON-import rows never populated it before this field existed.

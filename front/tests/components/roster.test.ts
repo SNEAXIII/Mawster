@@ -11,6 +11,10 @@ import {
 } from '@/components/roster/roster-filters'
 import type { PreviewRow } from '@/components/roster/import-preview-row'
 import type { RosterEntry } from '@/app/services/roster'
+import {
+  resolveAttackPreference,
+  type RosterImportEntry,
+} from '@/components/use-roster-import-core'
 
 const row = (over: Partial<PreviewRow>): PreviewRow => ({
   champion_name: 'Storm',
@@ -68,7 +72,7 @@ const entry = (over: Partial<RosterEntry>): RosterEntry => ({
   champion_class: 'Mutant',
   alias: null,
   image_url: null,
-  is_preferred_attacker: false,
+  attack_preference: 'neutral',
   ascension: 0,
   is_ascendable: false,
   has_prefight: false,
@@ -110,7 +114,7 @@ describe('roster filters', () => {
       champion_class: 'Tech',
       rarity: '7r4',
       ascension: 1,
-      is_preferred_attacker: true,
+      attack_preference: 'preferred',
     }),
     entry({
       champion_name: 'Hulk',
@@ -150,5 +154,45 @@ describe('option range', () => {
   it('round-trips a partial range', () => {
     expect(optionSlice(RANK_OPTIONS, [2, 4])).toEqual(['7r3', '7r4', '7r5'])
     expect(optionRange(RANK_OPTIONS, ['7r5', '7r3', '7r4'])).toEqual([2, 4])
+  })
+})
+
+describe('import attack preference', () => {
+  const entry = (over: Partial<RosterImportEntry>): RosterImportEntry => ({
+    champion_name: 'Storm',
+    rarity: '7r3',
+    signature: 0,
+    ascension: 0,
+    ...over,
+  })
+  const owned = (attack_preference: RosterEntry['attack_preference']) =>
+    ({ attack_preference }) as RosterEntry
+
+  it('takes the new field over the legacy flag', () => {
+    expect(
+      resolveAttackPreference(
+        entry({ attack_preference: 'detested', is_preferred_attacker: true }),
+        undefined
+      )
+    ).toBe('detested')
+  })
+
+  it('reads a legacy true as preferred', () => {
+    expect(resolveAttackPreference(entry({ is_preferred_attacker: true }), owned('neutral'))).toBe(
+      'preferred'
+    )
+  })
+
+  it('lets a legacy false demote a preferred only', () => {
+    expect(
+      resolveAttackPreference(entry({ is_preferred_attacker: false }), owned('preferred'))
+    ).toBe('neutral')
+    expect(
+      resolveAttackPreference(entry({ is_preferred_attacker: false }), owned('detested'))
+    ).toBeUndefined()
+  })
+
+  it('keeps the roster value when the file says nothing', () => {
+    expect(resolveAttackPreference(entry({}), owned('detested'))).toBeUndefined()
   })
 })

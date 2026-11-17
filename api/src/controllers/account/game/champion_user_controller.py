@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
 from src.dto.account.game.dto_champion_user import (
+    AttackPreferenceUpdateRequest,
     ChampionUserBulkRequest,
     ChampionUserCreateRequest,
     ChampionUserDetailResponse,
@@ -65,7 +66,7 @@ async def create_champion_user(
         champion_id=body.champion_id,
         rarity=body.rarity,
         signature=body.signature,
-        is_preferred_attacker=body.is_preferred_attacker,
+        attack_preference=body.attack_preference,
         ascension=body.ascension,
     )
     return ChampionUserResponse.model_validate(result)
@@ -93,7 +94,7 @@ async def bulk_add_champions(
             "champion_name": entry.champion_name,
             "rarity": entry.rarity,
             "signature": entry.signature,
-            "is_preferred_attacker": entry.is_preferred_attacker,
+            "attack_preference": entry.attack_preference,
             "ascension": entry.ascension,
         }
         for entry in body.champions
@@ -138,16 +139,17 @@ async def get_roster_by_game_account(
 
 
 @champion_user_controller.patch(
-    "/{champion_user_id}/preferred-attacker", response_model=ChampionUserResponse
+    "/{champion_user_id}/attack-preference", response_model=ChampionUserResponse
 )
-async def toggle_preferred_attacker(
+async def set_attack_preference(
     champion_user_id: uuid.UUID,
+    body: AttackPreferenceUpdateRequest,
     session: SessionDep,
     current_user: CurrentUser,
 ):
-    """Toggle the preferred attacker flag. Only the owner of the game account can toggle."""
+    """Set the Attack Preference. Only the owner of the game account can set it."""
     champion_user = await _get_own_champion_user(session, champion_user_id, current_user.id)
-    champion_user.is_preferred_attacker = not champion_user.is_preferred_attacker
+    champion_user.attack_preference = body.attack_preference
     session.add(champion_user)
     await session.commit()
     await session.refresh(champion_user)

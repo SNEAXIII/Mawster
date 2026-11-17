@@ -32,7 +32,7 @@ export function templateNodeToPlacement(
     game_pseudo: '',
     rarity: '',
     signature: 0,
-    is_preferred_attacker: false,
+    attack_preference: 'neutral',
     ascension: 0,
     is_ascendable: false,
     is_saga_attacker: false,

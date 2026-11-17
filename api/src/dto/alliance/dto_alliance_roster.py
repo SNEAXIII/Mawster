@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import ConfigDict, model_validator
 
 from src.dto.mixins import ChampionRef, PlayerIdentity, SagaRoles
+from src.enums.AttackPreference import AttackPreference
 
 
 class AllianceRosterEntryResponse(PlayerIdentity, ChampionRef, SagaRoles):
@@ -17,7 +18,7 @@ class AllianceRosterEntryResponse(PlayerIdentity, ChampionRef, SagaRoles):
     rarity: str
     signature: int
     ascension: int = 0
-    is_preferred_attacker: bool = False
+    attack_preference: AttackPreference = AttackPreference.NEUTRAL
     is_ascendable: bool = False
 
     @model_validator(mode="before")
@@ -39,6 +40,6 @@ class AllianceRosterEntryResponse(PlayerIdentity, ChampionRef, SagaRoles):
             "rarity": data.rarity,
             "signature": data.signature,
             "ascension": data.ascension,
-            "is_preferred_attacker": data.is_preferred_attacker,
+            "attack_preference": data.attack_preference,
             "is_ascendable": data.champion.is_ascendable,
         }

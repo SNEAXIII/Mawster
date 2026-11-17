@@ -149,7 +149,7 @@ export default function DefenseSidePanel({
                           name={p.champion_name}
                           rarity={p.rarity}
                           size={40}
-                          isPreferred={p.is_preferred_attacker}
+                          attackPreference={p.attack_preference}
                           ascension={p.ascension}
                           is_saga_attacker={p.is_saga_attacker}
                           is_saga_defender={p.is_saga_defender}
@@ -158,7 +158,7 @@ export default function DefenseSidePanel({
                         <span
                           className={cn(
                             'text-[10px]',
-                            p.is_preferred_attacker
+                            p.attack_preference === 'preferred'
                               ? 'text-yellow-400 font-semibold'
                               : 'text-muted-foreground'
                           )}

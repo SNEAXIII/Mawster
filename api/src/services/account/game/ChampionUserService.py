@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import col, func, select
 from starlette import status
 
+from src.enums.AttackPreference import AttackPreference
 from src.enums.ChampionRarity import ChampionRarity
 from src.game_types import MAX_ASCENSION
 from src.Messages.champion_user_messages import (
@@ -74,7 +75,7 @@ class ChampionUserService:
         game_account_id: uuid.UUID,
         champion_id: uuid.UUID,
         stars: int,
-        **fields: int | bool,
+        **fields: int | bool | AttackPreference,
     ) -> ChampionUser:
         """One entry per champion and star level: update it if present, else add it. No commit."""
         existing = await session.exec(
@@ -93,7 +94,7 @@ class ChampionUserService:
         game_account_id: uuid.UUID,
         champion_id: uuid.UUID,
         stars: int,
-        **fields: int | bool,
+        **fields: int | bool | AttackPreference,
     ) -> ChampionUser:
         if entry is None:
             entry = ChampionUser(
@@ -113,7 +114,7 @@ class ChampionUserService:
         champion_id: uuid.UUID,
         rarity: str,
         signature: int = 0,
-        is_preferred_attacker: bool = False,
+        attack_preference: AttackPreference = AttackPreference.NEUTRAL,
         ascension: int = 0,
     ) -> ChampionUser:
         stars, rank = cls._parse_rarity(rarity)
@@ -130,7 +131,7 @@ class ChampionUserService:
             stars,
             rank=rank,
             signature=signature,
-            is_preferred_attacker=is_preferred_attacker,
+            attack_preference=attack_preference,
             ascension=cls._validate_ascension(ascension, champion),
         )
         await session.commit()
@@ -199,7 +200,7 @@ class ChampionUserService:
                 stars,
                 rank=rank,
                 signature=signature,
-                is_preferred_attacker=entry.get("is_preferred_attacker", False),
+                attack_preference=entry.get("attack_preference", AttackPreference.NEUTRAL),
                 ascension=cls._validate_ascension(entry.get("ascension", 0), champion),
             )
             results.append(roster[key])

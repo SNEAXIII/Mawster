@@ -583,7 +583,7 @@ async def test_confirm_archives_one_sample_per_row_when_opted_in(fake_infra):
                         "rarity": "7r3",
                         "signature": 200,
                         "ascension": 1,
-                        "is_preferred_attacker": False,
+                        "attack_preference": "neutral",
                         "prediction_id": prediction_id,
                     }
                 ],
@@ -625,7 +625,7 @@ async def test_confirming_twice_is_idempotent(fake_infra):
                 "rarity": "7r3",
                 "signature": 200,
                 "ascension": 1,
-                "is_preferred_attacker": False,
+                "attack_preference": "neutral",
                 "prediction_id": prediction_id,
             }
         ],
@@ -680,7 +680,7 @@ async def test_confirm_archives_nothing_without_opt_in(fake_infra):
                         "rarity": "7r3",
                         "signature": 200,
                         "ascension": 1,
-                        "is_preferred_attacker": False,
+                        "attack_preference": "neutral",
                         "prediction_id": None,
                     }
                 ],
@@ -732,7 +732,7 @@ def _row(name: str, rarity: str, *, read: bool) -> dict:
         "rarity": rarity,
         "signature": 200,
         "ascension": 1,
-        "is_preferred_attacker": False,
+        "attack_preference": "neutral",
         "prediction_id": read,
     }
 

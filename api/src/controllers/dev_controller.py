@@ -16,6 +16,7 @@ from starlette import status as http_status
 from src.dto.admin.dto_champion import ChampionLoadRequest
 from src.dto.auth.dto_token import LoginResponse, TokenBody
 from src.dto.auth.dto_utilisateurs import UserProfile
+from src.enums.AttackPreference import AttackPreference
 from src.enums.Roles import Roles
 from src.enums.SeasonStatus import SeasonStatus
 from src.enums.WarStatus import WarStatus
@@ -109,7 +110,7 @@ class SetupRosterSpec(BaseModel):
     rarity: str = "7r3"
     signature: int = 0
     ascension: int = 0
-    is_preferred_attacker: bool = False
+    attack_preference: AttackPreference = AttackPreference.NEUTRAL
 
 
 class SetupSeasonSpec(BaseModel):
@@ -366,7 +367,7 @@ async def _add_batch_roster(
             champion_id=uuid.UUID(champion_id),
             rarity=entry.rarity,
             signature=entry.signature,
-            is_preferred_attacker=entry.is_preferred_attacker,
+            attack_preference=entry.attack_preference,
             ascension=entry.ascension,
         )
         created[entry.champion] = str(champion_user.id)

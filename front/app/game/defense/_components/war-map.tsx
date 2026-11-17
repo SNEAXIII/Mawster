@@ -125,7 +125,7 @@ export function WarMapNode({
                 rarity={placement.rarity || '7r1'}
                 size={PORTRAIT}
                 box='frame'
-                isPreferred={placement.is_preferred_attacker}
+                attackPreference={placement.attack_preference}
                 ascension={placement.ascension}
                 is_saga_attacker={placement.is_saga_attacker}
                 is_saga_defender={placement.is_saga_defender}

@@ -23,7 +23,7 @@ function giveChampion(adminToken: string, name: string, cls: string, owners: Own
           o.acc,
           champs[0].id,
           o.rarity ?? '7r3',
-          o.preferred === undefined ? undefined : { is_preferred_attacker: o.preferred },
+          o.preferred === undefined ? undefined : { attack_preference: o.preferred ? 'preferred' : 'neutral' },
         ),
       );
   });

@@ -58,7 +58,7 @@ describe('Roster – Basic (advanced)', () => {
         cy.getByCy('champion-submit').click();
         cy.contains('Storm added / updated').should('be.visible');
 
-        cy.get('[data-cy="champion-delete"]').should('have.length', 1);
+        cy.get('[data-cy="champion-card-Storm"]').should('have.length', 1);
       });
     });
   });

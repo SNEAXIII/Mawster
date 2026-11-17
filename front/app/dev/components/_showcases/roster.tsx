@@ -6,18 +6,12 @@ import { ROSTER_ENTRIES } from '@/app/dev/_mocks'
 import { Section, Variant } from '../_components/showcase-section'
 
 const noop = () => {}
-const ACTIONS = {
-  onEdit: noop,
-  onDelete: noop,
-  onUpgrade: noop,
-  onTogglePreferredAttacker: noop,
-  onAscend: noop,
-}
+const ACTIONS = { onOpen: noop }
 
 export default function RosterShowcase() {
   return (
     <>
-      <Section title='RosterChampionCard — editable (hover for actions)'>
+      <Section title='RosterChampionCard — editable (click for actions)'>
         {ROSTER_ENTRIES.map((entry) => (
           <RosterChampionCard
             key={entry.id}
@@ -32,14 +26,6 @@ export default function RosterShowcase() {
           <RosterChampionCard
             entry={ROSTER_ENTRIES[0]}
             readOnly
-          />
-        </Variant>
-        <Variant label='pending upgrade request'>
-          <RosterChampionCard
-            entry={ROSTER_ENTRIES[2]}
-            pendingRequestId='mock-request'
-            onCancelRequest={noop}
-            {...ACTIONS}
           />
         </Variant>
       </Section>

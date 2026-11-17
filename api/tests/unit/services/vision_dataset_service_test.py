@@ -3,6 +3,7 @@ import uuid
 
 import pytest
 
+from src.enums.AttackPreference import AttackPreference
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
@@ -71,7 +72,7 @@ async def test_archive_writes_a_sample_per_row_when_opted_in():
             rarity="7r3",
             signature=200,
             ascension=1,
-            is_preferred_attacker=False,
+            attack_preference=AttackPreference.NEUTRAL,
             prediction_id=prediction.id,
         )
     ]
@@ -101,7 +102,7 @@ async def test_archive_writes_a_sample_per_row_when_opted_in():
         "rarity": "7r3",
         "signature": 200,
         "ascension": 1,
-        "is_preferred_attacker": False,
+        "attack_preference": "neutral",
     }
 
 
@@ -120,7 +121,7 @@ async def test_archive_stores_a_null_prediction_for_user_added_rows():
             rarity="6r2",
             signature=0,
             ascension=0,
-            is_preferred_attacker=True,
+            attack_preference=AttackPreference.PREFERRED,
             prediction_id=None,
         )
     ]
@@ -146,7 +147,7 @@ async def test_archive_is_a_noop_without_opt_in():
             rarity="7r3",
             signature=200,
             ascension=1,
-            is_preferred_attacker=False,
+            attack_preference=AttackPreference.NEUTRAL,
             prediction_id=None,
         )
     ]

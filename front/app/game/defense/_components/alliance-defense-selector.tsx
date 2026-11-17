@@ -9,7 +9,7 @@ import ChampionPortrait from '@/components/champion-portrait'
 import AscensionRequestButton from '@/components/ascension-request-button'
 import { cn } from '@/app/lib/utils'
 import type { AvailableChampion, ChampionOwner, DefensePlacement } from '@/app/services/defense'
-import { RARITY_LABELS, shortenChampionName } from '@/app/services/roster'
+import { RARITY_LABELS, shortenChampionName, type AttackPreference } from '@/app/services/roster'
 import { getClassColors } from '@/app/lib/champion-class'
 import { Separator } from '@/components/ui/separator'
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar'
@@ -23,6 +23,12 @@ interface AllianceDefenseSelectorProps {
   availableChampions: AvailableChampion[]
   onSelect: (championUserId: string, gameAccountId: string, championName: string) => void
   currentPlacement?: DefensePlacement
+}
+
+/** The owners' Attack Preference when they all agree, so the tile's halo never misleads. */
+function sharedPreference(owners: { attack_preference: AttackPreference }[]) {
+  const first = owners[0]?.attack_preference
+  return owners.every((o) => o.attack_preference === first) ? first : undefined
 }
 
 export default function AllianceDefenseSelector({
@@ -64,8 +70,9 @@ export default function AllianceDefenseSelector({
 
   // Preferred first, then rarity descending.
   const ownerSort = (a: ChampionOwner, b: ChampionOwner) => {
-    if (a.is_preferred_attacker !== b.is_preferred_attacker) {
-      return a.is_preferred_attacker ? -1 : 1
+    const aPreferred = a.attack_preference === 'preferred'
+    if (aPreferred !== (b.attack_preference === 'preferred')) {
+      return aPreferred ? -1 : 1
     }
     return rarityWeight(b.rarity) - rarityWeight(a.rarity)
   }
@@ -79,7 +86,8 @@ export default function AllianceDefenseSelector({
               const matchPlayer =
                 !playerFilter ||
                 owner.game_pseudo.toLowerCase().includes(playerFilter.toLowerCase())
-              const matchNotPreferred = !notPreferredFilter || !owner.is_preferred_attacker
+              const matchNotPreferred =
+                !notPreferredFilter || owner.attack_preference !== 'preferred'
               const matchTier = matchRarity(owner.rarity)
               return matchPlayer && matchNotPreferred && matchTier
             })
@@ -283,7 +291,7 @@ export default function AllianceDefenseSelector({
                             name={champ.champion_name}
                             rarity={bestOwner.rarity}
                             size={48}
-                            isPreferred={champ.owners.every((o) => o.is_preferred_attacker)}
+                            attackPreference={sharedPreference(champ.owners)}
                             ascension={bestOwner.ascension}
                             is_saga_attacker={champ.is_saga_attacker}
                             is_saga_defender={champ.is_saga_defender}
@@ -358,7 +366,7 @@ export default function AllianceDefenseSelector({
                     name={selectedChampion.champion_name}
                     rarity={owner.rarity}
                     size={44}
-                    isPreferred={owner.is_preferred_attacker}
+                    attackPreference={owner.attack_preference}
                     ascension={owner.ascension}
                     is_saga_attacker={selectedChampion.is_saga_attacker}
                     is_saga_defender={selectedChampion.is_saga_defender}

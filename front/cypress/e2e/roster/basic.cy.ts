@@ -120,7 +120,8 @@ describe('Roster – Basic', () => {
       cy.contains('HulkDel added / updated').should('be.visible');
 
       // Now delete
-      cy.getByCy('champion-delete').first().focus().click();
+      cy.getByCy('champion-card-HulkDel').click();
+      cy.getByCy('champion-delete').click();
       cy.get('[role="alertdialog"]').should('be.visible').contains('button', 'Delete').click();
       cy.contains('HulkDel removed from roster').should('be.visible');
     });
