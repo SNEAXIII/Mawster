@@ -19,11 +19,6 @@ CHAMPION_ID = uuid.uuid4()
 GAME_ACCOUNT_ID = uuid.uuid4()
 
 
-MOCK_GET_CHAMPION_BY_NAME = (
-    "src.services.account.game.ChampionUserService.ChampionService.get_champion_by_name"
-)
-
-
 def _mock_session(mocker):
     """Return an AsyncMock pretending to be an async DB session."""
     session = mocker.AsyncMock()
@@ -211,6 +206,15 @@ class TestBulkAddChampions:
         session.commit.assert_awaited_once()
 
     @pytest.mark.asyncio
+    async def test_bulk_matches_name_ignoring_case(self, mocker):
+        session = _bulk_session(mocker, [_make_champion()], [])
+        champions = [{"champion_name": "spider-MAN", "rarity": "6r4", "signature": 0}]
+
+        results = await ChampionUserService.bulk_add_champions(session, GAME_ACCOUNT_ID, champions)
+
+        assert [r.rarity for r in results] == ["6r4"]
+
+    @pytest.mark.asyncio
     async def test_bulk_dedup_same_request(self, mocker):
         """If same champion+rarity appears twice, only first occurrence is kept."""
         session = _bulk_session(mocker, [_make_champion()], [])
@@ -262,10 +266,6 @@ class TestBulkAddChampions:
     @pytest.mark.asyncio
     async def test_bulk_champion_not_found(self, mocker):
         session = _bulk_session(mocker, [], [])
-        mocker.patch(
-            MOCK_GET_CHAMPION_BY_NAME,
-            return_value=None,
-        )
 
         with pytest.raises(HTTPException) as exc:
             await ChampionUserService.bulk_add_champions(

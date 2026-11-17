@@ -1,81 +1,86 @@
+import asyncio
 import os
 
 os.environ["MODE"] = "testing"
 
 import time
 
-import pymysql
+import psycopg
 import uvicorn
+from psycopg import sql
 
 from src.fixtures.reset_db import reset
 from src.security.secrets import SECRET
 
-# The E2E MariaDB has no readiness gate in front of it: CI starts the backends
+# The E2E PostgreSQL has no readiness gate in front of it: CI starts the backends
 # while its image is still being pulled (~25s), so waiting is this script's job.
-MARIADB_PROBE_INTERVAL = 2
-MARIADB_PROBE_TIMEOUT = 60
+POSTGRES_PROBE_INTERVAL = 2
+POSTGRES_PROBE_TIMEOUT = 60
 
 
-def _root_connect() -> pymysql.Connection:
-    """Connect as root with no database selected — the schema may not exist yet."""
-    return pymysql.connect(
-        host=SECRET.MARIADB_HOST,
-        port=SECRET.MARIADB_PORT,
-        user="root",
-        password=SECRET.MARIADB_ROOT_PASSWORD or "",
+def _maintenance_connect() -> psycopg.Connection:
+    """Connect to the `postgres` maintenance database: the worker's may not exist yet."""
+    return psycopg.connect(
+        host=SECRET.POSTGRES_HOST,
+        port=SECRET.POSTGRES_PORT,
+        user=SECRET.POSTGRES_USER,
+        password=SECRET.POSTGRES_PASSWORD,
+        dbname="postgres",
+        autocommit=True,
+        connect_timeout=5,
     )
 
 
-def _wait_for_mariadb() -> None:
-    """Poll MariaDB until it answers a real query.
+def _wait_for_postgres() -> None:
+    """Poll PostgreSQL until it answers a real query.
 
     A TCP connect is not enough: Docker publishes the host port through
-    docker-proxy, which accepts connections before mysqld listens behind it.
+    docker-proxy, which accepts connections before postgres listens behind it.
     """
-    target = f"{SECRET.MARIADB_HOST}:{SECRET.MARIADB_PORT}"
-    deadline = time.monotonic() + MARIADB_PROBE_TIMEOUT
-    print(f"🚀 Waiting for MariaDB at {target}")
+    target = f"{SECRET.POSTGRES_HOST}:{SECRET.POSTGRES_PORT}"
+    deadline = time.monotonic() + POSTGRES_PROBE_TIMEOUT
+    print(f"🚀 Waiting for PostgreSQL at {target}")
     while True:
         try:
-            with _root_connect() as conn, conn.cursor() as cursor:  # NOSONAR S9408 false positive
-                cursor.execute("SELECT 1")
-            print("✅ MariaDB is up")
+            with _maintenance_connect() as conn:  # NOSONAR S9408 false positive
+                conn.execute("SELECT 1")
+            print("✅ PostgreSQL is up")
             return
-        except pymysql.err.Error as error:
+        except psycopg.Error as error:
             if time.monotonic() >= deadline:
-                msg = f"MariaDB unreachable at {target} after {MARIADB_PROBE_TIMEOUT}s: {error}"
+                msg = f"PostgreSQL unreachable at {target} after {POSTGRES_PROBE_TIMEOUT}s: {error}"
                 raise RuntimeError(msg) from error
-            print(f"⏳ MariaDB not ready yet: {error}")
-            time.sleep(MARIADB_PROBE_INTERVAL)
+            print(f"⏳ PostgreSQL not ready yet: {error}")
+            time.sleep(POSTGRES_PROBE_INTERVAL)
 
 
 def _ensure_database() -> None:
-    """Create this worker's database and grant it to the app user.
+    """Create this worker's database unless it already exists.
 
     Each E2E worker owns a database that nothing else creates, so the backend
     creates its own: the runner then needs no SQL client of its own.
     """
-    database = SECRET.MARIADB_DATABASE
-    user = SECRET.MARIADB_USER
-    with _root_connect() as conn, conn.cursor() as cursor:  # NOSONAR S9408 false positive
-        cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{database}`")
-        cursor.execute(f"GRANT ALL PRIVILEGES ON `{database}`.* TO '{user}'@'%'")
-        cursor.execute("FLUSH PRIVILEGES")
-        conn.commit()
-    print(f"✅ Database {database} ready for user {user}")
+    database = SECRET.POSTGRES_DB
+    with _maintenance_connect() as conn:  # NOSONAR S9408 false positive
+        found = conn.execute("SELECT 1 FROM pg_database WHERE datname = %s", (database,))
+        if found.fetchone() is None:
+            conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database)))
+    print(f"✅ Database {database} ready for user {SECRET.POSTGRES_USER}")
 
 
 if __name__ == "__main__":
-    _wait_for_mariadb()
+    _wait_for_postgres()
     _ensure_database()
     reset()
     port = int(os.environ.get("PORT", "8001"))
     print(
         f"\n🧪 TEST MODE\n"
         f"  API      : http://localhost:{port}\n"
-        f"  DB       : {SECRET.MARIADB_DATABASE} @ {SECRET.MARIADB_HOST}:{SECRET.MARIADB_PORT}\n"
-        f"  DB user  : {SECRET.MARIADB_USER}\n"
+        f"  DB       : {SECRET.POSTGRES_DB} @ {SECRET.POSTGRES_HOST}:{SECRET.POSTGRES_PORT}\n"
+        f"  DB user  : {SECRET.POSTGRES_USER}\n"
     )
     # reload=False: the WatchFiles autoreloader has no place in E2E/CI — a stray
     # file change mid-run would restart the server and break in-flight tests.
-    uvicorn.run("main:app", host="127.0.0.1", port=port, reload=False)
+    server = uvicorn.Server(uvicorn.Config("main:app", host="127.0.0.1", port=port, reload=False))
+    # Windows: without a reload subprocess uvicorn picks the Proactor loop, which psycopg refuses.
+    asyncio.run(server.serve(), loop_factory=asyncio.SelectorEventLoop)

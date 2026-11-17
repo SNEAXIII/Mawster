@@ -7,7 +7,7 @@ export default defineConfig({
     specPattern: 'cypress/e2e/**/*.cy.ts',
     defaultCommandTimeout: 5000,
     // A full page load costs a Next.js SSR round-trip plus the backend call it
-    // fans out to. On a 2-core CI runner that shares the box with MariaDB, the
+    // fans out to. On a 2-core CI runner that shares the box with PostgreSQL, the
     // API and `next start`, 5s was a coin flip — and when the runner stalls it
     // takes every visit in the spec down at once, which retries cannot save.
     // 10s buys the margin without letting a genuinely hung page burn the job.

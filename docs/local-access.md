@@ -2,12 +2,14 @@
 
 Tunnels SSH pour accéder aux services depuis la machine locale (`-N` = tunnel uniquement, pas de shell).
 
-## Base de données (MariaDB)
+## Base de données (PostgreSQL)
+
+Port local 15432 : le 5432 est déjà pris par `postgres-dev`.
 
 ```bash
-ssh -L 3306:127.0.0.1:3306 root@mawster.app -N
-# Puis connecter sur localhost:3306
-mysql -h 127.0.0.1 -P 3306 -u mawster -p mawster
+ssh -L 15432:127.0.0.1:5432 root@mawster.app -N
+# Puis connecter sur localhost:15432
+psql -h 127.0.0.1 -p 15432 -U mawster mawster
 ```
 
 ## Grafana

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from sqlalchemy.dialects import mysql
+from sqlalchemy.dialects import postgresql
 
 from src.models import SQLModel
 
@@ -13,7 +13,7 @@ def column_line(col) -> str:
     tags = [t for t, on in (("PK", col.primary_key), ("UQ", col.unique)) if on]
     tags += [f"FK → {fk.column.table.name}.{fk.column.name}" for fk in col.foreign_keys]
     mark = "* " if col.primary_key or not col.nullable else ""
-    return f"  {mark}{col.name} : {col.type.compile(dialect=mysql.dialect())}" + "".join(
+    return f"  {mark}{col.name} : {col.type.compile(dialect=postgresql.dialect())}" + "".join(
         f" <<{t}>>" for t in tags
     )
 

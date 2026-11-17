@@ -13,11 +13,11 @@ dependencies = [
     "python-multipart",
     "pydantic-settings",
     "sqlmodel",
-    "asyncmy",
     "nh3",
     "prometheus-fastapi-instrumentator",
     "aio-pika",
     "aioboto3",
+    "psycopg[binary]>=3.3.8",
 ]
 
 [build-system]
@@ -72,7 +72,8 @@ extend = "../ruff.toml"
 [dependency-groups]
 migrate = [
     "alembic",
-    "pymysql",
+    "alembic-postgresql-enum>=1.11.1",
+    "psycopg[binary]>=3.3.8",
     "sqlmodel",
 ]
 dev = [
@@ -87,4 +88,5 @@ dev = [
     "vulture>=2.16",
     "faker>=24.0.0",
     "time-machine>=2.0.0",
+    "pymysql>=1.2.4",
 ]

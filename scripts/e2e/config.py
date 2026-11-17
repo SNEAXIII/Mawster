@@ -14,8 +14,8 @@ BASE_FRONT_PORT = 3010
 BASE_CDP_PORT = 9310
 STATIC_PORT = 8009
 DB_PREFIX = "mawster_test_"
-MARIADB_PORT = int(os.environ.get("MARIADB_PORT", "3307"))
-# Generous on purpose: a backend waits for MariaDB itself (app_testing.py) and
+POSTGRES_PORT = int(os.environ.get("POSTGRES_PORT", "5433"))
+# Generous on purpose: a backend waits for PostgreSQL itself (app_testing.py) and
 # runs the migrations before it starts listening, so this budget has to cover a
 # cold database, not just uvicorn's boot.
 HEALTH_TIMEOUT = 60

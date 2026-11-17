@@ -613,11 +613,10 @@ class AllianceService:
         Locks the alliance row until the caller commits, so concurrent joins queue up.
         """
         await session.exec(select(Alliance.id).where(Alliance.id == alliance_id).with_for_update())
-        # A locking read: REPEATABLE READ's snapshot would miss a join committed while we waited.
+        # No lock here: PostgreSQL refuses FOR SHARE on an aggregate, and READ COMMITTED
+        # already gives this statement a snapshot taken after the wait above.
         count = await session.exec(
-            select(func.count(col(GameAccount.id)))
-            .where(GameAccount.alliance_id == alliance_id)
-            .with_for_update(read=True)
+            select(func.count(col(GameAccount.id))).where(GameAccount.alliance_id == alliance_id)
         )
         if count.one() >= MAX_MEMBERS_PER_ALLIANCE:
             raise HTTPException(

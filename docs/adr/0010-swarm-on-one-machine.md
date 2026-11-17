@@ -31,5 +31,5 @@ health checks all work, which is the full extent of what is asked of it.
 
 The exit condition is a second machine, not a change of fashion. The day the workload needs more
 than one node — or needs to survive that node — the reasons above stop holding and the question
-reopens. Reversing this touches `stack-app.yaml`, `stack-app-staging.yaml`, `stack-app-dev.yaml`,
+reopens. Reversing this touches `stack-app.yaml`, `stack-app-staging.yaml`,
 the secret plumbing in `run.sh`, and the deploy jobs that shell into the host.

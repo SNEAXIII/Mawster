@@ -1,6 +1,6 @@
 # Backup System
 
-The `backup` service of `stack-app.yaml` dumps MariaDB, keeps the dumps locally and uploads them
+The `backup` service of `stack-app.yaml` dumps PostgreSQL, keeps the dumps locally and uploads them
 to an encrypted Google Drive remote through rclone.
 
 ## Schedule & retention
@@ -41,8 +41,8 @@ docker secret create mawster_rclone_conf ~/.config/rclone/rclone.conf
 ```bash
 make backup-list
 make backup-now
-make backup-restore FILE=mawster_2026-03-31_08-00.sql.gz
-make backup-restore-remote FILE=mawster_2026-03-31_08-00.sql.gz   # downloads from gdrive-crypt first
+make backup-restore FILE=mawster_2026-03-31_08-00.dump
+make backup-restore-remote FILE=mawster_2026-03-31_08-00.dump   # downloads from gdrive-crypt first
 docker service logs -f mawster_backup
 ```
 
@@ -50,9 +50,10 @@ docker service logs -f mawster_backup
 
 ## How backup.sh works
 
-1. **Dump** — `mysqldump --single-transaction --routines --triggers | gzip`
+1. **Dump** — `pg_dump -Fc` (custom format, compressed), restored by `restore.sh` with
+   `pg_restore --clean --if-exists --no-owner`
 2. **Local purge** — by age, then oldest first until under 5 GB
-3. **Upload** — `rclone copy` of `mawster_*.sql.gz` to the encrypted remote
+3. **Upload** — `rclone copy` of `mawster_*.dump` to the encrypted remote
 4. **Remote purge** — `rclone delete --min-age 7d`, then oldest first until under 3 GB
 
 ## Troubleshooting
