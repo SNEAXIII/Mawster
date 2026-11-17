@@ -14,6 +14,16 @@ import {
 const UNREADABLE = ['Mojo', 'Prowler'];
 const EDITED = ['Kindred', 'Sentinel', 'Photon', 'Knull', ...UNREADABLE];
 
+// `{selectall}` intermittently leaves a number input's text in place: '200' + '150' clamps
+// back to 200 and the row stays unchanged. The native setter replaces the value outright.
+function fillNumber(dataCy: string, value: string) {
+  cy.getByCy(dataCy).then(($el) => {
+    const input = $el[0] as HTMLInputElement;
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+}
+
 describe('Roster – Vision import: editing the read results', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -54,8 +64,8 @@ describe('Roster – Vision import: editing the read results', () => {
       // Rarity, signature, ascension: each turns an unchanged row into an update, the score untouched.
       const edits: [string, (i: number) => void][] = [
         ['Sentinel', (i) => cy.selectOption(`preview-row-rarity-select-${i}`, '7R6')],
-        ['Photon', (i) => cy.getByCy(`preview-row-signature-input-${i}`).type('{selectall}150')],
-        ['Knull', (i) => cy.getByCy(`preview-row-ascension-input-${i}`).type('{selectall}2')],
+        ['Photon', (i) => fillNumber(`preview-row-signature-input-${i}`, '150')],
+        ['Knull', (i) => fillNumber(`preview-row-ascension-input-${i}`, '2')],
       ];
       for (const [name, edit] of edits) {
         rowIndexOf(name).then((i) => {
