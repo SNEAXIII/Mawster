@@ -4,6 +4,7 @@ import { fetchCatalog, type CatalogChampion } from '@/app/services/tierlist'
 export interface CatalogPick {
   champion_id: string
   champion_name: string
+  champion_class: string
   champion_alias: string | null
   image_url: string | null
   is_saga_attacker: boolean
@@ -55,6 +56,7 @@ export function catalogCandidates(
     .map((c) => ({
       champion_id: c.id,
       champion_name: c.name,
+      champion_class: c.champion_class,
       champion_alias: c.alias,
       image_url: c.image_url,
       is_saga_attacker: c.is_saga_attacker,

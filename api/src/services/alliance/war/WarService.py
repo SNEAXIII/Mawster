@@ -968,6 +968,7 @@ class WarService:
                     game_pseudo=ga.game_pseudo,
                     champion_id=cu.champion_id,
                     champion_name=champ.name,
+                    champion_class=champ.champion_class,
                     champion_alias=champ.alias,
                     image_url=champ.image_url,
                     is_preferred_attacker=cu.is_preferred_attacker,

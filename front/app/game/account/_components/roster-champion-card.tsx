@@ -10,7 +10,6 @@ import {
   getNextRarity,
   MAX_ASCENSION,
 } from '@/app/services/roster'
-import { getClassColors } from '@/app/lib/champion-class'
 import { Trash2, Pencil, ArrowUp, X, Star } from 'lucide-react'
 import { memo } from 'react'
 
@@ -66,20 +65,19 @@ function RosterChampionCard({
   onCancelRequest,
 }: Readonly<RosterChampionCardProps>) {
   const { t } = useI18n()
-  const classColors = getClassColors(entry.champion_class)
   const nextRarity = getNextRarity(entry.rarity)
 
   return (
     <div
-      className={cn(
-        'group relative mx-auto flex w-21 flex-col items-center rounded-md border bg-card/50 pt-0.5 transition-colors hover:bg-card',
-        classColors.border
-      )}
+      className={
+        'group relative mx-auto flex w-21 flex-col items-center rounded-md bg-card/50 pt-0.5 transition-colors hover:bg-card'
+      }
       data-cy={`champion-card-${entry.champion_name}`}
     >
       {/* Star frame portrait */}
       <ChampionPortrait
         imageUrl={entry.image_url}
+        championClass={entry.champion_class}
         name={entry.champion_name}
         rarity={entry.rarity}
         size={72}

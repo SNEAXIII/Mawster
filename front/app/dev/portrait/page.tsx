@@ -47,6 +47,7 @@ export default function PortraitLabPage() {
   const portrait = (size: number, over?: (typeof COMBINATIONS)[number]) => (
     <ChampionPortrait
       imageUrl={champion.imageUrl}
+      championClass={champion.championClass}
       name={champion.name}
       rarity={rarity}
       size={size}

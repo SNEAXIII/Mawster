@@ -79,6 +79,7 @@ export default function ImportPreviewRow({
       <div className='shrink-0'>
         <ChampionPortrait
           imageUrl={row.image_url}
+          championClass={row.champion_class}
           name={row.champion_name}
           rarity={row.newRarity}
           size={40}

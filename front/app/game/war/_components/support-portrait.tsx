@@ -4,6 +4,7 @@ import UnrecordedBadge from './unrecorded-badge'
 
 interface SupportEntry {
   image_url: string | null
+  champion_class: string | null
   champion_name: string
   rarity: string | null
   ascension: number | null
@@ -21,6 +22,7 @@ export default function SupportPortrait({
     <div className='relative flex flex-col items-center'>
       <ChampionPortrait
         imageUrl={entry.image_url}
+        championClass={entry.champion_class}
         name={entry.champion_name}
         rarity={entry.rarity ?? ''}
         size={size}

@@ -241,6 +241,7 @@ export default function WarAttackerSelector({
               >
                 <ChampionPortrait
                   imageUrl={a.image_url}
+                  championClass={a.champion_class}
                   name={a.champion_name}
                   rarity={a.rarity}
                   size={48}

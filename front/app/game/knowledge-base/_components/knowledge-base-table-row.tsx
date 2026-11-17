@@ -54,6 +54,7 @@ export default function KnowledgeBaseTableRow({
       <ChampionCell
         name={r.champion_name}
         imageUrl={r.image_url}
+        championClass={r.champion_class}
         stars={r.stars}
         rank={r.rank}
         ascension={r.ascension}
@@ -64,6 +65,7 @@ export default function KnowledgeBaseTableRow({
       <ChampionCell
         name={r.defender_champion_name}
         imageUrl={r.defender_image_url}
+        championClass={r.defender_champion_class}
         stars={r.defender_stars}
         rank={r.defender_rank}
         ascension={r.defender_ascension}

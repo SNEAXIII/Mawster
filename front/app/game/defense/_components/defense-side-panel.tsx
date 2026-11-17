@@ -145,6 +145,7 @@ export default function DefenseSidePanel({
                       >
                         <ChampionPortrait
                           imageUrl={p.champion_image_url}
+                          championClass={p.champion_class}
                           name={p.champion_name}
                           rarity={p.rarity}
                           size={40}

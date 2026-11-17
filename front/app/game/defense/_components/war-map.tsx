@@ -120,6 +120,7 @@ export function WarMapNode({
               {/* A plan or template node without a Player has no copy, hence no rarity yet */}
               <ChampionPortrait
                 imageUrl={placement.champion_image_url}
+                championClass={placement.champion_class}
                 name={placement.champion_name}
                 rarity={placement.rarity || '7r1'}
                 size={PORTRAIT}

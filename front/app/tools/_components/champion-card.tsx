@@ -33,6 +33,7 @@ export function ChampionCardVisual({
     >
       <ChampionPortrait
         imageUrl={champion.image_url}
+        championClass={champion.champion_class}
         name={champion.name}
         rarity={frameRarity(champion)}
         size={size}

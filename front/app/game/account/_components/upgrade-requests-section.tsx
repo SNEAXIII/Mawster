@@ -45,6 +45,7 @@ export default function UpgradeRequestsSection({
               >
                 <ChampionPortrait
                   imageUrl={req.image_url}
+                  championClass={req.champion_class}
                   name={req.champion_name}
                   rarity={req.current_rarity}
                   size={40}

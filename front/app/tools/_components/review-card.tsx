@@ -34,6 +34,7 @@ export default function ReviewCard({
     <div className='m-auto flex flex-col items-center gap-4 px-4 py-5'>
       <ChampionPortrait
         imageUrl={champion.image_url}
+        championClass={champion.champion_class}
         name={champion.name}
         rarity={frameRarity(champion)}
         size={168}

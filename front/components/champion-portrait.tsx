@@ -9,6 +9,7 @@ import PreferredBadge from '@/components/preferred-badge'
 import SagaBadge from '@/components/saga-badge'
 import AscensionBadge from '@/components/ascension-badge'
 import { useExportMode } from '@/app/contexts/export-mode-context'
+import { getClassColors } from '@/app/lib/champion-class'
 
 type mode = 'normal' | 'synergy' | 'prefight'
 type SagaMode = 'attacker' | 'defender' | 'all'
@@ -46,6 +47,13 @@ export const FRAME_WINDOWS: Record<string, FrameWindow> = {
   '7': { left: 0.1132, top: 0.0345, width: 0.7547, height: 0.8276, focusY: 0 },
 }
 
+/** The frame's see-through opening, measured on the assets' alpha — the class colour fills
+ *  only this, where FRAME_WINDOWS lets the artwork run over the top bar. */
+const FRAME_OPENINGS: Record<string, FrameWindow> = {
+  '6': { left: 29 / 212, top: 36 / 174, width: 154 / 212, height: 118 / 174, focusY: 0 },
+  '7': { left: 12 / 106, top: 16 / 87, width: 79 / 106, height: 60 / 87, focusY: 0 },
+}
+
 /**
  * Smallest pre-resized thumbnail that covers `cssPx`, capped at MAX_THUMBNAIL_SIZE.
  * Deliberately ignores devicePixelRatio: it is not known during SSR (hydration
@@ -81,6 +89,8 @@ export function getFrameWindowRect(
 interface ChampionPortraitProps {
   imageUrl: string | null
   name: string
+  /** Paints the class colour behind the art, like in game; null when unknown */
+  championClass: string | null
   rarity: string
   /** Outer size in px (default 56) */
   size?: number
@@ -118,6 +128,7 @@ interface ChampionPortraitProps {
 export default function ChampionPortrait({
   imageUrl,
   name,
+  championClass,
   rarity,
   size = 56,
   mode = 'normal',
@@ -155,6 +166,22 @@ export default function ChampionPortrait({
       style={{ width: size, height: box === 'frame' ? size / FRAME_ASPECT : size }}
       data-cy={dataCy ?? `champion-portrait-${name}-${mode}`}
     >
+      {championClass && (
+        <div
+          className={getClassColors(championClass).bg}
+          style={{
+            position: 'absolute',
+            ...getFrameWindowRect(
+              size,
+              rarity,
+              FRAME_OPENINGS[rarity.charAt(0)] ?? FRAME_OPENINGS['6'],
+              box
+            ),
+          }}
+        >
+          <div className='size-full bg-linear-to-t from-black/70 to-white/15' />
+        </div>
+      )}
       {/* Star frame – behind; an Unrecorded Copy has no rarity, hence no frame */}
       {rarity && (
         <img
