@@ -630,6 +630,11 @@ const en = {
       clearConfirmTitle: 'Clear Battlegroup',
       clearConfirmDesc: 'Are you sure you want to remove all defenders from this battlegroup?',
       clearAll: 'Clear All',
+      clearAttackers: 'Clear attackers',
+      clearAttackersConfirmTitle: 'Clear unfinished attackers?',
+      clearAttackersConfirmDesc:
+        'The attackers of {count} unfinished nodes are removed, with their assists, prefights, synergies, KO counts and boosts. The defenders and the {completed} completed fights are kept.',
+      clearAttackersSuccess: 'Attackers removed',
       exportMap: 'Export map',
       exportList: 'Export list',
       shareLink: 'Copy link',

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { List, ListPlus, Map as MapIcon, Pencil, Trash2 } from 'lucide-react'
+import { FiUserX } from 'react-icons/fi'
 import { useI18n } from '@/app/i18n'
 import { useWar } from '@/app/contexts/war-context'
 import { Button } from '@/components/ui/button'
@@ -30,6 +31,7 @@ export default function WarActions({
     isWarClosed,
     placements,
     setShowClearConfirm,
+    setShowClearAttackersConfirm,
     setShowEndConfirm,
   } = useWar()
   const [quickEditOpen, setQuickEditOpen] = useState(false)
@@ -37,6 +39,10 @@ export default function WarActions({
   const canManageOpenWar = canManageWar && !isWarClosed
   const canExport = placements.length > 0
   const canClear = canPlaceWar && !isWarClosed && placements.length > 0
+  const canClearAttackers =
+    canPlaceWar &&
+    !isWarClosed &&
+    placements.some((p) => p.attacker_champion_user_id && !p.is_combat_completed)
 
   const iconButtons = [
     canPlaceWar && {
@@ -68,6 +74,12 @@ export default function WarActions({
       label: t.game.war.clearAll,
       icon: <Trash2 />,
       onClick: () => setShowClearConfirm(true),
+    },
+    canClearAttackers && {
+      cy: 'clear-war-attackers-btn',
+      label: t.game.war.clearAttackers,
+      icon: <FiUserX />,
+      onClick: () => setShowClearAttackersConfirm(true),
     },
   ].filter((b): b is Exclude<typeof b, false> => b !== false)
 

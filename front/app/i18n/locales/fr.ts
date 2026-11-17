@@ -635,6 +635,11 @@ const fr: Translations = {
       clearConfirmTitle: 'Vider le groupe de combat',
       clearConfirmDesc: 'Êtes-vous sûr de vouloir retirer tous les défenseurs de ce groupe ?',
       clearAll: 'Tout effacer',
+      clearAttackers: 'Retirer les attaquants',
+      clearAttackersConfirmTitle: 'Retirer les attaquants non terminés ?',
+      clearAttackersConfirmDesc:
+        'Les attaquants de {count} nœuds non terminés sont retirés, avec leurs assistances, pré-combats, synergies, compteurs de KO et boosts. Les défenseurs et les {completed} combats terminés sont conservés.',
+      clearAttackersSuccess: 'Attaquants retirés',
       exportMap: 'Exporter carte',
       exportList: 'Exporter liste',
       shareLink: 'Copier le lien',

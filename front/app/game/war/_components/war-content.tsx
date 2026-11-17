@@ -69,6 +69,8 @@ function WarLayout() {
     setAttackerSelectorNode,
     showClearConfirm,
     setShowClearConfirm,
+    showClearAttackersConfirm,
+    setShowClearAttackersConfirm,
     showCreateDialog,
     setShowCreateDialog,
     showEndConfirm,
@@ -82,6 +84,7 @@ function WarLayout() {
     handleAssignAttacker,
     handleConfirmRemoveDefender,
     handleClearBg,
+    handleClearAttackers,
   } = useWar()
 
   if (loading) return <FullPageSpinner />
@@ -90,6 +93,9 @@ function WarLayout() {
     pendingRemoveNode !== null
       ? placements.find((p) => p.node_number === pendingRemoveNode)
       : undefined
+  const attackedNodes = placements.filter((p) => p.attacker_champion_user_id)
+  const unfinishedCount = attackedNodes.filter((p) => !p.is_combat_completed).length
+  const completedCount = attackedNodes.length - unfinishedCount
 
   return (
     <PageContainer
@@ -205,6 +211,21 @@ function WarLayout() {
         }}
         title={t.game.war.clearConfirmTitle}
         description={t.game.war.clearConfirmDesc}
+        variant='destructive'
+      />
+
+      {/* Clear unfinished attackers confirm dialog */}
+      <ConfirmationDialog
+        open={showClearAttackersConfirm}
+        onOpenChange={setShowClearAttackersConfirm}
+        onConfirm={async () => {
+          setShowClearAttackersConfirm(false)
+          await handleClearAttackers()
+        }}
+        title={t.game.war.clearAttackersConfirmTitle}
+        description={t.game.war.clearAttackersConfirmDesc
+          .replace('{count}', String(unfinishedCount))
+          .replace('{completed}', String(completedCount))}
         variant='destructive'
       />
     </PageContainer>

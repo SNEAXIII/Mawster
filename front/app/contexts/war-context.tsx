@@ -35,6 +35,7 @@ import {
   placeWarDefender,
   removeWarDefender,
   clearWarBg,
+  clearWarBgAttackers,
   setWarBgReady,
   assignWarAttacker,
   removeWarAttacker,
@@ -104,6 +105,8 @@ interface WarContextValue {
   setAttackerSelectorNode: (node: number | null) => void
   showClearConfirm: boolean
   setShowClearConfirm: (show: boolean) => void
+  showClearAttackersConfirm: boolean
+  setShowClearAttackersConfirm: (show: boolean) => void
   showCreateDialog: boolean
   setShowCreateDialog: (show: boolean) => void
   showEndConfirm: boolean
@@ -135,6 +138,7 @@ interface WarContextValue {
   handleRemoveDefender: (node: number) => void
   handleConfirmRemoveDefender: () => Promise<void>
   handleClearBg: () => Promise<void>
+  handleClearAttackers: () => Promise<void>
   isBgReady: boolean
   handleToggleBgReady: () => Promise<void>
   handleAssignAttacker: (attacker: AvailableAttacker) => Promise<void>
@@ -239,6 +243,7 @@ export function WarProvider({
   const [selectorNode, setSelectorNode] = useState<number | null>(null)
   const [attackerSelectorNode, setAttackerSelectorNode] = useState<number | null>(null)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [showClearAttackersConfirm, setShowClearAttackersConfirm] = useState(false)
   const [pendingRemoveNode, setPendingRemoveNode] = useState<number | null>(null)
 
   const tRef = useRef(t)
@@ -555,6 +560,17 @@ export function WarProvider({
     try {
       await write(() => clearWarBg(selectedAllianceId, activeWarId, selectedBg))
       toast.success(t.game.war.clearSuccess)
+      await fetchWarDefense(true)
+    } catch {
+      toast.error(t.game.war.loadError)
+    }
+  }
+
+  const handleClearAttackers = async () => {
+    if (!selectedAllianceId || !activeWarId) return
+    try {
+      await write(() => clearWarBgAttackers(selectedAllianceId, activeWarId, selectedBg))
+      toast.success(t.game.war.clearAttackersSuccess)
       await fetchWarDefense(true)
     } catch {
       toast.error(t.game.war.loadError)
@@ -894,6 +910,8 @@ export function WarProvider({
       setAttackerSelectorNode,
       showClearConfirm,
       setShowClearConfirm,
+      showClearAttackersConfirm,
+      setShowClearAttackersConfirm,
       showCreateDialog,
       setShowCreateDialog,
       showEndConfirm,
@@ -911,6 +929,7 @@ export function WarProvider({
       handleRemoveDefender,
       handleConfirmRemoveDefender,
       handleClearBg,
+      handleClearAttackers,
       isBgReady,
       handleToggleBgReady,
       handleAssignAttacker,
@@ -961,6 +980,7 @@ export function WarProvider({
       selectorNode,
       attackerSelectorNode,
       showClearConfirm,
+      showClearAttackersConfirm,
       showCreateDialog,
       showEndConfirm,
       pendingRemoveNode,
