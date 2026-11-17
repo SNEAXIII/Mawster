@@ -17,7 +17,8 @@ import AttackerEntryRow from './attacker-entry-row'
 import WarNoteEditor from './war-note-editor'
 import SelectorFilterBar from '@/app/game/_components/selector-filter-bar'
 import RankRangeFilter from '@/app/game/_components/rank-range-filter'
-import { useRarityFilter, rarityWeight } from '@/app/game/_components/use-rarity-filter'
+import { useRarityFilter } from '@/app/game/_components/use-rarity-filter'
+import { compareAttackers } from './attacker-order'
 import { useCurrentSeason } from '@/hooks/use-current-season'
 
 interface WarAttackerSelectorProps {
@@ -65,6 +66,7 @@ export default function WarAttackerSelector({
   const [classFilter, setClassFilter] = useState('')
   const [sagaFilter, setSagaFilter] = useState(false)
   const [preferredFilter, setPreferredFilter] = useState(false)
+  const [hideDetested, setHideDetested] = useState(false)
   const {
     range: rankRange,
     setRange: setRankRange,
@@ -100,6 +102,7 @@ export default function WarAttackerSelector({
       setClassFilter('')
       setSagaFilter(false)
       setPreferredFilter(false)
+      setHideDetested(false)
       // Unfold the note when one already exists, fold it otherwise.
       setShowNote(!!existingNote)
     }
@@ -143,7 +146,8 @@ export default function WarAttackerSelector({
     championSearch !== '' ||
     classFilter !== '' ||
     sagaFilter ||
-    preferredFilter
+    preferredFilter ||
+    hideDetested
 
   const handleReset = () => {
     setPlayerFilter('')
@@ -151,6 +155,7 @@ export default function WarAttackerSelector({
     setClassFilter('')
     setSagaFilter(false)
     setPreferredFilter(false)
+    setHideDetested(false)
   }
 
   const filtered = available.filter((a) => {
@@ -163,8 +168,17 @@ export default function WarAttackerSelector({
     const matchClass = !classFilter || a.champion_class === classFilter
     const matchSaga = !sagaFilter || a.is_saga_attacker
     const matchPreferred = !preferredFilter || a.attack_preference === 'preferred'
+    const matchDetested = !hideDetested || a.attack_preference !== 'detested'
     const matchTier = matchRarity(a.rarity)
-    return matchPlayer && matchChampion && matchClass && matchSaga && matchPreferred && matchTier
+    return (
+      matchPlayer &&
+      matchChampion &&
+      matchClass &&
+      matchSaga &&
+      matchPreferred &&
+      matchDetested &&
+      matchTier
+    )
   })
 
   // Group by member
@@ -183,16 +197,7 @@ export default function WarAttackerSelector({
     group.attackers.push(a)
   }
   const groups = Array.from(groupMap.values())
-  // Sort each member's champions: preferred first, then rarity descending.
-  for (const group of groups) {
-    group.attackers.sort((a, b) => {
-      const aPreferred = a.attack_preference === 'preferred'
-      if (aPreferred !== (b.attack_preference === 'preferred')) {
-        return aPreferred ? -1 : 1
-      }
-      return rarityWeight(b.rarity) - rarityWeight(a.rarity)
-    })
-  }
+  for (const group of groups) group.attackers.sort(compareAttackers)
 
   let content: React.ReactNode
   if (loading) {
@@ -365,6 +370,12 @@ export default function WarAttackerSelector({
                     label: t.game.war.preferredAttackerFilter,
                     active: preferredFilter,
                     onToggle: setPreferredFilter,
+                  },
+                  {
+                    key: 'hideDetested',
+                    label: t.game.war.hideDetestedFilter,
+                    active: hideDetested,
+                    onToggle: setHideDetested,
                   },
                 ]}
                 canReset={canReset}

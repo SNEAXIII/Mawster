@@ -701,6 +701,7 @@ const en = {
       memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attacker',
       preferredAttackerFilter: 'Preferred',
+      hideDetestedFilter: 'Hide detested',
       rankFilter: 'Rank',
       noteLabel: 'Note',
       noAttackerAssigned: 'No attacker assigned',

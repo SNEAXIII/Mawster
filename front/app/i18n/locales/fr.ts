@@ -707,6 +707,7 @@ const fr: Translations = {
       memberAttackers: '{count}/{max}',
       sagaAttackerFilter: 'Saga Attaquant',
       preferredAttackerFilter: 'Préféré',
+      hideDetestedFilter: 'Masquer les détestés',
       rankFilter: 'Rang',
       noteLabel: 'Note',
       noAttackerAssigned: 'Aucun attaquant assigné',
