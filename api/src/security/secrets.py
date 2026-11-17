@@ -108,7 +108,8 @@ class Settings(BaseSettings):
     def _build_rabbitmq_url(self) -> Self:
         if "RABBITMQ_URL" not in self.model_fields_set and self.RABBITMQ_PASS:
             password = quote(self.RABBITMQ_PASS, safe="")
-            self.RABBITMQ_URL = f"amqp://mawster:{password}@rabbitmq:5672/"
+            # NOSONAR S5332 below: the broker only listens on the internal overlay network.
+            self.RABBITMQ_URL = f"amqp://mawster:{password}@rabbitmq:5672/"  # NOSONAR
         if not self.RABBITMQ_URL:
             msg = "RABBITMQ_URL or the mawster_rabbitmq_pass secret is required"
             raise ValueError(msg)
