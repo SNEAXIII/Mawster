@@ -101,6 +101,24 @@ async def clear_war_bg(
     return {"deleted": count}
 
 
+@war_placement_controller.delete(
+    "/{war_id}/bg/{battlegroup}/attackers",
+    status_code=status.HTTP_200_OK,
+)
+async def clear_war_bg_attackers(
+    alliance_id: uuid.UUID,
+    war_id: uuid.UUID,
+    battlegroup: BattlegroupPath,
+    session: SessionDep,
+    current_user: CurrentUser,
+    war: WarDep,
+):
+    """Remove the attackers of every unfinished node in a battlegroup. Strategist+ only."""
+    await AllianceService.require_strategist(session, alliance_id, current_user.id)
+    count = await WarService.clear_unfinished_attackers(session, war_id, battlegroup)
+    return {"cleared": count}
+
+
 @war_placement_controller.put("/{war_id}/bg/{battlegroup}/ready")
 async def set_war_bg_ready(
     alliance_id: uuid.UUID,

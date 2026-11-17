@@ -684,6 +684,56 @@ class WarService:
         await session.commit()
         return len(placements)
 
+    @classmethod
+    async def clear_unfinished_attackers(
+        cls, session: SessionDep, war_id: uuid.UUID, battlegroup: int
+    ) -> int:
+        """Detach every Attacker whose fight is not done, with their assist, prefights and synergies."""
+        ClosedWarPolicy.assert_open(await session.get_one(War, war_id))
+        placements = (
+            await session.exec(
+                select(WarDefensePlacement).where(
+                    WarDefensePlacement.war_id == war_id,
+                    WarDefensePlacement.battlegroup == battlegroup,
+                    col(WarDefensePlacement.attacker_champion_user_id).isnot(None),
+                    col(WarDefensePlacement.is_combat_completed).is_(False),
+                )
+            )
+        ).all()
+        if not placements:
+            return 0
+        removed = {p.attacker_champion_user_id for p in placements}
+        for p in placements:
+            p.attacker_champion_user_id = None
+            p.assist_champion_user_id = None
+            p.ko_count = 0
+            p.war_boost = None
+            p.has_defense_boost = False
+            p.has_power_boost = False
+            p.has_specials_boost = False
+        await session.flush()
+        stale: list[WarSynergyAttacker | WarPrefightAttacker] = []
+        for champion_user_id in removed:
+            if champion_user_id is not None:
+                stale += await cls._orphan_synergies(session, war_id, battlegroup, champion_user_id)
+        stale += (
+            await session.exec(
+                select(WarPrefightAttacker).where(
+                    WarPrefightAttacker.war_id == war_id,
+                    WarPrefightAttacker.battlegroup == battlegroup,
+                    col(WarPrefightAttacker.target_node_number).in_(
+                        [p.node_number for p in placements]
+                    ),
+                )
+            )
+        ).all()
+        for row in {r.id: r for r in stale}.values():
+            await session.delete(row)
+        await session.commit()
+        for p in placements:
+            await FightRecordService.sync_node(session, p.id)
+        return len(placements)
+
     # ─── Attackers ────────────────────────────────────────────────────────────
 
     @staticmethod
