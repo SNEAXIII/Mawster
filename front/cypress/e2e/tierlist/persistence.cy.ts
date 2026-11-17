@@ -55,7 +55,7 @@ describe('Tier list – saving', () => {
 
   it('adopts the single board a browser kept before lists, once', () => {
     cy.clearAllLocalStorage();
-    cy.visit('/tools', {
+    cy.visit('/tools?tab=tierlist', {
       onBeforeLoad: (win) =>
         win.localStorage.setItem(
           'mawster-tierlist:board',
