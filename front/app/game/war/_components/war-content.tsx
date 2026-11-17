@@ -227,6 +227,7 @@ function WarLayout() {
           .replace('{count}', String(unfinishedCount))
           .replace('{completed}', String(completedCount))}
         variant='destructive'
+        dataCy='clear-war-attackers-dialog'
       />
     </PageContainer>
   )
