@@ -75,7 +75,7 @@ function SagaSection({
       <ul
         className={cn(
           'grid gap-1.5',
-          exporting ? 'grid-cols-10' : 'grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))]'
+          exporting ? 'grid-cols-10' : 'grid-cols-[repeat(auto-fill,minmax(4rem,1fr))]'
         )}
       >
         {champions.map((champion) => (
