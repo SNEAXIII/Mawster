@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Shield } from 'lucide-react'
@@ -28,11 +27,9 @@ export function ProfileHeader({
     <Card>
       <CardContent className='pt-4'>
         <div className='flex flex-col sm:flex-row items-center gap-4 sm:gap-6'>
-          <Avatar className='size-20 sm:size-24 ring-2 ring-offset-2 ring-primary/20'>
-            <AvatarFallback className='text-xl sm:text-2xl font-bold bg-primary/10 text-primary'>
-              {getInitials(name)}
-            </AvatarFallback>
-          </Avatar>
+          <div className='flex size-20 sm:size-24 shrink-0 items-center justify-center rounded-full ring-2 ring-offset-2 ring-primary/20 text-xl sm:text-2xl font-bold bg-primary/10 text-primary'>
+            {getInitials(name)}
+          </div>
           <div className='text-center sm:text-left flex flex-col gap-1.5'>
             <PageTitle>{name ?? t.profile.user}</PageTitle>
             <Badge

@@ -32,12 +32,7 @@ E2E_DIR = FRONT_DIR / "cypress" / "e2e"
 # balances lanes, not runners, and hands each runner its lanes already split.
 LANE_SEPARATOR = "|"
 
-# Specs whose filename contains this marker exercise the vision import loop:
-# front -> API -> RabbitMQ -> worker -> API -> preview. They need RabbitMQ,
-# RustFS and a vision worker running, and only ONE worker may consume
-# `vision.jobs` at a time or message delivery stops being deterministic.
-#
-# CI runners have none of that, so they are never planned.
+# Vision specs need RabbitMQ, RustFS and the Rust worker: they run in the `e2e-vision` job, one lane.
 VISION_SPEC_MARKER = "vision"
 
 

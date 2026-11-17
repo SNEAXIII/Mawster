@@ -1,10 +1,9 @@
 import { setupRosterUser, confirmAction } from '../../support/e2e';
+import { assertPreviewMatchesShots, loadShotChampions, uploadShots } from '../../support/vision';
 
 // The how-to dialog is pure frontend behaviour, and this project has no
 // frontend unit tests by design — this spec is the only thing keeping the
 // dialog wired between the button and the file picker.
-// ponytail: the single-screenshot warning (and its "don't show again" in localStorage)
-// has no spec — a *vision* spec runs nowhere, so one here would be dead weight.
 describe('Roster – Vision import how-to dialog', () => {
   beforeEach(() => {
     cy.truncateDb();
@@ -44,22 +43,35 @@ describe('Roster – Vision import how-to dialog', () => {
   });
 
   it('still reads the screenshot once the dialog is confirmed', () => {
-    visitRoster('vision-howto-import', 'ImportPlayer').then(({ adminData }) => {
-      cy.apiLoadChampion(adminData.access_token, 'Hulk', 'Science');
-      cy.apiLoadChampion(adminData.access_token, 'Iron Man', 'Tech');
+    setupRosterUser('vision-howto-import', 'ImportPlayer').then(({ adminData, userData }) => {
+      loadShotChampions(adminData.access_token, ['shot_0001.png']);
+      cy.apiLogin(userData.user_id, 'roster');
 
       confirmAction('import-vision-button');
+      uploadShots('shot_0001.png');
+      assertPreviewMatchesShots(['shot_0001.png']);
+    });
+  });
 
-      // The file input is visually hidden (class='hidden'), so selectFile cannot
-      // wait for it to be actionable — force is the only way to attach a fixture.
-      cy.get('[data-cy="vision-input"]').selectFile('cypress/fixtures/vision/sample-roster.png', {
-        force: true,
-      });
+  it('reads a full screen of 48 cards', () => {
+    setupRosterUser('vision-full-screen', 'FullScreenPlayer').then(({ adminData, userData }) => {
+      loadShotChampions(adminData.access_token, ['shot_0004.png']);
+      cy.apiLogin(userData.user_id, 'roster');
 
-      cy.getByCy('vision-single-screen-dialog').should('be.visible');
-      cy.getByCy('confirmation-dialog-cancel').click();
+      uploadShots('shot_0004.png');
+      assertPreviewMatchesShots(['shot_0004.png']);
+    });
+  });
 
-      cy.get('[data-cy^="preview-row-signature-input-"]', { timeout: 30000 }).should('have.length', 2);
+  it('reads several screenshots uploaded together as one batch', () => {
+    setupRosterUser('vision-batch', 'BatchPlayer').then(({ adminData, userData }) => {
+      const batch = ['shot_0065.jpg', 'shot_0066.jpg', 'shot_0067.jpg', 'shot_0068.jpg'];
+      loadShotChampions(adminData.access_token, batch);
+      cy.apiLogin(userData.user_id, 'roster');
+
+      uploadShots(...batch);
+      // Shang-Chi, Nick Fury and Quicksilver show twice, at two star levels: both rows stay.
+      assertPreviewMatchesShots(batch);
     });
   });
 });

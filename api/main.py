@@ -10,8 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from prometheus_fastapi_instrumentator import Instrumentator
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 from starlette import status
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -22,7 +20,6 @@ from src.messaging import get_consumer
 from src.security import IS_PROD, IS_TESTING
 from src.security.secrets import SECRET
 from src.utils.logging_config import audit_log, setup_logging
-from src.utils.rate_limiter import limiter
 
 # Initialize logging before anything else
 setup_logging(logging.INFO if IS_PROD else logging.DEBUG)
@@ -63,12 +60,9 @@ async def lifespan(_: FastAPI):
     await consumer.stop()
 
 
-app = FastAPI(title="Mawster", version="2.6.0", lifespan=lifespan)  # x-release-please-version
+app = FastAPI(title="Mawster", version="2.7.0", lifespan=lifespan)  # x-release-please-version
 Instrumentator().instrument(app)
 
-# Rate limiter (utilise l'IP du client — X-Forwarded-For si disponible, sinon connexion directe)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS — origines définies dans api.env (ALLOWED_ORIGINS), jamais "*" en prod
 _cors_origins = [origin.strip() for origin in SECRET.ALLOWED_ORIGINS.split(",") if origin.strip()]
@@ -117,6 +111,15 @@ async def metrics():
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
 
+logging.getLogger("uvicorn.access").addFilter(lambda record: "/health" not in record.getMessage())
+
+
+@app.get("/health", include_in_schema=False)
+async def health():
+    # Liveness only: probing the database here would have swarm kill every replica on a DB blip.
+    return {"status": "ok"}
+
+
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
@@ -162,7 +165,8 @@ async def log_and_audit_requests(
     process_time = perf_counter() - start_time
     if not IS_PROD:
         response.headers["X-Process-Time"] = str(process_time)
-    logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
+    if uri != "/health":
+        logger.info("%s %s → %s (%.3fs)", method, uri, response.status_code, process_time)
     if method != "GET":
         user_id = "anonymous"
         auth = request.headers.get("Authorization", "")

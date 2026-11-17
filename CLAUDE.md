@@ -84,8 +84,7 @@ in-memory SQLite, one per xdist worker, not MariaDB. Update tests alongside code
 - A list that reloads is asserted with `should(($els) => ...)` on `cy.get('[data-cy^="..."]')`:
   `.then()` runs once and a `getByCy` subject stays on detached nodes.
 - Admin endpoints → the admin token, never the owner's.
-- Specs named `*vision*` run nowhere. A bug only a vision spec would cover deserves a backend fix
-  under pytest — say so before settling on a front-only fix.
+- Specs named `*vision*` run only in the `e2e-vision` job, against the real Rust worker, one lane.
 
 ---
 

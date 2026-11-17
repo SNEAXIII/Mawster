@@ -22,7 +22,8 @@ describe('Tier list – signed out', () => {
   });
 
   it('writes the open tab into the URL', () => {
-    cy.url().should('include', '/tools?tab=tierlist');
+    cy.visit('/tools');
+    cy.url().should('include', '/tools?tab=saga');
 
     // And a link that already names the tab is left as it is.
     cy.visit('/tools?tab=tierlist');
@@ -66,7 +67,7 @@ describe('Tier list – signed out', () => {
   it('shows the Tools entry in the nav without a session', () => {
     cy.visit('/');
     cy.getByCy('nav-tools').should('be.visible').click();
-    cy.url().should('include', '/tools');
-    cy.getByCy('tierlist-pool').should('exist');
+    cy.url().should('include', '/tools?tab=saga');
+    cy.getByCy('tab-saga').should('be.visible');
   });
 });

@@ -3,7 +3,7 @@ use anyhow::{Result, ensure};
 pub(super) struct Reader<'a>(pub(super) &'a [u8]);
 
 impl<'a> Reader<'a> {
-    pub(super) fn new(bytes: &'a [u8]) -> Self {
+    pub(super) const fn new(bytes: &'a [u8]) -> Self {
         Self(bytes)
     }
     pub(super) fn take(&mut self, n: usize) -> Result<&'a [u8]> {
@@ -24,8 +24,10 @@ impl<'a> Reader<'a> {
         let len = self.len()?;
         Ok(self
             .take(4 * len)?
-            .chunks_exact(4)
-            .map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]]))
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|c| f32::from_le_bytes(*c))
             .collect())
     }
 

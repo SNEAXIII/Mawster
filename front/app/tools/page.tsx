@@ -10,19 +10,19 @@ import SagaTab from './_components/saga-tab'
 
 /** The tools a player can use without an alliance, and mostly without an account. */
 enum ToolsTab {
-  TierList = 'tierlist',
   Saga = 'saga',
+  TierList = 'tierlist',
 }
 
 const TOOLS_TABS = Object.values(ToolsTab)
 
 function ToolsContent() {
   const { t } = useI18n()
-  const [activeTab, setActiveTab] = useTabParam(TOOLS_TABS, ToolsTab.TierList)
+  const [activeTab, setActiveTab] = useTabParam(TOOLS_TABS, ToolsTab.Saga)
 
   const tabs: TabItem<ToolsTab>[] = [
-    { value: ToolsTab.TierList, label: t.tierlist.title, cy: 'tab-tierlist' },
     { value: ToolsTab.Saga, label: t.saga.title, cy: 'tab-saga' },
+    { value: ToolsTab.TierList, label: t.tierlist.title, cy: 'tab-tierlist' },
   ]
 
   return (
@@ -35,8 +35,8 @@ function ToolsContent() {
         value={activeTab}
         onChange={setActiveTab}
       />
-      {activeTab === ToolsTab.TierList && <TierListBoard />}
       {activeTab === ToolsTab.Saga && <SagaTab />}
+      {activeTab === ToolsTab.TierList && <TierListBoard />}
     </PageContainer>
   )
 }

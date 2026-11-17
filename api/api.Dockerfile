@@ -27,7 +27,10 @@ RUN addgroup --system --gid 1001 python && \
 COPY --from=builder /app/.venv ./.venv
 COPY src ./src
 
-COPY --chown=root:root --chmod=555 main.py run.sh seed.sh wait-for-it.sh ./
+COPY --chown=root:root --chmod=555 main.py run.sh ./
 RUN find . -type f -name "*.sh" -exec sed -i 's/\r$//' {} \;
 
 USER fastapi
+
+HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
+    CMD wget -qO /dev/null "http://127.0.0.1:${API_PORT:-8000}/health" || exit 1

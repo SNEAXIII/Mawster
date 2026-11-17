@@ -1934,7 +1934,7 @@ export function visitSignedOut(path: string): void {
 
 /** Open the tier list with no session at all, and wait for the catalog. */
 export function visitTierListSignedOut(): void {
-  visitSignedOut('/tools');
+  visitSignedOut('/tools?tab=tierlist');
   cy.getByCy('tierlist-pool').should('exist');
 }
 
@@ -1954,7 +1954,7 @@ export function visitTierListWith(lists: { title: string; championIds?: string[]
     })),
     tags: {},
   }));
-  cy.visit('/tools', {
+  cy.visit('/tools?tab=tierlist', {
     onBeforeLoad: (win) => win.localStorage.setItem(TIER_LISTS_KEY, JSON.stringify(stored)),
   });
   cy.getByCy('tierlist-pool').should('exist');

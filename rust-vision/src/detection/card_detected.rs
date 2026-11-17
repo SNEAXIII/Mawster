@@ -128,7 +128,7 @@ impl<'l> CardDetected<'l> {
     fn asc_box(text: &TextsBox) -> AscBox {
         let width = (text.right - text.left) / 5.0;
         let height = (text.bottom - text.top) / 2.0;
-        let left = (text.left + width * 4.0 - (width / 6.0)).max(0.0);
+        let left = (width.mul_add(4.0, text.left) - (width / 6.0)).max(0.0);
         let top = (text.top + height - (height / 5.0)).max(0.0);
         AscBox(BoundingBox {
             left,

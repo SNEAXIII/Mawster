@@ -119,6 +119,8 @@ export default function ImportPreviewRowEdit({
     <div
       className={`flex flex-col gap-2 py-3 ${rowStateClass(row.ignored === true, issues.length > 0)}`}
       data-cy={`preview-row-${index}`}
+      data-champion={row.champion_name}
+      data-rarity={row.newRarity}
       data-invalid={issues.length > 0}
       data-ignored={row.ignored === true}
     >
