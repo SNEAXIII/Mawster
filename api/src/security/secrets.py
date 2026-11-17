@@ -24,7 +24,7 @@ _log = logging.getLogger(__name__)
 
 def _default_database() -> int:
     """Return the default database port based on mode."""
-    return 5432 if not IS_TESTING else 5433
+    return 5402 if not IS_TESTING else 5403
 
 
 class Settings(BaseSettings):

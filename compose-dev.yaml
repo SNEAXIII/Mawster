@@ -20,7 +20,7 @@ services:
   postgres-dev:
     image: postgres:18-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
     ports:
-      - 5432:5432
+      - 5402:5432
     container_name: postgres-dev
     networks:
       - internal-dev
@@ -34,7 +34,7 @@ services:
   postgres-test:
     image: postgres:18-alpine@sha256:123b17998ccaf47e53b502e8c6a1e79afd8f579c6f3eec83c563da026f957395
     ports:
-      - 5433:5432
+      - 5403:5432
     container_name: postgres-test
     networks:
       - internal-dev
