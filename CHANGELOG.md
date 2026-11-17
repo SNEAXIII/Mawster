@@ -3,6 +3,13 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [3.1.0](https://github.com/SNEAXIII/Mawster/compare/v3.0.0...v3.1.0) (2026-11-17)
+
+
+### Added
+
+* mark champions as detested attackers and manage them from a popup ([36fd954](https://github.com/SNEAXIII/Mawster/commit/36fd95495319b9f41672607ff00b81c5d4759264))
+
 ## [3.0.0](https://github.com/SNEAXIII/Mawster/compare/v2.8.0...v3.0.0) (2026-11-17)
 
 
