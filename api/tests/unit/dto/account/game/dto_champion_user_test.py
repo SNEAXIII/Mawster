@@ -14,6 +14,7 @@ from src.dto.account.game.dto_champion_user import (
     ChampionUserResponse,
 )
 from src.dto.account.game.dto_upgrade_request import UpgradeRequestResponse
+from src.enums.AttackPreference import AttackPreference
 from src.models.Base import utcnow
 
 # ---------------------------------------------------------------------------
@@ -49,7 +50,7 @@ def _make_champion_user(champion=None, **overrides):
         "stars": 7,
         "rank": 3,
         "signature": 200,
-        "is_preferred_attacker": True,
+        "attack_preference": AttackPreference.PREFERRED,
         "ascension": 1,
         "champion": champ,
     }
@@ -74,14 +75,14 @@ class TestChampionUserResponseModelValidate:
         assert dto.champion_id == cu.champion_id
         assert dto.rarity == "7r3"
         assert dto.signature == 200
-        assert dto.is_preferred_attacker is True
+        assert dto.attack_preference == AttackPreference.PREFERRED
         assert dto.ascension == 1
 
     def test_default_values(self):
-        cu = _make_champion_user(is_preferred_attacker=False, ascension=0)
+        cu = _make_champion_user(attack_preference=AttackPreference.NEUTRAL, ascension=0)
         dto = ChampionUserResponse.model_validate(cu)
 
-        assert dto.is_preferred_attacker is False
+        assert dto.attack_preference == AttackPreference.NEUTRAL
         assert dto.ascension == 0
 
 
@@ -104,7 +105,7 @@ class TestChampionUserDetailResponseModelValidate:
         assert dto.id == cu.id
         assert dto.rarity == "7r3"
         assert dto.signature == 200
-        assert dto.is_preferred_attacker is True
+        assert dto.attack_preference == AttackPreference.PREFERRED
         assert dto.ascension == 1
 
         # Champion fields
@@ -150,7 +151,7 @@ class TestChampionUserDetailResponseModelValidate:
             "champion_id": uuid.uuid4(),
             "rarity": "7r3",
             "signature": 200,
-            "is_preferred_attacker": True,
+            "attack_preference": AttackPreference.PREFERRED,
             "ascension": 1,
             "champion_name": "Doom",
             "champion_class": "Mystic",

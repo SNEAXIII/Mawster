@@ -1,5 +1,6 @@
 import collections
 
+from src.enums.AttackPreference import AttackPreference
 from src.fixtures import sample_data as sd
 
 
@@ -47,8 +48,9 @@ def test_signature_in_catalogue_values():
     assert {sd.roster_signature(slot, idx) for slot in range(60) for idx in range(10)} <= allowed
 
 
-def test_exactly_one_preferred_per_roster():
+def test_exactly_one_preferred_and_one_detested_per_roster():
     for idx in range(30):
         size = sd.roster_size(idx)
-        preferred = [slot for slot in range(size) if sd.is_preferred_slot(slot, idx, size)]
-        assert len(preferred) == 1
+        prefs = [sd.attack_preference_for_slot(slot, idx, size) for slot in range(size)]
+        assert prefs.count(AttackPreference.PREFERRED) == 1
+        assert prefs.count(AttackPreference.DETESTED) == 1

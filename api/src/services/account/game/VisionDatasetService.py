@@ -5,6 +5,7 @@ import uuid
 from pydantic import BaseModel
 
 from src.dto.account.game.dto_vision_predictions import VisionPreview
+from src.enums.AttackPreference import AttackPreference
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
@@ -23,7 +24,7 @@ class ConfirmedRow(BaseModel):
     rarity: str
     signature: int = 0
     ascension: int = 0
-    is_preferred_attacker: bool = False
+    attack_preference: AttackPreference = AttackPreference.NEUTRAL
     # Links the confirmed row back to the prediction it corrected, so the dataset
     # sample can pair prediction and truth. None if the user added the row.
     prediction_id: uuid.UUID | None = None
@@ -66,7 +67,7 @@ class VisionDatasetService:
                     "rarity": row.rarity,
                     "signature": row.signature,
                     "ascension": row.ascension,
-                    "is_preferred_attacker": row.is_preferred_attacker,
+                    "attack_preference": row.attack_preference.value,
                 },
                 "screen_key": screen_key,
             }

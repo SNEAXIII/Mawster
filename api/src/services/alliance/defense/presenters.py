@@ -82,7 +82,7 @@ def _node_response(node: DefensePlanNode, battlegroup: int, saga: dict) -> Defen
             "game_pseudo": copy.game_account.game_pseudo,
             "rarity": copy.rarity,
             "signature": copy.signature,
-            "is_preferred_attacker": copy.is_preferred_attacker,
+            "attack_preference": copy.attack_preference,
             "ascension": copy.ascension,
         }
         if copy is not None

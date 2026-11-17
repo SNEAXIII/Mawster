@@ -4,6 +4,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.expression import Select
 from sqlmodel import col, or_, select, tuple_
 
+from src.enums.AttackPreference import AttackPreference
 from src.models.champion.Champion import Champion
 from src.models.champion.ChampionUser import ChampionUser
 from src.models.user.GameAccount import GameAccount
@@ -54,7 +55,7 @@ class AllianceRosterService:
         if ascensions:
             stmt = stmt.where(col(ChampionUser.ascension).in_(ascensions))
         if preferred_attacker:
-            stmt = stmt.where(col(ChampionUser.is_preferred_attacker).is_(True))
+            stmt = stmt.where(col(ChampionUser.attack_preference) == AttackPreference.PREFERRED)
         if no_group:
             stmt = stmt.where(col(GameAccount.alliance_group).is_(None))
         elif alliance_group is not None:

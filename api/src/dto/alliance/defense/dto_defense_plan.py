@@ -5,6 +5,7 @@ from pydantic import BaseModel, model_validator
 
 from src.dto.alliance.defense.dto_defense_common import ChampionFields, DefenseNameRequest, Quota
 from src.dto.mixins import SagaRoles
+from src.enums.AttackPreference import AttackPreference
 from src.enums.DefensePlanState import DefensePlanState
 from src.enums.SeasonFormat import SeasonFormat
 
@@ -43,7 +44,7 @@ class DefensePlanNodeResponse(ChampionFields, SagaRoles):
     game_pseudo: str | None = None
     rarity: str | None = None
     signature: int = 0
-    is_preferred_attacker: bool = False
+    attack_preference: AttackPreference = AttackPreference.NEUTRAL
     ascension: int = 0
     is_ascendable: bool = False
     placed_by_id: uuid.UUID | None = None

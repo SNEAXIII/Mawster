@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.dto.mixins import ChampionIdentity, RosterEntryInput, SagaRoles
+from src.enums.AttackPreference import AttackPreference
 
 
 class ChampionUserCreateRequest(RosterEntryInput):
@@ -26,6 +27,12 @@ class ChampionUserBulkRequest(BaseModel):
     champions: list[ChampionUserBulkEntry] = Field(..., min_length=1)
 
 
+class AttackPreferenceUpdateRequest(BaseModel):
+    """DTO to set the Attack Preference of a roster entry."""
+
+    attack_preference: AttackPreference
+
+
 class ChampionUserResponse(BaseModel):
     """DTO for a champion-user roster entry."""
 
@@ -36,7 +43,7 @@ class ChampionUserResponse(BaseModel):
     champion_id: uuid.UUID
     rarity: str
     signature: int
-    is_preferred_attacker: bool = False
+    attack_preference: AttackPreference = AttackPreference.NEUTRAL
     ascension: int = 0
 
 
@@ -59,7 +66,7 @@ class ChampionUserDetailResponse(ChampionUserResponse, ChampionIdentity, SagaRol
             "champion_id": data.champion_id,
             "rarity": data.rarity,
             "signature": data.signature,
-            "is_preferred_attacker": data.is_preferred_attacker,
+            "attack_preference": data.attack_preference,
             "ascension": data.ascension,
             "is_ascendable": data.champion.is_ascendable,
             "champion_name": data.champion.name,
