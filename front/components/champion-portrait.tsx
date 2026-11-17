@@ -5,7 +5,6 @@ import { getChampionImageUrl, MAX_THUMBNAIL_SIZE, THUMBNAIL_SIZES } from '@/app/
 import { getStarFrameUrl } from '@/app/services/roster'
 import SynergyBadge from '@/components/synergy-badge'
 import PrefightBadge from '@/components/prefight-badge'
-import PreferredBadge from '@/components/preferred-badge'
 import SagaBadge from '@/components/saga-badge'
 import AscensionBadge from '@/components/ascension-badge'
 import { useExportMode } from '@/app/contexts/export-mode-context'
@@ -96,7 +95,7 @@ interface ChampionPortraitProps {
   size?: number
   /** Optional badge rendered absolutely over the portrait (bottom-right) */
   mode?: mode
-  /** Star badge at top-left indicating a player's preferred attacker */
+  /** Gold glow around the frame for a player's preferred attacker */
   isPreferred?: boolean
   /** Whether champion is a saga attacker */
   is_saga_attacker?: boolean
@@ -190,6 +189,13 @@ export default function ChampionPortrait({
           loading={eagerLoad ? 'eager' : 'lazy'}
           decoding='async'
           className='absolute inset-0 w-full h-full object-contain pointer-events-none'
+          // A preferred attacker glows gold, following the frame's own outline.
+          style={
+            isPreferred
+              ? { filter: `drop-shadow(0 0 ${Math.max(2, size / 16)}px #fbbf24)` }
+              : undefined
+          }
+          data-cy={isPreferred ? 'preferred-badge' : undefined}
         />
       )}
       {/* Champion image – on top, filling the frame's window. `focusY` keeps the
@@ -214,7 +220,6 @@ export default function ChampionPortrait({
       )}
       {mode === 'synergy' && <SynergyBadge additionalClasses='z-30' />}
       {mode === 'prefight' && <PrefightBadge additionalClasses='z-30' />}
-      {isPreferred && <PreferredBadge additionalClasses='z-30' />}
       {showSaga && (
         <SagaBadge
           additionalClasses='z-30'
