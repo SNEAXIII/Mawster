@@ -126,8 +126,8 @@ class AllianceRosterService:
                 .order_by(Champion.name)
                 .limit(distinct_champion_limit)
             )
-            # Wrap the limited select in a derived table: MariaDB rejects LIMIT
-            # directly inside an IN (...) subquery, but allows it in a FROM subquery.
+            # The capped select sits in a derived table, the portable spelling of a LIMIT
+            # inside an IN (...) subquery.
             capped = distinct_ids.subquery()
             stmt = stmt.where(col(ChampionUser.champion_id).in_(select(capped.c.champion_id)))
 

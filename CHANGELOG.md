@@ -3,6 +3,24 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [3.0.0](https://github.com/SNEAXIII/Mawster/compare/v2.8.0...v3.0.0) (2026-11-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* move the API from MariaDB to PostgreSQL ([#828](https://github.com/SNEAXIII/Mawster/issues/828))
+
+### Added
+
+* move the API from MariaDB to PostgreSQL ([#828](https://github.com/SNEAXIII/Mawster/issues/828)) ([2710ea9](https://github.com/SNEAXIII/Mawster/commit/2710ea98de3448bced896e95ae12db3c3533db2c))
+
+## [2.8.0](https://github.com/SNEAXIII/Mawster/compare/v2.7.0...v2.8.0) (2026-11-17)
+
+
+### Added
+
+* enhance champion visuals and lighten image exports ([b292acf](https://github.com/SNEAXIII/Mawster/commit/b292acff2e18547a7d5dc8510566bc928d5b062d))
+
 ## [2.7.0](https://github.com/SNEAXIII/Mawster/compare/v2.6.0...v2.7.0) (2026-11-17)
 
 

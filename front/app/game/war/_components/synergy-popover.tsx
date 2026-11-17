@@ -16,6 +16,7 @@ interface SynergyPopoverProps {
   gameAccountId: string
   championName: string
   imageUrl: string | null
+  championClass: string | null
   rarity: string
   size?: number
   isPreferred?: boolean
@@ -31,6 +32,7 @@ export default function SynergyPopover({
   gameAccountId,
   championName,
   imageUrl,
+  championClass,
   rarity,
   size = 35,
   isPreferred = false,
@@ -59,6 +61,7 @@ export default function SynergyPopover({
           >
             <ChampionPortrait
               imageUrl={imageUrl}
+              championClass={championClass}
               name={championName}
               rarity={rarity}
               size={size}
@@ -85,6 +88,7 @@ export default function SynergyPopover({
                 >
                   <ChampionPortrait
                     imageUrl={s.image_url}
+                    championClass={s.champion_class}
                     name={s.champion_name}
                     rarity={s.rarity ?? ''}
                     size={32}

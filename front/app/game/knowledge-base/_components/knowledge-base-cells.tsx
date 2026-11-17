@@ -18,6 +18,7 @@ const EXPORT_PORTRAIT_SIZE = 56
 type ChampionCellProps = Readonly<{
   name: string
   imageUrl: string | null
+  championClass: string | null
   stars?: number | null
   rank?: number | null
   ascension?: number | null
@@ -34,6 +35,7 @@ type ChampionCellProps = Readonly<{
 export function ChampionCell({
   name,
   imageUrl,
+  championClass,
   stars,
   rank,
   ascension,
@@ -54,6 +56,7 @@ export function ChampionCell({
       >
         <ChampionPortrait
           imageUrl={imageUrl}
+          championClass={championClass}
           name={name}
           rarity={String(stars ?? 7)}
           size={exporting ? EXPORT_PORTRAIT_SIZE : PORTRAIT_SIZE}

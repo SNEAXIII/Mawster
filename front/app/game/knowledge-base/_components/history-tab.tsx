@@ -15,11 +15,11 @@ export default function HistoryTab() {
   const kb = t.game.knowledgeBase
   const vm = useKnowledgeBaseViewModel()
   const exportRef = useRef<HTMLDivElement>(null)
-  const { exporting, exportPng } = useImageExport()
+  const { exporting, exportImage } = useImageExport()
 
   // Only the current page is captured — the table renders what the filters and
   // the pagination already selected, nothing more.
-  const handleExport = () => exportPng(exportRef, exportFilename('knowledge-base'))
+  const handleExport = () => exportImage(exportRef, exportFilename('knowledge-base'))
 
   return (
     <div className='flex flex-col gap-4'>

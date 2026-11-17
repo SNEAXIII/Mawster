@@ -144,6 +144,7 @@ export default function ImportReportDialog({
                 <div className='shrink-0'>
                   <ChampionPortrait
                     imageUrl={result.image_url}
+                    championClass={result.champion_class}
                     name={result.champion_name}
                     rarity={result.newRarity}
                     size={40}

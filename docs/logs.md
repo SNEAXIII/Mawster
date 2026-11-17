@@ -6,7 +6,7 @@
 # Logs temps réel d'un service (tous les réplicas)
 docker service logs -f mawster_api
 docker service logs -f mawster_front
-docker service logs -f mawster_mariadb
+docker service logs -f mawster_postgres
 
 # Dernières N lignes
 docker service logs --tail 100 mawster_api

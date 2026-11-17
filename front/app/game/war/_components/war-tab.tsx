@@ -12,7 +12,7 @@ import WarOverview from './war-overview'
 import WarAttackFrame from './war-attack-frame'
 import ExportHeader from '@/app/game/_components/export-header'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
-import { downloadElementAsPng } from '@/app/lib/export-image'
+import { downloadElementAsJpg } from '@/app/lib/export-image'
 
 export type fightStateFilter = 'all' | 'done' | 'todo'
 
@@ -66,9 +66,9 @@ export default function WarTab({ onEditClick }: Readonly<{ onEditClick: () => vo
       if (!ref.current) return
       const allianceName = selectedAlliance?.name ?? 'alliance'
       const date = new Date().toISOString().split('T')[0]
-      await downloadElementAsPng(
+      await downloadElementAsJpg(
         ref.current,
-        `war-${target}-bg${selectedBg}-${allianceName}-${date}.png`
+        `war-${target}-bg${selectedBg}-${allianceName}-${date}.jpg`
       )
     } finally {
       setExporting(false)

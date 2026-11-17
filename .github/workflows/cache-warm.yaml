@@ -1,0 +1,67 @@
+name: Warm caches
+
+# A pull request's cache is scoped to its merge ref, so no other PR can read it; one
+# saved on main is readable by every PR. Keys and commands mirror _test.yaml.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - rust-vision/Cargo.lock
+      - .github/workflows/cache-warm.yaml
+  workflow_dispatch:
+
+jobs:
+  vision-lint:
+    name: Warm the vision lint cache
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./rust-vision
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Cache cargo dependencies
+        id: cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust-vision/target
+          key: cargo-vision-lint-${{ runner.os }}-${{ hashFiles('rust-vision/Cargo.lock') }}
+      - name: Build what clippy and the tests compile
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          cargo clippy --locked --all-targets --all-features
+          cargo test --locked --all-features --no-run
+
+  vision-release:
+    name: Warm the vision release cache
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./rust-vision
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Cache cargo dependencies
+        id: cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust-vision/target
+          key: cargo-vision-release-${{ runner.os }}-${{ hashFiles('rust-vision/Cargo.lock') }}
+      - name: Build the worker, the gallery builder and the GT runner
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: cargo build --release --locked --features worker --bins

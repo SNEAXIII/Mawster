@@ -53,6 +53,7 @@ export default function PrefightEntryRow({
         <div className='relative'>
           <ChampionPortrait
             imageUrl={prefight.image_url}
+            championClass={prefight.champion_class}
             name={prefight.champion_name}
             rarity={prefight.rarity ?? ''}
             size={portraitSize}
@@ -68,6 +69,7 @@ export default function PrefightEntryRow({
         {targetPlacement ? (
           <ChampionPortrait
             imageUrl={targetPlacement.image_url}
+            championClass={targetPlacement.champion_class}
             name={targetPlacement.champion_name}
             rarity={targetPlacement.rarity}
             size={portraitSize}

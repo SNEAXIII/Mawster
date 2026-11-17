@@ -2,13 +2,10 @@
 set -e
 
 if [[ -f /run/secrets/mawster_db_password ]]; then
-  export MARIADB_PASSWORD=$(cat /run/secrets/mawster_db_password)
-fi
-if [[ -f /run/secrets/mawster_db_root_password ]]; then
-  export MARIADB_ROOT_PASSWORD=$(cat /run/secrets/mawster_db_root_password)
+  export POSTGRES_PASSWORD=$(cat /run/secrets/mawster_db_password)
 fi
 
-export MARIADB_USER=mawster
-export MARIADB_DATABASE=mawster
+export POSTGRES_USER=mawster
+export POSTGRES_DB=mawster
 
 uv run --no-build --no-sync alembic upgrade head

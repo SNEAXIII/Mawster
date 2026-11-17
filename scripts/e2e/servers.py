@@ -20,7 +20,7 @@ from config import (  # pylint: disable=import-error,wrong-import-position
     DB_PREFIX,
     FRONT_DIR,
     HEALTH_TIMEOUT,
-    MARIADB_PORT,
+    POSTGRES_PORT,
     RABBITMQ_URL,
     ROOT,
     RUSTFS_ACCESS_KEY,
@@ -48,7 +48,7 @@ def get_db_name(worker: int) -> str:
     """Return the database name for this worker.
 
     Nothing here creates it: app_testing.py does, from the backend process that
-    owns it — which is also what waits for MariaDB to accept connections.
+    owns it — which is also what waits for PostgreSQL to accept connections.
     """
     return f"{DB_PREFIX}{worker}"
 
@@ -113,8 +113,8 @@ def start_backend(worker: int, vision: bool = False) -> None:
     env = {
         **os.environ,
         "MODE": "testing",
-        "MARIADB_DATABASE": db,
-        "MARIADB_PORT": str(MARIADB_PORT),
+        "POSTGRES_DB": db,
+        "POSTGRES_PORT": str(POSTGRES_PORT),
         "PORT": str(api_port),
         "PYTHONIOENCODING": "utf-8",
         # Without this, print() is block-buffered into the log and lost when the

@@ -7,7 +7,7 @@ import UnrecordedBadge from './unrecorded-badge'
 interface InfoChampionTileProps {
   champion: Pick<
     AvailablePrefightAttacker,
-    'champion_name' | 'image_url' | 'is_saga_attacker' | 'is_saga_defender'
+    'champion_name' | 'image_url' | 'champion_class' | 'is_saga_attacker' | 'is_saga_defender'
   > & { is_preferred_attacker?: boolean }
   label: string
   onPick: () => void
@@ -31,6 +31,7 @@ export default function InfoChampionTile({
     >
       <ChampionPortrait
         imageUrl={champion.image_url}
+        championClass={champion.champion_class}
         name={champion.champion_name}
         rarity='7r1'
         size={48}

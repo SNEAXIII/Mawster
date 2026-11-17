@@ -21,7 +21,7 @@ export default function SagaTab() {
   const { t } = useI18n()
   const { seasons, seasonNumber, setSeasonNumber, attackers, defenders, loading, error } = useSaga()
   const captureRef = useRef<HTMLDivElement>(null)
-  const { exporting, exportPng } = useImageExport()
+  const { exporting, exportImage } = useImageExport()
 
   if (error)
     return (
@@ -78,7 +78,7 @@ export default function SagaTab() {
             type='button'
             variant='outline'
             size='sm'
-            onClick={() => exportPng(captureRef, `saga-season-${seasonNumber}.png`)}
+            onClick={() => exportImage(captureRef, `saga-season-${seasonNumber}.jpg`)}
             disabled={loading || empty || exporting}
             data-cy='saga-export-btn'
           >

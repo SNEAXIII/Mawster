@@ -64,6 +64,7 @@ export default function TemplateChampionPicker({
               >
                 <ChampionPortrait
                   imageUrl={champion.image_url}
+                  championClass={champion.champion_class}
                   name={champion.name}
                   rarity='7r1'
                   size={56}

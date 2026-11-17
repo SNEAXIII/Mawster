@@ -26,7 +26,7 @@ setup_logging(logging.INFO if IS_PROD else logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 if not IS_PROD:
-    logger.info("Starting Mawster API — database: %s", SECRET.MARIADB_DATABASE)
+    logger.info("Starting Mawster API — database: %s", SECRET.POSTGRES_DB)
 
 
 @asynccontextmanager
@@ -60,7 +60,7 @@ async def lifespan(_: FastAPI):
     await consumer.stop()
 
 
-app = FastAPI(title="Mawster", version="2.7.0", lifespan=lifespan)  # x-release-please-version
+app = FastAPI(title="Mawster", version="3.0.0", lifespan=lifespan)  # x-release-please-version
 Instrumentator().instrument(app)
 
 

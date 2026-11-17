@@ -1,7 +1,5 @@
 from sqlmodel import create_engine
 
-from src.security.secrets import SECRET
+from src.utils.db import url_object
 
-sync_engine = create_engine(
-    f"mysql+pymysql://{SECRET.MARIADB_USER}:{SECRET.MARIADB_PASSWORD}@{SECRET.MARIADB_HOST}:{SECRET.MARIADB_PORT}/{SECRET.MARIADB_DATABASE}",
-)
+sync_engine = create_engine(url_object)

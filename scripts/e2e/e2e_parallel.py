@@ -7,7 +7,7 @@ Two steps, so the backends boot while CI sets up the frontend:
     python3 scripts/e2e/e2e_parallel.py tests    --spec "<same lanes>"
 
 Each lane N gets its own worker:
-  - Backend on port 8010+N  (MariaDB DB: mawster_test_N)
+  - Backend on port 8010+N  (PostgreSQL DB: mawster_test_N)
   - Frontend on port 3010+N (next start serving the .next-e2e build from the e2e-build job)
   - Cypress instance running that lane's specs
 """
@@ -116,7 +116,7 @@ def start_backends(
 ) -> None:
     """Start the static server and one backend per lane, detached, then return.
 
-    Each backend waits for MariaDB and creates its own database (app_testing.py).
+    Each backend waits for PostgreSQL and creates its own database (app_testing.py).
     Vision: the worker starts only once the backend has declared vision.jobs.
     """
     start_static_server()
