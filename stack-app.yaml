@@ -378,7 +378,7 @@ services:
         max-size: 10m
         max-file: '5'
 
-  # One-shot: create the buckets + the imports/ retention rule, then exit. Swarm
+  # One-shot: create the buckets + their retention rules, then exit. Swarm
   # keeps re-running condition:none tasks off; it converges once rustfs is up.
   rustfs-init:
     image: amazon/aws-cli:latest
@@ -406,6 +406,9 @@ services:
         aws --endpoint-url http://rustfs:9000 s3api put-bucket-lifecycle-configuration \
           --bucket vision \
           --lifecycle-configuration "{\"Rules\":[{\"ID\":\"expire-imports\",\"Status\":\"Enabled\",\"Filter\":{\"Prefix\":\"imports/\"},\"Expiration\":{\"Days\":$${VISION_RETENTION_DAYS}}}]}"
+        aws --endpoint-url http://rustfs:9000 s3api put-bucket-lifecycle-configuration \
+          --bucket dataset \
+          --lifecycle-configuration '{"Rules":[{"ID":"expire-samples","Status":"Enabled","Filter":{"Prefix":"samples/"},"Expiration":{"Days":30}}]}'
         # Presigned uploads come straight from the browser, so the bucket answers
         # its own preflight — the API is not in that request path. Exactly one
         # origin: the site that hands out the URLs. Widening this would let any

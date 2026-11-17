@@ -354,11 +354,11 @@ A wrong Reading is corrected by hand from the Champion catalog.
 _Field_: `confidence`.
 
 **Dataset Sample**:
-A screenshot kept for training after the Player opted in. Stored apart from the rest
-of the domain (its own object store, no foreign keys) so it outlives the Import. It
-still records which Player sent it — not to exploit the identity, but so consent can
-be withdrawn and their samples removed.
-_Table_: `vision_sample`.
+A screenshot and its confirmed Readings, kept for training after the Player opted in.
+Copied apart from the Import (its own object store, no foreign keys) and expired after
+30 days. Consent is the Import's `share_dataset`: withdrawing it removes the samples
+under that Import.
+_Objects_: `dataset/samples/{import_id}/`.
 
 `vision_job` is queue plumbing, one screenshot in flight. It is not a domain term and
 never appears in player-facing wording.

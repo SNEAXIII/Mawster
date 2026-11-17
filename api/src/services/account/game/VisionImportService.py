@@ -692,8 +692,7 @@ class VisionImportService:
         Idempotent: a retry (network timeout, double-click) on an import that
         is already CONFIRMED is a no-op — no new samples archived, nothing
         written to storage, no status rewrite. Without this guard, a retry
-        would re-archive the same samples into the permanent dataset bucket,
-        leaving duplicates there forever.
+        would re-archive the same samples into the dataset bucket.
         """
         if vision_import.status == VisionImportStatus.CONFIRMED:
             return 0
