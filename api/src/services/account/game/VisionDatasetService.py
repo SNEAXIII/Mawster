@@ -9,7 +9,6 @@ from src.enums.AttackPreference import AttackPreference
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
-from src.models.vision.VisionSample import VisionSample
 from src.security.secrets import SECRET
 from src.storage.base import Storage
 from src.utils.db import SessionDep
@@ -33,11 +32,11 @@ class ConfirmedRow(BaseModel):
 class VisionDatasetService:
     """Archives opt-in dataset samples on import confirmation.
 
-    A sample is the pairing of what the model read (the prediction) with what
-    the user confirmed (the truth) — that pairing is the entire training
-    signal, so it is stored together as one JSON object. Only the object key
-    is kept in the DB (VisionSample.dataset_key); the JSON itself lives in the
-    `dataset` bucket, and only when the import opted in.
+    A sample pairs what the model read (the prediction) with what the user
+    confirmed (the truth), next to a copy of the screenshot it came from — the
+    original in `imports/` expires after VISION_RETENTION_DAYS. Everything lives
+    under `samples/{import_id}/` in the `dataset` bucket, which expires on its own;
+    `VisionImport.share_dataset` is the consent record.
     """
 
     @classmethod
@@ -51,15 +50,22 @@ class VisionDatasetService:
         if not vision_import.share_dataset:
             return 0
 
-        count = 0
-        for row in rows:
-            prediction, screen_key = await cls._resolve_prediction(session, row.prediction_id)
-
-            sample = VisionSample(
-                import_id=vision_import.id,
-                game_account_id=vision_import.game_account_id,
-                screen_key=screen_key,
-            )
+        prefix = f"samples/{vision_import.id}/"
+        copied: dict[uuid.UUID, str] = {}
+        for index, row in enumerate(rows):
+            prediction, job = await cls._resolve_prediction(session, row.prediction_id)
+            screen_key = ""
+            if job is not None:
+                screen_key = copied.get(job.id, "")
+                if not screen_key:
+                    screen_key = f"{prefix}{job.id}.png"
+                    await storage.copy_object(
+                        SECRET.RUSTFS_BUCKET_VISION,
+                        job.object_key,
+                        SECRET.RUSTFS_BUCKET_DATASET,
+                        screen_key,
+                    )
+                    copied[job.id] = screen_key
             payload = {
                 "prediction": cls._prediction_payload(prediction),
                 "truth": {
@@ -71,39 +77,29 @@ class VisionDatasetService:
                 },
                 "screen_key": screen_key,
             }
-            key = f"samples/{sample.id}/sample.json"
             await storage.put_bytes(
                 SECRET.RUSTFS_BUCKET_DATASET,
-                key,
+                f"{prefix}{index}.json",
                 json.dumps(payload).encode(),
                 "application/json",
             )
-            sample.dataset_key = key
-            session.add(sample)
-            count += 1
 
-        await session.commit()
-        if count:
-            logger.info("archived %s dataset sample(s) for import %s", count, vision_import.id)
-        return count
+        if rows:
+            logger.info("archived %s dataset sample(s) for import %s", len(rows), vision_import.id)
+        return len(rows)
 
     @classmethod
     async def _resolve_prediction(
         cls, session: SessionDep, prediction_id: uuid.UUID | None
-    ) -> tuple[VisionPrediction | None, str]:
-        """Look up the prediction a row corrected, and the screen it came from.
-
-        Returns (None, "") when the row has no prediction (the user added it
-        manually) or the prediction can no longer be resolved.
-        """
+    ) -> tuple[VisionPrediction | None, VisionJob | None]:
+        """The prediction a row corrected and the job of its screenshot, or
+        (None, None) for a row the user added by hand."""
         if prediction_id is None:
-            return None, ""
+            return None, None
         prediction = await session.get(VisionPrediction, prediction_id)
         if prediction is None:
-            return None, ""
-        job = await session.get(VisionJob, prediction.job_id)
-        screen_key = job.object_key if job is not None else ""
-        return prediction, screen_key
+            return None, None
+        return prediction, await session.get(VisionJob, prediction.job_id)
 
     @staticmethod
     def _prediction_payload(prediction: VisionPrediction | None) -> dict | None:

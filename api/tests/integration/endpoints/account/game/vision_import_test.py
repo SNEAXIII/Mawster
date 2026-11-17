@@ -75,6 +75,10 @@ class FakeStorage:
         self.objects[key] = data
         self.content_types[key] = content_type
 
+    async def copy_object(self, src_bucket: str, src_key: str, dst_bucket: str, dst_key: str):
+        self.objects[dst_key] = self.objects[src_key]
+        self.content_types[dst_key] = self.content_types[src_key]
+
     async def delete_prefix(self, bucket: str, prefix: str) -> None:
         for key in [key for key in self.objects if key.startswith(prefix)]:
             del self.objects[key]
@@ -592,7 +596,14 @@ async def test_confirm_archives_one_sample_per_row_when_opted_in(fake_infra):
 
     assert response.status_code == 200
     assert response.json()["samples_archived"] == 1
-    assert len(storage.objects) == 2  # the uploaded screen + the archived sample
+    # The uploaded screen, its copy in the dataset bucket and the sample JSON.
+    assert sorted(storage.objects) == sorted(
+        [
+            f"imports/{import_id}/{job_id}/screen.png",
+            f"samples/{import_id}/{job_id}.png",
+            f"samples/{import_id}/0.json",
+        ]
+    )
 
     after = await _get_import(headers, import_id)
     assert after["status"] == "confirmed"
@@ -601,7 +612,7 @@ async def test_confirm_archives_one_sample_per_row_when_opted_in(fake_infra):
 @pytest.mark.asyncio
 async def test_confirming_twice_is_idempotent(fake_infra):
     """A retry (network timeout, double-click) must not re-archive samples: the
-    second confirm is a no-op, and only ONE sample object ever lands in storage."""
+    second confirm is a no-op, and nothing new lands in storage."""
     storage, _ = fake_infra
     await push_one_user()
     account = await push_game_account(user_id=USER_ID, game_pseudo=GAME_PSEUDO)
@@ -639,7 +650,7 @@ async def test_confirming_twice_is_idempotent(fake_infra):
     assert first.status_code == 200
     assert first.json()["samples_archived"] == 1
     sample_keys_after_first = {key for key in storage.objects if key.startswith("samples/")}
-    assert len(sample_keys_after_first) == 1
+    assert len(sample_keys_after_first) == 2  # the screenshot copy + the sample JSON
 
     async with get_test_client() as client:
         second = await client.post(
@@ -649,7 +660,7 @@ async def test_confirming_twice_is_idempotent(fake_infra):
     assert second.status_code == 200
     assert second.json()["samples_archived"] == 0
     sample_keys_after_second = {key for key in storage.objects if key.startswith("samples/")}
-    # Still only the one sample object written by the first call.
+    # Still only the objects written by the first call.
     assert sample_keys_after_second == sample_keys_after_first
 
 

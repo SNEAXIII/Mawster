@@ -64,6 +64,14 @@ class S3Storage(Storage):
         async with self._client() as client:
             await client.put_object(Bucket=bucket, Key=key, Body=data, ContentType=content_type)
 
+    async def copy_object(
+        self, src_bucket: str, src_key: str, dst_bucket: str, dst_key: str
+    ) -> None:
+        async with self._client() as client:
+            await client.copy_object(
+                Bucket=dst_bucket, Key=dst_key, CopySource={"Bucket": src_bucket, "Key": src_key}
+            )
+
     async def presigned_put_url(
         self, bucket: str, key: str, content_type: str, expires_in: int
     ) -> str:

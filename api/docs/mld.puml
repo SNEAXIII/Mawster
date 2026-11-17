@@ -61,16 +61,6 @@ entity "user" as user {
   google_id : VARCHAR(255) <<UQ>>
 }
 
-entity "vision_sample" as vision_sample {
-  * id : CHAR(32) <<PK>>
-  --
-  * created_at : DATETIME
-  * import_id : CHAR(32)
-  * game_account_id : CHAR(32)
-  * screen_key : VARCHAR(255)
-  dataset_key : VARCHAR(255)
-}
-
 entity "admin_audit_entry" as admin_audit_entry {
   * id : CHAR(32) <<PK>>
   --
