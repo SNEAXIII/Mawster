@@ -3,6 +3,13 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [2.8.0](https://github.com/SNEAXIII/Mawster/compare/v2.7.0...v2.8.0) (2026-11-17)
+
+
+### Added
+
+* enhance champion visuals and lighten image exports ([b292acf](https://github.com/SNEAXIII/Mawster/commit/b292acff2e18547a7d5dc8510566bc928d5b062d))
+
 ## [2.7.0](https://github.com/SNEAXIII/Mawster/compare/v2.6.0...v2.7.0) (2026-11-17)
 
 
