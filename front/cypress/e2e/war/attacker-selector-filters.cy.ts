@@ -16,7 +16,7 @@ interface RosterChampion {
   cls?: string;
   rarity?: string;
   saga?: boolean;
-  preferred?: boolean;
+  preference?: 'preferred' | 'neutral' | 'detested';
 }
 
 /** Load a champion as admin and put it on the given account's roster. */
@@ -24,20 +24,14 @@ function giveChampion(
   adminToken: string,
   token: string,
   accountId: string,
-  { name, cls = 'Mutant', rarity = '7r3', saga = false, preferred }: RosterChampion,
+  { name, cls = 'Mutant', rarity = '7r3', saga = false, preference }: RosterChampion,
 ) {
   const load = saga
     ? cy.apiLoadChampionWithSaga(adminToken, name, cls, { is_saga_attacker: true })
     : cy.apiLoadChampion(adminToken, name, cls);
 
   load.then((champs: { id: string }[]) => {
-    cy.apiAddChampionToRoster(
-      token,
-      accountId,
-      champs[0].id,
-      rarity,
-      preferred === undefined ? undefined : { attack_preference: preferred ? 'preferred' : 'neutral' },
-    );
+    cy.apiAddChampionToRoster(token, accountId, champs[0].id, rarity, preference && { attack_preference: preference });
   });
 }
 
@@ -110,7 +104,7 @@ describe('War – WarAttackerSelector filters', () => {
 
   it('preferred attacker toggle shows only preferred attackers', () => {
     setupAttackerScenario('atk-flt-pref').then(({ adminToken, ownerData, memberData, memberAccId }) => {
-      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', preferred: true });
+      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', preference: 'preferred' });
 
       openAttackerSelector(ownerData.user_id);
 
@@ -122,6 +116,43 @@ describe('War – WarAttackerSelector filters', () => {
       // Only Storm (preferred) visible
       expectVisible('Storm');
       expectHidden('Wolverine');
+    });
+  });
+
+  // =========================================================================
+  // Detested Attackers: hidden by toggle, listed last otherwise
+  // =========================================================================
+
+  it('hide detested toggle hides detested attackers', () => {
+    setupAttackerScenario('atk-flt-det').then(({ adminToken, ownerData, memberData, memberAccId }) => {
+      giveChampion(adminToken, memberData.access_token, memberAccId, { name: 'Storm', preference: 'detested' });
+
+      openAttackerSelector(ownerData.user_id);
+
+      expectVisible('Wolverine', 'Storm');
+
+      cy.getByCy('selector-toggle-hideDetested').click();
+
+      expectVisible('Wolverine');
+      expectHidden('Storm');
+    });
+  });
+
+  it('lists detested attackers last, below lower-ranked ones', () => {
+    setupAttackerScenario('atk-sort-det').then(({ adminToken, ownerData, memberData, memberAccId }) => {
+      // Storm 7r5 detested outranks Wolverine 7r3 but must sink below it
+      giveChampion(adminToken, memberData.access_token, memberAccId, {
+        name: 'Storm',
+        rarity: '7r5',
+        preference: 'detested',
+      });
+
+      openAttackerSelector(ownerData.user_id);
+
+      cy.get('[data-cy^="attacker-card-"]').should(($cards) => {
+        const order = [...$cards].map((el) => el.getAttribute('data-cy'));
+        expect(order).to.deep.equal(['attacker-card-Wolverine', 'attacker-card-Storm']);
+      });
     });
   });
 
@@ -220,12 +251,12 @@ describe('War – WarAttackerSelector filters', () => {
       giveChampion(adminToken, memberData.access_token, memberAccId, {
         name: 'Storm',
         saga: true,
-        preferred: true,
+        preference: 'preferred',
       });
       giveChampion(adminToken, memberData.access_token, memberAccId, {
         name: 'Deadpool',
         saga: true,
-        preferred: false,
+        preference: 'neutral',
       });
 
       openAttackerSelector(ownerData.user_id);
@@ -344,7 +375,7 @@ describe('War – WarAttackerSelector rarity filter', () => {
       giveChampion(adminToken, memberData.access_token, memberAccId, {
         name: 'Deadpool',
         rarity: '7r1',
-        preferred: true,
+        preference: 'preferred',
       });
 
       openAttackerSelector(ownerData.user_id);

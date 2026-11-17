@@ -15,8 +15,9 @@ describe('Roster – Upgrade Requests', () => {
       cy.getByCy('invite-member-toggle').should('be.visible');
       cy.getByCy('view-roster-URMember').click();
 
-      // Click the upgrade button on the first champion card
-      cy.getByCy('champion-upgrade').first().focus().click();
+      // Open the champion dialog, then request the upgrade
+      cy.getByCy('champion-card-Spider-Man').click();
+      cy.getByCy('champion-upgrade').click();
 
       // Select 7r3 in the rarity dropdown
       cy.selectOption('upgrade-rarity-select', '7R3');

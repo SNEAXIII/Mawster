@@ -28,7 +28,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
         cy.getByCy('sig-input').should('have.value', '200');
 
         // Check preferred attacker
-        cy.getByCy('preferred-attacker-checkbox').should('be.visible').click();
+        cy.getByCy('attack-preference-preferred').should('be.visible').click();
 
         // Set ascension A2
         cy.slideTo('ascension', 'A2');
@@ -74,8 +74,9 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
 
           cy.apiLogin(userData.user_id, 'roster');
 
-          // Click the edit button on the champion card
-          cy.getByCy('champion-edit').first().focus().click();
+          // Open the champion dialog, then edit
+          cy.getByCy('champion-card-EditHero').click();
+          cy.getByCy('champion-edit').click();
 
           // Form should be open and pre-filled
           cy.contains('EditHero').should('be.visible');
@@ -104,8 +105,9 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
 
           cy.apiLogin(userData.user_id, 'roster');
 
-          // Click edit
-          cy.getByCy('champion-edit').first().focus().click();
+          // Open the champion dialog, then edit
+          cy.getByCy('champion-card-EditUpd').click();
+          cy.getByCy('champion-edit').click();
 
           // Change rarity to 7r4
           cy.slideTo('rarity', '7R4');
@@ -189,7 +191,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
         cy.contains('Kingpin added / updated').should('be.visible');
 
         // Should only appear once (updated, not duplicated)
-        cy.get('[data-cy="champion-delete"]').should('have.length', 1);
+        cy.get('[data-cy="champion-card-Kingpin"]').should('have.length', 1);
         // Should now be in the 7r2 group
         cy.getByCy('rarity-group-7r2').scrollIntoView().contains('Kingpin').should('be.visible');
         cy.getByCy('champion-card-Kingpin').find('[data-cy="champion-sig"]').should('contain', '200');
