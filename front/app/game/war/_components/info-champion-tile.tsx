@@ -3,12 +3,13 @@
 import ChampionPortrait from '@/components/champion-portrait'
 import type { AvailablePrefightAttacker, UnrecordedReason } from '@/app/services/war'
 import UnrecordedBadge from './unrecorded-badge'
+import type { AttackPreference } from '@/app/services/roster'
 
 interface InfoChampionTileProps {
   champion: Pick<
     AvailablePrefightAttacker,
     'champion_name' | 'image_url' | 'champion_class' | 'is_saga_attacker' | 'is_saga_defender'
-  > & { is_preferred_attacker?: boolean }
+  > & { attack_preference?: AttackPreference }
   label: string
   onPick: () => void
   dataCy: string
@@ -35,7 +36,7 @@ export default function InfoChampionTile({
         name={champion.champion_name}
         rarity='7r1'
         size={48}
-        isPreferred={champion.is_preferred_attacker ?? false}
+        attackPreference={champion.attack_preference}
         is_saga_attacker={champion.is_saga_attacker}
         is_saga_defender={champion.is_saga_defender}
         sagaMode='attacker'

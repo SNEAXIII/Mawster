@@ -77,7 +77,7 @@ export interface RosterRow {
   rarity: string;
   signature: number;
   ascension: number;
-  is_preferred_attacker: boolean;
+  attack_preference: 'preferred' | 'neutral' | 'detested';
 }
 
 export function getRoster(token: string, accountId: string): Cypress.Chainable<RosterRow[]> {

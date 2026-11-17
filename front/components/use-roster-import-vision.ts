@@ -40,9 +40,8 @@ function predictionToEntry(prediction: VisionPrediction): {
       rarity,
       signature: prediction.signature,
       ascension: prediction.ascension,
-      // Deliberately absent: a screenshot cannot show whether the player made
-      // this champion a preferred attacker, so the import must not claim it is
-      // `false` — that claim would erase the flag on every updated champion.
+      // Deliberately absent: a screenshot cannot show the Attack Preference, and
+      // claiming one would overwrite it on every updated champion.
     },
     rarityValid: isValidRarity(rarity),
   }
@@ -288,7 +287,7 @@ export function useRosterImportVision({
         rarity: row.newRarity,
         signature: row.newSignature,
         ascension: row.ascension ?? 0,
-        is_preferred_attacker: row.is_preferred_attacker ?? false,
+        attack_preference: row.attack_preference ?? 'neutral',
         prediction_id: row.prediction_id ?? null,
       }))
 

@@ -279,7 +279,7 @@ export default function WarAttackerPanel({
                           championClass={placement.attacker_champion_class}
                           rarity={placement.attacker_rarity ?? ''}
                           size={35}
-                          isPreferred={placement.attacker_is_preferred_attacker ?? false}
+                          attackPreference={placement.attacker_attack_preference ?? undefined}
                           ascension={placement.attacker_ascension ?? 0}
                           is_saga_attacker={placement.attacker_is_saga_attacker ?? false}
                           is_saga_defender={placement.attacker_is_saga_defender ?? false}
@@ -293,7 +293,7 @@ export default function WarAttackerPanel({
                           name={placement.attacker_champion_name ?? ''}
                           rarity={placement.attacker_rarity ?? ''}
                           size={35}
-                          isPreferred={placement.attacker_is_preferred_attacker ?? false}
+                          attackPreference={placement.attacker_attack_preference ?? undefined}
                           ascension={placement.attacker_ascension ?? 0}
                           is_saga_attacker={placement.attacker_is_saga_attacker ?? false}
                           is_saga_defender={placement.attacker_is_saga_defender ?? false}

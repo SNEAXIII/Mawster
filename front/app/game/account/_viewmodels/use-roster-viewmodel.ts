@@ -15,7 +15,7 @@ import {
   RARITY_LABELS,
   upgradeChampionRank,
   getNextRarity,
-  togglePreferredAttacker,
+  setAttackPreference,
   ascendChampion,
 } from '@/app/services/roster'
 import {
@@ -213,7 +213,10 @@ export function useRosterViewModel() {
   const handleTogglePreferredAttacker = useCallback(
     async (entry: RosterEntry) => {
       try {
-        await togglePreferredAttacker(entry.id)
+        await setAttackPreference(
+          entry.id,
+          entry.attack_preference === 'preferred' ? 'neutral' : 'preferred'
+        )
         if (selectedAccountId) setRoster(await getRoster(selectedAccountId))
       } catch (e: unknown) {
         toast.error((e as Error).message || t.roster.preferredAttackerToggle)

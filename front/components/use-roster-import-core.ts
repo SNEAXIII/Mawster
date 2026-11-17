@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import {
+  type AttackPreference,
   type RosterEntry,
   bulkUpdateRoster,
   getRoster,
@@ -13,18 +14,30 @@ import type { PreviewRow } from '@/components/roster/import-preview-row'
 import { blockingRows } from '@/components/roster/import-row-validation'
 
 // ─── Shared entry shape consumed by the preview builders ──
-// `is_preferred_attacker` is optional on purpose: `undefined` means "this
-// source has no opinion on the flag, keep whatever the roster already holds".
-// A vision import reads a game screenshot, where the flag simply does not
-// exist — sending `false` there would silently un-prefer every champion the
-// import touches. A JSON import, which round-trips an export, always carries a
-// real boolean and stays authoritative.
+// `undefined` means "this source has no opinion, keep the roster's value": a
+// vision screenshot cannot show the Attack Preference. `is_preferred_attacker`
+// is read only from legacy JSON exports.
 export interface RosterImportEntry {
   champion_name: string
   rarity: string
   signature: number
+  attack_preference?: AttackPreference
   is_preferred_attacker?: boolean
   ascension: number
+}
+
+/** The Attack Preference an import entry asks for; undefined keeps the roster's own. */
+export function resolveAttackPreference(
+  entry: RosterImportEntry,
+  existing: RosterEntry | undefined
+): AttackPreference | undefined {
+  if (entry.attack_preference) return entry.attack_preference
+  if (entry.is_preferred_attacker === true) return 'preferred'
+  // Legacy `false` only un-prefers a Preferred; a Detested is never touched.
+  if (entry.is_preferred_attacker === false && existing?.attack_preference === 'preferred') {
+    return 'neutral'
+  }
+  return undefined
 }
 
 // ─── Row-building helpers (shared by JSON + vision import) ─
@@ -93,14 +106,14 @@ export function buildPreviewRow(
   championLookup: Map<string, { champion_class: string; image_url: string | null }>
 ): PreviewRow {
   const existing = findRosterMatch(roster, entry.champion_name, entry.rarity)
+  const attackPreference = resolveAttackPreference(entry, existing)
 
   const isNew = !existing
   const hasChanges =
     existing != null &&
     (existing.rarity !== entry.rarity ||
       existing.signature !== entry.signature ||
-      (entry.is_preferred_attacker != null &&
-        existing.is_preferred_attacker !== entry.is_preferred_attacker) ||
+      (attackPreference !== undefined && existing.attack_preference !== attackPreference) ||
       (existing.ascension ?? 0) !== entry.ascension)
 
   const rosterMatch = roster.find(
@@ -119,7 +132,7 @@ export function buildPreviewRow(
     oldAscension: existing?.ascension ?? null,
     isNew,
     hasChanges,
-    is_preferred_attacker: entry.is_preferred_attacker,
+    attack_preference: attackPreference,
     ascension: entry.ascension,
   }
 }
@@ -144,7 +157,7 @@ export function rediffRow(
       rarity: row.newRarity,
       signature: row.newSignature,
       ascension: row.ascension ?? 0,
-      is_preferred_attacker: row.is_preferred_attacker,
+      attack_preference: row.attack_preference,
     } as RosterImportEntry,
     roster,
     championLookup
@@ -226,18 +239,16 @@ export function useRosterImportCore({
         return { success: true }
       }
 
-      // The bulk endpoint overwrites `is_preferred_attacker` with whatever it
-      // receives, so a row with no opinion (vision) has to re-send the value
-      // the roster already holds. Falling back to `false` here is what used to
-      // strip the flag off every champion a vision import updated.
+      // The bulk endpoint overwrites `attack_preference` with whatever it
+      // receives, so a row with no opinion (vision) re-sends the roster's value.
       const champions: BulkChampionEntry[] = toSend.map((r) => ({
         champion_name: r.champion_name,
         rarity: r.newRarity,
         signature: r.newSignature,
-        is_preferred_attacker:
-          r.is_preferred_attacker ??
-          findRosterMatch(roster, r.champion_name, r.newRarity)?.is_preferred_attacker ??
-          false,
+        attack_preference:
+          r.attack_preference ??
+          findRosterMatch(roster, r.champion_name, r.newRarity)?.attack_preference ??
+          'neutral',
         ascension: r.ascension ?? 0,
       }))
 

@@ -69,7 +69,7 @@ describe('Roster – Detailed UI (Combined, Edit, Already-in-Roster)', () => {
           cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r3', {
             signature: 120,
             ascension: 1,
-            is_preferred_attacker: true,
+            attack_preference: 'preferred',
           });
 
           cy.apiLogin(userData.user_id, 'roster');

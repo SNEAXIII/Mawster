@@ -29,7 +29,7 @@ describe('Roster – Preferred Attacker', () => {
       cy.apiLoadChampion(adminData.access_token, 'Quake', 'Science').then((champs) => {
         // Set as preferred attacker via API
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs[0].id, '7r1', {
-          is_preferred_attacker: true,
+          attack_preference: 'preferred',
         });
 
         cy.apiLogin(userData.user_id, 'roster');
@@ -73,10 +73,10 @@ describe('Roster – Preferred Attacker', () => {
       cy.apiLoadChampion(adminData.access_token, 'NickFuryM', 'Skill').then((c1) => {
         cy.apiLoadChampion(adminData.access_token, 'AegonM', 'Science').then((c2) => {
           cy.apiAddChampionToRoster(userData.access_token, accountId, c1[0].id, '7r2', {
-            is_preferred_attacker: true,
+            attack_preference: 'preferred',
           });
           cy.apiAddChampionToRoster(userData.access_token, accountId, c2[0].id, '7r3', {
-            is_preferred_attacker: true,
+            attack_preference: 'preferred',
           });
 
           cy.apiLogin(userData.user_id, 'roster');

@@ -162,7 +162,7 @@ export default function WarAttackerSelector({
       alias.includes(championSearch.toLowerCase())
     const matchClass = !classFilter || a.champion_class === classFilter
     const matchSaga = !sagaFilter || a.is_saga_attacker
-    const matchPreferred = !preferredFilter || a.is_preferred_attacker
+    const matchPreferred = !preferredFilter || a.attack_preference === 'preferred'
     const matchTier = matchRarity(a.rarity)
     return matchPlayer && matchChampion && matchClass && matchSaga && matchPreferred && matchTier
   })
@@ -186,8 +186,9 @@ export default function WarAttackerSelector({
   // Sort each member's champions: preferred first, then rarity descending.
   for (const group of groups) {
     group.attackers.sort((a, b) => {
-      if (a.is_preferred_attacker !== b.is_preferred_attacker) {
-        return a.is_preferred_attacker ? -1 : 1
+      const aPreferred = a.attack_preference === 'preferred'
+      if (aPreferred !== (b.attack_preference === 'preferred')) {
+        return aPreferred ? -1 : 1
       }
       return rarityWeight(b.rarity) - rarityWeight(a.rarity)
     })
@@ -245,7 +246,7 @@ export default function WarAttackerSelector({
                   name={a.champion_name}
                   rarity={a.rarity}
                   size={48}
-                  isPreferred={a.is_preferred_attacker}
+                  attackPreference={a.attack_preference}
                   ascension={a.ascension}
                   is_saga_attacker={a.is_saga_attacker}
                   is_saga_defender={a.is_saga_defender}

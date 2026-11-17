@@ -9,7 +9,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
     setupDefenseOwner('def-pref-show', 'PrefBadgePlyr', 'PrefAll', 'PB').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiGiveChampion(adminData.access_token, ownerData.access_token, ownerAccId, 'Spider-Man', 'Cosmic', '7r3', {
-          is_preferred_attacker: true,
+          attack_preference: 'preferred',
         });
         cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
@@ -25,7 +25,7 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
     setupDefenseOwner('def-pref-hide', 'NoPrefBadgePlyr', 'NoPrefAll', 'NB').then(
       ({ adminData, ownerData, allianceId, ownerAccId }) => {
         cy.apiGiveChampion(adminData.access_token, ownerData.access_token, ownerAccId, 'Wolverine', 'Mutant', '7r3', {
-          is_preferred_attacker: false,
+          attack_preference: 'neutral',
         });
         cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
 
@@ -43,10 +43,10 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
       ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: true,
+            attack_preference: 'preferred',
           });
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: false,
+            attack_preference: 'neutral',
           });
         });
         cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');
@@ -64,10 +64,10 @@ describe('Defense – Preferred Attacker Badge in selector', () => {
       ({ adminData, ownerData, memberData, allianceId, ownerAccId, memberAccId }) => {
         cy.apiLoadChampion(adminData.access_token, 'Spider-Man', 'Cosmic').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: true,
+            attack_preference: 'preferred',
           });
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
-            is_preferred_attacker: true,
+            attack_preference: 'preferred',
           });
         });
         cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');

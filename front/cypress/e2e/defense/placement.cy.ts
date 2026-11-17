@@ -105,8 +105,8 @@ describe('Defense – Placement via UI', () => {
 
   it('preferred attacker shows ⚔ prefix, non-preferred does not', () => {
     setupDefenseScenario('def-pl-pref', 'PrefPlyr', 'PR', [
-      { name: 'Iron Man', cls: 'Tech', rarity: '7r5', options: { signature: 200, is_preferred_attacker: true } },
-      { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { signature: 100, is_preferred_attacker: false } },
+      { name: 'Iron Man', cls: 'Tech', rarity: '7r5', options: { signature: 200, attack_preference: 'preferred' } },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { signature: 100, attack_preference: 'neutral' } },
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -129,8 +129,8 @@ describe('Defense – Placement via UI', () => {
 
   it('champion selector shows ⚔ marker for preferred attacker champions', () => {
     setupDefenseScenario('def-pl-sel-pref', 'SelPrefPlyr', 'SP', [
-      { name: 'Captain America', cls: 'Science', rarity: '7r3', options: { is_preferred_attacker: true } },
-      { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { is_preferred_attacker: false } },
+      { name: 'Captain America', cls: 'Science', rarity: '7r3', options: { attack_preference: 'preferred' } },
+      { name: 'Wolverine', cls: 'Mutant', rarity: '7r3', options: { attack_preference: 'neutral' } },
     ]).then(({ ownerData }) => {
       cy.apiLogin(ownerData.user_id, 'defense');
 
@@ -152,7 +152,7 @@ describe('Defense – Placement via UI', () => {
         name: 'Spider-Man',
         cls: 'Cosmic',
         rarity: '7r5',
-        options: { signature: 200, is_preferred_attacker: true, ascension: 1, is_ascendable: true },
+        options: { signature: 200, attack_preference: 'preferred', ascension: 1, is_ascendable: true },
       },
       { name: 'Wolverine', cls: 'Mutant', rarity: '7r4', options: { signature: 100 } },
       { name: 'Iron Man', cls: 'Tech', rarity: '7r3', options: { signature: 20 } },

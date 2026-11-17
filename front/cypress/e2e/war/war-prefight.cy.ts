@@ -203,7 +203,7 @@ describe('War Prefight', () => {
           cy.apiRequest(adminToken, 'PATCH', `/admin/champions/${stormId}/prefight`);
 
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, stormId, '7r3', {
-            is_preferred_attacker: true,
+            attack_preference: 'preferred',
           });
 
           cy.apiLogin(memberData.user_id, 'war');

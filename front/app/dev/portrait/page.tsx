@@ -52,7 +52,7 @@ export default function PortraitLabPage() {
       rarity={rarity}
       size={size}
       frameWindow={state.window}
-      isPreferred={over ? over.preferred : state.preferred}
+      attackPreference={(over?.preferred ?? state.preferred) ? 'preferred' : undefined}
       is_saga_attacker={over ? over.saga : state.saga}
       ascension={over ? over.ascension : state.ascension}
     />

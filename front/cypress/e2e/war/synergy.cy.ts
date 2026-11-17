@@ -285,11 +285,11 @@ describe('War Synergy', () => {
         cy.apiAssignWarAttacker(memberData.access_token, allianceId, warId, 1, 10, championUserId);
 
         cy.apiGiveChampion(adminToken, memberData.access_token, memberAccId, 'Deadpool', 'Mutant', '7r3', {
-          is_preferred_attacker: true,
+          attack_preference: 'preferred',
         });
 
         cy.apiGiveChampion(adminToken, memberData.access_token, memberAccId, 'Storm', 'Mutant', '7r3', {
-          is_preferred_attacker: false,
+          attack_preference: 'neutral',
         });
 
         cy.apiLogin(memberData.user_id, 'war');

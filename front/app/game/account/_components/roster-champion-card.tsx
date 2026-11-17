@@ -81,7 +81,7 @@ function RosterChampionCard({
         name={entry.champion_name}
         rarity={entry.rarity}
         size={72}
-        isPreferred={entry.is_preferred_attacker}
+        attackPreference={entry.attack_preference}
         ascension={entry.ascension}
         is_saga_attacker={entry.is_saga_attacker}
         is_saga_defender={entry.is_saga_defender}
@@ -92,10 +92,10 @@ function RosterChampionCard({
       <p
         className={cn(
           '-mt-1 w-full truncate px-1 text-center text-[10px] leading-tight font-semibold',
-          entry.is_preferred_attacker ? 'text-yellow-400' : 'text-foreground'
+          entry.attack_preference === 'preferred' ? 'text-yellow-400' : 'text-foreground'
         )}
         title={entry.champion_name}
-        data-cy={entry.is_preferred_attacker ? 'preferred-attacker-name' : undefined}
+        data-cy={entry.attack_preference === 'preferred' ? 'preferred-attacker-name' : undefined}
       >
         {shortenChampionName(entry.champion_name)}
       </p>
@@ -127,7 +127,7 @@ function RosterChampionCard({
           {onTogglePreferredAttacker && (
             <CardAction
               className={
-                entry.is_preferred_attacker
+                entry.attack_preference === 'preferred'
                   ? 'text-yellow-400 hover:text-yellow-300'
                   : 'text-white/50 hover:text-yellow-400'
               }

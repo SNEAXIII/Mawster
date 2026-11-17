@@ -14,7 +14,7 @@ export interface BatchSetupRosterSpec {
   rarity?: string;
   signature?: number;
   ascension?: number;
-  is_preferred_attacker?: boolean;
+  attack_preference?: 'preferred' | 'neutral' | 'detested';
 }
 
 export interface BatchSetupSeasonSpec {
@@ -149,7 +149,7 @@ declare global {
         gameAccountId: string,
         championId: string,
         rarity: string,
-        options?: { signature?: number; is_preferred_attacker?: boolean; ascension?: number },
+        options?: { signature?: number; attack_preference?: 'preferred' | 'neutral' | 'detested'; ascension?: number },
       ): Chainable<any>;
 
       /**
@@ -486,7 +486,7 @@ declare global {
         name: string,
         championClass: string,
         rarity?: string,
-        options?: { signature?: number; is_preferred_attacker?: boolean; ascension?: number },
+        options?: { signature?: number; attack_preference?: 'preferred' | 'neutral' | 'detested'; ascension?: number },
       ): Chainable<{ championId: string; championUser: any }>;
 
       setupAllianceWithMember(

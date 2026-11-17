@@ -36,7 +36,7 @@ function toDefensePlacement(p: WarPlacement): DefensePlacement {
     champion_image_url: p.image_url,
     rarity: p.rarity,
     signature: 0,
-    is_preferred_attacker: false,
+    attack_preference: 'neutral',
     ascension: p.ascension,
     is_ascendable: false,
     is_saga_attacker: p.is_saga_attacker,

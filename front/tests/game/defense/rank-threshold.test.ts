@@ -26,7 +26,7 @@ function placement(node: number, overrides: Partial<DefensePlacement> = {}): Def
     champion_image_url: null,
     rarity: '7r5',
     signature: 0,
-    is_preferred_attacker: false,
+    attack_preference: 'neutral',
     ascension: 0,
     is_ascendable: true,
     is_saga_attacker: false,

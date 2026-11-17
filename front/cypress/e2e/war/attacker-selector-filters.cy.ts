@@ -36,7 +36,7 @@ function giveChampion(
       accountId,
       champs[0].id,
       rarity,
-      preferred === undefined ? undefined : { is_preferred_attacker: preferred },
+      preferred === undefined ? undefined : { attack_preference: preferred ? 'preferred' : 'neutral' },
     );
   });
 }

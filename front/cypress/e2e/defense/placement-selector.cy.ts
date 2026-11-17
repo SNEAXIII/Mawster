@@ -174,11 +174,11 @@ describe('Defense – Champion Selector & Owner Picker', () => {
         cy.apiLoadChampion(adminData.access_token, 'Wolverine', 'Mutant').then((champs) => {
           cy.apiAddChampionToRoster(ownerData.access_token, ownerAccId, champs[0].id, '7r5', {
             signature: 200,
-            is_preferred_attacker: true,
+            attack_preference: 'preferred',
           });
           cy.apiAddChampionToRoster(memberData.access_token, memberAccId, champs[0].id, '7r3', {
             signature: 50,
-            is_preferred_attacker: false,
+            attack_preference: 'neutral',
           });
         });
         cy.apiCreatePlan(ownerData.access_token, allianceId, 1, 'Plan 1');

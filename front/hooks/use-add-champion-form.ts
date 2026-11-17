@@ -95,7 +95,7 @@ export function useAddChampionForm(selectedAccountId: string | null) {
         selectedChampion.id,
         selectedRarity,
         signatureValue,
-        isPreferredAttacker,
+        isPreferredAttacker ? 'preferred' : 'neutral',
         ascension
       )
       const updated = await getRoster(selectedAccountId)

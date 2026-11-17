@@ -351,7 +351,7 @@ Cypress.Commands.add(
     gameAccountId: string,
     championId: string,
     rarity: string,
-    options: { signature?: number; is_preferred_attacker?: boolean; ascension?: number } = {},
+    options: { signature?: number; attack_preference?: 'preferred' | 'neutral' | 'detested'; ascension?: number } = {},
   ) => {
     cy.request({
       method: 'POST',
@@ -362,7 +362,7 @@ Cypress.Commands.add(
         champion_id: championId,
         rarity,
         signature: options.signature ?? 0,
-        is_preferred_attacker: options.is_preferred_attacker ?? false,
+        attack_preference: options.attack_preference ?? 'neutral',
         ascension: options.ascension ?? 0,
       },
     }).then((res) => {
@@ -965,7 +965,7 @@ export type ChampDef = {
   rarity: string;
   options?: {
     signature?: number;
-    is_preferred_attacker?: boolean;
+    attack_preference?: 'preferred' | 'neutral' | 'detested';
     ascension?: number;
     is_ascendable?: boolean;
   };
@@ -1038,7 +1038,7 @@ export function setupDefenseScenario(
           champion: d.name,
           rarity: d.rarity,
           signature: d.options?.signature ?? 0,
-          is_preferred_attacker: d.options?.is_preferred_attacker ?? false,
+          attack_preference: d.options?.attack_preference ?? 'neutral',
           ascension: d.options?.ascension ?? 0,
         })),
       },
@@ -1831,7 +1831,7 @@ Cypress.Commands.add(
     name: string,
     championClass: string,
     rarity = '7r3',
-    options: { signature?: number; is_preferred_attacker?: boolean; ascension?: number } = {},
+    options: { signature?: number; attack_preference?: 'preferred' | 'neutral' | 'detested'; ascension?: number } = {},
   ) => {
     return cy.apiLoadChampion(adminToken, name, championClass).then((champs) => {
       return cy
