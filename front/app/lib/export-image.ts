@@ -1,6 +1,6 @@
 import { snapdom } from '@zumer/snapdom'
 
-/** Width (px) we aim for in an exported PNG — a map or list narrower than this
+/** Width (px) we aim for in an exported image — a map or list narrower than this
  *  is captured at a bigger scale so the file stays readable when zoomed in. */
 const TARGET_EXPORT_WIDTH = 2400
 const MIN_EXPORT_SCALE = 2
@@ -43,15 +43,18 @@ export async function waitForImages(element: HTMLElement): Promise<void> {
   ])
 }
 
-/** Capture an element as a high-resolution PNG and trigger its download. */
-export async function downloadElementAsPng(element: HTMLElement, filename: string): Promise<void> {
+/** Capture an element as a high-resolution JPEG and trigger its download — every export
+ *  sits on black, so PNG's alpha bought nothing but weight on the portraits. */
+export async function downloadElementAsJpg(element: HTMLElement, filename: string): Promise<void> {
   await waitForImages(element)
-  const png = await snapdom.toPng(element, {
+  const jpg = await snapdom.toJpg(element, {
     scale: getExportScale(element),
     embedFonts: true,
+    quality: 0.9,
+    backgroundColor: '#000',
   })
   const link = document.createElement('a')
   link.download = filename
-  link.href = png.src
+  link.href = jpg.src
   link.click()
 }

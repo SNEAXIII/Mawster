@@ -97,7 +97,7 @@ describe('Tier list – export, import, reset', () => {
     cy.getByCy('tierlist-pool').find('[data-cy="tierlist-champion-ExportHero"]').should('exist');
   });
 
-  it('downloads the board as a PNG', () => {
+  it('downloads the board as an image', () => {
     cy.getByCy('tierlist-title').type('Png Board');
 
     cy.getByCy('tierlist-export-png').click();
@@ -105,7 +105,7 @@ describe('Tier list – export, import, reset', () => {
     // the file takes noticeably longer to appear than a click usually does.
     cy.getByCy('tierlist-export-png').should('not.be.disabled');
 
-    cy.readFile(`cypress/downloads/png-board-${today()}.png`, null, { timeout: 20000 })
+    cy.readFile(`cypress/downloads/png-board-${today()}.jpg`, null, { timeout: 20000 })
       .its('length')
       .should('be.gt', 1000);
   });

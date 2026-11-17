@@ -1,10 +1,10 @@
 'use client'
 
 import { useCallback, useState, type RefObject } from 'react'
-import { downloadElementAsPng } from '@/app/lib/export-image'
+import { downloadElementAsJpg } from '@/app/lib/export-image'
 
 /**
- * Drives a "capture this element as a PNG" button.
+ * Drives a "capture this element as an image" button.
  *
  * The flag has to be in the DOM *before* the capture: the tree renders its
  * export-only look while it is on (black background, no action buttons, columns
@@ -15,7 +15,7 @@ import { downloadElementAsPng } from '@/app/lib/export-image'
 export function useImageExport() {
   const [exporting, setExporting] = useState(false)
 
-  const exportPng = useCallback(
+  const exportImage = useCallback(
     async (ref: RefObject<HTMLElement | null>, filename: string): Promise<void> => {
       if (!ref.current) return
       setExporting(true)
@@ -24,7 +24,7 @@ export function useImageExport() {
       )
       try {
         if (!ref.current) return
-        await downloadElementAsPng(ref.current, filename)
+        await downloadElementAsJpg(ref.current, filename)
       } finally {
         setExporting(false)
       }
@@ -32,10 +32,10 @@ export function useImageExport() {
     []
   )
 
-  return { exporting, exportPng }
+  return { exporting, exportImage }
 }
 
-/** `knowledge-base-2026-08-23.png` — same shape as the war/defense exports. */
+/** `knowledge-base-2026-08-23.jpg` — same shape as the war/defense exports. */
 export function exportFilename(prefix: string): string {
-  return `${prefix}-${new Date().toISOString().split('T')[0]}.png`
+  return `${prefix}-${new Date().toISOString().split('T')[0]}.jpg`
 }
