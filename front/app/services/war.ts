@@ -320,6 +320,18 @@ export async function clearWarBg(
   )
 }
 
+export async function clearWarBgAttackers(
+  allianceId: string,
+  warId: string,
+  battlegroup: number
+): Promise<void> {
+  await api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/attackers`,
+    'Failed to clear unfinished attackers',
+    { method: 'DELETE' }
+  )
+}
+
 export async function setWarBgReady(
   allianceId: string,
   warId: string,
