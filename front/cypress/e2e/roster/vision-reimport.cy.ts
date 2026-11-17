@@ -15,7 +15,10 @@ describe('Roster – Vision re-import of the same screenshot', () => {
 
       uploadShots('shot_0001.png');
       assertPreviewMatchesShots(['shot_0001.png']);
+      // The report opens before the import is confirmed: re-uploading earlier is a 409 on init.
+      cy.intercept('POST', '**/vision/imports/*/confirm').as('confirmImport');
       cy.getByCy('import-preview-confirm-button').should('be.enabled').click();
+      cy.wait('@confirmImport');
       cy.getByCy('import-report-close-button').click();
 
       uploadShots('shot_0001.png');
