@@ -483,13 +483,14 @@ class TestGetAvailablePrefightAttackers:
         assert isinstance(resp.json(), list)
 
     @pytest.mark.asyncio
-    async def test_omits_rank_signature_class_and_ascension(self):
+    async def test_omits_rank_signature_and_ascension(self):
         data = await _setup_prefight_scenario()
         url = f"/alliances/{data['alliance'].id}/wars/{data['war'].id}/bg/1/available-prefight-attackers"
         resp = await execute_get_request(url, headers=data["headers_member"])
         assert resp.status_code == 200
         for item in resp.json():
-            assert {"rarity", "signature", "champion_class", "ascension"}.isdisjoint(item)
+            assert {"rarity", "signature", "ascension"}.isdisjoint(item)
+            assert item["champion_class"]
 
     @pytest.mark.asyncio
     async def test_keeps_one_entry_per_player_and_champion(self):

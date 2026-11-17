@@ -101,6 +101,7 @@ export default function WarDefenderSelector({
             <div className='flex items-center gap-3 px-2'>
               <ChampionPortrait
                 imageUrl={selected.image_url}
+                championClass={selected.champion_class}
                 name={selected.name}
                 rarity={rarity}
                 size={48}
@@ -200,6 +201,7 @@ export default function WarDefenderSelector({
                           >
                             <ChampionPortrait
                               imageUrl={champ.image_url}
+                              championClass={champ.champion_class}
                               name={champ.name}
                               rarity='7r3'
                               size={48}
@@ -236,6 +238,7 @@ export default function WarDefenderSelector({
               <div className='flex items-center gap-3'>
                 <ChampionPortrait
                   imageUrl={selected.image_url}
+                  championClass={selected.champion_class}
                   name={selected.name}
                   rarity={rarity}
                   size={56}

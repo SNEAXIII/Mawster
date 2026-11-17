@@ -68,6 +68,7 @@ export default function QuickEditRow({
         {rarity && champion && (
           <ChampionPortrait
             imageUrl={champion.image_url}
+            championClass={champion.champion_class}
             name={champion.name}
             rarity={rarity}
             size={40}

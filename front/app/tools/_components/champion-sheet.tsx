@@ -54,6 +54,7 @@ export default function ChampionSheet({
         <div className='flex items-center gap-3'>
           <ChampionPortrait
             imageUrl={champion.image_url}
+            championClass={champion.champion_class}
             name={champion.name}
             rarity={frameRarity(champion)}
             size={88}

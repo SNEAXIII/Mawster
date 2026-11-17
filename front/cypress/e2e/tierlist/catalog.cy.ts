@@ -78,7 +78,7 @@ describe('Tier list – the champion catalog', () => {
       statusCode: 500,
       body: { detail: 'Catalog down' },
     }).as('catalog');
-    cy.visit('/tools');
+    cy.visit('/tools?tab=tierlist');
 
     cy.wait('@catalog');
     cy.contains('The champion catalog could not be loaded.').should('be.visible');

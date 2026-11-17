@@ -76,3 +76,17 @@ repos:
         language: system
         pass_filenames: false
         files: ^static-assets/(src/.*\.rs|Cargo\.(toml|lock))$
+
+      - id: cargo-fmt-vision
+        name: rustfmt (rust-vision)
+        entry: cargo fmt --manifest-path rust-vision/Cargo.toml
+        language: system
+        pass_filenames: false
+        files: ^rust-vision/.*\.rs$
+
+      - id: cargo-clippy-vision
+        name: clippy (rust-vision)
+        entry: cargo clippy --manifest-path rust-vision/Cargo.toml --all-targets --all-features
+        language: system
+        pass_filenames: false
+        files: ^rust-vision/(.*\.rs|Cargo\.(toml|lock))$

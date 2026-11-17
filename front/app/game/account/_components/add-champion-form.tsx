@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import AscensionRequestButton from '@/components/ascension-request-button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import LabeledSlider from '@/components/labeled-slider'
 import { SearchInput } from '@/components/search-input'
 import { CollapsibleSection } from '@/components/collapsible-section'
@@ -107,7 +106,7 @@ export default function AddChampionForm({
 
             {/* Search results dropdown */}
             {searchResults.length > 0 && !selectedChampion && (
-              <ScrollArea className='border rounded-md mt-1 max-h-48 shadow-md'>
+              <div className='border rounded-md mt-1 max-h-48 shadow-md overflow-y-auto'>
                 {searchResults.map((c) => (
                   <button
                     key={c.id}
@@ -128,7 +127,7 @@ export default function AddChampionForm({
                     </span>
                   </button>
                 ))}
-              </ScrollArea>
+              </div>
             )}
 
             {/* Selected champion preview */}

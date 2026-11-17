@@ -57,8 +57,6 @@ interface AllianceContextValue {
   applyAlliance: (updated: Alliance) => void
   refresh: () => Promise<void>
   refreshRoles: () => Promise<void>
-  /** @deprecated use refresh() */
-  refreshHasAlliance: () => Promise<void>
 }
 
 const AllianceContext = createContext<AllianceContextValue>({
@@ -79,7 +77,6 @@ const AllianceContext = createContext<AllianceContextValue>({
   applyAlliance: () => {},
   refresh: async () => {},
   refreshRoles: async () => {},
-  refreshHasAlliance: async () => {},
 })
 
 export function AllianceProvider({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -216,7 +213,6 @@ export function AllianceProvider({ children }: Readonly<{ children: React.ReactN
       applyAlliance,
       refresh,
       refreshRoles,
-      refreshHasAlliance: refresh,
     }),
     [
       alliances,

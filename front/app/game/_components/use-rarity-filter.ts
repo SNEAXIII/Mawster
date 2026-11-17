@@ -19,20 +19,10 @@ export function rarityWeight(rarity: string): number {
 const isIndex = (n: unknown): n is number =>
   Number.isInteger(n) && (n as number) >= 0 && (n as number) < RARITIES.length
 
-function toRange(indexes: number[]): RankRange | null {
-  if (indexes.length === 0) return null
-  return [Math.min(...indexes), Math.max(...indexes)]
-}
-
-/** Current format is `[lo, hi]`; the legacy format is an array of tier strings. */
 export function parseRankRange(raw: unknown): RankRange {
-  if (!Array.isArray(raw)) return DEFAULT_RANGE
-  if (raw.length === 2 && raw.every(isIndex)) return toRange(raw) ?? DEFAULT_RANGE
-  const legacy = raw.flatMap((tier) => {
-    const index = RARITIES.findIndex((r) => r === tier)
-    return index === -1 ? [] : [index]
-  })
-  return toRange(legacy) ?? DEFAULT_RANGE
+  if (Array.isArray(raw) && raw.length === 2 && raw.every(isIndex))
+    return [Math.min(...raw), Math.max(...raw)]
+  return DEFAULT_RANGE
 }
 
 /**

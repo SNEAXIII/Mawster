@@ -8,7 +8,7 @@ import { LayoutTemplate, Map as MapIcon, Shield } from 'lucide-react'
 import { ToggleButton, ToggleGroup } from '@/components/toggle-button'
 import { DefenseActionsProvider } from '@/app/contexts/defense-actions-context'
 import { ExportModeProvider } from '@/app/contexts/export-mode-context'
-import { downloadElementAsPng } from '@/app/lib/export-image'
+import { downloadElementAsJpg } from '@/app/lib/export-image'
 import DefenseHeader from './defense-header'
 import PlanWorkspace from './plan-workspace'
 import TemplateWorkspace from './template-workspace'
@@ -51,9 +51,9 @@ export default function DefensePageContent({
       if (!ref.current) return
       const allianceName = selectedAlliance?.name ?? 'alliance'
       const date = new Date().toISOString().split('T')[0]
-      await downloadElementAsPng(
+      await downloadElementAsJpg(
         ref.current,
-        `defense-${target}-bg${vm.selectedBg}-${allianceName}-${date}.png`
+        `defense-${target}-bg${vm.selectedBg}-${allianceName}-${date}.jpg`
       )
     } finally {
       setExporting(false)

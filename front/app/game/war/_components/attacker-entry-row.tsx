@@ -115,6 +115,7 @@ export default function AttackerEntryRow({
             gameAccountId={placement.attacker_game_account_id ?? ''}
             championName={placement.attacker_champion_name ?? ''}
             imageUrl={placement.attacker_image_url}
+            championClass={placement.attacker_champion_class}
             rarity={placement.attacker_rarity ?? ''}
             size={portraitSize}
             isPreferred={placement.attacker_is_preferred_attacker ?? false}
@@ -127,6 +128,7 @@ export default function AttackerEntryRow({
         {!showAttackerActions && placement.attacker_image_url && (
           <ChampionPortrait
             imageUrl={placement.attacker_image_url}
+            championClass={placement.attacker_champion_class}
             name={placement.attacker_champion_name ?? ''}
             rarity={placement.attacker_rarity ?? ''}
             size={portraitSize}
@@ -154,6 +156,7 @@ export default function AttackerEntryRow({
         <Swords className={cn('text-muted-foreground shrink-0', swordsSize)} />
         <ChampionPortrait
           imageUrl={placement.image_url}
+          championClass={placement.champion_class}
           name={placement.champion_name}
           rarity={placement.rarity}
           size={portraitSize}

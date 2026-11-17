@@ -2,7 +2,6 @@ import type { Translations } from './en'
 
 const fr: Translations = {
   common: {
-    appName: 'Mawster',
     loading: 'Chargement...',
     error: 'Erreur',
     confirm: 'Confirmer',
@@ -12,7 +11,6 @@ const fr: Translations = {
     edit: 'Modifier',
     back: 'Retour',
     notAvailable: 'Non disponible',
-    invalidDate: 'Date invalide',
     never: 'Jamais',
     active: 'Actif',
     page: 'Page',
@@ -41,7 +39,6 @@ const fr: Translations = {
   nav: {
     home: 'Accueil',
     profile: 'Mon Profil',
-    gameAccounts: 'Comptes de jeu',
     alliances: 'Alliances',
     roster: 'Compte',
     defense: 'Défense',
@@ -65,11 +62,7 @@ const fr: Translations = {
 
   // Landing page
   landing: {
-    wip: '🚧 Work in Progress',
-    wipDescription: "L'application est en cours de développement. Revenez bientôt !",
-
     eyebrow: "Gestion de Guerre d'Alliance",
-    evolving: 'En évolution · Open source',
     heroTitle: 'Planifie la guerre. Découvre qui l’a portée.',
     heroSubtitle:
       "Mawster transforme la Guerre d'Alliance en un plan clair — gestion des rosters, historique des combats, défense, attaque, synergies et stats au même endroit. Fini les screenshots et les fichiers Excel pour gérer les rosters de tes équipiers.",
@@ -79,9 +72,6 @@ const fr: Translations = {
     heroContactQuestion: 'Une question ? Contacte-moi sur',
     heroContactJoin: 'rejoins la communauté',
 
-    mapDefenseLabel: 'Défense',
-    mapAttackLabel: 'Attaque',
-
     statActiveAlliances: 'Alliances actives',
     statParticipatingPlayers: 'Joueurs participants',
     statKnowledgeBaseFights: 'Combats dans la base de connaissances',
@@ -89,7 +79,6 @@ const fr: Translations = {
     statLiveSince: "En production depuis la saison 66 de la Guerre d'Alliance (avril 2026)",
 
     featuresEyebrow: 'Fonctionnalités principales',
-    featuresTitle: "Tout ce qu'il faut pour gérer la Guerre d'Alliance.",
 
     featStatsTitle: 'Statistiques avancées',
     featStatsDesc:
@@ -116,7 +105,6 @@ const fr: Translations = {
       "Ajoute des notes directement sur les plans de guerre d'alliance, avec un système de modération pour que les officiers gardent le tableau propre et pertinent.",
 
     previewTitle: 'Carte de guerre',
-    previewSubtitle: 'Exemple de disposition',
     previewCaption: "Aperçu l'historique de guerre d'alliance",
 
     statsShowcase: {
@@ -169,7 +157,6 @@ const fr: Translations = {
       },
     ],
 
-    requestEyebrow: 'Vos idées',
     requestTitle: 'Tu décides de la suite.',
     requestDesc:
       'Mawster évolue à partir de ce que les alliances demandent vraiment. Propose une fonctionnalité et on construit la roadmap autour de la communauté.',
@@ -204,7 +191,6 @@ const fr: Translations = {
     subtitle: 'Connectez-vous avec votre compte Discord ou Google',
     discordButton: 'Se connecter avec Discord',
     googleButton: 'Se connecter avec Google',
-    signingIn: 'Connexion en cours...',
     errorGeneric: 'Une erreur est survenue lors de la connexion',
     errorProviderAlreadyLinked:
       'Cette adresse est déjà liée à un autre compte. Connecte-toi avec le fournisseur utilisé la première fois.',
@@ -227,14 +213,8 @@ const fr: Translations = {
     accountInfo: 'Informations du compte',
     username: "Nom d'utilisateur",
     memberSince: 'Membre depuis',
-    discordConnection: 'Connexion Discord',
-    discordConnected: 'Compte Discord connecté',
     signOut: 'Se déconnecter',
-    dangerZone: 'Zone de danger',
     deleteAccount: 'Supprimer mon compte',
-    deleteWarning:
-      'Cette action est irréversible. Toutes vos données seront définitivement supprimées.',
-    deleteConfirmation: 'SUPPRIMER',
     deleteError: 'Une erreur est survenue lors de la suppression du compte',
     editUsernameTooltip: 'Modifier le pseudo',
     editUsernamePlaceholder: '3 à 30 caractères alphanumériques',
@@ -246,7 +226,6 @@ const fr: Translations = {
       tabInfos: 'Infos',
       tabStats: 'Statistiques',
       title: 'Mes statistiques',
-      accountLabel: 'Compte',
       seasonLabel: 'Saison',
       allSeasons: 'Toutes les saisons',
       ratio: 'Ratio',
@@ -303,7 +282,6 @@ const fr: Translations = {
       restoreExpired: 'Ce compte de jeu ne peut plus être restauré',
       daysLeft: '{count} jours restants',
       lastDayLeft: 'Dernier jour pour restaurer',
-      setAsPrimary: 'Définir comme compte principal',
       primarySet: 'Compte principal mis à jour !',
     },
     alliances: {
@@ -317,9 +295,6 @@ const fr: Translations = {
       tagInvalid: 'Tag invalide : 1 à 5 caractères, sans emoji',
       owner: 'Chef',
       selectOwner: 'Sélectionner un compte',
-      noGameAccount: "Vous devez d'abord créer un compte de jeu avant de créer une alliance.",
-      noEligibleAccount:
-        'Tous vos comptes de jeu sont déjà dans une alliance. Créez un nouveau compte ou quittez une alliance.',
       createTitle: 'Créer une alliance',
       createButton: "Créer l'alliance",
       creating: 'Création...',
@@ -338,7 +313,6 @@ const fr: Translations = {
       cancelInvitationError: "Erreur lors de l'annulation de l'invitation",
       pendingInvitations: 'Invitations en attente',
       myInvitations: 'Mes invitations',
-      noInvitations: 'Aucune invitation en attente.',
       acceptInvitation: 'Accepter',
       declineInvitation: 'Refuser',
       acceptInvitationSuccess: "Invitation acceptée ! Vous avez rejoint l'alliance.",
@@ -365,12 +339,9 @@ const fr: Translations = {
       strategistRemoveSuccess: 'Stratège retiré avec succès !',
       strategistRemoveError: 'Échec du retrait du stratège',
       officersCount: 'officiers',
-      you: 'Vous',
       officers: 'Officiers',
       addOfficer: 'Ajouter un officier',
-      addOfficerButton: 'Ajouter',
       removeOfficer: "Retirer l'officier",
-      selectOfficer: 'Sélectionner un membre',
       promoteOfficerConfirm: 'Êtes-vous sûr de vouloir promouvoir {pseudo} en officier ?',
       officerAddSuccess: 'Officier ajouté avec succès !',
       officerAddError: "Erreur lors de l'ajout de l'officier",
@@ -428,7 +399,6 @@ const fr: Translations = {
       leaveVisitError: "Erreur lors du départ de l'alliance visitée",
       memberBadge: 'Membre',
       strategistBadge: 'Stratège',
-      invitationTypeVisitor: 'Invitation visiteur',
       statistics: {
         tabLabel: 'Statistiques',
         title: 'Statistiques de saison',
@@ -467,7 +437,6 @@ const fr: Translations = {
         champion: 'Champion',
         seasonFilter: 'Saison',
         seasonOption: 'Saison {number}',
-        warFilter: 'Guerre',
         allWars: 'Toutes les guerres',
         seasonWars: {
           title: 'Résultats des guerres',
@@ -495,7 +464,6 @@ const fr: Translations = {
         seeDetail: 'Voir le détail',
         others: 'Autres',
         allianceView: 'Alliance entière',
-        loadingChart: 'Chargement du graphique...',
       },
       championSearch: {
         tabLabel: 'Recherche champion',
@@ -536,7 +504,6 @@ const fr: Translations = {
       membersTitle: 'Membres',
       nodeEmpty: 'Nœud #{node} — Vide',
       ownersCount: '{count} possesseurs',
-      preferredAttackerWarning: 'Attaquant préféré',
       sagaDefenderFilter: 'Saga Défenseur',
       notPreferredFilter: 'Non préféré',
       rankFilter: 'Rang',
@@ -638,12 +605,10 @@ const fr: Translations = {
       declareWar: 'Déclarer une guerre',
       declareWarConfirmDesc:
         'Vous êtes sur le point de déclarer une guerre contre {name}. Êtes-vous sûr ?',
-      declareWarTooltip: 'Une seule guerre peut être déclenchée à la fois',
       noActiveWar:
         "Aucune guerre en cours, contactez vos officiers d'alliance pour déclarer une guerre.",
       modeDefenders: 'Défenseurs',
       modeAttackers: 'Attaquants',
-      modePlan: 'Plan',
       viewOnly: 'Lecture seule',
       opponentName: "Nom de l'adversaire",
       noWar: 'Aucune guerre déclarée.',
@@ -711,8 +676,6 @@ const fr: Translations = {
       // Attackers
       selectAttacker: 'Assigner un attaquant au nœud #{node}',
       nodeDetail: 'Nœud #{node}',
-      searchAttacker: 'Rechercher champion ou joueur...',
-      assignAttacker: 'Assigner Attaquant',
       removeAttacker: 'Retirer Attaquant',
       removeAttackerConfirmTitle: "Retirer l'attaquant",
       removeAttackerConfirmDesc: 'Êtes-vous sûr de vouloir retirer cet attaquant du combat ?',
@@ -737,8 +700,6 @@ const fr: Translations = {
       removeDefenderWithAttackerTitle: 'Retirer le défenseur',
       removeDefenderWithAttackerDesc:
         "Un attaquant est déjà assigné à ce nœud. Retirer le défenseur supprimera également l'attaquant. Continuer ?",
-      koUpdateError: 'Erreur lors de la mise à jour du compteur KO',
-      attackerLimitReached: '3 attaquants maximum par membre atteint',
       defenderRequired: "Ce nœud doit avoir un défenseur avant d'assigner un attaquant",
       noAvailableAttackers: 'Aucun attaquant disponible pour ce groupe de combat',
       availableAttackersError: 'Erreur lors du chargement des attaquants disponibles',
@@ -808,14 +769,12 @@ const fr: Translations = {
       bans: {
         label: 'Bannis',
         placeholder: 'Rechercher un champion à bannir...',
-        maxReached: 'Maximum {max} bans atteint',
         none: 'Aucun ban',
       },
       eloUpdateSuccess: 'ELO mis à jour',
       eloUpdateError: "Échec de la mise à jour de l'ELO",
       tierUpdateSuccess: 'Tier mis à jour',
       tierUpdateError: 'Échec de la mise à jour du Tier',
-      endWarResultDesc: 'Renseigne le résultat avant de clôturer la guerre.',
       result: 'Résultat',
       win: 'Victoire',
       lose: 'Défaite',
@@ -843,12 +802,10 @@ const fr: Translations = {
       },
       bans: {
         title: 'Bans de saison',
-        comingSoon: 'Bientôt disponible',
       },
       admin: {
         title: 'Saisons',
         createButton: 'Créer une saison',
-        numberLabel: 'Numéro de saison',
         numberPlaceholder: 'ex. 64',
         openButton: 'Ouvrir',
         closeButton: 'Fermer',
@@ -889,7 +846,6 @@ const fr: Translations = {
       note: 'Note',
       noteBy: 'par',
       noteExpand: 'Cliquer pour afficher la note entière',
-      noteCollapse: 'Cliquer pour replier',
       noData: 'Aucun combat enregistré.',
       exportImage: 'Exporter image',
       exportTitle: 'Base de connaissances',
@@ -897,7 +853,6 @@ const fr: Translations = {
       filterDefender: 'Sélectionner défenseur',
       clearFilters: 'Effacer les filtres',
       filterNode: 'Node',
-      filterBg: 'BG',
       filterTier: 'Tier',
       filterPlayer: 'Joueur',
       filterPlanningError: 'Erreurs de planning uniquement',
@@ -922,7 +877,6 @@ const fr: Translations = {
       sourceNonImported: 'Non importés',
       importRecords: 'Importer des combats',
       importTitle: 'Importer des combats',
-      importUploadLabel: 'Sélectionner un fichier CSV',
       importUploadHint: 'Format : attaquant,défenseur,node,saison,ko_count',
       importResolveTitle: 'Résoudre les champions inconnus',
       importResolveHint:
@@ -991,7 +945,6 @@ const fr: Translations = {
       chartEmpty: 'Aucun import sur cette période.',
       errorsTitle: 'Principales causes d’échec',
       errorsNone: 'Aucune capture en échec sur cette période.',
-      errorColumn: 'Cause',
       errorCount: 'Captures',
       usersTitle: 'Importateurs',
       usersEmpty: 'Personne n’a lancé d’import IA sur cette période.',
@@ -1019,7 +972,6 @@ const fr: Translations = {
       colLowCards: '1 % les plus bas',
       filterAllStatuses: 'Tous les statuts',
       filteredByUser: 'Filtré sur {{login}}',
-      clearUserFilter: 'Effacer',
       viewImports: 'Voir les imports',
       statusAwaitingUpload: 'En attente d’envoi',
       statusPending: 'En file',
@@ -1102,7 +1054,6 @@ const fr: Translations = {
     noteBlocked: 'Note temporairement bloquée',
     muted: 'Vous êtes réduit au silence',
     muteExpires: 'Expire le',
-    warned: 'Avertissement',
     loadError: 'Échec du chargement des signalements',
     resolveSuccess: 'Signalement traité',
     resolveError: 'Échec du traitement du signalement',
@@ -1155,7 +1106,6 @@ const fr: Translations = {
     warnError: "Échec de l'avertissement",
     liftSuccess: 'Silence levé',
     liftError: 'Échec de la levée du silence',
-    reasonRequired: 'La raison est requise',
     noExpiry: 'Jamais',
   },
 
@@ -1235,8 +1185,6 @@ const fr: Translations = {
     },
     classFilter: 'Classe',
     searchPlaceholder: 'Rechercher par nom ou alias...',
-    ascendableFilter: 'Ascentionnable',
-    prefightFilter: 'Précombat',
     sagaSeasonPlaceholder: 'Sélectionner une saison',
     seasonLabel: 'Saison {number}',
     empty: 'Aucun champion trouvé.',
@@ -1283,7 +1231,6 @@ const fr: Translations = {
     selectAccount: 'Sélectionner un compte de jeu',
     chooseAccount: '-- Choisir un compte --',
     noAccounts: "Vous devez d'abord créer un compte de jeu pour gérer votre roster.",
-    addChampion: 'Ajouter un champion',
     addOrUpdate: 'Ajouter / Mettre à jour un champion',
     champion: 'Champion',
     searchChampion: 'Rechercher un champion...',
@@ -1310,7 +1257,6 @@ const fr: Translations = {
       title: "Demandes d'upgrade",
       empty: "Aucune demande d'upgrade en cours.",
       requestedBy: 'Demandé par {pseudo}',
-      targetRarity: 'Cible : {rarity}',
       currentRarity: 'Actuel : {rarity}',
       cancel: 'Annuler la demande',
       cancelConfirmTitle: "Annuler la demande d'upgrade",
@@ -1359,7 +1305,6 @@ const fr: Translations = {
       serverError: 'Erreur serveur',
       fileReadError: 'Erreur lors de la lecture du fichier',
       reportTitle: "Compte-rendu de l'import",
-      successCount: '{count} réussi(s)',
       failCount: '{count} échoué(s)',
       badgeAdded: 'AJOUTÉ',
       badgeUpdated: 'MIS À JOUR',
@@ -1369,7 +1314,6 @@ const fr: Translations = {
       importVision: 'Import IA',
       visionUploading: 'Envoi en cours…',
       visionProcessing: 'Analyse en cours…',
-      visionFailed: "L'import IA a échoué.",
       visionNoChampions: 'Aucun champion détecté sur ces images.',
       editHint: 'Vérifiez les champions détectés ci-dessous et corrigez les erreurs avant import.',
       rarityLabel: 'Rareté',
@@ -1506,7 +1450,7 @@ const fr: Translations = {
     defenders: 'Défenseurs de saga',
     empty: 'Aucun champion de saga pour cette saison.',
     noSeason: 'Aucune saison régulière à afficher pour le moment.',
-    exportPng: 'Exporter PNG',
+    exportPng: 'Exporter image',
     exportTitle: 'Saga — Saison {number}',
     loadError: "La saga n'a pas pu être chargée.",
   },
@@ -1535,14 +1479,13 @@ const fr: Translations = {
     deleteList: 'Supprimer cette tier list',
     exportJson: 'Exporter JSON',
     importJson: 'Importer JSON',
-    exportPng: 'Exporter PNG',
-    exportPngError: "Le PNG n'a pas pu être capturé : {error}",
+    exportPng: 'Exporter image',
+    exportPngError: "L'image n'a pas pu être capturée : {error}",
     importError: "Ce fichier n'est pas un export de tier list valide.",
     importDone: 'Tier list importée.',
     reset: 'Réinitialiser',
     resetConfirm: 'Réinitialiser cette tier list ? Ses lignes et ses tags seront perdus.',
     title: 'Tier list',
-    dragHint: 'Glissez un champion dans une ligne, ou touchez-le pour le taguer.',
     addTier: 'Ajouter une ligne',
     tierLabel: 'Libellé de la ligne',
     tierColor: 'Couleur de la ligne',

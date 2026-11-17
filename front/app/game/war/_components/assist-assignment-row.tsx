@@ -48,6 +48,7 @@ export default function AssistAssignmentRow({
         {placement.assistor_image_url ? (
           <ChampionPortrait
             imageUrl={placement.assistor_image_url}
+            championClass={placement.assistor_champion_class}
             name={placement.assistor_champion_name ?? ''}
             rarity={placement.assistor_rarity ?? ''}
             size={portraitSize}
@@ -65,6 +66,7 @@ export default function AssistAssignmentRow({
         <Swords className={cn('text-amber-500 shrink-0', iconSize)} />
         <ChampionPortrait
           imageUrl={placement.image_url}
+          championClass={placement.champion_class}
           name={placement.champion_name}
           rarity={placement.rarity}
           size={portraitSize}

@@ -131,6 +131,7 @@ export interface AvailablePrefightAttacker {
   game_pseudo: string
   champion_id: string
   champion_name: string
+  champion_class: string
   champion_alias: string | null
   image_url: string | null
   is_preferred_attacker: boolean

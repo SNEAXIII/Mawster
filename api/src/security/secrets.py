@@ -1,7 +1,10 @@
 import logging
 import os
+from pathlib import Path
+from typing import Self
+from urllib.parse import quote
 
-from pydantic import Field
+from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 api_file = "api.env"
@@ -12,6 +15,9 @@ IS_TESTING = os.getenv("MODE") == "testing"
 # settings optional there and turns the feature off, rather than refusing to boot.
 VISION_ENABLED = os.getenv("VISION_ENABLED", "1").strip().lower() not in {"0", "false", "no"}
 _VISION_REQUIRED = IS_PROD and VISION_ENABLED
+
+# Where swarm mounts secrets. Absent outside a container, and pydantic warns on a missing dir.
+_SECRETS_DIR = Path("/run/secrets")
 
 _log = logging.getLogger(__name__)
 
@@ -24,13 +30,17 @@ def _default_database() -> int:
 class Settings(BaseSettings):
     POSTGRES_DB: str = Field(...) if IS_PROD else Field("mawster")
     POSTGRES_USER: str = Field(...) if IS_PROD else Field("user")
-    POSTGRES_PASSWORD: str = Field(...) if IS_PROD else Field("password")
+    POSTGRES_PASSWORD: str = Field(
+        ... if IS_PROD else "password",
+        validation_alias=AliasChoices("POSTGRES_PASSWORD", "mawster_db_password"),
+    )
     POSTGRES_PORT: int = Field(...) if IS_PROD else Field(_default_database())
     # Not "localhost": on Windows it resolves to ::1, and that route stalls ~44 ms
     # once a statement outgrows a buffer - which selectinload does on a full roster.
     POSTGRES_HOST: str = Field("postgres" if IS_PROD else "127.0.0.1")
-    SECRET_KEY: str = (
-        Field(...) if IS_PROD else Field("dev-secret-key_dev-secret-key_dev-secret-key")
+    SECRET_KEY: str = Field(
+        ... if IS_PROD else "dev-secret-key_dev-secret-key_dev-secret-key",
+        validation_alias=AliasChoices("SECRET_KEY", "mawster_secret_key"),
     )
     ALGORITHM: str = Field("HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(..., le=60) if IS_PROD else Field(60, le=60)
@@ -39,18 +49,29 @@ class Settings(BaseSettings):
     # Permissive default in dev; in prod it MUST be set in api.env.
     ALLOWED_ORIGINS: str = Field(...) if IS_PROD else Field("http://localhost:3000")
     API_PORT: int = Field(...) if IS_PROD else Field(8000)
-    EMAIL_PEPPER: str = Field(...) if IS_PROD else Field("dev-email-pepper")
+    EMAIL_PEPPER: str = Field(
+        ... if IS_PROD else "dev-email-pepper",
+        validation_alias=AliasChoices("EMAIL_PEPPER", "mawster_email_pepper"),
+    )
     EMAIL_PEPPER_VERSION: int = Field(default=1)
     # --- OAuth audience ------------------------------------------------------
     # The application an access token must have been issued to. Without this check,
     # a token issued for any other application still resolves to a valid profile, and
     # Mawster would sign a JWT for that user. Mandatory in prod: a deployment unable to
     # verify the audience must refuse to start rather than accept every token.
-    DISCORD_CLIENT_ID: str = Field(...) if IS_PROD else Field("dev-discord-client-id")
-    GOOGLE_CLIENT_ID: str = Field(...) if IS_PROD else Field("dev-google-client-id")
+    DISCORD_CLIENT_ID: str = Field(
+        ... if IS_PROD else "dev-discord-client-id",
+        validation_alias=AliasChoices("DISCORD_CLIENT_ID", "mawster_discord_client_id"),
+    )
+    GOOGLE_CLIENT_ID: str = Field(
+        ... if IS_PROD else "dev-google-client-id",
+        validation_alias=AliasChoices("GOOGLE_CLIENT_ID", "mawster_google_client_id"),
+    )
     # --- Vision (roster import) ---------------------------------------------
-    RABBITMQ_URL: str = (
-        Field(...) if _VISION_REQUIRED else Field("amqp://mawster:mawster@localhost:5672/")
+    # Left empty in prod: built from RABBITMQ_PASS below, the swarm secret holds the password only.
+    RABBITMQ_URL: str = Field("" if _VISION_REQUIRED else "amqp://mawster:mawster@localhost:5672/")
+    RABBITMQ_PASS: str | None = Field(
+        None, validation_alias=AliasChoices("RABBITMQ_PASS", "mawster_rabbitmq_pass")
     )
     RUSTFS_ENDPOINT: str = Field(...) if _VISION_REQUIRED else Field("http://localhost:9000")
     # The endpoint the BROWSER calls to upload directly (presigned URL). Distinct from
@@ -60,8 +81,14 @@ class Settings(BaseSettings):
     # in prod - without it the feature can only produce dead URLs, and a failing boot
     # beats a broken upload. In dev the two coincide: RustFS publishes 9000 on the host.
     RUSTFS_PUBLIC_ENDPOINT: str = Field(...) if _VISION_REQUIRED else Field("http://localhost:9000")
-    RUSTFS_ACCESS_KEY: str = Field(...) if _VISION_REQUIRED else Field("mawster")
-    RUSTFS_SECRET_KEY: str = Field(...) if _VISION_REQUIRED else Field("mawsterpassword")
+    RUSTFS_ACCESS_KEY: str = Field(
+        ... if _VISION_REQUIRED else "mawster",
+        validation_alias=AliasChoices("RUSTFS_ACCESS_KEY", "mawster_rustfs_access_key"),
+    )
+    RUSTFS_SECRET_KEY: str = Field(
+        ... if _VISION_REQUIRED else "mawsterpassword",
+        validation_alias=AliasChoices("RUSTFS_SECRET_KEY", "mawster_rustfs_secret_key"),
+    )
     RUSTFS_BUCKET_VISION: str = Field("vision")
     RUSTFS_BUCKET_DATASET: str = Field("dataset")
     # The AMQP consumer runs in dev and in prod; disabled under MODE=testing so CI and
@@ -72,7 +99,20 @@ class Settings(BaseSettings):
     # rustfs-init sets on the vision bucket: past it the images no longer exist and an
     # import can no longer be validated honestly.
     VISION_RETENTION_DAYS: int = Field(default=7)
-    model_config = SettingsConfigDict(env_file=api_file)
+    model_config = SettingsConfigDict(
+        env_file=api_file, secrets_dir=_SECRETS_DIR if _SECRETS_DIR.is_dir() else None
+    )
+
+    @model_validator(mode="after")
+    def _build_rabbitmq_url(self) -> Self:
+        if "RABBITMQ_URL" not in self.model_fields_set and self.RABBITMQ_PASS:
+            password = quote(self.RABBITMQ_PASS, safe="")
+            # NOSONAR S5332 below: the broker only listens on the internal overlay network.
+            self.RABBITMQ_URL = f"amqp://mawster:{password}@rabbitmq:5672/"  # NOSONAR
+        if not self.RABBITMQ_URL:
+            msg = "RABBITMQ_URL or the mawster_rabbitmq_pass secret is required"
+            raise ValueError(msg)
+        return self
 
 
 SECRET = Settings()
