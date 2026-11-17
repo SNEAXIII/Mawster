@@ -51,7 +51,7 @@ describe('War – Clear unfinished attackers', () => {
 
   it('a plain member does not see the clear attackers button', () => {
     setupClearAttackers('war-clear-atk-mem').then(({ memberData }) => {
-      cy.goToWarMode(memberData.user_id, 'attackers');
+      cy.openWarAttackerPanel(memberData.user_id);
 
       cy.getByCy('attacker-entry-node-1').should('have.attr', 'data-attacker', 'Thor');
       cy.getByCy('clear-war-attackers-btn').should('not.exist');
