@@ -43,7 +43,6 @@ SONAR_EXTRA = [
     ".claude/**",
     "scripts/**",
     "api/main.py",
-    "api/app_debugger.py",
     "api/app_testing.py",
 ]
 

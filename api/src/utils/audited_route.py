@@ -26,8 +26,8 @@ class AuditedRoute(APIRoute):
     def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
         handler = super().get_route_handler()
 
-        # ponytail: each 401 writes a row while `limiter` is disabled, and past the audit pool's
-        # capacity an entry is lost and logged; enable it (utils/rate_limiter.py) to bound both.
+        # ponytail: each 401 writes a row, unbounded without a rate limiter; past the audit
+        # pool's capacity an entry is lost and logged. A limiter at Traefik would bound both.
         async def audited_handler(request: Request) -> Response:
             try:
                 response = await handler(request)

@@ -5,7 +5,6 @@ import { api, jsonBody } from '@/app/services/utils'
 // ─── Types ───────────────────────────────────────────────
 
 export const NOTE_REPORT_STATUSES = ['pending', 'resolved', 'dismissed'] as const
-export type NoteReportStatus = (typeof NOTE_REPORT_STATUSES)[number]
 
 export interface NoteReport {
   id: string
