@@ -10,8 +10,8 @@ The Alembic history does not come along. The 45 MariaDB revisions do not replay 
 `63f2212fe47b` drops foreign keys by their `_ibfk_N` names, `1a0e2a6aa558` runs
 `ALTER TABLE … RENAME INDEX`, and 16 files spell `mysql.ENUM`, `mysql.TINYINT` or `mysql.CHAR(32)`.
 Rewriting them would produce a history nobody replays. The chain restarts from a single baseline,
-`e721cc08693f_postgres_baseline`, generated from the models; the old revisions stay readable in
-`api/migrations/mariadb_versions/`, which Alembic does not read. The data moves once, through
+`e721cc08693f_postgres_baseline`, generated from the models; the old revisions were deleted once
+the cutover ran, and stay readable in the git history at `v3.0.0`. The data moves once, through
 `api/scripts/mariadb_to_postgres.py`, into a database already migrated to that baseline.
 
 ## Consequences
