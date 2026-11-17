@@ -27,6 +27,7 @@ export function DashboardDefense({ nodes }: Readonly<{ nodes: DefensePlanNode[] 
               >
                 <ChampionPortrait
                   imageUrl={node.champion_image_url}
+                  championClass={node.champion_class}
                   name={node.champion_name}
                   rarity={node.rarity ?? ''}
                   size={40}

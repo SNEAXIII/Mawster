@@ -24,6 +24,7 @@ export function DashboardUpgradeRequests({ requests }: Readonly<{ requests: Upgr
             >
               <ChampionPortrait
                 imageUrl={req.image_url}
+                championClass={req.champion_class}
                 name={req.champion_name}
                 rarity={req.current_rarity}
                 size={40}

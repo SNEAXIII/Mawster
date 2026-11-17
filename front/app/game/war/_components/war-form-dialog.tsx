@@ -170,6 +170,7 @@ export default function WarFormDialog({
                       >
                         <ChampionPortrait
                           imageUrl={c.image_url}
+                          championClass={c.champion_class}
                           name={c.name}
                           rarity='7r6'
                           size={50}
@@ -208,6 +209,7 @@ export default function WarFormDialog({
                         >
                           <ChampionPortrait
                             imageUrl={c.image_url}
+                            championClass={c.champion_class}
                             name={c.name}
                             rarity='7r6'
                             size={40}

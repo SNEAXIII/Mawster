@@ -28,6 +28,7 @@ export default function ChampionShowcase() {
           >
             <ChampionPortrait
               imageUrl={THANOS.imageUrl}
+              championClass={THANOS.championClass}
               name={THANOS.name}
               size={72}
               {...props}

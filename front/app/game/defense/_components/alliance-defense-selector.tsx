@@ -183,6 +183,7 @@ export default function AllianceDefenseSelector({
             <>
               <ChampionPortrait
                 imageUrl={currentPlacement.champion_image_url}
+                championClass={currentPlacement.champion_class}
                 name={currentPlacement.champion_name}
                 rarity={currentPlacement.rarity || '7r1'}
                 size={44}
@@ -278,6 +279,7 @@ export default function AllianceDefenseSelector({
                         >
                           <ChampionPortrait
                             imageUrl={champ.image_url}
+                            championClass={champ.champion_class}
                             name={champ.champion_name}
                             rarity={bestOwner.rarity}
                             size={48}
@@ -352,6 +354,7 @@ export default function AllianceDefenseSelector({
                 >
                   <ChampionPortrait
                     imageUrl={selectedChampion.image_url}
+                    championClass={selectedChampion.champion_class}
                     name={selectedChampion.champion_name}
                     rarity={owner.rarity}
                     size={44}

@@ -17,6 +17,7 @@ interface NodeActionsPopoverProps {
   gameAccountId: string
   championName: string
   imageUrl: string | null
+  championClass: string | null
   rarity: string
   size?: number
   isPreferred?: boolean
@@ -31,6 +32,7 @@ export default function NodeActionsPopover({
   gameAccountId,
   championName,
   imageUrl,
+  championClass,
   rarity,
   size = 35,
   isPreferred = false,
@@ -69,6 +71,7 @@ export default function NodeActionsPopover({
           >
             <ChampionPortrait
               imageUrl={imageUrl}
+              championClass={championClass}
               name={championName}
               rarity={rarity}
               size={size}
@@ -106,6 +109,7 @@ export default function NodeActionsPopover({
                 >
                   <ChampionPortrait
                     imageUrl={p.image_url}
+                    championClass={p.champion_class}
                     name={p.champion_name}
                     rarity={p.rarity ?? ''}
                     size={32}
@@ -161,6 +165,7 @@ export default function NodeActionsPopover({
               <div className='flex items-center gap-2'>
                 <ChampionPortrait
                   imageUrl={placement.assistor_image_url ?? null}
+                  championClass={placement.assistor_champion_class}
                   name={placement.assistor_champion_name}
                   rarity={placement.assistor_rarity ?? ''}
                   size={32}

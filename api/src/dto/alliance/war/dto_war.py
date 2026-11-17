@@ -246,11 +246,12 @@ class AvailableAttackerResponse(PlayerIdentity, ChampionRef, SagaRoles):
 
 
 class AvailablePrefightAttackerResponse(PlayerIdentity, SagaRoles):
-    """A pre-fight is information, not a fight: no rank, signature, class or ascension."""
+    """A pre-fight is information, not a fight: no rank, signature or ascension."""
 
     champion_user_id: uuid.UUID
     champion_id: uuid.UUID
     champion_name: str
+    champion_class: str
     champion_alias: str | None = None
     image_url: str | None = None
     is_preferred_attacker: bool = False

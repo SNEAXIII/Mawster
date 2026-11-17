@@ -42,7 +42,7 @@ export function useTierListViewModel() {
   })
   const [prefs, setPrefs] = usePrefs()
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS)
-  const { exporting, exportPng } = useImageExport()
+  const { exporting, exportImage } = useImageExport()
   // Snapshot of the queue, taken when a run starts; null while idle.
   const [reviewQueue, setReviewQueue] = useState<string[] | null>(null)
   // Whether a run also walks champions already sitting in a row.
@@ -99,11 +99,11 @@ export function useTierListViewModel() {
 
   const handleExportPng = useCallback(async () => {
     try {
-      await exportPng(boardRef, boardFilename(board.title, 'png'))
+      await exportImage(boardRef, boardFilename(board.title, 'jpg'))
     } catch (error) {
       toast.error(t.tierlist.exportPngError.replace('{error}', (error as Error).message))
     }
-  }, [board.title, exportPng, t])
+  }, [board.title, exportImage, t])
 
   const handleImportJson = useCallback(
     async (file: File) => {
