@@ -119,6 +119,20 @@ own ascension is not a request, the Player just does it.
 _Table_: `ascension_request`.
 _Avoid_: ascendable request, upgrade request (that is an Officer asking a Player).
 
+**Attack Preference**:
+How eager a Player is to attack with a Roster Entry: Preferred, Neutral or Detested. Set
+by its owner only; attack-side information that never touches defense.
+_Avoid_: favourite, attacker flag.
+
+**Preferred Attacker**:
+A Roster Entry whose Attack Preference is Preferred — the Player wants to attack with it.
+_Avoid_: favourite, main.
+
+**Detested Attacker**:
+A Roster Entry whose Attack Preference is Detested — the Player does not want to attack
+with it. The opposite of a Preferred Attacker, not a judgement on its defense.
+_Avoid_: banned (a War's bans are another thing), blacklisted, disliked.
+
 ### Tier lists
 
 **Tier List**:
