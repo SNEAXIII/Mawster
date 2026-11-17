@@ -1,79 +1,34 @@
 'use client'
 
-import { useI18n } from '@/app/i18n'
+import { memo } from 'react'
 import { cn } from '@/app/lib/utils'
 import ChampionPortrait from '@/components/champion-portrait'
-import AscensionRequestButton from '@/components/ascension-request-button'
-import {
-  type RosterEntry,
-  shortenChampionName,
-  getNextRarity,
-  MAX_ASCENSION,
-} from '@/app/services/roster'
-import { Trash2, Pencil, ArrowUp, X, Star } from 'lucide-react'
-import { memo } from 'react'
+import { type AttackPreference, type RosterEntry, shortenChampionName } from '@/app/services/roster'
 
-export interface RosterChampionCardProps {
+interface RosterChampionCardProps {
   entry: RosterEntry
-  onEdit?: (entry: RosterEntry) => void
-  onDelete?: (entry: RosterEntry) => void
-  onUpgrade?: (entry: RosterEntry) => void
-  onTogglePreferredAttacker?: (entry: RosterEntry) => void
-  onAscend?: (entry: RosterEntry) => void
   readOnly?: boolean
-  /** If set, this champion has a pending upgrade request */
-  pendingRequestId?: string
-  /** Callback to cancel a pending upgrade request */
-  onCancelRequest?: (requestId: string) => void
+  /** Opens the shared champion dialog; ignored on a read-only card */
+  onOpen?: (entry: RosterEntry) => void
 }
 
-/** Action button rendered over the top scrim of the card */
-function CardAction({
-  className,
-  onClick,
-  title,
-  dataCy,
-  children,
-}: Readonly<{
-  className: string
-  onClick: () => void
-  title: string
-  dataCy?: string
-  children: React.ReactNode
-}>) {
-  return (
-    <button
-      className={cn('rounded p-0.5 transition-colors', className)}
-      onClick={onClick}
-      title={title}
-      data-cy={dataCy}
-    >
-      {children}
-    </button>
-  )
+const NAME_STYLE: Record<AttackPreference, { className: string; dataCy?: string }> = {
+  preferred: { className: 'text-yellow-400', dataCy: 'preferred-attacker-name' },
+  detested: { className: 'text-red-500', dataCy: 'detested-attacker-name' },
+  neutral: { className: 'text-foreground' },
 }
 
 function RosterChampionCard({
   entry,
-  onEdit,
-  onDelete,
-  onUpgrade,
-  onTogglePreferredAttacker,
-  onAscend,
   readOnly = false,
-  pendingRequestId,
-  onCancelRequest,
+  onOpen,
 }: Readonly<RosterChampionCardProps>) {
-  const { t } = useI18n()
-  const nextRarity = getNextRarity(entry.rarity)
+  const nameStyle = NAME_STYLE[entry.attack_preference]
+  const cardClass =
+    'relative mx-auto flex w-21 flex-col items-center rounded-md bg-card/50 pt-0.5 transition-colors hover:bg-card'
 
-  return (
-    <div
-      className={
-        'group relative mx-auto flex w-21 flex-col items-center rounded-md bg-card/50 pt-0.5 transition-colors hover:bg-card'
-      }
-      data-cy={`champion-card-${entry.champion_name}`}
-    >
+  const content = (
+    <>
       {/* Star frame portrait */}
       <ChampionPortrait
         imageUrl={entry.image_url}
@@ -92,10 +47,10 @@ function RosterChampionCard({
       <p
         className={cn(
           '-mt-1 w-full truncate px-1 text-center text-[10px] leading-tight font-semibold',
-          entry.attack_preference === 'preferred' ? 'text-yellow-400' : 'text-foreground'
+          nameStyle.className
         )}
         title={entry.champion_name}
-        data-cy={entry.attack_preference === 'preferred' ? 'preferred-attacker-name' : undefined}
+        data-cy={nameStyle.dataCy}
       >
         {shortenChampionName(entry.champion_name)}
       </p>
@@ -120,82 +75,29 @@ function RosterChampionCard({
           </span>
         )}
       </div>
+    </>
+  )
 
-      {/* Action bar — always visible on touch, hover or keyboard focus on desktop */}
-      {!readOnly && (
-        <div className='absolute inset-x-0 top-0 z-40 flex justify-end gap-0.5 rounded-t bg-gradient-to-b from-black/85 to-transparent p-0.5 pb-3 opacity-100 transition-opacity sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100'>
-          {onTogglePreferredAttacker && (
-            <CardAction
-              className={
-                entry.attack_preference === 'preferred'
-                  ? 'text-yellow-400 hover:text-yellow-300'
-                  : 'text-white/50 hover:text-yellow-400'
-              }
-              onClick={() => onTogglePreferredAttacker(entry)}
-              title={t.roster.preferredAttackerToggle}
-              dataCy='preferred-attacker-toggle'
-            >
-              <span className='text-xs leading-none'>⚔</span>
-            </CardAction>
-          )}
-          {entry.is_ascendable && entry.ascension < MAX_ASCENSION && onAscend && (
-            <CardAction
-              className='text-purple-400 hover:text-purple-300'
-              onClick={() => onAscend(entry)}
-              title='Ascension'
-            >
-              <Star className='size-3.5' />
-            </CardAction>
-          )}
-          {!entry.is_ascendable && (
-            <AscensionRequestButton
-              championId={entry.champion_id}
-              variant='bar'
-            />
-          )}
-          {pendingRequestId && onCancelRequest && (
-            <CardAction
-              className='text-red-400 hover:text-red-300'
-              onClick={() => onCancelRequest(pendingRequestId)}
-              title={t.roster.upgradeRequests.cancel}
-              dataCy='cancel-pending-request'
-            >
-              <X className='size-3.5' />
-            </CardAction>
-          )}
-          {!pendingRequestId && nextRarity && onUpgrade && (
-            <CardAction
-              className='text-green-400 hover:text-green-300'
-              onClick={() => onUpgrade(entry)}
-              title={t.roster.upgrade}
-              dataCy='champion-upgrade'
-            >
-              <ArrowUp className='size-3.5' />
-            </CardAction>
-          )}
-          {onEdit && (
-            <CardAction
-              className='text-blue-400 hover:text-blue-300'
-              onClick={() => onEdit(entry)}
-              title='Edit'
-              dataCy='champion-edit'
-            >
-              <Pencil className='size-3.5' />
-            </CardAction>
-          )}
-          {onDelete && (
-            <CardAction
-              className='text-red-400 hover:text-red-600'
-              onClick={() => onDelete(entry)}
-              title={t.common.delete}
-              dataCy='champion-delete'
-            >
-              <Trash2 className='size-3.5' />
-            </CardAction>
-          )}
-        </div>
-      )}
-    </div>
+  if (readOnly || !onOpen) {
+    return (
+      <div
+        className={cardClass}
+        data-cy={`champion-card-${entry.champion_name}`}
+      >
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type='button'
+      className={cn(cardClass, 'cursor-pointer focus-visible:ring-2 focus-visible:ring-ring')}
+      onClick={() => onOpen(entry)}
+      data-cy={`champion-card-${entry.champion_name}`}
+    >
+      {content}
+    </button>
   )
 }
 

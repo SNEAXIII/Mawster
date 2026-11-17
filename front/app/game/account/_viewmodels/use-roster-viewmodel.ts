@@ -11,6 +11,7 @@ import {
   getRoster,
   deleteRosterEntry,
   type RosterEntry,
+  type AttackPreference,
   RARITIES,
   RARITY_LABELS,
   upgradeChampionRank,
@@ -210,19 +211,20 @@ export function useRosterViewModel() {
     // oxlint-disable-next-line react/exhaustive-deps
   }, [upgradeTarget, selectedAccountId])
 
-  const handleTogglePreferredAttacker = useCallback(
-    async (entry: RosterEntry) => {
+  const handleSetAttackPreference = useCallback(
+    async (entry: RosterEntry, attackPreference: AttackPreference) => {
       try {
-        await setAttackPreference(
-          entry.id,
-          entry.attack_preference === 'preferred' ? 'neutral' : 'preferred'
+        const updated = await setAttackPreference(entry.id, attackPreference)
+        setRoster((prev) =>
+          prev.map((e) =>
+            e.id === entry.id ? { ...e, attack_preference: updated.attack_preference } : e
+          )
         )
-        if (selectedAccountId) setRoster(await getRoster(selectedAccountId))
       } catch (e: unknown) {
-        toast.error((e as Error).message || t.roster.preferredAttackerToggle)
+        toast.error((e as Error).message || t.roster.attackPreference.error)
       }
     },
-    [selectedAccountId, t]
+    [t]
   )
 
   const confirmAscend = useCallback(async () => {
@@ -298,7 +300,7 @@ export function useRosterViewModel() {
     confirmUpgrade,
     confirmAscend,
     handleFormSuccess,
-    handleTogglePreferredAttacker,
+    handleSetAttackPreference,
     clearError,
     filters,
     setFilterPatch,

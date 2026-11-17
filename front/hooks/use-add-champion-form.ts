@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import type { Champion } from '@/app/services/champions'
 import {
+  type AttackPreference,
   type RosterEntry,
   RARITIES,
   searchChampions,
@@ -20,7 +21,7 @@ export function useAddChampionForm(selectedAccountId: string | null) {
   const [selectedChampion, setSelectedChampion] = useState<Champion | null>(null)
   const [selectedRarity, setSelectedRarity] = useState<string>(RARITIES[0])
   const [signatureValue, setSignatureValue] = useState(0)
-  const [isPreferredAttacker, setIsPreferredAttacker] = useState(false)
+  const [attackPreference, setAttackPreference] = useState<AttackPreference>('neutral')
   const [ascension, setAscension] = useState(0)
   const [adding, setAdding] = useState(false)
 
@@ -62,7 +63,7 @@ export function useAddChampionForm(selectedAccountId: string | null) {
     setSelectedChampion(null)
     setChampionSearch('')
     setSearchResults([])
-    setIsPreferredAttacker(false)
+    setAttackPreference('neutral')
     setAscension(0)
   }, [])
 
@@ -84,6 +85,7 @@ export function useAddChampionForm(selectedAccountId: string | null) {
     setSelectedRarity(entry.rarity)
     setSignatureValue(entry.signature)
     setAscension(entry.ascension ?? 0)
+    setAttackPreference(entry.attack_preference)
   }, [])
 
   const handleSubmit = useCallback(async (): Promise<RosterEntry[] | null> => {
@@ -95,7 +97,7 @@ export function useAddChampionForm(selectedAccountId: string | null) {
         selectedChampion.id,
         selectedRarity,
         signatureValue,
-        isPreferredAttacker ? 'preferred' : 'neutral',
+        attackPreference,
         ascension
       )
       const updated = await getRoster(selectedAccountId)
@@ -114,7 +116,7 @@ export function useAddChampionForm(selectedAccountId: string | null) {
     selectedChampion,
     selectedRarity,
     signatureValue,
-    isPreferredAttacker,
+    attackPreference,
     ascension,
     reset,
     t,
@@ -128,8 +130,8 @@ export function useAddChampionForm(selectedAccountId: string | null) {
     setSelectedRarity,
     signatureValue,
     setSignatureValue,
-    isPreferredAttacker,
-    setIsPreferredAttacker,
+    attackPreference,
+    setAttackPreference,
     ascension,
     setAscension,
     adding,

@@ -7,18 +7,30 @@ interface ToggleButtonProps {
   active: boolean
   onClick: () => void
   dataCy?: string
+  /** Replaces the default primary colours of the active button */
+  activeClassName?: string
+  className?: string
   children: ReactNode
 }
 
-export function ToggleButton({ active, onClick, dataCy, children }: Readonly<ToggleButtonProps>) {
+export function ToggleButton({
+  active,
+  onClick,
+  dataCy,
+  activeClassName = 'bg-primary text-primary-foreground',
+  className,
+  children,
+}: Readonly<ToggleButtonProps>) {
   return (
     <button
       type='button'
-      onClick={onClick}
+      onClick={active ? undefined : onClick}
       aria-pressed={active}
+      data-active={active || undefined}
       className={cn(
         'flex items-center gap-1.5 px-3 py-1 rounded text-sm font-semibold whitespace-nowrap transition-colors',
-        active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'
+        active ? cn(activeClassName, 'cursor-default') : 'text-muted-foreground hover:bg-accent',
+        className
       )}
       data-cy={dataCy}
     >
