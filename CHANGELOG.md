@@ -3,6 +3,13 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [3.2.0](https://github.com/SNEAXIII/Mawster/compare/v3.1.0...v3.2.0) (2026-11-17)
+
+
+### Added
+
+* clear the attackers of unfinished fights on the war page ([#859](https://github.com/SNEAXIII/Mawster/issues/859)) ([1397b18](https://github.com/SNEAXIII/Mawster/commit/1397b18c84c09172dc38e3df8bff8d9ded8af007))
+
 ## [3.1.0](https://github.com/SNEAXIII/Mawster/compare/v3.0.0...v3.1.0) (2026-11-17)
 
 

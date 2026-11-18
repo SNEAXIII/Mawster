@@ -60,7 +60,7 @@ async def lifespan(_: FastAPI):
     await consumer.stop()
 
 
-app = FastAPI(title="Mawster", version="3.1.0", lifespan=lifespan)  # x-release-please-version
+app = FastAPI(title="Mawster", version="3.2.0", lifespan=lifespan)  # x-release-please-version
 Instrumentator().instrument(app)
 
 
