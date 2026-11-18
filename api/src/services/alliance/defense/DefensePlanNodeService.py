@@ -155,7 +155,7 @@ class DefensePlanNodeService:
                     "stars": cu.stars,
                     "rank": cu.rank,
                     "signature": cu.signature,
-                    "is_preferred_attacker": cu.is_preferred_attacker,
+                    "attack_preference": cu.attack_preference,
                     "ascension": cu.ascension,
                     "defender_count": held[cu.game_account_id],
                 }

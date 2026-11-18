@@ -12,6 +12,7 @@ from src.dto.mixins import (
     SagaRoles,
     WarCoords,
 )
+from src.enums.AttackPreference import AttackPreference
 from src.enums.SeasonFormat import SeasonFormat
 from src.enums.UnrecordedReason import UnrecordedReason
 from src.enums.WarBoost import WarBoost
@@ -131,7 +132,7 @@ class WarPlacementResponse(WarCoords, ChampionRef, SagaRoles):
     attacker_champion_class: str | None = None
     attacker_image_url: str | None = None
     attacker_rarity: str | None = None
-    attacker_is_preferred_attacker: bool | None = None
+    attacker_attack_preference: AttackPreference | None = None
     attacker_ascension: int | None = None
     attacker_is_saga_attacker: bool | None = None
     attacker_is_saga_defender: bool | None = None
@@ -178,7 +179,7 @@ class WarPlacementResponse(WarCoords, ChampionRef, SagaRoles):
             "has_specials_boost": data.has_specials_boost,
             "attacker_champion_user_id": data.attacker_champion_user_id,
             "attacker_champion_id": attacker.champion_id if attacker else None,
-            "attacker_is_preferred_attacker": attacker.is_preferred_attacker if attacker else None,
+            "attacker_attack_preference": attacker.attack_preference if attacker else None,
             "is_assisted": data.assist_champion_user_id is not None,
             "assistor_champion_user_id": data.assist_champion_user_id,
             **_champion_user_fields(attacker, "attacker"),
@@ -241,7 +242,7 @@ class AvailableAttackerResponse(PlayerIdentity, ChampionRef, SagaRoles):
     rarity: str
     ascension: int
     signature: int
-    is_preferred_attacker: bool = False
+    attack_preference: AttackPreference = AttackPreference.NEUTRAL
     is_on_defense: bool = False
 
 
@@ -254,7 +255,7 @@ class AvailablePrefightAttackerResponse(PlayerIdentity, SagaRoles):
     champion_class: str
     champion_alias: str | None = None
     image_url: str | None = None
-    is_preferred_attacker: bool = False
+    attack_preference: AttackPreference = AttackPreference.NEUTRAL
     is_on_defense: bool = False
 
 

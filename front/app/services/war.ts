@@ -1,3 +1,4 @@
+import type { AttackPreference } from '@/app/services/roster'
 import { api, jsonBody } from '@/app/services/utils'
 import type { SeasonFormat } from '@/app/services/season'
 
@@ -80,7 +81,7 @@ export interface WarPlacement {
   attacker_champion_class: string | null
   attacker_image_url: string | null
   attacker_rarity: string | null
-  attacker_is_preferred_attacker: boolean | null
+  attacker_attack_preference: AttackPreference | null
   is_saga_attacker: boolean
   is_saga_defender: boolean
   attacker_ascension: number | null
@@ -134,7 +135,7 @@ export interface AvailablePrefightAttacker {
   champion_class: string
   champion_alias: string | null
   image_url: string | null
-  is_preferred_attacker: boolean
+  attack_preference: AttackPreference
   is_saga_attacker: boolean
   is_saga_defender: boolean
   is_on_defense: boolean
@@ -315,6 +316,18 @@ export async function clearWarBg(
   await api(
     `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/clear`,
     'Failed to clear war battlegroup',
+    { method: 'DELETE' }
+  )
+}
+
+export async function clearWarBgAttackers(
+  allianceId: string,
+  warId: string,
+  battlegroup: number
+): Promise<void> {
+  await api(
+    `/alliances/${allianceId}/wars/${warId}/bg/${battlegroup}/attackers`,
+    'Failed to clear unfinished attackers',
     { method: 'DELETE' }
   )
 }

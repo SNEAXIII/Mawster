@@ -1,15 +1,16 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useI18n } from '@/app/i18n'
 import { type RosterEntry, RARITY_LABELS, type UpgradeRequest } from '@/app/services/roster'
-import RosterChampionCard, { type RosterChampionCardProps } from './roster-champion-card'
+import RosterChampionCard from './roster-champion-card'
+import RosterChampionDialog, { type RosterChampionActions } from './roster-champion-dialog'
 
-/** Everything the grid forwards as-is to each card */
-type RosterCardActions = Omit<RosterChampionCardProps, 'entry' | 'pendingRequestId'>
-
-interface RosterGridProps extends RosterCardActions {
+interface RosterGridProps extends RosterChampionActions {
   groupedRoster: [string, RosterEntry[]][]
+  /** Unfiltered roster: the open dialog keeps its entry even once filters hide it */
+  roster: RosterEntry[]
+  readOnly?: boolean
   /** Pending upgrade requests — used to show cancel button instead of upgrade arrow */
   upgradeRequests?: UpgradeRequest[]
   /** True when filters are active — changes the empty-state message */
@@ -20,9 +21,14 @@ export default function RosterGrid({
   groupedRoster,
   upgradeRequests,
   isFiltered = false,
-  ...cardActions
+  roster,
+  readOnly = false,
+  ...actions
 }: Readonly<RosterGridProps>) {
   const { t } = useI18n()
+  const [openId, setOpenId] = useState<string | null>(null)
+  const openEntry = roster.find((e) => e.id === openId)
+  const openDialog = useCallback((entry: RosterEntry) => setOpenId(entry.id), [])
 
   /** champion_user_id → pending request id, built once instead of scanning per card */
   const pendingByChampion = useMemo(
@@ -30,14 +36,27 @@ export default function RosterGrid({
     [upgradeRequests]
   )
 
+  const dialog = openEntry && (
+    <RosterChampionDialog
+      {...actions}
+      entry={openEntry}
+      pendingRequestId={pendingByChampion.get(openEntry.id)}
+      open
+      onOpenChange={(open) => !open && setOpenId(null)}
+    />
+  )
+
   if (groupedRoster.length === 0) {
     return (
-      <p
-        className='text-muted-foreground'
-        data-cy={isFiltered ? 'roster-no-results' : 'roster-empty'}
-      >
-        {isFiltered ? t.roster.filter.noResults : t.roster.empty}
-      </p>
+      <>
+        <p
+          className='text-muted-foreground'
+          data-cy={isFiltered ? 'roster-no-results' : 'roster-empty'}
+        >
+          {isFiltered ? t.roster.filter.noResults : t.roster.empty}
+        </p>
+        {dialog}
+      </>
     )
   }
 
@@ -58,14 +77,15 @@ export default function RosterGrid({
             {entries.map((entry) => (
               <RosterChampionCard
                 key={entry.id}
-                {...cardActions}
                 entry={entry}
-                pendingRequestId={pendingByChampion.get(entry.id)}
+                readOnly={readOnly}
+                onOpen={openDialog}
               />
             ))}
           </div>
         </div>
       ))}
+      {dialog}
     </div>
   )
 }

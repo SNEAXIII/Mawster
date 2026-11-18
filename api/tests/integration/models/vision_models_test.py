@@ -5,7 +5,6 @@ from src.enums.VisionJobStatus import VisionJobStatus
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
-from src.models.vision.VisionSample import VisionSample
 
 
 def test_vision_import_defaults():
@@ -54,17 +53,6 @@ def test_vision_prediction_accepts_unknown_champion():
     )
     assert prediction.champion_name is None
     assert prediction.champion_class is None
-
-
-def test_vision_sample_construction():
-
-    sample = VisionSample(
-        import_id=uuid.uuid4(),
-        game_account_id=uuid.uuid4(),
-        screen_key="imports/a/b/screen.png",
-    )
-    assert sample.dataset_key is None
-    assert sample.screen_key.endswith("screen.png")
 
 
 def test_vision_import_has_confirmed_status():

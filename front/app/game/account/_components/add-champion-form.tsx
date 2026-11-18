@@ -5,7 +5,7 @@ import { useI18n } from '@/app/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
+import AttackPreferencePicker from '@/components/attack-preference-picker'
 import AscensionRequestButton from '@/components/ascension-request-button'
 import LabeledSlider from '@/components/labeled-slider'
 import { SearchInput } from '@/components/search-input'
@@ -43,8 +43,8 @@ export default function AddChampionForm({
     setSelectedRarity,
     signatureValue,
     setSignatureValue,
-    isPreferredAttacker,
-    setIsPreferredAttacker,
+    attackPreference,
+    setAttackPreference,
     ascension,
     setAscension,
     adding,
@@ -208,22 +208,11 @@ export default function AddChampionForm({
               className={`${FORM_SLIDER} mb-4`}
             />
 
-            {/* Preferred Attacker */}
             <div className='mb-4'>
-              <div className='flex items-center gap-2'>
-                <Checkbox
-                  id='preferred-attacker'
-                  checked={isPreferredAttacker}
-                  onCheckedChange={(checked) => setIsPreferredAttacker(checked === true)}
-                  data-cy='preferred-attacker-checkbox'
-                />
-                <Label
-                  htmlFor='preferred-attacker'
-                  className='cursor-pointer select-none'
-                >
-                  {t.roster.preferredAttacker}
-                </Label>
-              </div>
+              <AttackPreferencePicker
+                value={attackPreference}
+                onChange={setAttackPreference}
+              />
             </div>
 
             {/* Ascension */}

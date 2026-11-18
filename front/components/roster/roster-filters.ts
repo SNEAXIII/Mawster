@@ -66,7 +66,7 @@ export function applyRosterFilters(roster: RosterEntry[], f: RosterFilters): Ros
     if (f.championClass && e.champion_class !== f.championClass) return false
     if (f.sagaAttacker && !e.is_saga_attacker) return false
     if (f.sagaDefender && !e.is_saga_defender) return false
-    if (f.preferredAttacker && !e.is_preferred_attacker) return false
+    if (f.preferredAttacker && e.attack_preference !== 'preferred') return false
     if (e.signature < f.minSignature || e.signature > f.maxSignature) return false
     return true
   })

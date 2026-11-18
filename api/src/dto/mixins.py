@@ -11,6 +11,7 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.enums.AttackPreference import AttackPreference
 from src.game_types import Ascension, Signature
 
 
@@ -59,5 +60,5 @@ class RosterEntryInput(BaseModel):
 
     rarity: str = Field(..., examples=["6r4"])
     signature: Signature = Field(default=0, examples=[200])
-    is_preferred_attacker: bool = Field(default=False)
+    attack_preference: AttackPreference = Field(default=AttackPreference.NEUTRAL)
     ascension: Ascension = Field(default=0, examples=[0])

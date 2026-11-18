@@ -138,11 +138,12 @@ export default function RosterContent() {
                     ) : (
                       <RosterGrid
                         groupedRoster={vm.groupedRoster}
+                        roster={vm.roster}
                         isFiltered={vm.hasActiveFilters}
                         onEdit={vm.startEditEntry}
                         onDelete={vm.setDeleteTarget}
                         onUpgrade={vm.setUpgradeTarget}
-                        onTogglePreferredAttacker={vm.handleTogglePreferredAttacker}
+                        onAttackPreferenceChange={vm.handleSetAttackPreference}
                         onAscend={vm.setAscendTarget}
                       />
                     )}

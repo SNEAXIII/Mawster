@@ -17,7 +17,7 @@ describe('Roster – Vision import preserves preferred attacker', () => {
     setupRosterUser('vision-pref', 'PrefVisionPlayer').then(({ adminData, userData, accountId }) => {
       loadShotChampions(adminData.access_token, ['shot_0001.png']).then((champs) => {
         cy.apiAddChampionToRoster(userData.access_token, accountId, champs['Kindred'].id, '7r3', {
-          is_preferred_attacker: true,
+          attack_preference: 'preferred',
         });
       });
 
@@ -36,7 +36,7 @@ describe('Roster – Vision import preserves preferred attacker', () => {
       getRoster(userData.access_token, accountId).then((roster) => {
         const kindred = roster.find((r) => r.champion_name === 'Kindred');
         expect(kindred?.rarity).to.eq('7r4');
-        expect(kindred?.is_preferred_attacker).to.eq(true);
+        expect(kindred?.attack_preference).to.eq('preferred');
       });
     });
   });

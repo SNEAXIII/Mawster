@@ -55,6 +55,10 @@ export function raritySortValue(rarity: string): number {
   return parsed.stars * 10 + parsed.rank
 }
 
+export type AttackPreference = 'preferred' | 'neutral' | 'detested'
+export const isAttackPreference = (raw: unknown): raw is AttackPreference =>
+  raw === 'preferred' || raw === 'neutral' || raw === 'detested'
+
 export interface RosterEntry {
   id: string
   game_account_id: string
@@ -65,7 +69,7 @@ export interface RosterEntry {
   champion_class: string
   alias: string | null
   image_url: string | null
-  is_preferred_attacker: boolean
+  attack_preference: AttackPreference
   ascension: number
   is_ascendable: boolean
   has_prefight: boolean
@@ -77,7 +81,7 @@ export interface BulkChampionEntry {
   champion_name: string
   rarity: string
   signature: number
-  is_preferred_attacker?: boolean
+  attack_preference?: AttackPreference
   ascension?: number
 }
 
@@ -104,7 +108,7 @@ export const updateChampionInRoster = async (
   championId: string,
   rarity: string,
   signature: number,
-  isPreferredAttacker: boolean = false,
+  attackPreference: AttackPreference = 'neutral',
   ascension: number = 0
 ): Promise<RosterEntry> => {
   return api(
@@ -115,7 +119,7 @@ export const updateChampionInRoster = async (
       champion_id: championId,
       rarity,
       signature,
-      is_preferred_attacker: isPreferredAttacker,
+      attack_preference: attackPreference,
       ascension,
     })
   )
@@ -166,11 +170,14 @@ export const ascendChampion = async (championUserId: string): Promise<RosterEntr
   })
 }
 
-export const togglePreferredAttacker = async (championUserId: string): Promise<RosterEntry> => {
+export const setAttackPreference = async (
+  championUserId: string,
+  attackPreference: AttackPreference
+): Promise<RosterEntry> => {
   return api(
-    `/champion-users/${championUserId}/preferred-attacker`,
-    "Erreur lors du basculement de l'attaquant préféré",
-    { method: 'PATCH' }
+    `/champion-users/${championUserId}/attack-preference`,
+    "Erreur lors de la mise à jour de la préférence d'attaque",
+    jsonBody('PATCH', { attack_preference: attackPreference })
   )
 }
 

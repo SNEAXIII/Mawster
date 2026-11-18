@@ -102,11 +102,13 @@ services:
         aws --endpoint-url http://rustfs:9000 s3 mb s3://dataset 2>/dev/null || true
         # imports/ crops and screenshots are transient working data — expire after
         # VISION_RETENTION_DAYS days. put-bucket-lifecycle-configuration replaces
-        # wholesale, so this is idempotent by nature. dataset holds opt-in training
-        # samples and must stay permanent — no lifecycle rule is applied to it.
+        # wholesale, so this is idempotent by nature.
         aws --endpoint-url http://rustfs:9000 s3api put-bucket-lifecycle-configuration \
           --bucket vision \
           --lifecycle-configuration "{\"Rules\":[{\"ID\":\"expire-imports\",\"Status\":\"Enabled\",\"Filter\":{\"Prefix\":\"imports/\"},\"Expiration\":{\"Days\":$${VISION_RETENTION_DAYS}}}]}"
+        aws --endpoint-url http://rustfs:9000 s3api put-bucket-lifecycle-configuration \
+          --bucket dataset \
+          --lifecycle-configuration '{"Rules":[{"ID":"expire-samples","Status":"Enabled","Filter":{"Prefix":"samples/"},"Expiration":{"Days":30}}]}'
         # The browser PUTs screenshots straight here with a presigned URL, so the
         # bucket has to answer the preflight itself — the API is not in the path
         # and cannot add the headers for it.

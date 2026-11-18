@@ -63,7 +63,7 @@ export default function AllianceChampionGroup({
             className='flex items-center gap-2 py-1 text-sm'
             data-cy='champion-owner-row'
           >
-            {e.is_preferred_attacker && (
+            {e.attack_preference === 'preferred' && (
               <Crown
                 className='h-3 w-3 shrink-0 text-yellow-400'
                 data-cy='champion-owner-preferred'
@@ -72,7 +72,8 @@ export default function AllianceChampionGroup({
             <span
               className={cn(
                 'flex-1 truncate',
-                e.is_preferred_attacker && 'text-yellow-400 font-medium'
+                e.attack_preference === 'preferred' && 'text-yellow-400 font-medium',
+                e.attack_preference === 'detested' && 'text-destructive font-medium'
               )}
             >
               {e.game_pseudo}

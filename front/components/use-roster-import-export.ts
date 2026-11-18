@@ -2,7 +2,12 @@ import { type ChangeEvent, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { useI18n } from '@/app/i18n'
 import { withToast } from '@/app/lib/with-toast'
-import { isAscension, type RosterEntry, raritySortValue } from '@/app/services/roster'
+import {
+  isAscension,
+  isAttackPreference,
+  type RosterEntry,
+  raritySortValue,
+} from '@/app/services/roster'
 import type { PreviewRow } from '@/components/roster/import-preview-row'
 import { isValidRarity } from '@/components/roster/import-row-validation'
 import {
@@ -51,7 +56,11 @@ function validateEntry(
       champion_name: obj.champion_name,
       rarity: obj.rarity,
       signature: typeof obj.signature === 'number' ? obj.signature : 0,
-      is_preferred_attacker: obj.is_preferred_attacker === true,
+      attack_preference: isAttackPreference(obj.attack_preference)
+        ? obj.attack_preference
+        : undefined,
+      is_preferred_attacker:
+        typeof obj.is_preferred_attacker === 'boolean' ? obj.is_preferred_attacker : undefined,
       ascension: isAscension(obj.ascension) ? obj.ascension : 0,
     },
   }
@@ -144,7 +153,7 @@ export function useRosterImportExport({
       champion_name: e.champion_name,
       rarity: e.rarity,
       signature: e.signature,
-      is_preferred_attacker: e.is_preferred_attacker,
+      attack_preference: e.attack_preference,
       ascension: e.ascension ?? 0,
     }))
 

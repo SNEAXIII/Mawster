@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { getChampionImageUrl, MAX_THUMBNAIL_SIZE, THUMBNAIL_SIZES } from '@/app/services/champions'
-import { getStarFrameUrl } from '@/app/services/roster'
+import { getStarFrameUrl, type AttackPreference } from '@/app/services/roster'
 import SynergyBadge from '@/components/synergy-badge'
 import PrefightBadge from '@/components/prefight-badge'
 import SagaBadge from '@/components/saga-badge'
@@ -12,6 +12,12 @@ import { getClassColors } from '@/app/lib/champion-class'
 
 type mode = 'normal' | 'synergy' | 'prefight'
 type SagaMode = 'attacker' | 'defender' | 'all'
+
+/** Halo colour and test id per Attack Preference; Neutral draws no halo. */
+const HALOS: Partial<Record<AttackPreference, { color: string; dataCy: string }>> = {
+  preferred: { color: '#fbbf24', dataCy: 'preferred-badge' },
+  detested: { color: '#dc2626', dataCy: 'detested-badge' },
+}
 
 /**
  * Shape of the outer box:
@@ -95,8 +101,8 @@ interface ChampionPortraitProps {
   size?: number
   /** Optional badge rendered absolutely over the portrait (bottom-right) */
   mode?: mode
-  /** Gold glow around the frame for a player's preferred attacker */
-  isPreferred?: boolean
+  /** Glow around the frame: gold for Preferred, red for Detested */
+  attackPreference?: AttackPreference
   /** Whether champion is a saga attacker */
   is_saga_attacker?: boolean
   /** Whether champion is a saga defender */
@@ -131,7 +137,7 @@ export default function ChampionPortrait({
   rarity,
   size = 56,
   mode = 'normal',
-  isPreferred = false,
+  attackPreference,
   is_saga_attacker = false,
   is_saga_defender = false,
   sagaMode = 'all',
@@ -146,6 +152,7 @@ export default function ChampionPortrait({
     all: is_saga_attacker || is_saga_defender,
   }
   const showSaga = sagaByMode[sagaMode]
+  const halo = attackPreference ? HALOS[attackPreference] : undefined
   const exporting = useExportMode()
   const frameUrl = getStarFrameUrl(rarity)
   const windowRect = getFrameWindowRect(size, rarity, frameWindow, box)
@@ -189,13 +196,13 @@ export default function ChampionPortrait({
           loading={eagerLoad ? 'eager' : 'lazy'}
           decoding='async'
           className='absolute inset-0 w-full h-full object-contain pointer-events-none'
-          // A preferred attacker glows gold, following the frame's own outline.
+          // The halo follows the frame's own outline.
           style={
-            isPreferred
-              ? { filter: `drop-shadow(0 0 ${Math.max(2, size / 16)}px #fbbf24)` }
+            halo
+              ? { filter: `drop-shadow(0 0 ${Math.max(2, size / 16)}px ${halo.color})` }
               : undefined
           }
-          data-cy={isPreferred ? 'preferred-badge' : undefined}
+          data-cy={halo?.dataCy}
         />
       )}
       {/* Champion image – on top, filling the frame's window. `focusY` keeps the

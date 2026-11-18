@@ -3,6 +3,7 @@ import uuid
 
 import pytest
 
+from src.enums.AttackPreference import AttackPreference
 from src.models.vision.VisionImport import VisionImport
 from src.models.vision.VisionJob import VisionJob
 from src.models.vision.VisionPrediction import VisionPrediction
@@ -12,31 +13,27 @@ from src.services.account.game.VisionDatasetService import ConfirmedRow, VisionD
 class FakeStorage:
     def __init__(self):
         self.puts: dict[str, bytes] = {}
+        self.copies: list[tuple[str, str, str, str]] = []
 
     async def put_bytes(self, bucket, key, data, content_type) -> None:
         self.puts[key] = data
 
+    async def copy_object(self, src_bucket, src_key, dst_bucket, dst_key) -> None:
+        self.copies.append((src_bucket, src_key, dst_bucket, dst_key))
+
 
 class FakeSession:
-    """Minimal async session: records adds, commits are no-ops, and get()
-    resolves objects seeded ahead of time by (type, id) — enough to stand in
-    for the prediction/job lookups archive() performs."""
+    """get() resolves objects seeded ahead of time by (type, id) — enough to
+    stand in for the prediction/job lookups archive() performs."""
 
     def __init__(self):
-        self.added: list = []
         self._store: dict[tuple[type, uuid.UUID], object] = {}
 
     def seed(self, obj) -> None:
         self._store[(type(obj), obj.id)] = obj
 
-    def add(self, obj) -> None:
-        self.added.append(obj)
-
     async def get(self, model, obj_id):
         return self._store.get((model, obj_id))
-
-    async def commit(self):
-        pass
 
 
 def _import(share=True) -> VisionImport:
@@ -71,23 +68,21 @@ async def test_archive_writes_a_sample_per_row_when_opted_in():
             rarity="7r3",
             signature=200,
             ascension=1,
-            is_preferred_attacker=False,
+            attack_preference=AttackPreference.NEUTRAL,
             prediction_id=prediction.id,
         )
     ]
 
-    count = await VisionDatasetService.archive(session, storage, _import(share=True), rows)
+    imp = _import(share=True)
+    count = await VisionDatasetService.archive(session, storage, imp, rows + rows)
 
-    assert count == 1
-    samples = [o for o in session.added if o.__class__.__name__ == "VisionSample"]
-    assert len(samples) == 1
-    sample = samples[0]
-    assert sample.screen_key == job.object_key
-    assert sample.dataset_key == f"samples/{sample.id}/sample.json"
-
-    assert list(storage.puts.keys()) == [sample.dataset_key]
-    payload = json.loads(storage.puts[sample.dataset_key])
-    assert payload["screen_key"] == job.object_key
+    assert count == 2
+    screen = f"samples/{imp.id}/{job.id}.png"
+    # Two rows from the same screenshot copy it once.
+    assert storage.copies == [("vision", job.object_key, "dataset", screen)]
+    assert sorted(storage.puts) == [f"samples/{imp.id}/0.json", f"samples/{imp.id}/1.json"]
+    payload = json.loads(storage.puts[f"samples/{imp.id}/0.json"])
+    assert payload["screen_key"] == screen
     assert payload["prediction"]["champion_name"] == "Hulk"
     assert payload["prediction"]["confidence"] == 0.8
     assert payload["prediction"]["preview"] == {
@@ -101,7 +96,7 @@ async def test_archive_writes_a_sample_per_row_when_opted_in():
         "rarity": "7r3",
         "signature": 200,
         "ascension": 1,
-        "is_preferred_attacker": False,
+        "attack_preference": "neutral",
     }
 
 
@@ -120,18 +115,17 @@ async def test_archive_stores_a_null_prediction_for_user_added_rows():
             rarity="6r2",
             signature=0,
             ascension=0,
-            is_preferred_attacker=True,
+            attack_preference=AttackPreference.PREFERRED,
             prediction_id=None,
         )
     ]
 
-    count = await VisionDatasetService.archive(session, storage, _import(share=True), rows)
+    imp = _import(share=True)
+    count = await VisionDatasetService.archive(session, storage, imp, rows)
 
     assert count == 1
-    sample = next(o for o in session.added if o.__class__.__name__ == "VisionSample")
-    assert sample.screen_key == ""
-
-    payload = json.loads(storage.puts[sample.dataset_key])
+    assert storage.copies == []
+    payload = json.loads(storage.puts[f"samples/{imp.id}/0.json"])
     assert payload["prediction"] is None
     assert payload["screen_key"] == ""
     assert payload["truth"]["champion_name"] == "Groot"
@@ -146,7 +140,7 @@ async def test_archive_is_a_noop_without_opt_in():
             rarity="7r3",
             signature=200,
             ascension=1,
-            is_preferred_attacker=False,
+            attack_preference=AttackPreference.NEUTRAL,
             prediction_id=None,
         )
     ]
@@ -154,5 +148,5 @@ async def test_archive_is_a_noop_without_opt_in():
     count = await VisionDatasetService.archive(session, storage, _import(share=False), rows)
 
     assert count == 0
-    assert session.added == []
     assert storage.puts == {}
+    assert storage.copies == []

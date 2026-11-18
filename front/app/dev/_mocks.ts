@@ -21,10 +21,10 @@ export const CHAMPIONS = [
 ] as const
 
 const ROSTER_SHAPES = [
-  { rarity: '7r5', signature: 200, is_preferred_attacker: true, ascension: 2 },
-  { rarity: '7r4', signature: 60, is_preferred_attacker: false, ascension: 1 },
-  { rarity: '7r3', signature: 0, is_preferred_attacker: false, ascension: 0 },
-  { rarity: '6r5', signature: 200, is_preferred_attacker: true, ascension: 0 },
+  { rarity: '7r5', signature: 200, attack_preference: 'preferred', ascension: 2 },
+  { rarity: '7r4', signature: 60, attack_preference: 'detested', ascension: 1 },
+  { rarity: '7r3', signature: 0, attack_preference: 'neutral', ascension: 0 },
+  { rarity: '6r5', signature: 200, attack_preference: 'preferred', ascension: 0 },
 ] as const
 
 export const ROSTER_ENTRIES: RosterEntry[] = CHAMPIONS.slice(0, 4).map((champion, i) => ({

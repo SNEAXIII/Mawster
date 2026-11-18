@@ -25,6 +25,7 @@ from datetime import UTC, timedelta
 from faker import Faker
 from sqlmodel import Session, select
 
+from src.enums.AttackPreference import AttackPreference
 from src.enums.InvitationStatus import InvitationStatus
 from src.enums.Roles import Roles
 from src.enums.SeasonFormat import SeasonFormat
@@ -124,9 +125,14 @@ def roster_signature(slot: int, user_index: int) -> int:
     return SIG_CYCLE[(slot + user_index) % len(SIG_CYCLE)]
 
 
-def is_preferred_slot(slot: int, user_index: int, size: int) -> bool:
-    """Exactly one preferred attacker per roster."""
-    return slot == (user_index % max(size, 1))
+def attack_preference_for_slot(slot: int, user_index: int, size: int) -> AttackPreference:
+    """Exactly one Preferred and, from two champions on, one Detested Attacker per roster."""
+    size = max(size, 1)
+    if slot == user_index % size:
+        return AttackPreference.PREFERRED
+    if size > 1 and slot == (user_index + 1) % size:
+        return AttackPreference.DETESTED
+    return AttackPreference.NEUTRAL
 
 
 # (battlegroup, node_number, stars, rank, ascension, ko_count)
@@ -268,7 +274,7 @@ def _build_roster(game_account_id, user_index: int, champions_db: dict) -> list:
                 stars=7,
                 rank=rank,
                 signature=roster_signature(slot, user_index),
-                is_preferred_attacker=is_preferred_slot(slot, user_index, size),
+                attack_preference=attack_preference_for_slot(slot, user_index, size),
                 ascension=ascension,
             )
         )

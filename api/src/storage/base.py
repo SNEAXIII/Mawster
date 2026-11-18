@@ -40,6 +40,12 @@ class Storage(Protocol):
 
     async def put_bytes(self, bucket: str, key: str, data: bytes, content_type: str) -> None: ...
 
+    async def copy_object(
+        self, src_bucket: str, src_key: str, dst_bucket: str, dst_key: str
+    ) -> None:
+        """Server-side copy: the bytes never transit through the API."""
+        ...
+
     async def delete_prefix(self, bucket: str, prefix: str) -> None: ...
 
     async def presigned_put_url(
